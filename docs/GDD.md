@@ -1,5 +1,7 @@
 # UNWRITTEN — Knights of the Last Lantern
-### Game Design Document · Foundation Draft v0.1 (awaiting approval)
+### Game Design Document · Foundation Draft v0.2 (awaiting approval)
+
+> **v0.2 changes:** §15 rebuilt around the **Masked Survivor reveal** (Cal → the Sable Knight). Stale identity tells were removed from Arcs 1–3, Boss 9, and the Ep 18 storyboard. Added red-herring characters (Aurek Valcourt, Wraithe). Arcs 4–7 outline rewritten. The playable roster now includes Cal after the reveal.
 
 > **Status:** Pre-production. No code until this foundation is approved.
 > **Spoiler policy:** Sections marked 🔒 **DIRECTOR'S EYES ONLY** contain truths the player must never be told directly. They exist so the whole team writes toward the same hidden answers.
@@ -111,7 +113,7 @@ There are 12 important characters. 🔒 marks hidden truths.
 | 1 | **Rook** (player) | Protagonist | Affinity + 🔒 Inscription | The One-Page Mage. |
 | 2 | **Severin Valcourt** | Rival | Starlight | See above. |
 | 3 | **Captain Dagrun Holt** | Lanterns captain | Gravity | Huge, lazy, protective. Was once Paragon candidate before a scandal. Recruits you because "a one-page grimoire means nobody's written your story for you." |
-| 4 | **Vice Captain Calder "Cal" Wynn** | Mentor / big sibling | Threshold | Charming, reckless, always taps his blade twice before fighting. Gives you a cheap brass key "to the snack cupboard." **The fake-death character.** |
+| 4 | **Vice Captain Calder "Cal" Wynn** | Mentor / big sibling | Threshold | Charming, reckless, and quick with a joke. Says "Mind the step" whenever he opens a door for someone, and whistles the same four-note tune while cooking. Gives you a cheap brass key "to the snack cupboard." **The fake-death character** (🔒 returns as the Sable Knight, §15). |
 | 5 | **Juno Quill** | Squadmate | Thread | A tailor's daughter with a sharp tongue. Thinks you're dead weight at first. Cal is like an older brother to her. Her grief arc drives Arc 3. |
 | 6 | **Bastion "Bas" Okafor** | Squadmate (tank) | Stone | Former miner and a gentle giant. Mentored by Iron Warden Captain Brannoc. Trains you in defense. |
 | 7 | **Lio Varnish** | Squadmate (support) | Memory | Quiet squad archivist. 🔒 A former Pale Choir novice who knows what a Palimpsest grimoire is. He joined the Lanterns to watch you. He becomes loyal, but his secret detonates in Arc 3. |
@@ -122,6 +124,9 @@ There are 12 important characters. 🔒 marks hidden truths.
 | 12 | **Paragon Elias Thorne** | Kingdom's strongest knight | Sunlance | Warm, unknowable, rarely present. Your goal. 🔒 He knows about the Hollow and has been losing a secret war against it for 20 years. |
 | + | **Elodie Valcourt** | Severin's sister | none | Grimoire-less. Seemingly a side character. 🔒 Hollow-touched from birth. She can *hear* the Hollow, and Cal, in Arc 4. |
 | + | **Captain Brannoc Steelhart** | Iron Wardens captain | Oath | A mentor figure who **truly dies** in Arc 3 (see §14 for why this matters). |
+| + | **The Sable Knight** | Masked antagonist / antihero (Arcs 3–5) | "Severance" (space-cutting) | A nameless masked knight who raids Crown vaults, executes Choir agents, and fights the Lanterns three times. Players should believe he is a new character. 🔒 He is Cal (§15). |
+| + | **Aurek Valcourt** | Severin's older brother, presumed dead | Starlight | Lost in the Hollowmarch six years ago; body never found. **Red herring**: players and Severin come to believe he is the Sable Knight. 🔒 He truly died, on Cal's watch. |
+| + | **Wraithe** | Pale Choir rift-assassin | Hollow rifts | **Red herring**: establishes "space-tearing" as a Choir technique before the Sable Knight appears. Executed by the Sable Knight in Arc 4. |
 
 **Relationship seeds (party members interact with each other):**
 - Juno ↔ Rook: dislike → grudging respect → fierce loyalty.
@@ -327,7 +332,7 @@ Format: **Signature mechanic (resource)** · Off = Offensive · Def = Defensive 
 **30. Hollow (Forbidden)**: *Erasure*. Devours mana, tags, and spells. Corrupts the user.
 - Off: *Unmaking* (temporarily erases part of max HP), *Null Bite* (deletes buffs) · Def: *Null Shell* (erases incoming spells) · Mob: *Absence* · Util: erase seals and barriers… **and memories** (why villages vanish from memory)
 - Ult: *Blank Page* · Awk: *Hollow Saint*
-- Weak: Corruption; light (Sunlance, Candle) burns it; drains the user's lifespan · *Hesper Voss, the Warden (apparently)*
+- Weak: Corruption; light (Sunlance, Candle) burns it; drains the user's lifespan · *Hesper Voss, Wraithe (and, apparently, the Sable Knight)*
 
 > **Director's Note: 30 types, not 30 player kits.** Only **4 player affinities + Inscription + ~8 party kits** need full moveset-grade implementation. The other ~17 are enemy and NPC kits built from the **same ability building blocks** (projectile, zone, dash, summon, tag-apply). That's how 30 magic types stays affordable.
 
@@ -457,7 +462,7 @@ Adding a new character means building a new graph from existing node types, with
   - **Stances:** *Press* (aggressive), *Guard* (protect the player), *Support* (spells and heals).
   - **Assist Call (D-pad):** the ally immediately performs their signature move, which works as a combo extender (e.g., Bas pops a Pillar Uppercut under your juggled enemy).
   - **Team Attacks:** spend the Bond gauge for a 3–5s duo cinematic.
-- **Character switching** (playing as Juno, Bas, Severin) comes **in Phase 5, for 3 core characters only**.
+- **Character switching** (tag-swap) comes **in Phase 5, for 3 core characters only: Rook, Severin, and Cal** (Cal only after his reveal in Arc 5; his kit reuses the Sable Knight boss abilities, §15.10).
 
 | Per character | Stored in `CharacterData` |
 |---|---|
@@ -515,7 +520,7 @@ Each squad has a **captain, vice captain, 2–3 named members**, an HQ location,
 
 ### 12.2 Squad Merit (the star race)
 At the end of each arc, the Crown ranks squads by **Merit**. The Lanterns start last. Climbing is a visible, shonen-style goal:
-- Merit unlocks **HQ upgrades**: training yard → library (lore & page research) → kitchen (meal buffs) → forge → observatory (Severin's bond events) → "Cal's door" (🔒 late-game).
+- Merit unlocks **HQ upgrades**: training yard → library (lore & page research) → kitchen (meal buffs) → forge → observatory (Severin's bond events) → "Cal's room" (🔒 reopened after the reveal).
 - Merit rank changes how NPCs and the other squads talk to you.
 
 ### 12.3 Reputation (two axes)
@@ -589,9 +594,9 @@ Every episode follows the anime pacing template (§18). Episodes listed in brief
 
 1. **The Tower of Choosing.** Cold open: a burning village (**Larkspur**, 🔒) and an infant's cry. Hard cut to 15 years later. Rook and Severin climb the Tower. Severin receives a seven-clasp tome; Rook receives one page. Brother Moss: *"Some books are better read twice."* 🔒 A Choir acolyte attacks the ceremony. First combat tutorial. **Hook:** the acolyte, dying, stares at Rook's grimoire: *"…It's you."*
 2. **The Knight Exam.** Trials across the training grounds. **Boss 1: Severin (duel).** Every squad rejects Rook, until Dagrun yawns: *"I'll take the one-pager."*
-3. **The Lighthouse with No Sea.** Squad-life episode. Meet the Lanterns. Cal teaches doors: 🔒 *"A door I open, I can only close from the other side. So don't make me close one, kid."* Dagrun explains the **squad lanterns**: 🔒 *"A Lantern goes out when the knight dies… or when their mana can't find its way home."* Cal taps his blade twice before sparring (🔒 animation tell).
-4. **The Village That Wasn't There.** First mission in Greywater Fens: a village is missing from the map. **Boss 2: Hask the Bogwarden.** Choice: chase the fleeing acolyte *or* save the child **Mirren** from the bog (🔒 Mirren matters in Arc 3).
-5. **Thread and Needle.** Juno-centric. She thinks you're a liability. A mission where Thread traps solve the dungeon. Ending: grudging respect.
+3. **The Lighthouse with No Sea.** Squad-life episode. Meet the Lanterns. Cal teaches doors: 🔒 *"A door I open, I can only close from the other side. So don't make me close one, kid."* (S1) Dagrun explains the **squad lanterns**: 🔒 *"A Lantern goes out when the knight dies… or when their mana can't find its way home."* Cal is the sparring partner in the dodge tutorial; his AI always evades left, left, backstep (🔒 S3, never mentioned). He whistles the Lighthouse Tune while cooking (🔒 S5). First "Mind the step" (🔒 S2).
+4. **The Village That Wasn't There.** First mission in Greywater Fens: a village is missing from the map. **Boss 2: Hask the Bogwarden.** Choice: chase the fleeing acolyte *or* save the child **Mirren** from the bog (🔒 in Arc 3 Mirren tells of "a black knight who fixed our well", a Sable Knight sighting that gains a second meaning after the reveal).
+5. **Thread and Needle.** Juno-centric. She thinks you're a liability. A mission where Thread traps solve the dungeon. Ending: grudging respect, and she ties a red cord with her signature **Quill knot** on every Lantern's wrist, Cal's included (🔒 S6).
 6. **The Silence Sermon.** The Pale Choir surfaces in a fen town. **Boss 3: Deacon Ilse Marrowind** (Silence magic). Hesper Voss appears in a vision: *"They gave you one page so you'd stay small. I can give you none, and you'll be free."*
 7. **Brass and Small Things.** Squad-life episode. Bond Event: Cal gives Rook the **brass key** (🔒 the anchor of his doors) as a joke. Festival prep. Lio secretly reads Rook's grimoire at night (🔒).
 8. **Rust Remembers.** The Choir raises **Sir Galen the Rusted**, a long-dead Iron Warden captain, at the Tower. **Boss 4.** Mid-fight, Rook's grimoire bleeds *ink* for the first time: a single line of unreadable under-text. **Hook — WHAT HAPPENS NEXT?** Lio, alone: *"It's started. I have to tell them… no. Not yet."*
@@ -599,7 +604,7 @@ Every episode follows the anime pacing template (§18). Episodes listed in brief
 ### ARC 2: "The Lantern That Went Out" (Episodes 9–18)
 *Theme: family, and the cost of being a knight. Tone: escalating, warmer and darker together.*
 
-9. **The Royal Festival.** Aurelin hub opens. Rank promotion. Severin snubs you publicly but saves a civilian you missed. First glimpse of **Elodie**.
+9. **The Royal Festival.** Aurelin hub opens. Rank promotion. Severin snubs you publicly but saves a civilian you missed. First glimpse of **Elodie**. Severin's pendant belonged to his brother **Aurek**, lost in the Hollowmarch six years ago (🔒 red herring). Juno's Lowmarket stall sells her Quill-knot cords to the public (🔒 S6 alibi).
 10. **The Hall of Lanterns.** You light your lantern in the capital's great hall (every knight has one here, mirrored by their squad's lanterns). 🔒 Close-up insert: when a knight dies, their wick turns to ash.
 11. **Beneath the Festival.** Children are disappearing into the **Undercroft**. Forced alliance with Severin.
 12. **The Clockwork Court.** **Boss 5: The Clockwork Magistrate.** Severin shields you. Rivalry turns to respect.
@@ -617,18 +622,18 @@ Every episode follows the anime pacing template (§18). Episodes listed in brief
 20. **The Iron Front.** The Ashfall Dominion invades, sensing weakness. Deployment to Ironhold beside Captain Brannoc.
 21. **The Oath of Steel.** Brannoc trains Bas and Rook. Bond with Brannoc (short, intense).
 22. **Ironsong.** **Boss 8: General Varka Ironsong.** Brannoc invokes *Final Vow* to end the siege and **truly dies** on-screen, body present. At the Hall of Lanterns, his **wick crumbles to ash**. (🔒 This is the contrast clue. Cal's wick did *not* crumble.)
-23. **Juno's Thread.** Juno's grief quest. She knows where Cal hid his journal (🔒 Clue).
-24. **The Masked Door.** In Hollowmarch villages, a masked figure, **the Warden**, appears through rifts, destroying buildings. The Crown declares him a Hollow servant.
-25. **The Warden.** **Boss 9: The Warden.** He fights brilliantly, **never uses his ultimate on Rook**, and leaves through a rift that closes *behind him from inside* (🔒). He taps his blade twice before the fight. (🔒 animation tell, unannounced.)
-26. **What Lio Knew.** Lio's secret explodes: he was a Choir novice sent to watch the Palimpsest. The party fractures (choice: forgive / exile temporarily. Both paths reconnect by Ep 28).
+23. **Juno's Thread.** Juno's grief quest. She knows where Cal hid his journal (🔒 Clue A4). At Brannoc's funeral, the Choir assassin **Wraithe** attacks through a rift in space (🔒 red herring: space-tearing is now a "Choir technique").
+24. **Sable.** Ashfall's last war engine is about to crush the Lanterns when a black tear opens beneath it and it falls out of the sky (🔒 B1). A masked knight watches from the ridge, then leaves. **Sable Encounter I.** *Who the hell is that?*
+25. **What Lio Knew.** Lio's secret explodes: he was a Choir novice sent to watch the Palimpsest. The party fractures (choice: forgive / exile temporarily. Both paths reconnect by Ep 28).
+26. **The Vault Beneath Ironhold.** The Lanterns guard a sealed Crown vault. **Boss 9: the Sable Knight.** He breaks Bas's arm, takes a sealed artifact, and spares Rook at 25% HP. The Crown names him on bounty posters: *the Sable Knight*. **Sable Encounter II.**
 27. **Elodie's Price.** Aldric offers Severin a forbidden page to cure Elodie. Severin accepts.
-28. **Eclipse.** At Mirrorlake Saelith: **Boss 10: Severin Eclipsed.** Rook's grimoire awakens its **first Under-Text stage (Annotation)**. Rook writes one clause: *"Severin comes home."* Hesper appears and takes the forbidden page's corruption away *with a smile*. She *wanted* the Palimpsest to wake. **Hook — WHAT HAPPENS NEXT?** At the lighthouse, deep night: Cal's lantern **flickers once**. No one is there to see it. (The player sees it. No dialogue.)
+28. **Eclipse.** At Mirrorlake Saelith: **Boss 10: Severin Eclipsed.** Rook's grimoire awakens its **first Under-Text stage (Annotation)**. Rook writes one clause: *"Severin comes home."* Hesper appears and takes the forbidden page's corruption away *with a smile*. She *wanted* the Palimpsest to wake. **Hook — WHAT HAPPENS NEXT?** The Valcourt crypt, deep night: the Sable Knight kneels at **Aurek Valcourt's grave** and leaves a flower. (🔒 Misdirection. Players will think: *"He's Severin's brother."*)
 
 ### Beyond Arc 3 (outline only)
-- **Arc 4: "The Unanswered Door":** Elodie hears a voice in the Hollow; the Severed Isles; Aldric's coup.
-- **Arc 5: "Writ of Return":** the Warden revelation (§15); the Paragon's secret war; *Revision* stage.
-- **Arc 6: "The Last Scribe":** Brother Moss's truth; Larkspur and the protagonist's origin.
-- **Arc 7: "Unwritten":** the Hollow Sovereign; final battle; endings.
+- **Arc 4: "The Unanswered Door" (Eps 29–38):** Aldric's coup takes shape; the Severed Isles; Severin hunts the Sable Knight, believing he is Aurek. **Sable Encounters III** (Wraithe's execution, "Mind the step"), **IV** (Aldric's convoy: *"Brother…?"*), and **V** (Sable carries Elodie out of the Hollow and places her in Rook's arms).
+- **Arc 5: "Writ of Return" (Eps 39–48):** the Paragon's Gate Key; **Sable Encounter VI** (boss: *"Go home, Lantern."*); *Revision* stage; finale **The Siege of Aurelin**, where the **mask breaks and the Sable Knight is revealed as Cal** (§15.8).
+- **Arc 6: "The Other Side" (WHY):** Cal sheltered behind Rook's first world-scale clause; the tether; why he stayed dead; Aurek's true fate; the *"Reasons"* quest line; Brother Moss's truth; Larkspur.
+- **Arc 7: "Unwritten" (WHAT HE DISCOVERED):** the Paragon engineered Cal's "death"; grimoire ink is taken from erased fates; the Hollow Sovereign; final battle; endings.
 
 ### Long-range seeds (Ch. 1 → Ch. 8+)
 
@@ -636,91 +641,369 @@ Every episode follows the anime pacing template (§18). Episodes listed in brief
 |---|---|---|
 | Brother Moss, the sweeper | Ep 1 (one line) | Arc 6: the Last Scribe who erased your grimoire to hide it |
 | "Larkspur" burning (cold open) | Ep 1 | Arc 6: your true birthplace, erased by the Hollow |
-| Mirren, the fen child | Ep 4 (optional save) | Arc 3: witness to the "door-man" (Clue 5) |
-| Brass key | Ep 7 | Arc 5: opens Cal's door from *this* side |
+| Mirren, the fen child | Ep 4 (optional save) | Arc 3: witness to "the black knight who fixed our well"; reinterpreted after the reveal |
+| Aurek Valcourt's pendant | Ep 9 | Arc 3–4 red herring; Arc 6: Cal's guilt over Aurek's death |
+| Brass key | Ep 7 | Arc 5 reveal, Phase 4: *"…It never had a lock."* |
 | Elodie's silence | Ep 9 | Arc 4: she can hear the Hollow |
 | The dying acolyte's "It's you" | Ep 1 | Arc 5: the Choir has hunted the Palimpsest for 15 years |
 | The dry Sea of Marrow | Ep 3 (scenery) | Arc 7: the Hollow drank it a century ago |
 
 ---
 
-## 15. THE FAKE-DEATH CHARACTER: CALDER "CAL" WYNN
+## 15. THE MASKED SURVIVOR: CAL WYNN → "THE SABLE KNIGHT"
+
+> 🔒 **This entire section is DIRECTOR'S EYES ONLY.** Nothing here may appear in the game, its data files, codex, loading screens, achievements, trailers, or store page before the reveal episode. See §15.11 (Leak Prevention).
+
+### 15.0 OBJECTIVE
+A beloved character "dies" at the end of Arc 2. A brand-new masked antagonist/antihero appears in Arc 3 and becomes one of the most important figures in the late story. The player fights them multiple times without realizing who they are. Their identity is revealed **at the height of the largest battle in the game**, through visuals rather than exposition. The reveal answers **WHO** and immediately raises **WHY** (Arc 6) and **WHAT THEY DISCOVERED** (Arc 7).
+
+**Design goal, verbatim:** *"The game didn't trick me. The game showed me the truth, but I didn't understand what I was seeing."*
+
+---
 
 ### 15.1 Why Cal
-He's introduced early, carries the most charm, mentors the protagonist, is loved by Juno and Dagrun, and his magic (Threshold) gives a **mechanically honest** explanation for survival that the game teaches in Episode 3.
+He is introduced early, mentors the protagonist, carries the most charm in the squad, and is loved by Juno and Dagrun. His magic (Threshold) gives a **mechanically honest** explanation for his survival that the game teaches in Episode 3, long before it matters.
 
-### 15.2 🔒 The truth (DIRECTOR'S EYES ONLY)
-The Hollow Bloom could not be destroyed, only *moved*. Cal opened a door to the Hollow, pushed the Bloom through, and, because **a door can only be closed from the other side**, he stepped through to close it. He's been **holding it shut from inside** ever since. The **Hollow Sovereign** grafted Hollow armor and a mask onto him, making him **the Warden**, a jailer for both sides of the gate. Cal's will survives under the mask:
-- The Warden's "attacks" on Hollowmarch villages were Cal **sealing tears** moments before Hollow beasts emerged. The destruction was collateral from closing doors.
-- He pulls every lethal blow against Rook and his old squad.
-- His lantern went dark because his mana **can't find its way home** from another realm, exactly as Dagrun said. His wick never turned to ash.
+### 15.2 🔒 The complete truth (three layers)
 
-### 15.3 Five-phase structure
+**Layer 1: WHO (revealed in the Siege of Aurelin, Arc 5 finale).**
+The Sable Knight is Cal.
 
-**Phase 1: Death (Ep 18).** A full boss battle with emotional stakes, then a scripted sacrifice (storyboarded, §19). No body. No grimoire. White light. Silence.
+**Layer 2: HOW he survived (shown on rewatch, confirmed early in Arc 6).**
+The Hollow Bloom could not be destroyed, only moved. Cal opened a door into the Hollow, pushed the Bloom through, and, because **a Threshold door can only be closed from the other side**, he stepped through to close it. He fought his way out of the Hollow over what was months for the world and years for him. He lost his left eye, and his left arm was replaced by Hollow-glass. His saber shattered; he fused its remains into a greatsword of Hollow-glass. His Threshold magic was warped into **Severance**: he no longer opens framed doors, he **cuts** tears in space.
 
-**Phase 2: Aftermath (Eps 19–23, with persistent effects all game).** The world must *feel* the absence:
-- Cal is **removed from the party**. His Assist and Team Attacks are gone. His bond rank is frozen and shown greyed in the menu.
-- **His room** at HQ stays exactly as it was. Interactable objects get new, sad descriptions.
-- His **sword is missing** (lost in the blast). His **cloak** remains on its hook.
-- NPC barks change for ~10 hours ("Heard about your vice captain… I'm sorry").
-- **Quests change:** *Cal's Gambling Debts* (a comedy side quest) becomes *Settling Cal's Debts* (melancholy, the same NPCs). Two of his character quests become unavailable.
-- Dagrun misses training scenes for two episodes. Juno uses "you" angrily in dialogue for a while.
-- Lantern Lighthouse music changes key (minor), permanently, until the reveal.
+**Layer 3: WHY he stayed dead (Arc 6).**
+Anything that returns from the Hollow carries a **tether**. The Hollow Sovereign can see and hear through it. If Cal had come home, the Sovereign would have seen inside the Lanterns' HQ, learned the squad's secrets, and found the Palimpsest grimoire. The **mask** is forged from the broken glass of his own door, and it is the one thing that blinds the tether. So he stayed masked, nameless, and away from everyone he loved. *He wasn't hiding from his friends. He was hiding his friends from the thing behind his eyes.*
 
-**Phase 3: Strange clues (Arc 3 onward).** None of them confirm anything on its own.
+**Layer 4: WHAT he discovered (Arc 7).**
+Inside the Hollow, Cal learned two things:
+1. **The Lanterns were sent to the Hollowmarch on purpose.** Paragon Elias Thorne needed a Threshold mage inside the Hollow and arranged the mission knowing someone would have to step through. Cal's "death" was engineered by the protagonist's own side.
+2. **Grimoire ink comes from the Hollow.** Every spell written in every grimoire was taken from a fate that was erased. Larkspur, the protagonist's lost village, was erased to write the Palimpsest.
 
-**Phase 4: Investigation (optional).** A hidden **Investigation journal** page appears only after the player finds 2 clues (titled "Questions," with no mention of Cal).
+This is why the Sable Knight attacks Crown sites: he is dismantling the Paragon's Hollow machinery.
 
-**Phase 5: Revelation (Arc 5).** See §15.5.
+---
 
-### 15.4 Clue table
+### 15.3 DESIGN: The Disguise Bible
+Every department has rules to keep Cal and the Sable Knight from reading as the same person. All of them have a hidden truth that becomes visible in hindsight.
 
-| # | Clue | Where / when | Missable? | What it *seems* to mean | What it *actually* means |
-|---|---|---|---|---|---|
-| 0a | *"A door I open, I can only close from the other side."* | Ep 3, tutorial line | No (but easily forgotten) | Flavor text | He *had* to step through |
-| 0b | *"…or when their mana can't find its way home."* | Ep 3, Dagrun | No | Flavor text | Cal's lantern is dark because he's elsewhere |
-| 0c | Cal taps his blade twice | Ep 3 onward, idle animation | Unmentioned | Character quirk | The Warden does it too |
-| 0d | *"I'll hold the door. Don't wait up."* | Ep 18 | No | A heroic metaphor | Literal |
-| 1 | Lio's analysis: *"There's no residue. None."* | Ep 19 | No | He was vaporized | No body, because there was no death |
-| 2 | Cal's lantern wick intact vs. Brannoc's ash | Ep 22, Hall of Lanterns | **Yes** (examine both) | Nothing, if not compared | The death "rule" was never met |
-| 3 | Brass key grows warm near Hollowmarch | Arc 3 onward, item text changes | **Yes** (must read the item) | Odd flavor | His door anchor is reacting |
-| 4 | Cal's hidden journal: notes on "closing doors from the inside" | Ep 23, Juno's quest | Requires Juno bond 4 | He was researching his own magic | He planned for this possibility |
-| 5 | Mirren: *"The door-man fixed our well. He tapped his sword twice."* | Arc 3, Hollowmarch | **Only if Mirren was saved in Ep 4** (else: a letter in Ep 24 with less detail) | A child's story about the Warden | The Warden is Cal |
-| 6 | Warden never uses his ultimate on Rook; rifts close from inside | Ep 25 boss | Visible to attentive players | He's toying with you | He's protecting you |
-| 7 | Memory Replay side quest: scrub Lio's reconstructed memory of Ep 18 frame by frame | Arc 3 side quest | **Yes** | Confirms the blast | At frame 42, Cal *steps* forward before the light; he isn't consumed |
-| 8 | Hesper: *"You think he died? How small your idea of death is."* | Ep 28 | No | A villain taunt | Literally true |
-| 9 | Unknown voice when Rook nearly dies in Ep 28: *"Not yet, kid."* | Ep 28 cutscene | No (heavily processed audio) | Rook's inner voice | Cal, through a door |
-| 10 | Cal's sword embedded at a Mirrorlake shrine, a place it can't be | Arc 3 post-game exploration | **Yes** | Someone moved it as a memorial | He sent it through a door as a message |
-| 11 | Cal's lantern flickers once | Ep 28 ending | No (but unexplained) | Ghost story / grief | The Hollow barrier thinned |
+| Element | Cal (before) | Sable Knight (after) | Hidden truth (hindsight only) |
+|---|---|---|---|
+| **Name** | Calder "Cal" Wynn | Never speaks a name. The Crown names him **"the Sable Knight"** on bounty posters (we need *some* label for subtitles, codex, and dialogue) | — |
+| **Face** | Shown constantly | Smooth black Hollow-glass full mask with a single hairline crack-pattern motif. **The face is never shown, not even in shadow** | The crack pattern is the outline of a door frame |
+| **Silhouette** | Lanky, light coat, loose hair, saber on the hip | Heavy high-collared cloak, **asymmetric left pauldron** (hides the glass arm), greatsword across the back. Padding makes him look broader | Same height, exactly (never shown side by side) |
+| **Weapon** | Slim saber, one-handed | Two-handed Hollow-glass greatsword | The greatsword's core is the shattered saber, visible only in a post-reveal closeup |
+| **Magic** | **Threshold**: golden rectangular door frames, clean geometry, warm light | **Severance**: jagged black tears cut with the blade, ink-like edges, cold light | Severance tears still **close from the far side** (he steps through when leaving) |
+| **Fighting style** | Fast, playful, one-handed, right-side lead | Heavy, economical, two-handed, **left side guarded** | **Dodge pattern unchanged** (see Animation Clue) |
+| **Voice** | Casual, teasing, quick | Formal, clipped, few words. **Same voice actor**, processed through the mask (glass resonance, pitch-down) | Processing **thins slightly with each encounter** as the mask cracks |
+| **Personality on-screen** | Warm, jokes constantly | Cold, ruthless toward the Choir, silent toward the Lanterns | Never harms a civilian; never lands a killing blow on a Lantern |
 
-### 15.5 Revelation (Arc 5): "The Game Told You the Truth"
-The Warden returns during the Arc 5 siege. Mid-fight, the mask cracks. Then a **Memory-montage cutscene** replays clues 0a → 0d → 2 → 6 → 7, re-cut with the truth. Every line plays *exactly as originally recorded*, but recontextualized. **No new information is added in the montage.** That's the fairness test.
+> **Director's Note: same voice actor, not a different one.** A different actor would make the disguise easier, but the reveal would lose its strongest moment: the instant the mask breaks, the player hears *the voice they remember*, unprocessed, for the first time in 20+ hours. Recognition has to come from the player's own memory.
 
-**Controlled branch (Fork & Fold):**
-| Investigation score | Outcome | Folds back at |
+---
+
+### 15.4 DESIGN: The two clue tracks (and why they must stay apart)
+
+The danger with this story is that the player connects "Cal might be alive" with "who is the masked knight?" too early. So the clues run on **two separate tracks** that only meet in the reveal.
+
+| Track | Question it raises | When | Purpose |
+|---|---|---|---|
+| **Track A: "Did Cal really die?"** | Very faint doubt | Arc 3, early (Eps 19–23), **before** the Sable Knight appears | Lets players grieve while leaving a fair trail |
+| **Track B: "Who is the Sable Knight?"** | Loud, obvious mystery | Arc 3 Ep 24 → Arc 5 | Pointed *at red herrings* (§15.6) |
+| **Bridge clues** | Link Cal ↔ Sable | Rare; each points back to something **≥ 10 hours earlier** | The only clues that connect the two. Recognizable in hindsight |
+
+**Clue rules (every writer, animator, and composer follows these):**
+1. **Every clue ships with an alibi**: an in-world reason the player can dismiss it.
+2. **No clue confirms on its own.** Only the combination does, and only in hindsight.
+3. **Bridge clues are never placed within 10 hours of their source**, so the player must genuinely remember.
+4. **Nothing is ever pointed at.** No camera push-ins, sound stingers, or UI highlights on a clue before the reveal.
+5. **After the reveal, the game never explains the clues either.** The Lore Archive lets players rediscover them (§15.9).
+
+---
+
+### 15.5 CONTENT: The Clue Ledger
+
+**Seeds (Arcs 1–2, while Cal is alive). Planted as character texture, never as plot.**
+
+| Seed | Where | How it appears |
 |---|---|---|
-| **≥ 6 clues + Cal bond ≥ 6 before Ep 18** | "Say His Name": Rook calls him by name with the brass key in hand; Cal breaks free mid-fight; returns with Threshold intact | Arc 5 end |
-| **3–5 clues** | Warden defeated and freed; Cal returns, loses an eye and the use of one arm (permanent; reduced kit) | Arc 5 end |
-| **0–2 clues** | Freed, but his memories are scorched; he doesn't recognize the squad. A short quest chain rebuilds the bond | Arc 5 end |
+| **S1. "A door I open, I can only close from the other side."** | Ep 3, Cal's Threshold tutorial | A gameplay rule, stated once |
+| **S2. "Mind the step."** | Eps 3–17: Cal's incidental bark whenever he opens a door for someone, in and out of combat (~8 times) | A throwaway catchphrase, a pun on his doors |
+| **S3. The dodge pattern: left, left, backstep** | Ep 3: Cal is the **sparring partner** in the dodge tutorial; his sparring AI always evades in this pattern | Pure animation; never mentioned |
+| **S4. Head tilt** | All Cal dialogue: he tilts his head right when listening | Pure animation |
+| **S5. The Lighthouse Tune**: four notes Cal whistles while cooking | Eps 3, 7, 16 (HQ ambient scenes) | Diegetic whistling; never named |
+| **S6. Juno's knots**: red cords with the unique **"Quill knot"** | Ep 5: Juno ties one on every Lantern's wrist, including Cal's. Ep 9: the Lowmarket stall where Juno **sells** the same cords to the public | Squad bonding + a side hustle |
+| **S7. The brass key** that "opens the snack cupboard" | Ep 7 bond event. (The cupboard has no lock. Cal makes the joke; Rook never tries it) | A gag gift |
+| **S8. "I'll hold the door. Don't wait up."** | Ep 18, final words | A heroic metaphor |
 
-All three paths reconnect for Arc 6, with persistent differences (Cal's kit, dialogue, an Arc 7 team attack only available on Path 1).
+**Track A: "Did Cal really die?" (Arc 3, early). Faint doubt, always with an alibi.**
 
-> **Director's Note: why Brannoc must truly die.** If no one ever really dies, players assume every death is fake. Brannoc's real, permanent death in Ep 22, with a body, a funeral, and a crumbled wick, is what makes Cal's absence *believable*. It also creates the contrast clue for observant players.
+| # | Clue | Missable? | Alibi (why players dismiss it) |
+|---|---|---|---|
+| A1 | Lio: *"There's no residue. None."* | No | "The Bloom erased him completely." The scene plays it as horror |
+| A2 | In the Hall of Lanterns, Cal's wick is dark but **whole**. Brannoc's (Ep 22) **crumbles to ash** | **Yes** (examine both) | The Hall Keeper: *"Those lost beyond the border sometimes keep their wicks. The Hollow takes the ash too."* |
+| A3 | The brass key is warm when you're near the Hollowmarch (item text changes) | **Yes** (read the item) | The Hollowmarch makes all metal warm (the item text for several other items changes there too) |
+| A4 | Cal's hidden journal: notes on "what happens to a door-maker who stays on the wrong side" | Juno's quest (bond 4) | Read as *why he knew he'd die* |
+| A5 | Lio's memory reconstruction of Ep 18 **burns out** right at the light | Side quest | "The light destroyed the memory itself." (Players can't scrub the truth pre-reveal. Fairness is preserved by the *original* scene, §15.9) |
 
-### 15.6 Story flags (persistent, saved)
+**Track B red herrings (Arc 3 Ep 24 → Arc 5). Make the player confidently wrong.**
+See §15.6.
+
+**Bridge clues (Cal ↔ Sable). The only clues that connect them.**
+
+| # | Type | Clue | First seen | Source (≥10h earlier) | Alibi |
+|---|---|---|---|---|---|
+| B1 | **Combat** | Sable cuts a tear *beneath* an enemy; the enemy drops out of the sky. Cal's old *Drop* did the same with a door frame | Encounter I (Ep 24) | Cal's Assist, Arcs 1–2 | Visually different (black jagged tear vs. golden frame); the Choir's Wraithe does space-drops too (§15.6) |
+| B2 | **Animation** | Sable dodges **left, left, backstep** | Encounter II boss fight (Ep 26) | S3 (Ep 3 tutorial, ~25h earlier) | It's just an animation; nobody comments |
+| B3 | **Animation** | Sable tilts his head right when Rook speaks to him | Encounters II–V | S4 | Same |
+| B4 | **Dialogue** | Sable pulls a civilian through a tear and murmurs **"Mind the step."** Tamsin: *"…That's a weird thing to say."* Nobody follows up | Encounter III (Arc 4) | S2 (~30h earlier) | It's a common phrase; the scene immediately escalates |
+| B5 | **Music** | Sable's theme contains the **Lighthouse Tune inverted and slowed**, buried in the low strings for at most 2 bars | Every encounter | S5 | Not consciously audible. Composer brief: *felt, not heard* |
+| B6 | **Item** | A frayed red cord with a Quill knot on Sable's wrist, visible for ~1 second under his gauntlet in one shot, in shadow | Encounter V (Arc 4 finale) | S6 | Juno **sells** those cords in the Lowmarket. Anyone could own one. Juno isn't in that scene |
+| B7 | **Voice** | The mask's voice processing is slightly lighter each encounter | Encounters I → VI | — | Unnoticeable unless compared back-to-back |
+| B8 | **Behavior** | Sable never lands a killing blow on a Lantern and never harms a civilian. He **does** brutally kill Choir agents and badly injures Bas | All | — | He's ruthless and unpredictable. The injury to Bas makes "he's secretly a friend" feel *wrong* |
+
+> **Director's Note: tuning the mystery.** We test this with outsiders. Targets: **10–20%** of playtesters suspect Cal before the reveal; **80%+** recall at least one clue when they rewatch. If more than 25% guess, remove a bridge clue (B4 first). If fewer than 50% recall a clue on rewatch, strengthen the seeds, never the bridge clues.
+
+---
+
+### 15.6 CONTENT: Misdirection (so the player is confidently wrong)
+
+A good mystery needs a wrong answer that feels right.
+
+**Red herring 1: Aurek Valcourt (the primary wrong answer).**
+- Severin's older brother, presumed dead **six years ago** in the Hollowmarch. Body never found. First mentioned in Ep 9; Severin keeps his broken pendant.
+- The Sable Knight shows unusual interest in the Valcourts: he attacks Aldric's convoy (Encounter IV) and is seen **at Aurek's grave in the Valcourt crypt** (Arc 3 ending hook).
+- Severin becomes convinced Sable is Aurek: *"Brother…?"* Sable says nothing.
+- 🔒 Truth: Aurek was Cal's expedition partner six years ago and died on Cal's watch. Cal visits the grave out of guilt. This is revealed in Arc 6, and it recontextualizes the grave scene a second time.
+
+**Red herring 2: Wraithe, the Choir's rift-walker.**
+- A Pale Choir assassin who also tears space. Introduced Arc 3 (Ep 23) *before* the Sable Knight, so "space-tearing" reads as a **Hollow/Choir technique**, not Cal's.
+- Sable kills Wraithe brutally in Encounter III. Players theorize Sable is a Choir defector from the same school.
+
+**Red herring 3: the Rumor Board.**
+- The protagonist's journal has a **"Who is the Sable Knight?"** page that collects NPC rumors: *Aurek Valcourt*, *a Choir defector*, *a Hollow demon wearing a man's armor*, *an Ashfall war hero*, *the Paragon's secret executioner*.
+- **Cal's name never appears.** No NPC ever suggests it; in-world, he is dead and mourned.
+
+---
+
+### 15.7 PLAYER EXPERIENCE: Encounter timeline
+
+Each encounter raises a new question: *"Who the hell is this person?"*
+
+| # | When | What happens | Question it raises |
+|---|---|---|---|
+| — | **Ep 18** | Cal "dies" (§19.3) | — |
+| — | **Eps 19–23** | Grief arc; Track A clues; Wraithe introduced | "Is there any chance…?" (most players: no) |
+| **I** | **Ep 24 "Sable"** | During the Ashfall war, an Ashfall siege engine is about to crush the Lanterns. A black tear opens and the engine falls out of the sky (B1). A masked figure stands on the ridge, then leaves | "Who is that? Whose side is he on?" |
+| **II** | **Ep 26 "The Vault Beneath Ironhold"** | **Boss fight (B9).** Sable raids a Crown vault the Lanterns are guarding. He takes a sealed artifact. He **breaks Bas's arm** in a cutscene. He spares Rook at 25% HP and leaves | "Why does he want Crown secrets? Why didn't he finish me?" |
+| — | **Ep 28 hook** | Sable stands at **Aurek Valcourt's grave** and leaves a flower | "Is he Severin's brother?!" |
+| **III** | **Arc 4, Ep ~31** | A three-way fight: Lanterns vs. Wraithe vs. Sable. Sable executes Wraithe. He pulls a child through a tear: "Mind the step." (B4) | "He saves children *and* executes people?" |
+| **IV** | **Arc 4, Ep ~34** | Sable attacks Chancellor Aldric's convoy. Severin defends his father: *"Brother…?"* Sable vanishes | "Severin thinks it's Aurek. Is he right?" |
+| **V** | **Arc 4 finale, Ep ~38** | The Hollow takes Elodie. Sable walks out of a tear carrying her and places her in Rook's arms without a word. Cord visible (B6) | "Ally? Enemy? Why give her to *me*?" |
+| **VI** | **Arc 5, Ep ~43** | **Boss fight.** Sable stops the Lanterns from escorting the Paragon's **Gate Key** and destroys half of it. *"Go home, Lantern."* | "What is he trying to stop?" |
+| **REVEAL** | **Arc 5 finale, Eps 47–48 "The Siege of Aurelin"** | §15.8 | — |
+
+That's **six encounters across ~25 hours**, including **three full boss fights against him**. By the reveal the player knows his moveset intimately, which is exactly why fighting beside him lands so hard.
+
+---
+
+### 15.8 THE REVEAL: The Siege of Aurelin (Arc 5 finale)
+
+**Setup:** Hesper Voss opens the Hollow Gate above the capital using the Gate Key. At the same moment, Aldric Valcourt launches his coup. Hollow beasts, Choir cantors, rebel Lances, and Crown knights all fight in the streets. The sky turns white-black. Every squad is deployed. This is the largest battle in the game so far.
+
+> **Director's Note: "chaos is authored, not simulated."** The battle *looks* like thousands of combatants but runs within normal budgets: max 8 active enemies near the player; armies in the distance are animated impostors and baked vignettes; destruction is pre-authored (pooled debris, swapped building states); the sky and lighting change via timeline. The player is always in a **readable pocket of chaos**, moving between pockets. (Full budgets in §21.7.)
+
+#### PHASE 1: CHAOS (gameplay, ~6–8 min)
+- **Objective:** hold the Lowmarket Bridge while civilians evacuate. A **Defense meter** shows the bridge falling.
+- Bridge sections collapse behind you. **Bas goes down** (arm still in a brace from Encounter II); **Juno is pinned** under rubble. Small chaos choice: reach Juno or cover Bas first (affects a line in the aftermath, nothing else).
+- A **Hollow Colossus** descends through the Gate. The music is the full battle theme.
+- **Fairness rule:** the Defense meter falls no matter what, but the player's actions visibly *slow* it. The arrival triggers at a threshold or a time limit, so it never feels like the game stole a win.
+
+**The arrival:** the sky tears open, a black jagged cut across the clouds. **Everything stops.** Enemies and allies freeze in held poses (anime "held frame" beat, in-engine). The Sable Knight drops onto the bridge.
+- Allies' barks: Tamsin: *"Is he with them?!"* Juno: *"Kill him if he moves!"*
+- The music cuts to Sable's theme (B5 buried in it, as always).
+
+#### PHASE 2: THE SABLE KNIGHT FIGHTS (gameplay, ~4 min)
+- The player **keeps control**. Sable rampages through the battlefield along an authored path, an AI "storm" that wipes out enemy waves. The player fights in his wake.
+- His combat ability is absurdly high: enemies fall in single cuts, tears open and close everywhere.
+- **T2 cinematic (6s):** Sable cuts a tear beneath the **Hollow Colossus**, and the colossus falls *out of the sky* onto the Choir's lines. This is the *Drop* technique (B1) at its biggest scale.
+- Rook (in-engine bark, not a cutscene): ***"That technique…"*** The battle continues; no one follows up.
+- **Turn:** Sable heads for the **Gate Key's anchor**, built into the Grand Archive where civilians are sheltering. Destroying it would close the Gate *and* collapse the Archive on them. Rook steps into his path.
+
+#### PHASE 3: MASK DAMAGE (boss fight)
+- **Rook vs. the Sable Knight, the third full duel.** The player knows his patterns now; he escalates with moves never seen before (his full kit, including two-handed Severance combos).
+- **Win condition:** break his Posture, then land an **Inscription finisher** (*Underline → heavy*). The player earns this hit; it isn't scripted.
+- **Cutscene (T3):** the impact frame cracks the mask down the center. It does **not** break. The camera holds on the cracked mask. Blood runs from beneath it. Sable lifts his glass hand and touches the blood. **Silence**, wind only.
+
+#### PHASE 4: MEMORY TRIGGER (interactive dialogue)
+A timed anime-style dialogue choice (Rook breathing hard, the battle muffled around them). **Available lines depend on what the player experienced:**
+
+| Option | Requires | Sable's response |
+|---|---|---|
+| Hold up the brass key: *"You still owe me a snack cupboard."* | Saw the Ep 7 bond event (S7) | ***"…It never had a lock."*** |
+| *"Mind the step."* | Heard B4 (Encounter III) **and** Cal's bark (S2) | ***"…Tell Juno the knot held."*** |
+| *"Whoever you are, Dagrun still leaves a lantern lit."* | Visited the Hall of Lanterns after Ep 18 | ***"…He always did leave the light on."*** |
+| *"WHO ARE YOU?!"* (default) | — | Rook, shaking, pulls out the brass key anyway. Sable: ***"…It never had a lock."*** |
+
+Each response is something **only Cal could know**. (The cupboard has no lock; only Cal knew that. Juno ties her knots in a way only her squadmates' cords have. Dagrun's lantern habit was a private joke.)
+- **His composure breaks for the first time:** a half-step back, the voice processing slips for a single syllable.
+- **Rook freezes.** No confirmation. Before either can speak, a Choir cantor's spell hits the bridge and the battle swallows the moment.
+
+#### PHASE 5: THE GRAND REVEAL
+**Gameplay:** Hesper's Colossus targets both of them. Sable and Rook turn on each other one last time, both believing the other is the obstacle. They unleash their strongest attacks simultaneously: a **Clash** sequence (alternating timed presses, no button mashing) between Rook's ultimate and Sable's.
+
+**Storyboard: "The Face in the Smoke" (24 fps)**
+
+| CUT | PICTURE | ACTION / STAGE | DIALOGUE / AUDIO | TIME / FRAMES |
+|---|---|---|---|---|
+| 001 | Two-shot, profile: ink and black light meet between Rook and Sable | Push in, speed lines | Both ultimates' roars rising | 1.0s / 24 |
+| 002 | **Impact frame**: white-on-black silhouettes, both blades | 3-frame flash | One enormous crack | 0.12s / 3 |
+| 003 | Wide, high angle: shockwave levels the bridge district | Crane up rapidly | Roar → sudden total silence | 1.5s / 36 |
+| 004 | Black screen | — | **Silence** | 1.0s / 24 |
+| 005 | Low wide: smoke and drifting ash; the sky beginning to clear | Slow dolly forward through smoke | Wind, falling debris, distant collapse | 4.0s / 96 |
+| 006 | MS: Rook on their knees, grimoire smoking | Static | Ragged breathing | 1.5s / 36 |
+| 007 | Through smoke: a standing silhouette | Rack focus | Wind | 2.0s / 48 |
+| 008 | Insert: mask shards falling onto stone | Static; shards land one by one | Glass tinkling | 1.5s / 36 |
+| 009 | ECU: a **hand**, glass fingers, a frayed red cord with a Quill knot at the wrist | Slow tilt | Wind | 1.5s / 36 |
+| 010 | ECU: **one eye** opens (the right eye; the left is scarred shut) | Hold | Heartbeat, very faint | 1.2s / 29 |
+| 011 | ECU: wind lifts **hair** away from the face | Slow pan | Wind | 1.0s / 24 |
+| 012 | ECU: the **scar** across the left eye | Slow pan continues | — | 1.0s / 24 |
+| 013 | CU: his mouth: **the same crooked half-smile** from Arc 1 | Hold | — | 1.0s / 24 |
+| 014 | MS: **full face**. Calder Wynn. Older, scarred, unmistakable. He tilts his head right (S4) | Slow push in, held 3 seconds | **Silence. No music.** Wind and debris only | 3.0s / 72 |
+| 015 | ECU: Rook's eyes, pupils shrinking | Snap zoom | — | 0.6s / 14 |
+| 016 | CU: Cal, unprocessed voice, quiet | Static | CAL: ***"Told you not to wait up."*** | 2.5s / 60 |
+| 017 | CU: Rook's face crumpling (VOICE_PLACEHOLDER: no words, one breath) | Hold | **The Lighthouse Tune, all four notes, finally complete** (solo instrument) | 3.0s / 72 |
+
+**Rules for this sequence:**
+- No dramatic laughter. No narrator. No flashback montage. No explanation of any kind.
+- The line ties directly to his last words in Ep 18 (*"Don't wait up"*).
+- The Ep 18 death scene played the Lighthouse Tune **three of four notes** (unresolved). Cut 017 resolves it. Players feel the resolution even if they never noticed the motif.
+
+#### FINAL: CONTROL RETURNS (gameplay)
+There is no fade to black. The Colossus rises behind them, and Cal turns his back to Rook, *facing the enemy beside them.*
+- **Synchronized state:** Rook and Cal fight together. For the first time, the player can **tag-swap to Cal** and control the character they've fought for hours.
+- **New team attack unlocked on the spot:** ***Thousand-Door Verse***. Rook writes a line of ink across the sky; Cal cuts a door along every letter; the Colossus falls through all of them.
+- The final phase is the **Hollow Colossus boss**, fought with the new team attack.
+- **The UI rewrites itself:** the bestiary entry "The Sable Knight" and the party slot "???" visibly re-ink into **"Calder Wynn"** (a Palimpsest-themed animation). The identity is now permanent.
+
+**The immediate twist (before the episode ends):** with the mask shattered, the tether is open. Moments after victory, Cal staggers, presses his glass hand over his remaining eye, and says to Dagrun: ***"Lock me up. Now. Somewhere without windows."*** He offers no explanation.
+**Ending hook, WHAT HAPPENS NEXT?:** Rook, at the cell door: *"If you were alive this whole time… why didn't you come back?"* Cal, eyes bound: ***"Not here. It's listening."***
+
+---
+
+### 15.9 PHASE 6: AFTERMATH & PERMANENT CHANGE
+
+#### Character reactions (no one reacts the same way)
+| Character | Reaction | Gameplay effect |
+|---|---|---|
+| **Juno** | Fury. Slaps him in the cell. Refuses to speak to him for two episodes. Then her quest: *"The Knot Held"* | `CAL_JUNO = FURIOUS` → `MENDING` → `FAMILY`. No Cal + Juno team attack until resolved |
+| **Dagrun** | Says nothing. Opens Cal's old room and hands him his cloak. Later, a training "spar" that is really one punch | Dagrun's training scenes return |
+| **Bas** | **Distrust.** *"You broke my arm, Cal."* The injury from Encounter II is real and recent | Bas refuses to be in a party with Cal until his quest *"Load-Bearing"* |
+| **Tamsin** | Openly emotional; writes a terrible song about it | Comic relief that also heals the squad |
+| **Lio** | Suspicious, and correct to be: he senses the Hollow watching through Cal | Lio's research quest for a way to blind the tether |
+| **Severin** | Hollow anger. His hope that Sable was Aurek dies in the same moment Rook's hope comes true. *"You let me believe."* | The most complex reaction; drives an Arc 6 rival scene |
+| **The Crown / Crimson Bell** | Cal is a wanted criminal (the Sable Knight's attacks). The Lanterns are harboring a fugitive | Squad Rep −; Crimson Bell pressure; political quests |
+| **Paragon Elias** | Calm, unreadable. Asks to "debrief" Cal privately | 🔒 Sinister in hindsight (Layer 4) |
+| **Rook** | *"Why didn't you come back?"* | The question that drives Arc 6 |
+
+#### Why he can't just explain (the reason the mystery survives the reveal)
+The tether means **anything Cal says, the Sovereign hears**. That is why the battle reveals WHO but not WHY. Arc 6 opens with the squad's first task: build a place where Cal can speak safely. Rook writes their first world-scale Inscription clause, ***"Here, no one listens,"*** over Cal's cell, using a page Brother Moss restores. Only then does Cal begin to explain (Layer 3). Layer 4 is withheld until Arc 7 because Cal himself doesn't trust what the Crown will do with it.
+
+#### Permanent gameplay changes after the reveal
+| Requirement | Implementation |
+|---|---|
+| **Playable** | Cal joins the tag-swap roster (Rook, Severin, Cal). **His kit reuses the Sable Knight boss abilities** (§15.10), so most of the work was already paid for |
+| **New combat abilities** | **Sable Threshold** kit: Severance cuts + restored Threshold doors (regained in Arc 6 as a bond reward) |
+| **New combo tree** | Two-handed greatsword ComboGraph with "tear-cancel" edges (any hit can cancel into a short tear-step) |
+| **New party interactions** | ~30 new banter skits; pair flags with every party member |
+| **New bond quests** | Cal's bond resumes from his pre-death rank **minus 3** ("You don't know me anymore"); a new quest chain *"The Other Side"* |
+| **New story quests** | Arc 6: *"Reasons"*: revisit each Sable attack site with Cal and learn why it happened (the Ironhold vault held a tether relay; Wraithe was the Sovereign's eyes; the convoy carried Gate Key parts) |
+| **Unexplained events gain context** | Each Sable encounter gets a short "other side" scene from Cal's perspective, unlocked in the Archive as you complete *"Reasons"* |
+| **Earlier dialogue reinterpreted** | ~40 lines flagged **"Echo"**: revisiting key NPCs and places plays an alternate reading (e.g., the Hall Keeper's wick line, Mirren's Arc 3 story). Old journal entries gain handwritten **annotations** in Rook's hand |
+| **New optional scenes** | "Where It Happened": return to the Hollowmarch plateau with Cal. "The Grave": Cal and Severin at Aurek's grave |
+| **Death scene replayable** | Lore Archive → **Theatre** (§15.10) |
+| **Revisit locations** | Hollowmarch plateau, Ironhold vault, Aurek's grave, the lighthouse's lantern room: each gains new interactions and dialogue with Cal present |
+
+#### What the player finds when they rewatch the Ep 18 death scene
+The original scene (§19.3) was always honest:
+- Cut 006: *"Keep the key."* (He needs an anchor on this side.)
+- Cut 010: he **walks toward** the door, deliberately; he is not consumed.
+- Cut 013: the door slams **toward the camera**, which means it was pushed from beyond. Frame-stepping the 2-frame impact flash shows a silhouette **standing in the doorway, a hand on the door, pushing it shut from the far side**.
+- Cut 015: the key *rings* in Rook's palm. It's resonating with an open door.
+- The Lighthouse Tune plays only three notes. It never resolved, because the story wasn't over.
+
+---
+
+### 15.10 TECHNICAL IMPLEMENTATION
+
+**Separate identities in data (critical for leak prevention):**
+- `CHR_SABLE` and `CHR_CAL` are **separate CharacterData assets**. Nothing in `CHR_SABLE` references Cal. They share no IDs, animation file names, voice bank names, or localization keys.
+- After the reveal, `IdentityService` maps `CHR_SABLE → CHR_CAL` for the codex, party UI, subtitles, and the bestiary re-ink animation.
+- `CHR_CAL_RETURNED` is a **third** asset: the playable kit. It is built from `CHR_SABLE`'s AbilityData plus Cal's restored Threshold abilities.
+
+**Reuse:** the three Sable boss fights are built from AbilityData assets. Making Cal playable means writing a **ComboGraph** that points at those same abilities, plus player-facing tuning. This is a major cost saving.
+
+**Lore Archive: Theatre mode:**
+- Replays any watched cutscene from its Timeline asset (no video files).
+- **Frame-step**, slow-motion, and free pause.
+- **"Annotated Edition"** unlocks after the player has rewatched a scene once on their own: optional margin notes in Rook's handwriting appear at clue moments. The player always gets the chance to spot clues first.
+
+**Voice processing:** an FMOD effect chain (`SNAP_MASK_VOICE`) with a parameter `MaskIntegrity` (1.0 → 0.6 across encounters) that controls pitch-shift and resonance depth. In Phase 4, one syllable plays at 0.0.
+
+**Music:** the Lighthouse Tune exists as a motif stem. Sable's theme uses an inverted, augmented version on a low string layer. The death scene uses a 3-note truncation. The reveal uses the full statement.
+
+**Story flags (persistent, saved):**
 ```
-CAL_STATE            : 0 alive | 1 "dead" | 2 warden_known | 3 warden_revealed | 4 returned
-CAL_RETURN_PATH      : 0 none | 1 name | 2 injured | 3 amnesia
-CAL_BOND_AT_DEATH    : int (snapshot)
-CLUE_00..CLUE_11     : bool
-INVESTIGATION_SCORE  : derived (count of CLUE_01..11)
-MIRREN_SAVED         : bool
-BRANNOC_DEAD         : bool (always true after Ep 22, kept for safety)
-LIO_STATUS           : 0 trusted | 1 exiled | 2 forgiven
-SEVERIN_ECLIPSED     : bool
-CORRUPTION           : int 0–100
+CAL_STATE              : 0 alive | 1 "dead" | 2 sable_active | 3 revealed | 4 sheltered | 5 rejoined
+SABLE_ENCOUNTER        : 0–6  (highest encounter completed)
+CAL_IDENTITY_REVEALED  : bool  (drives IdentityService, codex, subtitles)
+SEED_S2_HEARD_COUNT    : int   (how many "Mind the step" barks the player heard)
+SEED_S7_KEY_EVENT      : bool
+CLUE_A1..A5            : bool
+CLUE_B4_HEARD          : bool
+HALL_VISITED_POST_DEATH: bool
+PHASE4_CHOICE          : 0 default | 1 key | 2 step | 3 lantern
+CAL_BOND_AT_DEATH      : int (snapshot at Ep 18)
+CAL_JUNO / CAL_BAS / CAL_SEVERIN : relationship states
+BAS_ARM_BROKEN         : bool (Encounter II → aftermath)
+SEVERIN_BELIEVES_AUREK : bool
+THEATRE_REWATCHED_EP18 : bool (unlocks Annotated Edition)
+INVESTIGATION_SCORE    : derived (Track A + bridge clues found), never stored
+
+# Other story flags referenced elsewhere in this document
+MIRREN_SAVED           : bool (Ep 4 choice)
+BRANNOC_DEAD           : bool (always true after Ep 22; kept for safety)
+LIO_STATUS             : 0 trusted | 1 exiled | 2 forgiven
+SEVERIN_ECLIPSED       : bool
+EXAM_DUEL_WON          : bool
+CORRUPTION             : int 0–100
 ```
+
+**What the investigation score changes** (deliberately small, so the reveal is the same for everyone):
+- Which Phase 4 options appear.
+- One aftermath scene: **"I think I knew"** (score ≥ 6: Rook admits they suspected; Cal: *"Then you were braver than me."*) vs. **"I never guessed"** (score ≤ 2: *"Good. That was the point."*).
+- Starting trust in Cal's bond (+1 rank at score ≥ 6).
+- Secret grimoire page **"Second Reading"** (score ≥ 8).
+
+### 15.11 Leak prevention (the reveal must survive the real world)
+| Channel | Rule |
+|---|---|
+| Subtitles | Speaker label "???" → "Masked Knight" → "The Sable Knight". Never "Cal" before the reveal |
+| Codex / bestiary | Sable entries describe only what Rook has seen. No hidden fields containing truth |
+| Loading screens & tips | Pre-reveal pool never mentions Cal after Ep 18 except as mourned |
+| Episode titles & previews | Ep 47–48 titles: *"Lanterns in the Smoke"* / *"The Other Side of the Door"*. The next-episode preview for Ep 48 **never shows the mask breaking** |
+| Achievements | The reveal achievement is **hidden** until earned |
+| Credits | "The Sable Knight ……… ???" until the reveal; updated afterward |
+| Data files | No shared names between `CHR_SABLE` and Cal assets (dataminers read file names) |
+| Marketing | No trailer shows the Sable Knight's voice unprocessed, his left arm, or a close-up of his wrist |
+
+### 15.12 PERFORMANCE
+- The Siege of Aurelin uses the staged-chaos approach (§15.8 note): impostor armies, pre-authored destruction states, timeline-driven sky. Budget: ≤ 8 active enemies near the player, ≤ 2 bosses with full AI at once, VFX capped per zone.
+- Theatre mode reuses existing Timeline assets; it costs no extra disk beyond a scrubbing UI.
+- Voice processing is a single real-time DSP chain (negligible cost).
+
+### 15.13 NEXT STEP (for this storyline)
+Lock the Disguise Bible (§15.3) before any character art begins. The Sable Knight's silhouette must pass a **squint test** against Cal's (side by side, blurred, they must not read as the same person), and the concept artist should design Sable *without being told who he is*.
 
 ---
 
@@ -768,10 +1051,12 @@ Template: **P1** learn → **P2** strategy shift → **P3** arena changes → **
 - Final: Brannoc's *Final Vow* team attack (scripted) ends her; Brannoc dies
 - Consequence: Ashfall pushed back; Iron Wardens leaderless (Bas's arc)
 
-**B9 · The Warden** (Ep 25)
-- P1: rift blinks (Threshold disguised as Hollow) · P2: drops enemies *and you* through rifts into the air (Cal's old *Drop* move) · P3: arena fills with doors and every exit leads back · P4: holds his ultimate, charging, aimed at Rook… then **turns it on a Hollow beast emerging behind you** and leaves
-- He cannot be killed in this fight: at 25% HP he retreats (a fair "win" for the player, not a cheat loss)
-- Consequence: Crown bounty on the Warden; `CAL_STATE=2` (for the system; the player is never told)
+**B9 · The Sable Knight, Encounter II: "The Vault Beneath Ironhold"** (Ep 26)
+- P1: Severance blink-cuts; heavy two-handed greatsword strings with a guarded left side · P2: cuts tears beneath you and drops *you* from the sky (aerial recovery test) · P3: the vault corridors fill with tears, and every exit loops back into the arena · P4: hidden ability *Sever Line*, a cut that splits the arena in two and isolates one party member
+- He cannot be killed in this fight: at 25% HP he takes the artifact and leaves through a tear that closes behind him. This is a fair "win" for the player, not a cheat loss. He spares Rook; in the cutscene he **breaks Bas's arm**.
+- Weak: tears take a moment to close (punish him while one is open); Sunlance and Candle light disrupt Severance
+- 🔒 Bridge clues present but unannounced: B2 dodge pattern, B3 head tilt, B5 buried motif, B7 voice processing
+- Consequence: Crown bounty on the Sable Knight; `SABLE_ENCOUNTER=2`; `BAS_ARM_BROKEN=true` (Bas fights at reduced strength for 3 episodes and remembers it at the reveal)
 
 **B10 · Severin Eclipsed** (Ep 28, Arc 3 finale)
 - P1: corrupted Starlight, where stars become black holes · P2: summons a corrupted zodiac beast · P3: Mirrorlake shows two arenas, one per reflection, and you swap sides · P4: Severin uses a forbidden *Eclipse* clause to erase your Ultimate gauge
@@ -811,9 +1096,9 @@ Template: **P1** learn → **P2** strategy shift → **P3** arena changes → **
 Choices create **forks that fold back** into the main line within 1–2 episodes, leaving **persistent residue** (flags) that changes dialogue, available quests, items, and later outcomes. No exponential branch trees.
 
 Example, matching your Quest A/B/C:
-- If **Mirren was saved** (Ep 4) → **Quest A** "The Door-Man" (she leads you to clue 5 in person).
-- If **Mirren was lost** → **Quest B** "Letters from the Fen" (her grandmother's letter delivers a weaker version of the clue).
-- If the player found **Cal's journal** → **Quest C** "From the Other Side" unlocks (Memory Replay quest, clue 7).
+- If **Mirren was saved** (Ep 4) → **Quest A** "The Black Knight's Well" (she leads you to a Sable Knight sighting site in person).
+- If **Mirren was lost** → **Quest B** "Letters from the Fen" (her grandmother's letter describes the sighting, with less detail).
+- If the player found **Cal's journal** → **Quest C** "Burned Memory" unlocks (Lio's reconstruction of Ep 18, Clue A5).
 
 ### 18.3 Episode pacing template (24-minute anime framework)
 
@@ -855,7 +1140,7 @@ The animatic is the most important gate. If it isn't exciting in grey-box, polis
 | 002 | MS: Rook on one knee, grimoire flickering | Static, slight handheld | Ragged breathing | 1.5s / 36 |
 | 003 | CU: the Bloom's core contracting | Snap zoom | Deep heartbeat, accelerating | 0.8s / 19 |
 | 004 | OTS from Cal toward the Bloom | Slow dolly in | CAL: "Huh. That's a big one." | 2.0s / 48 |
-| 005 | CU: Cal taps his blade twice | **Hold pose**, limited animation | Two metallic taps; music cuts | 1.2s / 29 |
+| 005 | CU: Cal tilts his head, listening to the Bloom, half-smile | **Hold pose**, limited animation | The Lighthouse Tune on a solo instrument: **three of its four notes**, unresolved; then music cuts | 1.2s / 29 |
 | 006 | Two-shot: Cal and Rook | Cal places a hand on Rook's head | CAL: "Kid. Keep the key." | 2.5s / 60 |
 | 007 | ECU: Rook's eyes widening | Static | ROOK (VO_PLACEHOLDER): "Cal, what are you…" | 1.0s / 24 |
 | 008 | Low angle: Cal raises his hand; a vast door frame tears open in the air | Tilt up, Dutch angle | Reality tearing (SFX) | 1.8s / 43 |
@@ -863,12 +1148,12 @@ The animatic is the most important gate. If it isn't exciting in grey-box, polis
 | 010 | MS from behind Cal: he walks *toward* the door | Tracking shot, slow | Footsteps only | 2.0s / 48 |
 | 011 | CU: Cal, turning his head back, smiling | Held frame | CAL: "I'll hold the door. Don't wait up." | 2.5s / 60 |
 | 012 | MS: Rook lunging forward | Speed lines, smear frames | ROOK: "CAL!" | 0.6s / 14 |
-| 013 | **Impact frame**: inverted white silhouette of the door slamming | 2-frame flash | Single massive slam | 0.15s / 4 |
+| 013 | **Impact frame**: inverted white silhouette of the door slamming **toward the camera**; in one frame, a figure stands in the doorway with a hand on the door | 2-frame flash | Single massive slam | 0.15s / 4 |
 | 014 | Wide: empty plateau, white mist, nothing remains | Static, held 3 seconds | **Total silence** | 3.5s / 84 |
 | 015 | Insert: Rook's open palm, the brass key | Slow push in | A faint, distant ringing (🔒 the key resonating) | 2.0s / 48 |
 | 016 | Wide: the lighthouse at dusk; one lantern dark | Slow pull back | Ambient wind; no music | 4.0s / 96 |
 
-🔒 **Fairness check:** cuts 005, 006, 010, 011, 015, and 016 each contain truth. Cut 010 is the one the Memory Replay quest (clue 7) lets the player scrub.
+🔒 **Fairness check:** cuts 005 (unresolved tune), 006 ("keep the key"), 010 (he walks *toward* the door), 011 ("don't wait up"), 013 (the door is pushed shut from beyond; visible only frame by frame), 015 (the key resonates), and 016 (the dark lantern) each contain truth. After the reveal, the Lore Archive's Theatre mode allows frame-stepping (§15.10).
 
 ### 19.4 Ultimate template (reusable sequence structure)
 | Beat | Shot | Default length |
@@ -1070,9 +1355,9 @@ Estimates assume **1–2 people, part-time-ish**. Every phase ends with a **go/n
 | **3: Story Vertical Slice** | Episodes 1–3 playable: Tower, Exam duel (B1), Lighthouse hub, Yarn dialogue, flags, saves, first storyboarded cutscenes, title cards + next-episode preview; **fake-death setup lines planted** | 4–6 months | "Does it feel like an anime episode?" Playtest with outsiders |
 | **4: World** | Aurelin hub, Greywater Fens, Thornwick, Undercroft; NPCs, shops, zone streaming, squads, reputation | 6–9 months | Performance budget met in the largest zone |
 | **5: Full RPG** | Progression, equipment, bonds + bond events, party switching (3 chars), crafting-lite, HQ upgrades, quests, Arc 1–2 bosses, hidden lore | 9–12 months | Arc 1 + 2 complete, content pipeline proven |
-| **6: Narrative Expansion** | Arc 3+, Cal's death & clue network, Brannoc, Warden, transformations, the reveal | ongoing | — |
+| **6: Narrative Expansion** | Arc 3+, Cal's death & clue network, Brannoc, the Sable Knight encounters, transformations, the Siege of Aurelin reveal | ongoing | Mystery playtest targets met (§15.5 note) |
 
-**Honest scope note:** a three-arc release (Episodes 1–28) is already a substantial game. Consider shipping **Arcs 1–3 as "Season 1"**. It ends on the lantern flicker, which is a perfect anime season cliffhanger. Arcs 4–7 become Season 2.
+**Honest scope note:** a three-arc release (Episodes 1–28) is already a substantial game. Consider shipping **Arcs 1–3 as "Season 1"**. It ends with the Sable Knight at Aurek's grave, a perfect anime season cliffhanger that points players toward the wrong answer. Arcs 4–7 become Season 2, with the reveal as its centerpiece.
 
 ---
 
@@ -1091,17 +1376,21 @@ Estimates assume **1–2 people, part-time-ish**. Every phase ends with a **go/n
 | Random-affix loot | No | Works against pages/bonds | — | — | No | — | **Curated gear** |
 | Fake-death flag network | **Yes** (core story) | Yes | Flag system reused everywhere | Trivial | Yes | Yes | **Keep** |
 | Stepped animation | Yes (style) | Yes | All moves | **Cheaper** | Yes | Yes | **Keep; huge value per cost** |
+| Masked-survivor clue network | **Yes** (the defining story beat) | Yes | Flags, Echo lines, and Theatre mode serve other mysteries too | Trivial | Yes, if scoped to ~20 authored clues | Yes | **Keep; cap at the ledger in §15.5** |
+| Playable Cal after reveal | Yes | Yes | **Reuses the Sable boss AbilityData** | Yes | Yes | Yes | **Keep** |
+| Siege of Aurelin "massive battle" | Yes | Yes | Staged-chaos tools reused for later wars | Only if staged | Yes, if staged | Yes | **Keep; authored chaos, never simulated armies** |
+| Theatre mode (frame-step replay) | Yes | Yes (rewatch payoff) | All cutscenes | Reuses Timelines | Yes | Yes | **Keep** |
 | Full voice acting | Not yet | Yes later | — | — | Not for prototype | Yes | **Placeholders (`VOICE_PLACEHOLDER`)** |
 
 ---
 
 ## NEXT STEP
 
-**Your approval of this foundation.** Specifically, please confirm or redirect:
+**Your approval of this foundation.** The foundation questions from v0.1 are still open:
 
 1. **Engine:** Unity 6 + URP + C#? (Or do you have Unreal/C++ experience that changes this?)
 2. **Target platform for the prototype:** PC (Windows) first?
-3. **Cast & story:** Cal as the fake-death character, Brannoc's real death, and the Palimpsest protagonist. Anything to change?
-4. **Scope calls:** 4 player affinities at launch, AI companions first, zones rather than seamless open world, "Season 1" = Arcs 1–3.
+3. **Cast & story:** Cal as the masked survivor (the Sable Knight), Brannoc's real death, Aurek Valcourt as the red herring, and the Palimpsest protagonist. Anything to change?
+4. **Scope calls:** 4 player affinities at launch, AI companions first (tag-swap for Rook, Severin, and Cal later), zones rather than a seamless open world, "Season 1" = Arcs 1–3.
 
-Once approved, the first implementation task is **Phase 1, Step 1: project setup + input + the AbilityData / AbilityRunner core**, with complete files, exact folder locations, and setup steps in the Unity editor.
+Once approved, the first implementation task is **Phase 1, Step 1: project setup + input + the AbilityData / AbilityRunner core**, with complete files, exact folder locations, and setup steps in the Unity editor. The masked-survivor work begins in Phase 3, when the Ep 3 seeds (S1–S5) are planted in the story vertical slice.
