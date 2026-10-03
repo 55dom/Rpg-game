@@ -1,5 +1,7 @@
 # UNWRITTEN — Knights of the Last Lantern
-### Game Design Document · Foundation Draft v0.8 (awaiting approval)
+### Game Design Document · Foundation Draft v0.9 (awaiting approval)
+
+> **v0.9 changes:** The Backlash flashback **ends on Cal's grin**, match-cutting to the present. The player then **chooses who to play** in the rest of the reveal fight: Rook, or Cal (which opens the optional **Cal's Path**). The archdemons **don't know Cal**: they take him because he alone can move in their frozen time and speaks their language.
 
 > **v0.8 changes:** After the Aura Sacrifice, the Demon Lord King sleeps in his coffin for **1000 years**. The archdemons treat him as a god and travel through **time and other worlds**, destroying them, to find the power to restore him. They find Cal **by accident**, and they are excited. The Siege, Arc 7, and §28 updated. Assumed (please confirm): the archdemons **wake the King early in Arc 7**.
 
@@ -936,7 +938,8 @@ Cut 017 hands control straight back. Cal rolls his shoulders, opens a **golden d
 | **1: The companion** | Cal fights with **his Arcs 1–2 kit**: golden doors, saber-like strikes (formed from door light), and his **old Assist moves, now used against you** (the *Drop* that used to juggle enemies for you, the door-swap he used to save you) | *"I've been fighting beside this guy the entire game."* |
 | **2: Evolution** | Each companion move evolves mid-fight into the Sable Knight's version: doors become black tears; the Drop becomes a sky-wide fall; the swap becomes a party-wide scramble | *"He was holding back. The whole time."* |
 | **3: The reincarnated power** | Silent casting at speed, regeneration, floating spatial blades, and the **glaive's true form**: **Godfall Demon Slash**, a backstep-cut that splits the arena (the god-like version of a Demon Soldier's basic drill). At the end of the phase he says something no one could know: *"You were lighter than my glaive, you know. That night in Larkspur."* Rook: *"…What are you?"* Cal: ***"You really want to know?"*** **(Ep 48 ends.)** | *"I never knew what he actually was."* |
-| **BACKLASH** (Ep 49) | *"Then don't just listen."* Cal opens a golden door into his own memory; the battlefield freezes mid-collapse. The player **plays Cal's past**: a 1★ Demon Soldier, the monthly Goddess Trial, the Saint's *Sacrifice*, *"For the Demon King,"* waking human in burning Larkspur, rejection, Dagrun, the mask (30–60 min, 8 chapters; **`docs/BACKLASH.md`**). **Return (Ep 50):** the frozen debris finishes falling. *"So. That's how I died."* *(smile grows)* *"…The first time."* *(the smirk)* *"Don't mistake that for a confession. It was an introduction."* | *"I WAS Cal."* Then: *"I was playing the villain before I even knew he was the villain."* |
+| **BACKLASH** (Ep 49) | *"Then don't just listen."* Cal opens a golden door into his own memory; the battlefield freezes mid-collapse. The player **plays Cal's past**: a 1★ Demon Soldier, the monthly Goddess Trial, the Saint's *Sacrifice*, *"For the Demon King,"* the apparent death, and the void, where two archdemons stop time and carry him off. **The flashback ends on his grin** and match-cuts to present-day Cal's same grin (`docs/BACKLASH.md`). *"So. That's how I died."* *(smile grows)* *"…The first time."* *(the smirk)* *"Don't mistake that for a confession. It was an introduction."* | *"I WAS Cal."* Then: *"I was playing the villain before I even knew he was the villain."* |
+| **PERSPECTIVE CHOICE** (Ep 50) | ***Whose story?*** The player chooses who to play for Phases 4–6. **Rook:** as below. **Cal:** play him against Rook and the Lanterns (AI): evade and judge in Phase 4, **move the party like pieces** in Phase 5, lose to the Lantern Chain in Phase 6. Then **Cal's Path**: the rest of his story (through the void, the Astral Path, Larkspur, Liraen, the mask) and a present-day scene after he steps through his door. Rook players unlock Cal's Path in the Lore Archive in Arc 6, so nothing is missed | Same story, different eyes |
 | **4: Not serious** | He sits on the golden door frame he opened at the end of the flashback, swinging one leg, and **grades** the player (*"Your move."*). He only attacks when the player does something *interesting* (reactions, perfect dodges, team attacks). Boring play gets nothing but commentary. An **"Interest" gauge** replaces his HP bar for this phase | Unsettling. Playful. The most dangerous moments are quiet |
 | **5: The board** | He manipulates the battlefield itself: the camera rises to a **high-angle "board" view** (his point of view), districts rotate through doors, and party members are **split across the city**, each fighting alone against demon squads while he moves them like pieces | Helplessness: *"pieces on a board"* made literal |
 | **6: Bonds** | The party fights its way back together. Each reunited ally restores a **Link**; each Link enables a team attack. With all Links restored, the party performs the **Lantern Chain** (every Lantern's team attack in sequence) | The protagonist's strength is people, not power |
@@ -1533,11 +1536,13 @@ Then the player returns to the frozen battlefield and Cal's smirk. It should mak
 | 2 | The Monthly Trial | #1 → #2 | Five condensed Trials; Observe; the order he ignores |
 | 3 | The Question | #2 | Forbidden ruins; the King's glance (first ★, through the King's eye) |
 | 4 | Sacrifice | #2 | The Saint dies and is reborn; *"…what exactly is death?"* |
-| 5 | The Final Battle | #2 | *"For the Demon King"*, but nothing happens; sent back at 0★; cut down; **The Void**: time stops, two figures in black take him, and he's smiling |
-| 6 | The Other World | #3 | Heartbeat; human; burning Larkspur; an infant with no star |
-| 7 | The Human | #3 | Rejection; Ascended Demon Slash; Dagrun: *"Nobody's written your story. Good."* |
-| 8 | The Mask | #3 → #4 | Ep 18 from his side; Godfall Demon Slash; the mask |
-| R | Return | #4 | *"So. That's how I died. …The first time."* *"It was an introduction."* |
+| 5 | The Final Battle | #2 | *"For the Demon King"*, but nothing happens; sent back at 0★; cut down; **The Void**: time stops, two strangers in black find the only thing that can move, and it answers them in their language. **Ends on his grin** |
+| C1 | *Cal's Path:* Through the Void | #2 → #3 | The laugh; the woman looks back; time resumes; the Astral Path (optional) |
+| 6 | *Cal's Path:* The Other World | #3 | Heartbeat; human; burning Larkspur; an infant with no star |
+| 7 | *Cal's Path:* The Human | #3 | Rejection; Ascended Demon Slash; Dagrun: *"Nobody's written your story. Good."* |
+| 8 | *Cal's Path:* The Mask | #3 → #4 | Ep 18 from his side; Godfall Demon Slash; the mask |
+| R | Return (all players, after Ch 5) | #4 | Match cut on the grin. *"So. That's how I died. …The first time."* *"It was an introduction."* → **Perspective Choice** |
+| C3 | *Cal's Path:* After the Door (present) | #4 | The coffin; the archdemons waiting; *"Morning's coming early, Your Majesty."* |
 
 ### 26.2 DESIGN: The Demon Continent (a functioning society)
 The Demon Continent is the only known civilization of its world. It's isolated, ancient, and built on one chain of value:
@@ -1662,7 +1667,7 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 4. **Within minutes**, he performs the **Aura Sacrifice**: he tears his aura out of himself and pours it into his two trusted Commanders. **Ghorran and Vaelith are reborn as intelligent archdemons**, a butler and a maid, **5★**.
 5. Emptied, the King lies down in a black **coffin** behind his throne and enters a **1000-year slumber**.
 6. The archdemons, who now treat their King as a **god** and would do anything to have him back, use their new abilities to travel **through time and other worlds**, searching for the power to restore him and **destroying worlds and planets** as they go. (Their black suits come from one of those worlds.)
-7. On that road, they arrive **by accident** at the moment of Cal's "death": the black circle, the stopped time. They recognize the soldier whose star passed through their King's palm and are **excited**: luck, for them, too. They take Cal down the Astral Path, past the wreckage of other worlds. Cal is smiling.
+7. On that road, they arrive **by accident** at the moment of Cal's "death": the black circle, the stopped time. **They don't know who he is.** They walk past him. But he is **the only thing in their frozen time that can move** (a 0★ being is no longer held by it), and he **answers them in their own language**, which he taught himself from the cavern glyphs in Ch 3. They are **excited**: luck, for them, too. They take him down the Astral Path, past the wreckage of other worlds. Cal is grinning.
 
 | | **The butler** | **The maid** (musician) |
 |---|---|---|
@@ -1688,11 +1693,13 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 |---|---|
 | An ancient mural: a wounded King pouring aura into two Wings, who become human-shaped servants | Backlash Ch 3 |
 | Through Cal's dying eyes: the King defeats the heroes without standing, looks at his palm, then pours his aura into the two kneeling Commanders, whose silhouettes fold into human shape | CIN-05B (cuts 004–011) |
-| A glitch, a **perfect black circle**, **time stops**, two calm figures in black suits and masks take Cal, who is awake and smiling, then laughing | CIN-05B |
+| A glitch, a **perfect black circle**, **time stops**; two calm figures in black suits and masks walk past the dead soldier; he **moves and answers them in their language**; they take him; he grins (the flashback ends) | CIN-05B |
+| *(Cal's Path)* The laugh; the woman looks back; the void closes; time resumes | CIN-05B-2 |
+| *(Cal's Path, present day)* The archdemons waiting by the coffin for Cal: *"Morning's coming early, Your Majesty."* | CIN-10 |
 | The King lies down in a black coffin; the lid closes | CIN-05B (cut 011a) |
 | After time resumes: the sealed coffin, the empty throne, the empty places beside it | CIN-05B (cut 050) |
 | A **language no one has heard**, never subtitled | CIN-05B, CIN-05C |
-| On a **dark astral path** past the **wreckage of other worlds**: **butler and maid** outfits, **horns**, **the Commanders' wings**; their excitement; the maid hums the march; Cal whistles it back; **★★★★★** through Cal's eyes; a doorway at the edge of the Continent | CIN-05C |
+| *(Cal's Path)* On a **dark astral path** past the **wreckage of other worlds**: **butler and maid** outfits, **horns**, **the Commanders' wings**; their excitement; the maid hums the march; Cal whistles it back; **★★★★★** through Cal's eyes; a doorway at the edge of the Continent | CIN-05C |
 
 ### 28.3 Design rules
 1. **Calm is the horror.** They never run, pose, shout, threaten, or fight on screen. They walk like people arriving at a meeting, even while transforming.

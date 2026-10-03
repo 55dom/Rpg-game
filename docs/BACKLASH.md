@@ -1,6 +1,8 @@
 # BACKLASH — Playable Flashback Design Package
 ### UNWRITTEN — Knights of the Last Lantern · Companion to `GDD.md` §26 · v1.1
 
+> **v1.5:** **The flashback now ends on Cal's grin**, which match-cuts to present-day Cal, and the player then **chooses who to play** in the rest of the fight: Rook or Cal. Choosing Cal opens **Cal's Path**, the rest of his story (through the void, the Astral Path, Liraen, the mask) plus a scene after he steps through his door at the Siege. The archdemons **don't know who Cal is**: they take him because he is the **only one who can move** in their frozen time and he **answers in their language**.
+>
 > **v1.4:** The King's **1000-year slumber**: emptied by the Aura Sacrifice, he lies down in his coffin. The archdemons, who now treat him as a god, travel through time and destroy other worlds searching for the power to restore him, and they **find Cal by accident**: the void is their time-travel arrival. CIN-05B and CIN-05C updated.
 >
 > **v1.3:** Corrected canon. The archdemons are **Ghorran and Vaelith themselves**: after Cal's pointless sacrifice, the King defeats the Hero Party (despite another Goddess Sacrifice), notices the anomaly, and in minutes of confusion **sacrifices his aura** to his two commanders, who are reborn as intelligent archdemons, a butler and a maid. Cal never fights the commanders. Chapter 5 and CIN-05B are rebuilt around this.
@@ -69,9 +71,10 @@ Turn Cal's past life into a **30–60 minute playable chapter** that the player 
 **Where it sits in the game:**
 - **Episode 49 "BACKLASH"**, placed *inside* the reveal fight (GDD §15.8), between Phase 3 (his reincarnated power appears) and Phase 4 (he stops taking the fight seriously).
 - **Ep 48** ends on Cal's offer: *"You really want to know?"*
-- **Ep 50** opens on the return to the present.
+- **Ep 49 ends on Cal's grin** as the archdemons carry him, and **match-cuts** to present-day Cal's same grin.
+- **Ep 50** opens in the present with the smirk, then the **Perspective Choice**: play the rest of the reveal fight as **Rook** or as **Cal**. Choosing Cal opens **Cal's Path**, the rest of his story.
 
-This is the anime "flashback episode in the middle of the fight," made playable.
+This is the anime "flashback episode in the middle of the fight," made playable, with a choice of whose eyes to finish it through.
 
 **Four Cals, one chapter:**
 
@@ -178,9 +181,18 @@ Cal's eye nearly closes. He tries to say something: three faint syllables, unint
 
 **The Void (CIN-05B, second half).** A small distortion behind him, like a visual glitch. The air bends. Light drains toward a point. A **perfect black circle** opens: not a portal, a **hole punched through reality and time**. Smoke drifts toward it, ash floats upward, and loose debris shifts. The moment it is fully open, **time stops**: fire, smoke, dust, falling stones, routing soldiers. Through the doorway, the sealed coffin and the empty throne. Only the void moves. And, if the player is watching closely, **Cal's eyes open slightly.**
 
-Two figures step out: a man and a woman in **identical black suits**, black shirts, black ties, black gloves, featureless black masks. No skin, no insignia, no horns, no wings. They look absurdly formal in a burning castle, like people arriving at a meeting, because their clothes **come from another world**. 🔒 For them, this is not minutes after their rebirth: they have spent a long time travelling through time and other worlds, searching for a way to restore their sleeping King, and this moment is a stop on that road they arrived at **by accident**. Their presence is unbearable: the screen presses in, the air feels thick, the avatar's breathing sound is gone. It is **the same pressure as the King's gaze** in Ch 3, because it *is* the King's aura. Yet they simply **walk**, stepping around a frozen ember without looking at it. They exchange a few quiet, casual words in a language nobody has ever heard (**no subtitles, no translation**). The woman looks at the man. He bends and lifts Cal onto his shoulder in one effortless motion and walks toward the void. The woman follows.
+Two figures step out: a man and a woman in **identical black suits**, black shirts, black ties, black gloves, featureless black masks. No skin, no insignia, no horns, no wings. They look absurdly formal in a burning castle, like people arriving at a meeting, because their clothes **come from another world**. 🔒 For them, this is not minutes after their rebirth: they have spent a long time travelling through time and other worlds, searching for a way to restore their sleeping King, and this moment is a stop on that road they arrived at **by accident**. **They don't know who Cal is.** Their presence is unbearable: the screen presses in, the air feels thick, the avatar's breathing sound is gone. It is **the same pressure as the King's gaze** in Ch 3, because it *is* the King's aura. Yet they simply **walk**, looking out over the frozen battlefield, stepping around a frozen ember without looking at it, talking quietly to each other in a language nobody has ever heard (**no subtitles, no translation**). They pass within a step of the dead soldier without a glance.
 
-The camera circles Cal's face. His eyes are open. He isn't afraid, unconscious, or dying. **He's smiling.** The smile becomes a grin. A breath through the nose, a chuckle, a deeper laugh, and then, for a moment, a manic laugh, echoing unnaturally through frozen time. Not a cartoon villain's laugh: the laugh of someone whose plan just worked.
+Then **a voice answers them, from the ground**: two faint words in their own language. Both stop. In a world where nothing moves, the dead soldier **lifts his head an inch off the stone**, eyes open, and speaks again. **He is the only thing in their frozen world that can move, and he understands them.** The man crouches and asks a question; Cal answers. The woman looks at the man, and there is a small, unmistakable lift in her shoulders: **excitement**. The man lifts Cal onto his shoulder in one effortless motion and walks toward the void. The woman follows.
+
+The camera circles Cal's face. His eyes are open. He isn't afraid, unconscious, or dying. **He's smiling.** The smile becomes a **grin**.
+
+**The flashback ends here, on the grin.** Match cut: the same grin, the same angle, on present-day Cal's human face (CIN-09). Everything after this point belongs to **Cal's Path**.
+
+### Cal's Path, Part 1: Through the Void (optional; chosen after the return)
+*Played only if the player chooses Cal at the Perspective Choice (or later, from the Lore Archive).*
+
+The grin breaks into a breath through the nose, a chuckle, a deeper laugh, and then, for a moment, a manic laugh, echoing unnaturally through frozen time. Not a cartoon villain's laugh: the laugh of someone who just hit a jackpot.
 
 The man steps into the void. The woman is about to follow, then stops, and slowly turns around. Her mask faces Cal, still visible in the dark just past the edge over the man's shoulder. Hold. She takes one small step back toward the void. Cal's face one last time: still smiling, then laughing, wildly. **Hard cut** to the woman. She is gone.
 
@@ -198,15 +210,15 @@ For a single cut through Cal's eyes, faint ink **★★★★★** flicker above
 
 **Cut to black** before they reach it.
 
-> **The intended order of thoughts:** 1. *Cal is almost dead.* → 2. *Cal died.* → 3. *Wait… what is that?* → 4. *Why did time stop?* → 5. *Who the hell are those people?* → 6. *Why can't anyone else move, not even the King?* → 7. *Why are they so calm?* → 8. *Why are they taking Cal?* → 9. ***Wait… Cal is smiling.*** → 10. ***He knew.*** → 11. *What the hell just happened?* And on the Astral Path: 12. *…Those wings. Were those the Commanders?*
+> **The intended order of thoughts:** 1. *Cal is almost dead.* → 2. *Cal died.* → 3. *Wait… what is that?* → 4. *Why did time stop?* → 5. *Who the hell are those people?* → 6. *Why can't anyone else move?* → 7. *Why are they so calm?* → 8. ***Wait. Who said that? Cal is talking to them?*** → 9. *Why are they taking him?* → 10. ***Cal is smiling.*** → 11. ***He knew.*** → *(match cut)* → 12. *What the hell just happened?* And, for Cal's Path players on the Astral Path: 13. *…Those wings. Were those the Commanders?*
 >
 > **What the deception targets.** The player already knows a human Cal exists in the present. The trick is not "Cal no longer exists." It is ***"this is how his demon life ended: a real, sad, pointless death."*** The void turns that into: *it wasn't a death at all; it was an exit he arranged.*
 >
-> **Did Cal "know"?** The player is meant to read his smile as *"he knew."* 🔒 The truth is subtler. Cal knew from the Ch 3 mural how a wounded King answers, and he gambled that falling to 0★ would *do something*. He did **not** know the archdemons would come: they found him **by accident** on their search through time. What he recognized in the frozen moment, faster than anyone, was what they were and what he could be to them. His laugh is the laugh of a gambler who just hit a jackpot he never knew was on the table. From the archdemons' side, it was luck too, and they are excited.
+> **Did Cal "know"?** The player is meant to read his grin as *"he knew."* 🔒 The truth is subtler. Cal knew from the Ch 3 mural how a wounded King answers, and he gambled that falling to 0★ would *do something*. He did **not** know the archdemons would come, and **they did not know him**. They were passing through by accident. What caught them was that he was **the only thing that could move in their frozen time** (a 0★ being is no longer held by it) and that he **spoke their language**, which he had taught himself from the cavern glyphs in Ch 3. He recognized them, and the opportunity, faster than they recognized him. His grin is a gambler's who just hit a jackpot he never knew was on the table. For them, it was luck too, and they are excited.
 >
 > **What Backlash shows, and what it never says.** The player half-sees the Commanders' rebirth through smoke and dying eyes, sees the King lie down in his coffin, then sees two archdemons with the Commanders' wings carry Cal past the wreckage of other worlds. **No one says it.** In-world, **only Cal** knows who they are. Backlash never translates their language, never explains why they were excited by him, never shows where the path ends, and never explains how he woke up human in Liraen. Canon and rules: GDD §28.
 
-### Chapter 6: The Other World
+### Chapter 6: The Other World (Cal's Path, Part 2)
 Black, for several seconds. Then a low, glassy tone that bends upward and stops: the **Void Note**, half-familiar from the drone of the Astral Path, and never heard again except as a rare clue. Breathing. A heartbeat. Another. Eyes open.
 - A **human** hand, thin, young. Fire everywhere: **Larkspur** burning (the cold open of Episode 1, from the other side).
 - **The player has control.** The body is light, fast, fragile. There is no armor.
@@ -220,7 +232,7 @@ He learns:
 - **Watches** a hedge-mage shout a spell; tries to copy the words; nothing happens. Opens a door in silence; it works. *Magic never needed words. Only the King knew.*
 - **Watches** grimoires, knights, nobles, markets, prices, prayers, exams.
 
-### Chapter 7: The Human
+### Chapter 7: The Human (Cal's Path, Part 2)
 Years, in short playable vignettes:
 - **The village that bars its doors.** Cal saves them from fen beasts in seconds; they lock him out anyway. Not cruelty: fear.
 - **The Crimson Bell hunt.** Six inquisitors corner the grimoire-less boy with impossible magic. The player now *dismantles* them with doors, a fallen knight's saber, and the drill, which with a saber becomes **Ascended Demon Slash**. The contrast with Chapter 1 is total. He lets them live. Experiment.
@@ -231,7 +243,7 @@ Years, in short playable vignettes:
 - **Thornwick fence, years apart.** A child practicing sword swings with a stick. No star above them, ever.
 - **The Knight Exam (Ep 2), from his seat:** *"Take the one-pager."*
 
-### Chapter 8: The Mask
+### Chapter 8: The Mask (Cal's Path, Part 2)
 - **A conversation with a young, bitter Choir novice named Hesper.** (Another **splice**: the memory jumps.)
 - **Ep 18, the Hollowmarch, from his side.** **The player walks Cal toward the door** they once watched him walk through. *"I'll hold the door. Don't wait up."* The player now knows it is the same move as the kneel.
 - **The Hollow:** a space between pages. Far off, through the white, the **four-beat drum**. Demon country, on the other side.
@@ -239,14 +251,27 @@ Years, in short playable vignettes:
 - He shapes a **mask** whose slits match a Demon Soldier faceplate. He puts it on. **A ridge in the Ashfall war (Ep 24), from his eyes:** below, Rook and the Lanterns, and a siege engine about to crush them. He opens a tear.
 - **Narration:** *"And that's where you came in. Again."*
 
-### Return to the present
-The door frame folds shut. Color floods back. The debris that hung in the air at the start of the chapter **finishes falling**. Silence. No music. Cal is standing exactly where he was. Same face. Same voice. Rook stares.
+### Return to the present (all players, straight after the grin)
+Match cut from the demon soldier's grin to present-day Cal's grin. The door frame folds shut behind him. Color floods back. The debris that hung in the air at the start of the chapter **finishes falling**. Silence. No music. Cal is standing exactly where he was. Same face. Same voice. Rook stares.
 
 > **CAL:** "So. That's how I died." *(beat; his smile grows)* "…The first time."
 >
 > **CAL:** *(head tilt, S4)* "Don't mistake that for a confession." *(the smirk)* "It was an introduction."
 
-Gameplay resumes. He opens a door frame, sits on it, swings his legs, and the reveal fight enters **Phase 4: Not Serious** (GDD §15.8).
+He opens a door frame, sits on it, and swings his legs. Then the **Perspective Choice**.
+
+### The Perspective Choice
+A split screen, half Rook's face, half Cal's grin, and one line: ***Whose story?*** No timer.
+
+| Choice | The rest of the reveal fight (Phases 4–6) | Afterwards |
+|---|---|---|
+| **Rook** | As designed (GDD §15.8): Cal grades you, splits the party across the city, and the Lanterns' bonds bring them back together | Ep 50's ending. **Cal's Path unlocks in the Lore Archive** when the Field Notes are found (Arc 6), so nothing is missed |
+| **Cal** | **Play Cal against Rook and the Lanterns** (AI-controlled). **Phase 4:** you sit on your door frame and can only evade, taunt, and comment; Rook's attacks come at you and you rate them. **Phase 5:** the camera rises to the board view and you **move the party like pieces**, dragging Lanterns through doors into demon squads. **Phase 6:** the party fights its way back together; every restored Link adds an enemy team attack, and you finally lose to the **Lantern Chain**. Power against connection, felt from the losing side | *"Was any of it real?"* from Cal's side; he steps through his door → **Cal's Path** (Parts 1–3) → back to Rook for Ep 50's ending |
+
+> **Director's note.** Both choices tell the same story; the choice is about *whose eyes*, not *what happens*. Cal's Path is ~25 minutes of extra content, never locked away: Rook players can play it from the Lore Archive. Playing as Cal costs: a player-controlled version of Cal's kit (built anyway for Arc 7, now needed earlier), an AI opponent using Rook's kit (on top of the companion AI framework), and a board-view mode for Phase 5 (a top-down camera plus a drag-to-door command layer).
+
+### Cal's Path, Part 3: After the Door (present day; CIN-10)
+At the end of the reveal fight, Cal steps through his door and closes it from the other side. The Astral Path again, the same road between worlds, walked on his own feet this time. At its end, before the sealed black coffin and the empty throne, the butler and the maid are waiting. They incline their heads to him, a fraction: not as servants, not as equals. Something stranger. He answers them in their language. The maid begins to hum the march. Cal looks at the coffin, tilts his head, and says, in Liraen's tongue: ***"Morning's coming early, Your Majesty."*** Cut to black. (Sets up Arc 7's early waking.)
 
 > After the Void scene, *"That's how I died"* is a **lie told with a smile**, and the player knows it. That irony is intended: he is telling Rook the story the world believes while standing in front of someone who has just seen the truth.
 
@@ -264,12 +289,15 @@ Gameplay resumes. He opens a door frame, sits on it, swings his legs, and the re
 | 2 | **The Monthly Trial** | #1 → #2 | 7 min | 9 min | 85 / 15 | The order fades |
 | 3 | **The Question** | #2 | 4 min | 7 min | 75 / 25 | *"What exactly are you?"* |
 | 4 | **Sacrifice** | #2 | 4 min | 5 min | 55 / 45 | *"…what exactly is death?"* |
-| 5 | **The Final Battle** | #2 | 12 min | 13 min | 50 / 50 | The Astral Path; black |
-| 6 | **The Other World** | #3 | 4 min | 6 min | 80 / 20 | The orphanage step |
-| 7 | **The Human** | #3 | 6 min | 9 min | 70 / 30 | *"Take the one-pager."* |
-| 8 | **The Mask** | #3 → #4 | 4 min | 5 min | 70 / 30 | The tear opens |
-| R | **Return** | #4 | 1 min | 1 min | 0 / 100 | The smirk → fight resumes |
-| | **Total** | | **≈ 48 min** | **≈ 65 min** | **≈ 68 / 32** | |
+| 5 | **The Final Battle** | #2 | 10 min | 11 min | 55 / 45 | **The grin (flashback ends)** |
+| C1 | **Cal's Path 1: Through the Void** | #2 → #3 | 3 min | 3 min | 0 / 100 | The Astral Path; black |
+| 6 | **The Other World** (Cal's Path 2) | #3 | 4 min | 6 min | 80 / 20 | The orphanage step |
+| 7 | **The Human** (Cal's Path 2) | #3 | 6 min | 9 min | 70 / 30 | *"Take the one-pager."* |
+| 8 | **The Mask** (Cal's Path 2) | #3 → #4 | 4 min | 5 min | 70 / 30 | The tear opens |
+| C3 | **Cal's Path 3: After the Door** (present) | #4 | 1 min | 1 min | 0 / 100 | *"Morning's coming early."* |
+| R | **Return** (all players, after Ch 5) | #4 | 1 min | 1 min | 0 / 100 | The smirk → **Perspective Choice** |
+| | **Flashback, all players (Ch 0–5 + R)** | | **≈ 32 min** | **≈ 44 min** | **≈ 75 / 25** | |
+| | **Cal's Path (C1, Ch 6–8, C3), optional** | | **≈ 18 min** | **≈ 24 min** | **≈ 65 / 35** | |
 
 **Pacing rules:**
 - No cinematic runs longer than **90 seconds** except CIN-05B (*The Void*, ~150s) and its continuation CIN-05C (*The Astral Path*, ~60s). They are the scenes allowed to break the chapter's rules, and their length is part of the effect.
@@ -303,6 +331,10 @@ Gameplay resumes. He opens a door frame, sits on it, swings his legs, and the re
 | P8.1 | 8 | **The Door, from Inside** | Walk toward Ep 18's door | Layer 7, playable |
 | P8.2 | 8 | **The Hollow** | Traverse white nothing toward a drum; final input: the drill → **Godfall Demon Slash** | Taste of god-like power |
 | P8.3 | 8 | **The Ridge** | Stand; look down at the Lanterns; one input: open the tear | Encounter I from the other side |
+| PC.0 | R | **Perspective Choice** | *Whose story?* Rook or Cal | Choose whose eyes finish the fight |
+| PC.4 | Cal | **Not Serious, as Cal** | Evade, taunt, comment; rate Rook's attacks | Feel his contempt and his curiosity |
+| PC.5 | Cal | **The Board, as Cal** | Top-down board view; drag Lanterns through doors into demon squads | *Moving the pieces*, literally |
+| PC.6 | Cal | **Bonds, as Cal** | Full power against a party whose every restored Link adds a team attack; scripted loss to the Lantern Chain | Power vs. connection, from the losing side |
 
 ---
 
@@ -317,11 +349,13 @@ Gameplay resumes. He opens a door frame, sits on it, swings his legs, and the re
 | CIN-04 | **Sacrifice** | 50s | Maelis dies and is reborn | §21 |
 | CIN-05 | **For the Demon King** | 50s | The kneel; his star leaves him; *"Return to the line."* | §21 |
 | CIN-05B | **The Void** | ~150s | The dying view (the King defeats the heroes and pours his aura into the Commanders), the apparent death, frozen time, the two figures, the smile, the laugh. (With CIN-05, mirrors Ep 18 cut for cut) | §21 |
-| CIN-05C | **The Astral Path** | ~60s | The tunnel: butler and maid revealed, horns and wings, the hummed march, the first ★★★★★ | §21 |
+| CIN-05C | **The Astral Path** (Cal's Path) | ~60s | The tunnel: butler and maid revealed, horns and wings, the hummed march, the first ★★★★★ | §21 |
 | CIN-06 | **Heartbeat** | 35s | The Void Note; waking human in Larkspur | §21 |
 | CIN-07 | **Nobody's Written Your Story** | 45s | Dagrun at the lighthouse | §21 |
 | CIN-08 | **The Mask** | 35s | Shaping and putting on the mask | §21 |
-| CIN-09 | **The First Time** | 45s | Return to present; the smirk | §21 |
+| CIN-05B-2 | **Through the Void** (Cal's Path) | ~45s | The laugh, the woman's look back, the void closing, time resuming, *"Mind the step"* | §21 |
+| CIN-09 | **The First Time** | 45s | Match cut from the grin; return to present; the smirk; the Perspective Choice | §21 |
+| CIN-10 | **After the Door** (Cal's Path) | ~40s | Present day: the Astral Path, the coffin, the archdemons waiting | §21 |
 
 ---
 
@@ -951,7 +985,7 @@ Format: **CUT · PICTURE · ACTION / STAGE · DIALOGUE / AUDIO · TIME / FRAMES 
 | 019 | OTS: he walks back down the chamber toward the white glare of the gate | Slow dolly behind | War drums swelling | 3.0s / 72 | — |
 | → | **Control: The Last Line (P5.3)** | — | — | — | — |
 
-### CIN-05B "The Void" (≈ 150s; Ch 5; the player must believe Cal died)
+### CIN-05B "The Void" (≈ 115s to the grin; Ch 5; the player must believe Cal died)
 | CUT | PICTURE | ACTION / STAGE | DIALOGUE / AUDIO | TIME / FRAMES | Mirrors Ep 18 |
 |---|---|---|---|---|---|
 | — | *(Gameplay P5.4 Failing Body ends: the player's last attempt to stand fails; control removed on the collapse)* | — | — | — | — |
@@ -979,17 +1013,26 @@ Format: **CUT · PICTURE · ACTION / STAGE · DIALOGUE / AUDIO · TIME / FRAMES 
 | 021 | ECU, framed **off-center**: Cal's eye. The lid lifts a few millimetres | Static, no push-in | — | 1.0s / 24 | — |
 | 022 | **Male figure enters.** MS, the void: a black-gloved hand, then a black suit sleeve; the MAN steps out onto the ash in one unhurried step. Black suit, shirt, tie, mask. No skin, no horns, no wings | Static | A single **footstep**: dry, close, perfectly clear | 2.5s / 60 | — |
 | 023 | **Female figure enters.** MS: the WOMAN steps out beside him, in the same suit and mask, with the same cadence | Static | Second footstep. Cloth rustle | 2.0s / 48 | — |
-| 024 | **Dark aura.** Low wide: both standing still, looking toward Cal | Vignette closes ~15% and breathes once; color drains toward black; edges squeeze | Sub-bass rises; controller pulses a heartbeat (**the same pattern as the King's Gaze in Ch 3**)… then **stops** | 3.0s / 72 | — |
+| 024 | **Dark aura.** Low wide: both standing still, looking out over the frozen battlefield | Vignette closes ~15% and breathes once; color drains toward black; edges squeeze | Sub-bass rises; controller pulses a heartbeat (**the same pattern as the King's Gaze in Ch 3**)… then **stops** | 3.0s / 72 | — |
 | 025 | Tracking from behind: they walk; the man steps **around** a frozen ember without looking at it | Slow tracking | Only their footsteps | 3.0s / 72 | — |
 | 026 | **Indecipherable conversation.** Two-shot profile, walking | Static | MAN: *[unknown language, quiet, casual]* | 2.0s / 48 | — |
 | 027 | Same | — | WOMAN: *[unknown language]* | 1.5s / 36 | — |
-| 028 | Same | They stop beside Cal | MAN: *[unknown language, short]*. **No subtitles. CC only: [Speaking an unknown language]** | 1.5s / 36 | — |
-| 029 | MS: the woman's mask turns toward the man | Slight turn; held | — | 1.5s / 36 | — |
+| 028 | Same | Still walking; they pass within a step of Cal **without a glance**. **They don't know him** | MAN: *[unknown language, short]*. **No subtitles. CC only: [Speaking an unknown language]** | 1.5s / 36 | — |
+| 028a | Ground level: Cal's face soft in the foreground; their legs walking away beyond him | Static | **From the ground**, barely audible: CAL: *[unknown language, two words]* | 1.5s / 36 | — |
+| 028b | MS: both **stop mid-step**. For the first time they move out of sync: the woman's head turns first | Static | Silence | 1.5s / 36 | — |
+| 028c | CU: Cal, **the only thing moving in the frozen world**, lifts his head an inch off the stone, eyes open | Static | CAL: *[unknown language, a short phrase]* | 2.0s / 48 | — |
+| 028d | Two-shot: the man crouches beside him, studying him | Static | MAN: *[unknown language, a question]* · CAL: *[short answer]* | 2.5s / 60 | — |
+| 029 | MS: the woman's mask turns toward the man; a small, unmistakable lift in her shoulders: **excitement** | Slight turn; held | — | 1.5s / 36 | — |
 | 030 | **Cal being picked up.** Low angle: the man lifts Cal onto his shoulder in **one smooth motion**, no anticipation, no strain | Static | Armor shifting; nothing else | 2.0s / 48 | — |
 | 031 | Wide: the man walks toward the void carrying Cal; the woman follows a step behind | Static | Two sets of footsteps | 3.0s / 72 | — |
 | 032 | **Cal's face.** Orbit CU around his face over the man's shoulder. **His eyes are open.** Calm. Not afraid | Slow orbit, 90° | — | 3.0s / 72 | — |
 | 033 | ECU: a **slight smile** | Hold | — | 1.5s / 36 | — |
 | 034 | ECU: the smile becomes a **grin** | Hold | — | 1.5s / 36 | — |
+| ⟶ | **THE FLASHBACK ENDS. MATCH CUT** to present-day Cal's grin (CIN-09) | Match cut on the grin | — | — | — |
+
+### CIN-05B-2 "Through the Void" (≈ 45s; **Cal's Path only**; continues from cut 034)
+| CUT | PICTURE | ACTION / STAGE | DIALOGUE / AUDIO | TIME / FRAMES | Mirrors Ep 18 |
+|---|---|---|---|---|---|
 | 035 | **Cal's laugh.** CU: a breath out through the nose; a small chuckle | Static | Chuckle with an **unnaturally long reverb tail** | 1.5s / 36 | — |
 | 036 | MS: a deeper laugh, shoulders shaking. **The man does not react at all** | Static | Laugh, echoing | 2.0s / 48 | — |
 | 037 | CU: a brief, unsettling **manic** laugh, then it stops | Stepped animation, held final frame | Manic laugh, cut off | 1.5s / 36 | — |
@@ -1008,9 +1051,9 @@ Format: **CUT · PICTURE · ACTION / STAGE · DIALOGUE / AUDIO · TIME / FRAMES 
 | 050 | Wide through the doorway: the **sealed coffin**, the **empty throne**, and the **empty places** where the Commanders knelt. No one is left to notice anything | Slow push in | Silence from the chamber | 3.5s / 84 | — |
 | 051 | Wide: a soldier from the rear steps into the gap in the Line | Static | SERGEANT: ***"Mind the step."*** | 2.5s / 60 | ↔ The dark lantern |
 | 052 | **CUT TO BLACK** | Hard cut | **Total silence** | 3.0s / 72 | — |
-| → | **CIN-05C "The Astral Path"** | — | — | — | — |
+| → | **CIN-05C "The Astral Path"** (Cal's Path) | — | — | — | — |
 
-### CIN-05C "The Astral Path" (≈ 60s; Ch 5; follows CIN-05B's cut to black)
+### CIN-05C "The Astral Path" (≈ 60s; Cal's Path; follows CIN-05B-2's cut to black)
 | CUT | PICTURE | ACTION / STAGE | DIALOGUE / AUDIO | TIME / FRAMES |
 |---|---|---|---|---|
 | 001 | Black | Hold | Silence | 2.0s / 48 |
@@ -1080,10 +1123,11 @@ Format: **CUT · PICTURE · ACTION / STAGE · DIALOGUE / AUDIO · TIME / FRAMES 
 | 009 | (after input) Wide: the engine falls out of the sky (Ep 24 from above) | Static | Impact | 2.0s / 48 |
 | 010 | MS: the masked figure turns away from the edge | Hold | NARR: "And that's where you came in. Again." | 3.0s / 72 |
 
-### CIN-09 "The First Time" (≈ 45s; return to present)
+### CIN-09 "The First Time" (≈ 50s; return to present; all players)
 | CUT | PICTURE | ACTION / STAGE | DIALOGUE / AUDIO | TIME / FRAMES |
 |---|---|---|---|---|
-| 001 | White | The golden frame **folds shut** toward camera | Door creak, reversed | 1.0s / 24 |
+| 000 | **MATCH CUT** from the demon soldier's grin (CIN-05B cut 034): the **same grin, same angle**, on present-day Cal's human face | Hold 12f | **Total silence** | 0.5s / 12 |
+| 001 | Wider: behind Cal, the golden frame **folds shut** | Static | Door creak, reversed | 1.0s / 24 |
 | 002 | Wide: the burning bridge district, **full color**; debris frozen mid-air | Hold 1s | **Total silence** | 1.0s / 24 |
 | 003 | Wide | The debris **finishes falling** all at once | Crashes, dry, unprocessed | 1.5s / 36 |
 | 004 | MS: Rook, exactly where they stood, staring | Static | Silence. Wind returns, faint | 2.0s / 48 |
@@ -1094,7 +1138,21 @@ Format: **CUT · PICTURE · ACTION / STAGE · DIALOGUE / AUDIO · TIME / FRAMES 
 | 009 | MCU: Cal tilts his head (S4) | Static | CAL: "Don't mistake that for a confession." | 2.5s / 60 |
 | 010 | **ECU: the smirk.** Subtle, confident, playful. Not cruel | **Held 18 frames** | CAL: "It was an introduction." | 3.0s / 72 |
 | 011 | Wide: he opens a golden door frame beside him, sits on its lower edge, swings one leg | Static | The march, once, low, quiet | 3.0s / 72 |
-| → | **Control returns. Reveal fight Phase 4: Not Serious** (GDD §15.8) | — | CAL: "Your move." | — |
+| 012 | **PERSPECTIVE CHOICE.** Split screen: Rook's face, left; Cal's grin, right | Hold until chosen; no timer | CAL: "Your move." Then silence | — |
+| → | **Rook:** reveal fight Phase 4 (GDD §15.8). **Cal:** Phases 4–6 as Cal (PC.4–PC.6), then Cal's Path | — | — | — |
+
+### CIN-10 "After the Door" (≈ 40s; present day; Cal's Path only)
+| CUT | PICTURE | ACTION / STAGE | DIALOGUE / AUDIO | TIME / FRAMES |
+|---|---|---|---|---|
+| 001 | MS: Cal steps through his golden door; it closes behind him from his side | Static | Door shutting | 2.0s / 48 |
+| 002 | Extreme wide: the Astral Path, the dark between worlds, walked on his own feet this time | Slow tracking | Realm drone; glass footsteps | 4.0s / 96 |
+| 003 | Wide: the end of the path: an empty throne, a **sealed black coffin**, and before it, the **butler and the maid**, waiting | Slow push | The drone thins | 4.0s / 96 |
+| 004 | MS: they incline their heads, a fraction. Not as servants. Not as equals | Hold | — | 2.0s / 48 |
+| 005 | CU: Cal | Static | CAL: *[unknown language, short]* | 2.0s / 48 |
+| 006 | MS: the maid begins to hum the march | Static | The four notes | 3.0s / 72 |
+| 007 | CU: Cal looks at the coffin and tilts his head (S4) | Hold | CAL: ***"Morning's coming early, Your Majesty."*** | 3.5s / 84 |
+| 008 | **CUT TO BLACK** | Hard cut | Silence | 2.0s / 48 |
+| → | **Back to Rook: Ep 50's ending** (GDD §15.8) | — | — | — |
 
 ---
 
@@ -1109,7 +1167,7 @@ Format: **CUT · PICTURE · ACTION / STAGE · DIALOGUE / AUDIO · TIME / FRAMES 
 | **Chapter checkpoints** | Autosave at each chapter start + each encounter start (E1–E13). Quitting mid-flashback resumes at the latest checkpoint *inside* the memory |
 | **Failure in memory** | Death as Ash Eleven or young Cal is a **narrated correction**: the screen flickers like a splice, Cal's NARRATION says one of several lines (*"No. That's not how it went."* / *"I didn't die there. Try again."* / *"You're making me look bad."*), and the encounter restarts. No game-over screen |
 | **Exit** | On CIN-09, `PresentSnapshot` is restored and the reveal fight continues at Phase 4. The game autosaves |
-| **Flags written** | `BACKLASH_COMPLETE`, `BACKLASH_CHAPTER` (0–8), `BACKLASH_T4_STRATEGY`, `BACKLASH_T5_ATTACKED` (did the player try to obey), `BACKLASH_INSIGHT_COUNT`, `BACKLASH_VOID_SEEN`, `THEATRE_FRAMESTEPPED_VOID` (telemetry: did the player find Cal's eye opening at cut 013), `BACKLASH_SPLICES_NOTICED` (counts players who paused on a splice, optional telemetry), `STAR_SIGHT_SEEN_ONCE` |
+| **Flags written** | `BACKLASH_COMPLETE`, `BACKLASH_CHAPTER` (0–8), `BACKLASH_T4_STRATEGY`, `BACKLASH_T5_ATTACKED` (did the player try to obey), `BACKLASH_INSIGHT_COUNT`, `BACKLASH_PERSPECTIVE` (0 Rook / 1 Cal), `CALS_PATH_COMPLETE`, `CALS_PATH_ARCHIVE_UNLOCKED` (set by the Field Notes in Arc 6 for Rook players), `BACKLASH_VOID_SEEN`, `THEATRE_FRAMESTEPPED_VOID` (telemetry: did the player find Cal's eye opening at cut 013), `BACKLASH_SPLICES_NOTICED` (counts players who paused on a splice, optional telemetry), `STAR_SIGHT_SEEN_ONCE` |
 | **Replay** | Lore Archive → **Relive** (replay any chapter; playable segments are playable) and **Theatre** (cinematics with frame-step and side-by-side: CIN-05 + CIN-05B ↔ Ep 18) |
 
 ---
