@@ -1,5 +1,7 @@
 # UNWRITTEN — Knights of the Last Lantern
-### Game Design Document · Foundation Draft v1.0 (awaiting approval)
+### Game Design Document · Foundation Draft v1.1
+
+> **v1.1 changes:** **Engine decided: Unity 6 LTS.** Platforms: **Windows PC** (lead) + **mobile (Android & iOS)**. Release builds compile to native C++ through **IL2CPP** (§20.2). New §20.3 (mobile design) and mobile performance budgets in §21.7. Phase 1 has started: see `docs/SETUP.md`.
 
 > **v1.0 changes:** **The King does not wake in this game** (no King boss; sequel hook). The archdemons' secret plan is the **Rite of Waking**: sacrificing **themselves and Cal** to wake him. They never tell Cal; their excitement shows only in calm body language behind their masks. Arc 7 rebuilt around the Rite.
 
@@ -1262,9 +1264,9 @@ Toggles for camera shake, motion blur, impact-frame flashes (photosensitivity: i
 
 ---
 
-## 20. RECOMMENDED ENGINE
+## 20. ENGINE & PLATFORMS
 
-### Recommendation: **Unity 6 (LTS), Universal Render Pipeline (URP), C#**
+### Decision: **Unity 6 (LTS), Universal Render Pipeline (URP), C#** ✅ *(confirmed)*
 
 | Criterion | Unity 6 + URP | Unreal 5 | Godot 4 |
 |---|---|---|---|
@@ -1279,12 +1281,45 @@ Toggles for camera shake, motion blur, impact-frame flashes (photosensitivity: i
 
 **Why Unity:** the target is **stylized, not photoreal**, so Unreal's biggest advantage (high-end rendering) matters less. Our ability system is data-driven by design, so we don't need GAS's complexity. C# iteration speed, a lean renderer, Cinemachine/Timeline for anime camera language, and a beginner-friendly stack make Unity the most realistic tool for a solo dev or small team.
 
-**When I'd switch to Unreal:** if you already know C++/Unreal, or if the team grows with dedicated technical artists. Tell me if either applies.
+### 20.1 Platforms
+| Platform | Role | Scripting backend | Renderer | Target |
+|---|---|---|---|---|
+| **Windows PC** (Steam) | **Lead platform**: developed and tuned first | **IL2CPP** (native C++) for release; Mono in the editor for fast iteration | URP, `PC` quality tier | 60 fps @ 1080p on GTX 1660-class |
+| **Android** | Mobile | **IL2CPP**, ARM64 only (required by Google Play) | URP, `Mobile` quality tier | 30 fps locked (60 fps option on high-end), dynamic resolution |
+| **iOS** | Mobile | **IL2CPP** (Apple requires it) | URP, `Mobile` quality tier | 30 fps locked (60 fps on recent devices) |
+
+### 20.2 "C++ for Windows": how it actually works in Unity
+In Unity, **all game code is written in C#**; the engine doesn't support writing gameplay in C++. What we *do* get is native C++ performance on Windows:
+- **IL2CPP** (Intermediate Language To C++) is Unity's build backend. At build time it **converts our C# into C++** and compiles it with Visual Studio's C++ compiler (MSVC) into a native Windows executable. No C# runtime ships with the game.
+- It's **required on iOS**, effectively required on Android (ARM64), and we use it on **Windows release builds** too, so every platform ships native code from the same C# source.
+- It needs **Visual Studio 2022 with the "Desktop development with C++" workload** on the build machine (`docs/SETUP.md`).
+- **Hand-written C++ native plugins** (a `.dll` called from C#) are allowed only if the Profiler shows a hot spot that C# and the Burst compiler can't handle. None are planned; they would also need separate Android and iOS builds.
+
+> **Director's Note.** Writing the game itself in C++ would mean switching to Unreal (or a custom engine) and giving up everything that made Unity the right choice: iteration speed, URP's lean mobile renderer, and beginner-friendly tooling. IL2CPP gives us native code on every platform while keeping one C# codebase.
+
+### 20.3 Mobile version
+**Approach: PC first, mobile-ready from day one.** Every system is built so mobile is a port, not a rewrite. Mobile ships **after** the PC vertical slice proves performance on real phones.
+
+| Area | Mobile design |
+|---|---|
+| **Logic** | Combat runs on a **fixed 60 Hz logic clock** independent of render frame rate, so a 30 fps phone plays *exactly* the same frame data as a 60 fps PC |
+| **Controls** | Virtual stick (left) + on-screen buttons (right): Light, Heavy, Jump, Dodge; a **Magic button** that opens a 4-spell ring; Block; Ultimate and Team Attack buttons appear when charged. Built with Input System **On-Screen Controls** that act as a virtual gamepad, so **gameplay code is identical** to PC |
+| **Touch assists** (optional, on by default on touch) | Auto lock-on to the nearest threat; slightly wider perfect-dodge/parry windows (+3f); **Smart Combo** (holding Light auto-continues the current string). Assists never change damage numbers |
+| **Camera** | Auto-framing in combat; swipe on the right half to orbit; Ultimate and cutscene cameras unchanged |
+| **UI** | Separate HUD layout for touch (larger hit areas, safe-area aware for notches); the same menus re-laid-out with UI anchors |
+| **Rendering** | URP `Mobile` tier: dynamic resolution (720p–1080p), shorter shadow distance, outlines on heroes only, simplified post-processing (no motion blur; impact frames and speed lines kept, since they're cheap and core to the style) |
+| **Content scale** | Half the VFX particle budgets; max **5** active enemies near the player (vs 8 on PC); crowd impostors start closer; ASTC textures; lower LODs |
+| **Cinematics** | Same Timeline assets; mobile LOD and post-processing tiers only |
+| **Suspend & resume** | Autosave on app pause (`OnApplicationPause`); resume mid-combat into a checkpoint |
+| **Install size** | Core install under ~2 GB; later arcs downloadable via **Addressables remote content** |
+| **Thermals & battery** | 30 fps default; "Battery Saver" mode caps at 30 fps with lower resolution |
+
+> **Director's Note: the cost of mobile.** Mobile roughly adds **25–35%** to production: a second control scheme, a second UI layout, performance work, device QA across many phones, and store compliance. Keeping it as a constraint from day one (fixed-step logic, input abstraction, quality tiers, Addressables) is what keeps that cost from doubling. The first mobile build happens at the **end of Phase 1** as a smoke test on one mid-range Android phone.
 
 **Supporting stack:**
 | Need | Choice | Why |
 |---|---|---|
-| Input | Unity Input System | Rebinding, gamepad + KB/M |
+| Input | Unity Input System | Rebinding; gamepad, KB/M, and **touch via On-Screen Controls** (one code path) |
 | Camera | Cinemachine 3 | Camera states, presets, impulse shake |
 | Cinematics | Timeline | Ultimates + cutscenes |
 | Dialogue | **Yarn Spinner** (free, open source) | Writer-friendly scripts, flag-driven branching, Unity integration |
@@ -1363,11 +1398,11 @@ A new spell is a new data asset. New *behavior* only means writing a new **event
 - Autosave at episode beats + manual slots. A **migration step** per version, so old saves survive updates.
 
 ### 21.7 Performance plan
-| Area | Strategy / budget (target 60 fps @ 1080p on GTX 1660 / PS5-class) |
+| Area | Strategy / budget: **PC** 60 fps @ 1080p on GTX 1660-class · **Mobile** 30 fps on 2022+ mid-range phones (e.g., Snapdragon 7-series, iPhone 12+) |
 |---|---|
-| Characters | Hero 30–50k tris + 2 LODs; enemies 8–20k; texture atlases; shared materials |
-| Enemies | Max 8 active in combat; attack tokens; pooled |
-| VFX | Pooled; per-spell particle budget (≤ 300 normal, ≤ 1500 ultimate); flipbooks over simulation |
+| Characters | Hero 30–50k tris + 2 LODs (mobile uses LOD1, ~15k); enemies 8–20k; texture atlases; shared materials |
+| Enemies | Max 8 active in combat (mobile: 5); attack tokens; pooled |
+| VFX | Pooled; per-spell particle budget (≤ 300 normal, ≤ 1500 ultimate; **mobile: half**); flipbooks over simulation |
 | Hitboxes / projectiles | Pooled; `Physics.OverlapBoxNonAlloc` (no GC) |
 | World | Zone streaming (Addressables), occlusion culling, LOD groups, baked lighting where possible |
 | NPCs | Distant NPCs are animated impostors / no AI; crowds are cosmetic |
@@ -1375,11 +1410,14 @@ A new spell is a new data asset. New *behavior* only means writing a new **event
 | Physics | Minimal rigidbodies; scripted debris for destruction (pooled, timed despawn) |
 | Memory | Async loading; unload previous zone; audio streamed |
 | GC | No allocations in combat hot paths; profile every phase |
+| Draw calls | PC ≤ 2,000; **mobile ≤ 300** (SRP Batcher, GPU instancing, atlases) |
+| Memory (mobile) | ≤ 1.5 GB resident on a 4 GB phone; per-zone Addressables unload |
 
 ### 21.8 Project layout (when we code)
+The Unity project lives in **`UnityProject/`**. `Scripts/Core/` is **engine-independent C#** (no `UnityEngine`), unit-tested outside Unity in `tests/`; `Scripts/Runtime/` holds the thin Unity layer.
 ```
-Assets/_Project/
-  Scripts/  Core/  Input/  Player/  Combat/  Abilities/  AI/  Camera/
+UnityProject/Assets/_Project/
+  Scripts/  Core/ (pure C#)  Runtime/ (Unity)  … later: Combat/  AI/  Camera/
             Feedback/  Story/ (Flags, Quests, Dialogue)  Party/  Save/  UI/  World/
   Data/     Characters/  Abilities/  Spells/  Enemies/  Reactions/  Quests/  Episodes/
   Art/  Animation/  VFX/  Audio/  Scenes/  Settings/
@@ -1402,6 +1440,7 @@ Assets/_Project/
 - 1 small arena (grey box, a couple of pillars).
 - Feedback: hitstop, camera shake, basic hit VFX (pooled), placeholder SFX.
 - Debug HUD: frame data, input buffer display, FPS.
+- **Mobile smoke test:** one Android build on a mid-range phone with on-screen controls (end of phase).
 
 **Out of scope (deliberately):** story, dialogue, party, grimoire UI, saves, cel shading, ultimates.
 
@@ -1411,6 +1450,7 @@ Assets/_Project/
 3. 3 acolytes at once stay readable (token system works).
 4. Adding a second spell takes **only a new data asset + VFX**, with no code changes. (This proves the architecture.)
 5. Zero GC allocations per frame in combat (Profiler verified).
+6. The same combat runs on a mid-range Android phone at a locked 30 fps with on-screen controls, with identical frame data.
 
 ---
 
@@ -1424,7 +1464,7 @@ Estimates assume **1–2 people, part-time-ish**. Every phase ends with a **go/n
 | **1: Prototype** | §22 | 6–10 wks | "Is the combat fun with grey boxes?" |
 | **2: Combat Vertical Slice** | 3 characters (Rook + 2 AI companions w/ assists), 5 enemy types, 1 mini-boss (Hask), tag/reaction system, 4 spells + page evolution, Cinemachine camera states, cel-shading v1, impact frames, 1 ultimate (Skyrender), combat HUD | 3–5 months | A playable 10–15 min combat run that *feels anime* |
 | **3: Story Vertical Slice** | Episodes 1–3 playable: Tower, Exam duel (B1), Lighthouse hub, Yarn dialogue, flags, saves, first storyboarded cutscenes, title cards + next-episode preview; **fake-death setup lines planted** | 4–6 months | "Does it feel like an anime episode?" Playtest with outsiders |
-| **4: World** | Aurelin hub, Greywater Fens, Thornwick, Undercroft; NPCs, shops, zone streaming, squads, reputation | 6–9 months | Performance budget met in the largest zone |
+| **4: World** | Aurelin hub, Greywater Fens, Thornwick, Undercroft; NPCs, shops, zone streaming, squads, reputation | 6–9 months | Performance budget met in the largest zone **on PC and on the mobile reference phone** |
 | **5: Full RPG** | Progression, equipment, bonds + bond events, party switching (3 chars), crafting-lite, HQ upgrades, quests, Arc 1–2 bosses, hidden lore | 9–12 months | Arc 1 + 2 complete, content pipeline proven |
 | **6: Narrative Expansion** | Arc 3+, Cal's death & clue network, Brannoc, the Sable Knight encounters, transformations, the Siege of Aurelin reveal | ongoing | Mystery playtest targets met (§15.5 note) |
 
@@ -1753,9 +1793,9 @@ Whatever is decided must stay consistent with §28.1–28.4.
 
 The foundation questions from v0.1 are still open:
 
-1. **Engine:** Unity 6 + URP + C#? (Or do you have Unreal/C++ experience that changes this?)
-2. **Target platform for the prototype:** PC (Windows) first?
+1. ~~Engine~~ **Decided:** Unity 6 + URP + C#, IL2CPP native builds.
+2. ~~Platforms~~ **Decided:** Windows PC first; Android and iOS as the mobile version (§20).
 3. **Cast & story:** Brannoc's real death, Aurek Valcourt as the red herring, the Palimpsest protagonist. Anything to change?
 4. **Scope calls:** 4 player affinities at launch, AI companions first (tag-swap for Rook, Severin, and Cal later), zones rather than a seamless open world, "Season 1" = Arcs 1–3.
 
-Once approved, the first implementation task is **Phase 1, Step 1: project setup + input + the AbilityData / AbilityRunner core**, with complete files, exact folder locations, and setup steps in the Unity editor. Story systems (flags, Theatre mode) come in Phase 3. **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.
+**Phase 1, Step 1 is in progress:** project setup + input + the AbilityData / AbilityRunner core (`docs/SETUP.md`). Story systems (flags, Theatre mode) come in Phase 3. **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.

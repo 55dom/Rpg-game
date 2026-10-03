@@ -1,0 +1,42 @@
+# ---- Unity (project lives in UnityProject/) ----
+UnityProject/[Ll]ibrary/
+UnityProject/[Tt]emp/
+UnityProject/[Oo]bj/
+UnityProject/[Bb]uild/
+UnityProject/[Bb]uilds/
+UnityProject/[Ll]ogs/
+UnityProject/[Uu]ser[Ss]ettings/
+UnityProject/[Mm]emoryCaptures/
+UnityProject/[Rr]ecordings/
+UnityProject/Assets/Plugins/Editor/JetBrains*
+UnityProject/.vs/
+UnityProject/.idea/
+UnityProject/.vscode/
+UnityProject/*.csproj
+UnityProject/*.sln
+UnityProject/*.slnx
+UnityProject/*.user
+UnityProject/*.unityproj
+UnityProject/*.pidb
+UnityProject/*.booproj
+UnityProject/*.svd
+UnityProject/*.pdb
+UnityProject/*.mdb
+UnityProject/*.opendb
+UnityProject/*.VC.db
+UnityProject/*.apk
+UnityProject/*.aab
+UnityProject/*.unitypackage
+UnityProject/crashlytics-build.properties
+UnityProject/Assets/StreamingAssets/aa.meta
+UnityProject/Assets/StreamingAssets/aa/*
+
+# ---- .NET test projects ----
+tests/**/bin/
+tests/**/obj/
+tests/**/TestResults/
+
+# ---- OS / editors ----
+.DS_Store
+Thumbs.db
+*.swp
