@@ -1,5 +1,7 @@
 # UNWRITTEN — Knights of the Last Lantern
-### Game Design Document · Foundation Draft v0.6 (awaiting approval)
+### Game Design Document · Foundation Draft v0.7 (awaiting approval)
+
+> **v0.7 changes:** Corrected canon. The archdemons are **Ghorran and Vaelith**, the King's own Commanders, reborn when the King **sacrificed his aura** to them after defeating the Hero Party. **Cal never fights the Commanders**: the Siege of Aurelin is now led by a Line Marshal, and Arc 7's Vaelith boss is replaced by the empty places beside the throne. §28 rewritten.
 
 > **v0.6 changes:** The Void Figures are now defined (§28): the Demon Lord King's **former** Left and Right Wing commanders, now **5★ archdemons** called **the Clergy Duo**: a butler (male) and a musician (female). Only Cal knows who they are. Backlash adds **CIN-05C "The Astral Path"**, in which they carry Cal down a dark astral tunnel with horns and wings fully revealed.
 
@@ -135,7 +137,7 @@ There are 12 important characters. 🔒 marks hidden truths.
 | + | **The Sable Knight** | Masked antagonist / antihero (Arcs 3–5) | "Severance" (space-cutting) | A nameless masked knight who raids Crown vaults, executes Choir agents, and fights the Lanterns three times. Players should believe he is a new character. 🔒 He is Cal (§15). |
 | + | **Aurek Valcourt** | Severin's older brother, presumed dead | Starlight | Lost in the Hollowmarch six years ago; body never found. **Red herring**: players and Severin come to believe he is the Sable Knight. 🔒 He truly died, on Cal's watch. |
 | + | **The Demon Lord King** | 🔒 Ruler of the Demon Continent (Arc 5 glimpse → Arc 7) | Silent, wordless magic | The world's first anomaly (6★). Calm, never angry, believes nothing can challenge him (§26.5). |
-| + | **Ghorran & Vaelith** | 🔒 The King's Left and Right Wing commanders | — (3★ might) | Ghorran dies to the Sable Knight in the Siege of Aurelin; Vaelith is an Arc 7 boss. |
+| + | **Ghorran & Vaelith** | 🔒 The King's Left and Right Wing commanders | — (3★ might → 5★) | Seen only in Backlash. At its end the King pours his aura into them and they are reborn as **intelligent archdemons, a butler and a maid**: the Clergy Duo (§28). Cal never fights them. |
 | + | **The Hero Party: Corin, Maelis, "King A"** | 🔒 Goddess Trial heroes (Backlash Arc, Arc 7) | Sword & shield / Saint's prayers / bow | Demon-hating heroes; the Saint's *Sacrifice* is the key to Cal's reincarnation (§26.6). |
 | + | **Wraithe** | Pale Choir rift-assassin | Hollow rifts | **Red herring**: establishes "space-tearing" as a Choir technique before the Sable Knight appears. Executed by the Sable Knight in Arc 4. |
 
@@ -682,7 +684,7 @@ He is introduced early, mentors the protagonist, carries the most charm in the s
 
 ### 15.2 🔒 The complete truth (revealed in 10 layers)
 
-**Who he really is.** Cal was once **Ash Line Eleven**, a 1★ Demon Soldier on the **Demon Continent**, serving the **Demon Lord King** (6★). He was a nobody: identical armor, no wings, no name, only a line designation. He began asking a question no demon asks: *"Why am I only supposed to obey?"* He studied the Hero Party that invaded every month in the **Goddess Trial**, watched the **Goddess Saint** use *Sacrifice* to die and be reborn, and memorized her prayer. Then he knelt before the Demon Lord King, whispered the stolen prayer disguised as a vow, said *"For the Demon King,"* and gave away the only star he had. Nothing visible happened. The King sent him back to the line at **0★**, and he was cut down at the gate by the very Knight he had once spared. He lay still. Then **time stopped**, a perfect black circle opened in the air, and **two calm figures in black suits and masks** stepped out, spoke in a language no one has ever heard, and carried him away. **He was smiling.** On a dark astral path, their disguises fell away: **archdemons**, a butler and a musician, horns and wings. 🔒 They are the King's **former** commanders, now 5★, and only Cal knows them (§28). He woke up in a human body in the ashes of a burning village in Liraen: **Larkspur**, fifteen years before the game. (Full detail: §26 and `docs/BACKLASH.md`.)
+**Who he really is.** Cal was once **Ash Line Eleven**, a 1★ Demon Soldier on the **Demon Continent**, serving the **Demon Lord King** (6★). He was a nobody: identical armor, no wings, no name, only a line designation. He began asking a question no demon asks: *"Why am I only supposed to obey?"* He studied the Hero Party that invaded every month in the **Goddess Trial**, watched the **Goddess Saint** use *Sacrifice* to die and be reborn, and memorized her prayer. Then he knelt before the Demon Lord King, whispered the stolen prayer disguised as a vow, said *"For the Demon King,"* and gave away the only star he had. Nothing visible happened. The King sent him back to the line at **0★**, and he was cut down at the gate by the very Knight he had once spared. He lay still. Then **time stopped**, a perfect black circle opened in the air, and **two calm figures in black suits and masks** stepped out, spoke in a language no one has ever heard, and carried him away. **He was smiling.** On a dark astral path, their disguises fell away: **archdemons**, a butler and a maid, horns and wings. 🔒 They are **Ghorran and Vaelith**, the King's own Commanders, reborn minutes earlier when the King, having defeated the Hero Party and confused for the first time by the star that passed through his palm, **sacrificed his aura** to them. Now 5★. Only Cal knows (§28). He woke up in a human body in the ashes of a burning village in Liraen: **Larkspur**, fifteen years before the game. (Full detail: §26 and `docs/BACKLASH.md`.)
 
 **What he did in Liraen.** In the ashes he found an infant the system could not rate at all: **Rook**. He carried the baby to Thornwick without speaking a word (he didn't know the language yet). He learned the language, customs, and magic, was feared, hunted by the Crimson Bell, and courted by Aldric Valcourt as a weapon. Dagrun Holt took him in when no one else would. He forged a grimoire (his doors need none; it's a prop), rose to vice captain, and waited for Rook to climb the Tower. At the Knight Exam, it was Cal who told Dagrun: *"Take the one-pager."*
 
@@ -774,7 +776,7 @@ The danger is that the player connects "Cal might be alive" with "who is the mas
 | D4 | **His grimoire never glows** when he casts (everyone else's does), seen only in close-up animations | Arcs 1–2 | *"It's a cheap old book. The light broke."* | It's a prop. His magic needs no grimoire |
 | D5 | **Reads an ancient glyph aloud** in the Tower ruins, then covers: *"Guessed. Sounds like a word, right?"* | Ep 8 | Lucky guess / joke | Demon script; the same glyphs exist on the Demon Continent |
 | D6 | **Stares at the Saint mural** in the Tower (a kneeling woman beneath stars) for too long | Ep 8 | Tamsin: *"Never took you for an art lover."* | It depicts the Goddess Saint's Sacrifice |
-| D7 | **Names a battle formation** nobody uses: *"Spear-wall, three lines deep, wings overhead. Nobody fights like that anymore."* | Ep 15 (squad strategy scene) | He's well read | It's the Demon Army formation the player faces in the Siege of Aurelin |
+| D7 | **Names a battle formation** nobody uses: *"Spear-wall, three lines deep, marshal at the rear. Nobody fights like that anymore."* | Ep 15 (squad strategy scene) | He's well read | It's the Demon Army formation the player faces in the Siege of Aurelin |
 | D8 | **Reacts to the armored husks** (dark red and black armor) in the Hollowmarch: closes one's visor, murmurs *"Rest, soldier."* | Ep 17 | Knights say that to the fallen | They were Demon Soldiers who fell through the Hollow |
 | D9 | **Watches the sky after battles** | Arcs 1–2, post-fight idle | He's a daydreamer | On the Demon Continent, commanders came from the sky |
 | D10 | **Talks like he remembers another life:** *"Where I grew up, nobody had names. Just numbers."* | Ep 16 (night before the march) | Everyone assumes a slum orphanage | Literal |
@@ -851,7 +853,7 @@ That's **six encounters across ~25 hours**, including **three full boss fights a
 
 ### 15.8 THE REVEAL: The Siege of Aurelin (Arc 5 finale, Eps 47–48)
 
-**Setup:** Hesper Voss opens the Hollow Gate above the capital using the Gate Key. She believes it leads into the Hollow. **It leads through the Hollow, to the Demon Continent.** The Demon Lord King perceives a new world for the first time and sends his army through: ranks of **Demon Soldiers** (1★, dark red and black, no wings) and the winged **Demon Commander Ghorran, the Left Wing** (3★). At the same moment, Aldric Valcourt launches his coup. Demon lines, Choir cantors, rebel Lances, and Crown knights fight in the streets. The sky turns red-black. This is the largest battle in the game so far, and the first time Liraen sees a demon.
+**Setup:** Hesper Voss opens the Hollow Gate above the capital using the Gate Key. She believes it leads into the Hollow. **It leads through the Hollow, to the Demon Continent.** The Demon Lord King perceives a new world for the first time and sends his army through: ranks of **Demon Soldiers** (1★, dark red and black, no wings) led by a wingless **Line Marshal** (2★, a brute in heavy plate). There are no Commanders: the two places beside the King's throne have stood empty for fifteen years (§28). At the same moment, Aldric Valcourt launches his coup. Demon lines, Choir cantors, rebel Lances, and Crown knights fight in the streets. The sky turns red-black. This is the largest battle in the game so far, and the first time Liraen sees a demon.
 
 > **Director's Note: "chaos is authored, not simulated."** The battle *looks* like thousands of combatants but runs within normal budgets: max 8 active enemies near the player; armies in the distance are animated impostors and baked vignettes; destruction is pre-authored (pooled debris, swapped building states); the sky and lighting change via timeline. The player is always in a **readable pocket of chaos**, moving between pockets. Demon Soldiers share one armor model with color and weapon variants. (Full budgets in §21.7.)
 >
@@ -859,7 +861,7 @@ That's **six encounters across ~25 hours**, including **three full boss fights a
 
 #### PHASE 1: CHAOS (gameplay, ~6–8 min)
 - **Objective:** hold the Lowmarket Bridge while civilians evacuate. A **Defense meter** shows the bridge falling.
-- The demons advance in a **spear-wall, three lines deep, with Ghorran overhead**. (D7. Players who remember Ep 15 may get chills.)
+- The demons advance in a **spear-wall, three lines deep, with the Marshal at the rear**. (D7. Players who remember Ep 15 may get chills.)
 - Bridge sections collapse behind you. **Bas goes down** (arm still in a brace from Encounter II); **Juno is pinned** under rubble. Small chaos choice: reach Juno or cover Bas first (affects a line in the aftermath, nothing else).
 - **Fairness rule:** the Defense meter falls no matter what, but the player's actions visibly *slow* it. The arrival triggers at a threshold or a time limit, so it never feels like the game stole a win.
 
@@ -870,9 +872,9 @@ That's **six encounters across ~25 hours**, including **three full boss fights a
 #### PHASE 2: THE SABLE KNIGHT FIGHTS (gameplay, ~4 min)
 - The player **keeps control**. Sable rampages through the demon lines along an authored path, an AI "storm" that wipes out enemy waves. The player fights in his wake.
 - He kills Demon Soldiers in single cuts. Each time, unprocessed for a fraction of a syllable, he murmurs ***"Rest, soldier."*** (D8 again. A player who remembers Ep 17 will notice. Most will hear only the mask.)
-- **T2 cinematic (6s):** Sable cuts a tear beneath **Ghorran**, and the Commander falls *out of his own sky* onto the demon lines. Sable kills him with one glaive thrust from a backstep.
+- **T2 cinematic (6s):** Sable cuts a tear beneath the **Line Marshal**, who falls *out of the sky* onto his own lines. Sable kills him with one glaive cut from a backstep.
 - Rook (in-engine bark, not a cutscene): ***"That technique…"*** The battle continues; no one follows up.
-- **Through the Gate**, a vast silhouette on a throne watches. The **Demon Lord King** speaks for the first time, without moving his lips: ***"…What are you?"*** (He believed nothing was stronger than his commanders. Players will only understand the echo after the Backlash Arc, §26.)
+- **Through the Gate**, a vast silhouette on a throne watches. The **Demon Lord King** speaks for the first time, without moving his lips: ***"…What are you?"*** (He once believed nothing was stronger than his commanders. Players will only understand the echo after Backlash, §26.)
 - **Turn:** Sable heads for the **Gate Key's anchor**, built into the Grand Archive where civilians are sheltering. Rook steps into his path.
 
 #### PHASE 3: MASK DAMAGE (boss fight)
@@ -1459,7 +1461,7 @@ A secret layer of the cosmos that no ordinary being can see, which grows more im
 |---|---|
 | **The scale** | 0★ → 1★ → 2★ → 3★ → 4★ → 5★. Every living being in both worlds has a rating |
 | **Nobody can see it** | Not their own, not anyone else's. Nobody knows the system exists. People just assume strong warriors are naturally stronger |
-| **No confirmed 5★** | No 5★ being has ever existed, as far as anyone knows. 🔒 Two do: the **Clergy Duo** (§28), hidden archdemons whom only Cal has seen rated |
+| **No confirmed 5★** | No 5★ being has ever existed, as far as anyone knows. 🔒 In Backlash, the King sees the Knight reach 5★ and makes two 5★ archdemons of his own (§28). Nobody but the King and Cal knows |
 | **The first anomaly** | The **Demon Lord King is 6★**, beyond the scale. He can **perceive** ratings and senses something beyond the world's limits |
 | **Sacrifice** | The Goddess Saint's prayer. She gives up her life and is reborn **one star lower**; one chosen ally gains that star |
 | **0★: the unknown** | 🔒 What happens at 0★ is **not known, even to the design canon yet**. Cal reached 0★, apparently died, and was taken alive by the **Void Figures** (§28) before waking in Liraen. Whether every 0★ being is collected, and whether the figures *cause* reincarnation, is deliberately undecided (§28.5) |
@@ -1474,11 +1476,11 @@ A secret layer of the cosmos that no ordinary being can see, which grows more im
 | Squad captains, Hesper, Severin (late) | 3★ | Dagrun is a quiet 3★ |
 | Paragon Elias Thorne | 4★ | The strongest human in Liraen |
 | Demon Soldiers (incl. Ash Line Eleven) | 1★ | Disposable by design |
-| Demon Commanders Ghorran & Vaelith | 3★ | The King believes nothing is stronger |
-| Knight Hero (Corin) | 3★ → 4★ (Backlash) → **5★** (Arc 7) | The first confirmed 5★, thanks to 15 years of the Saint's gifts |
+| Demon Commanders Ghorran & Vaelith | 3★ (Backlash) → **5★** archdemons | The King believed nothing was stronger. Then he made them stronger |
+| Knight Hero (Corin) | 3★ → 4★ → **5★** (both in Backlash) | Reaches 5★ in the throne room and loses anyway. By Arc 7 he is the first 5★ anyone *outside* the throne room knows of |
 | Goddess Saint (Maelis) | 4★ (Backlash) → **1★** (Arc 7) | She has sacrificed again and again. One more, and she falls off the page |
 | King A (Teo) | 3★ | Dies permanently in the Backlash Arc; replaced by "King B"… by Arc 7 the archer is "King D" |
-| 🔒 **The Clergy Duo** (former Left & Right Wing) | **5★** | Exclusive, rare NPCs; hidden archdemons outside the King's hierarchy (§28) |
+| 🔒 **The Clergy Duo** (Ghorran & Vaelith, reborn) | **5★** | Exclusive, rare NPCs; archdemons created by the King's Aura Sacrifice (§28) |
 | Demon Lord King | **6★** | First anomaly |
 | Cal | **★?** | Second anomaly |
 | Rook | **∅** | Third anomaly |
@@ -1558,8 +1560,8 @@ The Demon Continent is the only known civilization of its world. It's isolated, 
 | Rank | Rating | Look | Behavior |
 |---|---|---|---|
 | **Demon Soldiers** | 1★ | Dark red and black heavy armor, faceplate with vertical slits, **no wings**, near-identical | Obey almost automatically. Don't know magic exists. Don't understand reincarnation. Loyalty = hierarchy |
-| **Demon Commanders** | 3★ | Larger, more elaborate armor; **large demonic wings**; bigger weapons | **Ghorran, the Left Wing** (axe, brute force; kills King A in Backlash; killed by the Sable Knight in the Siege) and **Vaelith, the Right Wing** (twin spears, precise, cold; an Arc 7 boss) |
-| 🔒 **Former commanders → archdemons** | 5★ | Erased from the record; the defaced mural in the caverns shows two Wings with their faces chiselled away. Today: the **Clergy Duo**, able to change form and conceal horns and wings | Outside the hierarchy. Known only to Cal (§28) |
+| **Demon Commanders** | 3★ | Larger, more elaborate armor; **large demonic wings**; bigger weapons | **Ghorran, the Left Wing** (axe, brute force; kills King A in Backlash) and **Vaelith, the Right Wing** (twin spears, precise, cold). The King's only two. Cal never fights either |
+| 🔒 **Archdemons (Ghorran & Vaelith, reborn)** | 5★ | Created at the end of Backlash by the King's **Aura Sacrifice**. A butler and a maid; intelligent; able to change form and conceal horns and wings | They took Cal instead of returning to the King. Their places beside the throne have been empty ever since (§28) |
 | **Demon Lord King** | 6★ | Unique silhouette, massive dark wings, royal armor, crown-helm. Instantly *not a normal demon* | Calm. Never angry. Casts **without words, by looking**. Believes nothing can challenge him |
 
 ### 26.4 DESIGN: Visual design
@@ -1617,7 +1619,7 @@ The Goddess designates the heroes by role, not name. **The heroes are numbered t
 
 ## 27. ARC 7: "UNWRITTEN" — THE COLLISION OF THREE PHILOSOPHIES 🔒
 
-> Boss details for Vaelith and the Demon Lord King: `docs/BACKLASH.md` §10–11. Maelis as a guest and *Sacrifice* rules: §12 of the same document.
+> Boss details for the Demon Lord King: `docs/BACKLASH.md` §11. Maelis as a guest and *Sacrifice* rules: §12 of the same document.
 
 | Philosophy | Who | Belief |
 |---|---|---|
@@ -1628,11 +1630,11 @@ The Goddess designates the heroes by role, not name. **The heroes are numbered t
 **Outline (Eps ~59–70):**
 1. **The Key.** Rook opens Cal's sealed door with the brass key: *"Doors don't have locks. They have keys."* (S7 pays off.) The Lanterns, Severin, and a reluctant Bas cross to the Demon Continent.
 2. **The Continent Today.** The same map as Backlash, fifteen years later. Some Demon Soldiers have started **asking questions** (Cal has been teaching them, as pieces; some remember a soldier who once stepped out of line). The King purges them. Rook's party meets demons who are people.
-3. **The Trial Continues.** The present Hero Party: **Corin** (now 5★, the first ever), **Maelis** (1★, frail; one more Sacrifice and she falls off the page), **King D**. They hate demons, and Rook's friend *was* one. A tense alliance. **Maelis joins as a guest:** Low Heal (10s prayer: protect her), Sacrifice (once per battle: an ally gains a temporary star surge, at a terrible personal cost she keeps offering to pay).
+3. **The Trial Continues.** The present Hero Party: **Corin** (5★ since the throne room fifteen years ago, the only known 5★), **Maelis** (1★, frail; one more Sacrifice and she falls off the page), **King D**. They hate demons, and Rook's friend *was* one. A tense alliance. **Maelis joins as a guest:** Low Heal (10s prayer: protect her), Sacrifice (once per battle: an ally gains a temporary star surge, at a terrible personal cost she keeps offering to pay).
 4. **The Soldier Who Stepped Aside.** Corin meets Cal: ***"You. The one who didn't kill me."*** Cal: *"You were more interesting alive."* Then, cheerfully: *"You did kill me, actually. Didn't take."*
-5. **The Right Wing.** Boss: **Vaelith**, a three-way fight with Cal. Cal, to the Commander who walked past him every day: ***"You never looked at me once."***
+5. **The Empty Wings.** The throne room's approach is held by the **Throne Guard Lines** (formation boss fight for Rook's party; Cal is elsewhere). Inside, beside the throne, two places have stood empty for fifteen years. Cal, arriving, looks at them a moment too long.
 6. **Star Sight.** Rook reaches the throne room. The King forces Rook to see: stars over everyone, a 6★ crown of light over himself, a smear of **★?** over Cal… and **nothing** over Rook. The King, for the first time in his existence, is uncertain.
-7. **Alliance.** **Boss: the Demon Lord King**, fought by Rook and Cal together. **Cal is playable** (tag-swap); the team attack **Thousand-Door Verse** unlocks (Rook writes a line across the sky; Cal opens a door along every letter). Phases: silent casting by gaze; the throne room's soldiers ordered to sacrifice themselves into him; the King's own **Sacrifice** used defensively.
+7. **Alliance.** **Boss: the Demon Lord King**, fought by Rook and Cal together. **Cal is playable** (tag-swap); the team attack **Thousand-Door Verse** unlocks (Rook writes a line across the sky; Cal opens a door along every letter). His aura is noticeably weaker than in Backlash (he gave it away, §28), which is part of why they can stand before him at all. Phases: silent casting by gaze; the throne room's soldiers ordered to sacrifice themselves into him; the King's own **Sacrifice** used defensively.
 8. **The Last Move.** The King, defeated, attempts Sacrifice to be reborn. Cal **opens a door inside the prayer** and takes the transferring stars for himself. Layer 10 lands all at once: Hesper, Aldric, the Gate, Rook's recruitment, Larkspur (his arrival is what erased it; he didn't choose where he landed, but he never told Rook). He becomes the first being above the scale, and the sky of the Demon Continent **cracks like a page**. *"Now, Rook. Write me."*
 9. **Final Battle: Rook vs. Cal.** The arena is the world's page tearing. Cal uses everything: every companion move, every Sable move, every King technique he stole. Final phase: **the Shared Star** (§25.4). Maelis offers her last star (it would erase her). Juno, Bas, Tamsin, Lio, Severin, and Dagrun offer theirs. Given freely, **nobody loses anything**, and Rook becomes Unwritten. Final clash: the Godfall glaive against the last line of the Palimpsest.
 10. **The Clause (ending choice, `CAL_FATE`).** Rook writes one clause about Cal:
@@ -1647,45 +1649,53 @@ All three endings share the same final battle and epilogue structure; only the c
 ## 28. THE VOID FIGURES: THE CLERGY DUO 🔒
 
 ### 28.0 OBJECTIVE
-A mystery built in two halves. Backlash (CIN-05B) shows two impossibly calm figures in black who stop time and carry Cal away, smiling. Then (CIN-05C) it shows them on a dark astral path as **archdemons**, horns and wings revealed. The player learns *what* they are. Only Cal knows *who* they are, and nobody (player included) learns *why* in this game unless a later arc is designed to tell it.
+A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figures in black stop time and carry the "dead" Cal away, smiling. Then (CIN-05C) a dark astral path shows them as **archdemons**, horns and wings revealed. Through Cal's dying eyes the player has half-seen where they came from; nobody says it. **Only Cal knows who they are** (and the King, who made them). Nobody, player included, learns *why* they took him in this game unless a later arc is designed to tell it.
 
 ### 28.1 Identity canon (DIRECTOR'S EYES ONLY)
-| | The butler | The musician |
+**The order of events at the end of Backlash:**
+1. Cal kneels, whispers the stolen prayer, and his single star passes **through the King's palm** and fades. He is sent back to the line at 0★ and cut down by the Knight at the throne-room doors. It's a sacrifice **for nothing**, as far as anyone can see.
+2. The heroes reach the throne room. Maelis **sacrifices herself again** and the Knight reaches **5★**. The King defeats them anyway, **without standing**; the Goddess's light recalls the survivors.
+3. The King **notices**: a soldier's star passed through him, a human reached 5★, and something is wrong with the rules he alone can see. For the first time, he is **confused**.
+4. **Within minutes**, he performs the **Aura Sacrifice**: he tears his aura out of himself and pours it into his two trusted Commanders. **Ghorran and Vaelith are reborn as intelligent archdemons**, a butler and a maid, **5★**.
+5. Their first act: they open the black circle, stop time, and **take Cal**. Not to the King. Down the Astral Path toward a doorway at the edge of the Continent. Cal is smiling.
+
+| | **The butler** | **The maid** (musician) |
 |---|---|---|
-| **Former title** | The King's **Left Wing** (before Ghorran) | The King's **Right Wing** (before Vaelith) |
-| **Working name** (never used in game until a reveal arc) | **Ezrael** | **Cantessa** |
-| **Now** | Archdemon, **5★** | Archdemon, **5★** |
-| **Collectively** | **The Clergy Duo**: they tend to "the dead who fall wrong" | |
-| **Concealed form** (battlefield, CIN-05B) | Plain black suit, black shirt, tie, gloves, featureless black mask | The same |
-| **True outfit** (revealed in CIN-05C) | Immaculate black **butler's suit**: waistcoat, tie, gloves, black watch-chain | Black **maid's dress cut with a suit jacket and tie**, gloves, a slim black **instrument case** on her back |
-| **Archdemon form** (CIN-05C) | Horns curving back from the brow; vast dark wings from slits in the coat; mask stays on | The same |
-| **Personality (as shown)** | Unhurried, precise, unreadable; does the lifting, opens the path | Watchful; the one who **turned back to look at Cal**; hums |
-| **Abilities shown** | Stopping time locally; opening the black circle; the astral path (dark magic, no words or gestures beyond a small hand motion); changing form; concealing horns and wings | |
-| **Status** | **Exclusive, rare NPCs.** Not fought in this game. A future superboss or reveal arc can use them | |
+| **Was** | **Ghorran, the Left Wing** (3★): axe, brute force, killed King A | **Vaelith, the Right Wing** (3★): twin spears, precise, cold |
+| **Now** | Archdemon, **5★**, intelligent for the first time | Archdemon, **5★**, intelligent for the first time |
+| **Collectively** | **The Clergy Duo** | |
+| **Concealed form** (CIN-05B) | Plain black suit, black shirt, tie, gloves, featureless black mask | The same |
+| **True outfit** (CIN-05C) | Immaculate black **butler's suit**: waistcoat, tie, gloves, black watch-chain | Black **maid's dress cut with a suit jacket and tie**, gloves, a slim black **instrument case** on her back |
+| **Archdemon form** (CIN-05C) | Horns from the brow; the Commander's vast wings, from slits in the coat; mask stays on | The same |
+| **As shown** | Unhurried, precise; does the lifting; opens the path | Watchful; **turns back to look at Cal**; hums the army's march as a lullaby |
+| **Abilities shown** | Stopping time locally (even the King froze); the black circle; the Astral Path; changing form; concealing horns and wings. All of it is **the King's aura** | |
+| **Status** | **Exclusive, rare NPCs.** Never fought in this game, by Cal or anyone. A future superboss or reveal arc can use them | |
 
-**Why the King "believes nothing is stronger than my commanders":** he had their predecessors' names and faces chiselled from the record. The official truth on the Demon Continent is *"There have only ever been the Left Wing and the Right Wing."* His belief is a deliberate forgetting. His former commanders became something stronger than the current ones, and he doesn't know (or won't admit) that they still exist.
+**The King's lost certainty:** he believed nothing was stronger than his Commanders. Then he made them stronger than anything but himself, and they walked away with the soldier who caused it. For fifteen years, the places beside his throne have stood **empty**, and his presence has never been as crushing as it was (Arc 7, §27).
 
-**Who knows:** **only Cal.** No other character in Liraen or on the Demon Continent knows the Clergy Duo exist, apart from the King's suppressed memory of his former commanders (which surfaces in V8).
+**How Cal "knew":** in Backlash Ch 3, he studied an ancient cavern mural of a wounded King pouring his aura into his two Wings, who rise as robed, human-shaped servants. He arranged the "wound" (the star through the palm). Whether the King would answer the way the mural said was a gamble. His laugh is the laugh of a gamble that paid off.
+
+**Who knows:** **Cal**, and **the King** (who made them and lost them). The player half-sees the rebirth through smoke and dying eyes (CIN-05B, cut 011) and sees the Commanders' wings on the archdemons (CIN-05C). No character ever says it.
 
 ### 28.2 What the player has seen (canon of appearances)
 | Fact | Where |
 |---|---|
-| A glitch, then a **perfect black circle** that absorbs light; **time stops**; two calm figures in black suits and masks take Cal, who is awake and smiling, then laughing | CIN-05B |
-| They speak a **language no one has heard**, never subtitled | CIN-05B, CIN-05C |
-| On a **dark astral path** (a long tunnel over the Demon Continent, formed by dark magic), their disguise lifts: **butler and maid**, **horns**, **wings** | CIN-05C |
-| The musician **hums the Demon Army's march as a lullaby**; Cal whistles it back. (That's where his tune comes from) | CIN-05C |
-| Through Cal's eyes, **★★★★★** above each of them, for one cut | CIN-05C |
-| The path ends at a dark doorway at the edge of the Continent; the scene cuts to black before they reach it | CIN-05C |
-| A defaced mural of the King between two winged commanders with chiselled-off faces | Backlash Ch 3 |
+| An ancient mural: a wounded King pouring aura into two Wings, who become human-shaped servants | Backlash Ch 3 |
+| Through Cal's dying eyes: the King defeats the heroes without standing, looks at his palm, then pours his aura into the two kneeling Commanders, whose silhouettes fold into human shape | CIN-05B (cuts 004–011) |
+| A glitch, a **perfect black circle**, **time stops** (the King too), two calm figures in black suits and masks take Cal, who is awake and smiling, then laughing | CIN-05B |
+| The King stares at the empty threshold; the places beside his throne are empty | CIN-05B (cut 050) |
+| A **language no one has heard**, never subtitled | CIN-05B, CIN-05C |
+| On a **dark astral path**: **butler and maid** outfits, **horns**, **the Commanders' wings**; the maid hums the march; Cal whistles it back; **★★★★★** through Cal's eyes; a doorway at the edge of the Continent | CIN-05C |
 
 ### 28.3 Design rules
 1. **Calm is the horror.** They never run, pose, shout, threaten, or fight on screen. They walk like people arriving at a meeting, even while transforming.
-2. **Smooth is wrong.** They are the only characters animated on ones with no anticipation or held frames (`docs/BACKLASH.md` §20.2).
+2. **Smooth is wrong.** As archdemons they are the only characters animated on ones with no anticipation or held frames (`docs/BACKLASH.md` §20.2). As Commanders, before the rebirth, they move like everyone else. The change in animation style *is* the rebirth.
 3. **The circle is reserved.** No other effect in the game may use a perfect, smooth, light-absorbing black circle.
-4. **The language is theirs.** It's the archdemons' tongue, built as a small consistent grammar. Cal speaks it; the King understands it. Its meaning sits in a sealed director's envelope.
-5. **Masks never come off** in this game. Their faces are reserved for a reveal arc.
-6. **No UI ever names them.** No codex entry, no bestiary entry, no name in subtitles (captions read *[Speaking an unknown language]*). The Lore Archive's Theatre lists the scenes as *"Chapter 5 — ???"*.
-7. **Cal never explains them.** If asked, his smile falters. It's the only thing that does that.
+4. **Their pressure is the King's.** The Void's dark aura uses the same audio, rumble, and vignette signature as the King's Gaze in Ch 3.
+5. **The language is theirs.** It's the archdemons' tongue, built as a small consistent grammar. Cal speaks it; the King understands it. Its meaning sits in a sealed director's envelope.
+6. **Masks never come off** in this game. Their faces are reserved for a reveal arc.
+7. **No UI ever names them.** No codex or bestiary entry, no name in subtitles (CC: *[Speaking an unknown language]*). The Lore Archive's Theatre lists the scenes as *"Chapter 5 — ???"*.
+8. **Cal never explains them.** If asked, his smile falters. It's the only thing that does that.
 
 ### 28.4 Foreshadowing & later references (rare by design)
 **Budget:** at most **8** references across the whole game, **never two in the same episode**, and never more than one per arc before Arc 7.
@@ -1693,23 +1703,23 @@ A mystery built in two halves. Backlash (CIN-05B) shows two impossibly calm figu
 | # | Clue type | Where | What happens | Alibi |
 |---|---|---|---|---|
 | V1 | **Refuses to explain an ability** | Arc 1, Ep 7 bond event | Rook asks where he learned doors. Cal: *"Somebody showed me a door once."* Changes the subject | A deflection; Cal jokes about everything |
-| V2 | **A symbol + the erased commanders** | Backlash Ch 3, the caverns | The filled black circle scratched beside the tally marks; the mural of two Wings with chiselled faces; a **memory splice** right after Cal studies it | Ancient history; a scratch |
+| V2 | **The mural + a symbol** | Backlash Ch 3, the caverns | The filled black circle scratched beside a dead soldier's tallies; the mural of a King giving his aura to two Wings; a **memory splice** right after Cal studies it | Ancient history; a scratch |
 | V3 | **Records of disappearances** | Arc 6, Silent Quill archive (side quest) | Centuries of vanishings: witnesses report *"the world held its breath"* and *"two people dressed for a funeral, one of them humming."* One entry: a shepherd near Larkspur, fifteen years ago, *"lost a moment of time."* | Folk superstition, filed under *Unexplained* |
-| V4 | **Someone mentions "black figures"** | Arc 6, a stranded Demon Soldier in Liraen | *"The black ones come for those who fall wrong."* He won't say more | Battlefield superstition |
+| V4 | **Someone mentions "black figures"** | Arc 6, a stranded Demon Soldier in Liraen | *"The Wings left the King. Now the black ones come for those who fall wrong."* He won't say more | Battlefield superstition |
 | V5 | **Cal recognizes the clothing** | Arc 7, Juno's sketchbook | A stranger once commissioned two odd garments from Juno: a black butler's suit and a black maid's dress *with a tie*. Cal goes quiet for a full beat. *"Don't make those for anyone."* | Juno: *"…Fashion critic now?"* |
 | V6 | **Quiet about portals** | Arc 7 banter skit | Tamsin: *"Why don't you just portal us to the throne room?"* Cal: *"Doors, Tamsin. I make doors."* Not a joke, for once | He's touchy about his magic |
 | V7 | **Direct question** | Arc 7, after the alliance | Rook: *"The two in black. Who were they?"* Cal's smile falters, the only time in Arc 7. *"…Family. Sort of. Not yet."* | — |
-| V8 | **The King recognizes the language** | Arc 7, the Demon Lord King fight | Mid-fight, Cal mutters the three syllables he whispered as he "died." The King **stops**: *"Where did you learn that tongue?"* Cal: *"From your Wings. The old ones."* For the first time, the King has no answer | — |
+| V8 | **The King recognizes the language** | Arc 7, the Demon Lord King fight | Mid-fight, Cal mutters the three syllables he whispered as he "died." The King **stops**: *"Where did you learn that tongue?"* Cal: *"From your Wings."* For the first time, the King understands where they went | — |
 
 ### 28.5 Still open (deliberately)
-The **who** is decided. These stay undecided until a later arc needs them:
-- **Why** they took Cal, and what he promised them (or they him).
-- **How** the former commanders became 5★ archdemons. (A possible parallel: they also "fell" and came back stronger.)
+The **who** and the **how** are decided. These stay undecided until a later arc needs them:
+- **Why** the archdemons took Cal instead of returning to the King, and what Cal promised them (or they him).
 - **What lies beyond the doorway** at the edge of the Continent, and how Cal went from there to waking human in Larkspur.
+- Whether the King **sent** them after the anomaly, or they chose it the moment they could think.
 - Their relationship to the **Goddess**, the **Scribe**, and the possibility that the Demon Continent is a training ground (§25.5).
 - Whether "the dead who fall wrong" means every 0★ being.
 
-Whatever is decided must stay consistent with §28.1–28.4: they can stop time and open the black circle, they know Cal and he knew they would come, the King understands their language, they took Cal at 0★, and they showed no hostility.
+Whatever is decided must stay consistent with §28.1–28.4.
 
 ---
 
@@ -1720,7 +1730,7 @@ Whatever is decided must stay consistent with §28.1–28.4: they can stop time 
 5. **The deepest layer (§25.5):** should the Demon Continent being a Goddess-built training ground be **hinted** (my recommendation), **confirmed**, or **cut**?
 6. **Endings (§27):** are three endings (Fall / Stay / Lantern) the right number? They share one final battle.
 7. **Backlash placement:** inside the reveal fight (Ep 48 → 49 → 50), as designed in `docs/BACKLASH.md`?
-8. **Clergy Duo:** confirmed as the King's **former** commanders (not Ghorran and Vaelith), with the tunnel leading to their hidden domain at the edge of the Continent (§28). Say so if you meant otherwise. Is the 8-clue budget (§28.4) the right density?
+8. **Clergy Duo:** Ghorran and Vaelith reborn by the King's Aura Sacrifice (§28). The Astral Path leads to a doorway at the edge of the Continent. Is that the right destination, and is the 8-clue budget (§28.4) the right density?
 
 The foundation questions from v0.1 are still open:
 

@@ -1,7 +1,9 @@
 # BACKLASH — Playable Flashback Design Package
 ### UNWRITTEN — Knights of the Last Lantern · Companion to `GDD.md` §26 · v1.1
 
-> **v1.2:** The Void Figures are now defined: the King's **former** Left and Right Wing, now 5★ archdemons, called **the Clergy Duo** (a butler and a musician). Added **CIN-05C "The Astral Path"**, where they carry Cal down a dark astral tunnel with horns and wings fully revealed, and a defaced commanders' mural in Ch 3. Identity canon: GDD §28.
+> **v1.3:** Corrected canon. The archdemons are **Ghorran and Vaelith themselves**: after Cal's pointless sacrifice, the King defeats the Hero Party (despite another Goddess Sacrifice), notices the anomaly, and in minutes of confusion **sacrifices his aura** to his two commanders, who are reborn as intelligent archdemons, a butler and a maid. Cal never fights the commanders. Chapter 5 and CIN-05B are rebuilt around this.
+>
+> **v1.2 (superseded in part):** The Void Figures are now defined: the King's **former** Left and Right Wing, now 5★ archdemons, called **the Clergy Duo** (a butler and a musician). Added **CIN-05C "The Astral Path"**, where they carry Cal down a dark astral tunnel with horns and wings fully revealed, and a defaced commanders' mural in Ch 3. Identity canon: GDD §28.
 >
 > **v1.1:** Added **The Void Figures** (Chapter 5, CIN-05B), the scene where the player watches Cal "die" and two calm figures in black step out of a hole in reality, stop time, and carry him away smiling. Mystery canon and the rules for future clues: GDD §28.
 
@@ -130,7 +132,7 @@ Five condensed Trials, each shorter than the last:
 5. **Trial 5:** ORDER: *ATTACK THE KNIGHT.* The Knight charges. A perfect sidestep. The opening to kill him is right there. **The player doesn't take it, and the order text flickers and fades.** The Knight retreats, alive. Cal smiles under the faceplate. *"Nothing happened. I broke an order, and the sky stayed exactly where it was."*
 
 ### Chapter 3: The Question
-- **Night.** Cal slips out of the barracks into the forbidden caverns beneath the castle. Ancient ruins. Glyphs on the walls (the same script as Liraen's Tower murals, the glyph Cal "guessed" in Ep 8). Old hero relics. A broken helm with tally marks scratched inside, left by another soldier who once asked questions and vanished; beside the tallies, a small, perfectly round, filled-in circle. Deeper in, a vast **defaced mural**: the Demon Lord King enthroned between **two winged commanders whose faces and names have been chiselled away**. A patrolling soldier, if Observed nearby, mutters the official truth: *"There have only ever been the Left Wing and the Right Wing."* Cal stands in front of the mural for a long time. Then a **memory splice**: the scene jumps, and Cal is walking back to the barracks before dawn. (What happened in the missing minutes is never shown in Backlash.)
+- **Night.** Cal slips out of the barracks into the forbidden caverns beneath the castle. Ancient ruins. Glyphs on the walls (the same script as Liraen's Tower murals, the glyph Cal "guessed" in Ep 8). Old hero relics. A broken helm with tally marks scratched inside, left by another soldier who once asked questions and vanished; beside the tallies, a small, perfectly round, filled-in circle. Deeper in, a vast, ancient **mural**: a Demon King of some forgotten age, wounded, pouring a black aura from his chest into the **two winged commanders** kneeling before him, who rise from it changed: wingless, robed, human-shaped, standing behind his throne like servants. A patrolling soldier, if Observed nearby, mutters: *"Old stories. Kings don't bleed."* Cal stands in front of the mural for a long time. Then a **memory splice**: the scene jumps, and Cal is walking back to the barracks before dawn. (What happened in the missing minutes is never shown in Backlash.)
 - **Day.** Guard duty in the throne chamber. The Demon Lord King settles a dispute between his two Commanders **without a word**: a glance, and the air bends.
 - **For one cut, the camera is the King's eye**, and the player sees what he sees: a faint **★** above every soldier, ★★★ above each Commander. The King's gaze passes over Cal. One star. Nothing. He looks away.
 - **Cal (internal):** ***"What exactly are you?"***
@@ -143,7 +145,7 @@ Her body dissolves into light. A mote of gold leaves her and sinks into the Knig
 Later, alone on the wall: ***"If death isn't permanent…"*** *(long pause)* ***"…what exactly is death?"***
 
 ### Chapter 5: The Final Battle
-The largest Trial anyone remembers. The heroes are far stronger now: King A's arrows punch through plate, the Knight carves through lines, and Maelis keeps them standing. The Commanders **Ghorran (Left Wing)** and **Vaelith (Right Wing)** take the field. For the first time, the heroes push past the castle gates. **King A falls, permanently**, killed by Ghorran.
+The largest Trial anyone remembers. The heroes are far stronger now: King A's arrows punch through plate, the Knight carves through lines, and Maelis keeps them standing. The Commanders **Ghorran (Left Wing)** and **Vaelith (Right Wing)** take the field (Cal fights *beside* them in the lines, never against them). For the first time, the heroes push past the castle gates. **King A falls, permanently**, killed by Ghorran. The Commanders fall back to guard the throne.
 
 In the throne chamber, the King perceives the Knight's new rating: *"…Four."* For the first time, he is mildly interested. He orders every Line to hold.
 
@@ -157,40 +159,49 @@ Cal kneels. Control ends. He whispers ten seconds of words under his breath (to 
 
 The player's read: *the stolen prayer doesn't work for a demon. He gave away the only thing he had, for nothing.*
 
-**The Last Line (playable).** Back at the shattered gate, the battle reaches its peak. Smoke, fire everywhere, weapons scattered, buildings broken, the Line barely holding. Cal fights at **0★**: his damage and posture damage are visibly lower than at any point in the chapter, and the player feels the loss in their hands without being told why. Then **the Knight Hero**, blazing with the star Maelis gave him, cuts through the line. It is the man Cal spared in Trial 5. His Surge charge is the one attack the memory will not let Cal avoid: a dodge input produces only a stumble.
+**The Last Line (playable).** The last Line holds the great doors of the throne chamber. The battle reaches its peak: smoke, fire everywhere, weapons scattered, the hall's outer gallery collapsing, the Line barely holding. Cal fights at **0★**: his damage and posture damage are visibly lower than at any point in the chapter, and the player feels the loss in their hands without being told why. Then **the Knight Hero** cuts through the Line. It is the man Cal spared in Trial 5. His Surge charge is the one attack the memory will not let Cal avoid: a dodge input produces only a stumble.
 
-**Failing Body (playable, ~20s).** Cal is thrown into the debris, armor split, breathing ragged. **The player still has control** and will try to stand. Pushing the stick lifts him onto one arm, which buckles. Pressing attack raises the glaive a few inches before it drops. Each attempt is weaker. The HUD fades away piece by piece. After a few attempts he falls and lies still, and control is gone.
+**Failing Body (playable, ~20s).** Cal is thrown down on the threshold of the throne chamber, armor split, breathing ragged. **The player still has control** and will try to stand. Pushing the stick lifts him onto one arm, which buckles. Pressing attack raises the glaive a few inches before it drops. Each attempt is weaker. The HUD fades away piece by piece. After a few attempts he falls, and control is gone.
 
-**The Void (CIN-05B).** Present-day narration has stopped. The battle muffles to a hum. There is only his breathing, slow and heavy. His eyes are half-open. He tries to say something: three faint syllables, unintelligible, unsubtitled. His breathing stops. His body goes still. **The camera stays.** The battle goes on, out of focus, behind him, for far longer than is comfortable. *That's it?*
+**The Dying View (CIN-05B, first half).** Present-day narration has stopped. Cal lies on his side at the open doors, and the camera holds on his face. Behind him, **through the doorway, out of focus**, the end of the battle plays out while his eye drifts in and out of focus:
+- The Knight steps over him without a glance and walks into the throne chamber with Maelis behind him.
+- The King **does not stand**. The Knight's charge stops in mid-air, held by nothing.
+- Maelis kneels and **sacrifices herself again**. Her light flows into the Knight, who blazes brighter than anything Cal has ever seen. Faint, far away: *KING: "…Five."*
+- One glance from the throne. The Knight is hurled across the chamber; Maelis collapses; a pillar of light tears the broken heroes out of the world. **The King has defeated the Hero Party**, even with the Goddess's Sacrifice.
+- Then the King sits very still, looking at **his own open palm**, where a soldier's star passed through him. For the first time in his existence, he is **confused**.
+- Barely visible through smoke, **minutes later**: the two Commanders kneel before the throne. The King tears his **aura** (the black pressure that made him unbearable to stand near) out of himself in two streams and pours it into them. Their silhouettes twist; their wings fold away; they shrink into something human-shaped. Smoke swallows the image.
 
-Then a small distortion behind him, like a visual glitch. The air bends. Light drains toward a point. A **perfect black circle** opens: not a portal, a **hole punched through reality**. Smoke drifts toward it, ash floats upward, and loose debris shifts. The moment it is fully open, **time stops**: fire, smoke, arrows, dust, falling stones, and every fighter freeze. Only the void moves. And, if the player is watching closely, **Cal's eyes open slightly.**
+Cal's eye nearly closes. He tries to say something: three faint syllables, unintelligible, unsubtitled. His breathing stops. His body goes still. **The camera stays** for far longer than is comfortable. *That's it?*
 
-Two figures step out: a man and a woman in **identical black suits**, black shirts, black ties, black gloves, featureless black masks. No skin, no insignia. They look absurdly formal on a battlefield, like people arriving at a meeting. Their presence is unbearable: the screen presses in, the air feels thick, the sound of breathing (even the player's own avatar's) is gone. Yet they simply **walk**, stepping around a frozen arrow without looking at it, past the frozen Knight without turning their heads. They exchange a few quiet, casual words in a language nobody has ever heard (**no subtitles, no translation**). The woman looks at the man. He bends and lifts Cal onto his shoulder in one effortless motion, as if he weighs nothing, and walks toward the void. The woman follows.
+**The Void (CIN-05B, second half).** A small distortion behind him, like a visual glitch. The air bends. Light drains toward a point. A **perfect black circle** opens: not a portal, a **hole punched through reality**. Smoke drifts toward it, ash floats upward, and loose debris shifts. The moment it is fully open, **time stops**: fire, smoke, dust, falling stones, routing soldiers, and, through the doorway, **even the King**, frozen mid-turn. Only the void moves. And, if the player is watching closely, **Cal's eyes open slightly.**
 
-The camera circles Cal's face, which we see clearly for the first time since he fell. His eyes are open. He isn't afraid, unconscious, or dying. **He's smiling.** The smile becomes a grin. A breath through the nose, a chuckle, a deeper laugh, and then, for a moment, a manic laugh, echoing unnaturally through frozen time. Not a cartoon villain's laugh: the laugh of someone whose plan just worked.
+Two figures step out: a man and a woman in **identical black suits**, black shirts, black ties, black gloves, featureless black masks. No skin, no insignia, no horns, no wings. They look absurdly formal in a burning castle, like people arriving at a meeting. Their presence is unbearable: the screen presses in, the air feels thick, the avatar's breathing sound is gone. It is **the same pressure as the King's gaze** in Ch 3, because it *is* the King's aura. Yet they simply **walk**, stepping around a frozen ember without looking at it. They exchange a few quiet, casual words in a language nobody has ever heard (**no subtitles, no translation**). The woman looks at the man. He bends and lifts Cal onto his shoulder in one effortless motion and walks toward the void. The woman follows.
+
+The camera circles Cal's face. His eyes are open. He isn't afraid, unconscious, or dying. **He's smiling.** The smile becomes a grin. A breath through the nose, a chuckle, a deeper laugh, and then, for a moment, a manic laugh, echoing unnaturally through frozen time. Not a cartoon villain's laugh: the laugh of someone whose plan just worked.
 
 The man steps into the void. The woman is about to follow, then stops, and slowly turns around. Her mask faces Cal, still visible in the dark just past the edge over the man's shoulder. Hold. She takes one small step back toward the void. Cal's face one last time: still smiling, then laughing, wildly. **Hard cut** to the woman. She is gone.
 
-The void **folds inward**, like reality sealing a wound, and vanishes. The pressure lifts. **Time resumes**: fire, smoke, arrows, and the fighting continue mid-motion. A Demon Soldier glances at the spot where Cal lay. Nothing. He turns back. A soldier from the rear steps into the gap. ***"Mind the step."*** Nobody knows anything happened.
+The void **folds inward**, like reality sealing a wound, and vanishes. The pressure lifts. **Time resumes**: fire, smoke, and falling stone continue mid-motion. A Demon Soldier glances at the spot where Cal lay. Nothing. Through the doorway, the King finishes turning his head toward the threshold and stares at the empty stone **for a long moment**. Beside his throne, the places where his two Commanders knelt are empty too. A soldier from the rear steps into the gap in the Line. ***"Mind the step."***
 
 **Cut to black.**
 
-**The Astral Path (CIN-05C).** Out of the black, a different place. A **dark astral realm**: a starfield of black and violet, cold aurora rippling through it, no ground, no sky. A path of black glass forms under the figures' feet one tile ahead of each step and dissolves behind them. **Dark magic** without gesture or word. They are still walking, at exactly the same unhurried pace, the man still carrying Cal over his shoulder.
+**The Astral Path (CIN-05C).** Out of the black, a different place: a **dark astral realm**, a starfield of black and violet with cold aurora rippling through it, no ground, no sky. A path of black glass forms under the figures' feet one tile ahead of each step and dissolves behind them. **Dark magic**, the King's aura, without a word. They are still walking at exactly the same unhurried pace, the man still carrying Cal.
 
-Here, the concealment falls away. In the realm's light, the plain black suits **resolve into what they really are**: the man in an immaculate **black butler's suit**, waistcoat, tie, and gloves, a black watch-chain at his vest; the woman in a **black maid's dress cut with a suit jacket and tie**, gloved, a slim black instrument case on her back. Midway down the path, without breaking stride, they let the disguise go completely: **horns** rise from their brows, and **vast dark wings** unfurl from slits in their coats. Their masks stay on. **Fully revealed as archdemons.**
+Here, the concealment falls away. The plain black suits **resolve into what they really are**: the man in an immaculate **black butler's suit**, waistcoat, tie, gloves, and a black watch-chain; the woman in a **black maid's dress cut with a suit jacket and tie**, gloved, a slim black instrument case on her back. Midway down the path, without breaking stride, they let the disguise go completely: **horns** rise from their brows, and **vast dark wings** unfurl from slits in their coats. Their masks stay on. **Fully revealed as archdemons.** The wings are the same shape as the Commanders' wings the player has seen all chapter.
 
-The tunnel is enormous. Far below the translucent path, the whole Demon Continent drifts past like a map: the castle a speck, the battlefield a smear of fire. They walk on for a long time. The woman begins to **hum**: four slow notes, the Demon Army's march cadence turned into a lullaby. Over the man's shoulder, Cal, eyes half-closed and still smiling, **whistles it back**, badly. (This is where his whistled tune comes from.)
+The tunnel is enormous. Far below the translucent path, the whole Demon Continent drifts past like a map: the castle a speck, the battlefield a smear of fire. The woman begins to **hum**: four slow notes, the Demon Army's march cadence turned into a lullaby. Over the man's shoulder, Cal, eyes half-closed and still smiling, **whistles it back**, badly. (This is where his whistled tune comes from.)
 
-For a single cut through Cal's eyes, faint ink **★★★★★** flicker above each of them, then vanish: the first time Cal ever sees a rating, and the first 5★ ratings anyone has ever seen. Far ahead, at the end of the path, a tall dark doorway waits at the very edge of the Continent.
+For a single cut through Cal's eyes, faint ink **★★★★★** flicker above each of them, then vanish: the first time Cal ever sees a rating. Far ahead, at the end of the path, a tall dark doorway waits at the very edge of the Continent.
 
 **Cut to black** before they reach it.
 
-
-> **The intended order of thoughts:** 1. *Cal is almost dead.* → 2. *Cal died.* → 3. *Wait… what is that?* → 4. *Why did time stop?* → 5. *Who the hell are those people?* → 6. *Why can't anyone else move?* → 7. *Why are they so calm?* → 8. *Why are they taking Cal?* → 9. ***Wait… Cal is smiling.*** → 10. ***He knew.*** → 11. *What the hell just happened?*
+> **The intended order of thoughts:** 1. *Cal is almost dead.* → 2. *Cal died.* → 3. *Wait… what is that?* → 4. *Why did time stop?* → 5. *Who the hell are those people?* → 6. *Why can't anyone else move, not even the King?* → 7. *Why are they so calm?* → 8. *Why are they taking Cal?* → 9. ***Wait… Cal is smiling.*** → 10. ***He knew.*** → 11. *What the hell just happened?* And on the Astral Path: 12. *…Those wings. Were those the Commanders?*
 >
 > **What the deception targets.** The player already knows a human Cal exists in the present. The trick is not "Cal no longer exists." It is ***"this is how his demon life ended: a real, sad, pointless death."*** The void turns that into: *it wasn't a death at all; it was an exit he arranged.*
 >
-> **What Backlash shows, and what it never says.** The player now *sees* that the figures are **archdemons** (horns, wings, 5★) who **know Cal** and are taking him somewhere at the edge of the Demon Continent. Backlash **never** names them, never says they were the King's former commanders (only Cal knows that; attentive players can connect it to the defaced mural in Ch 3), never translates their language, and never explains why they took him, what happened at the doorway, or how he woke up human in Liraen. Identity canon and rules: GDD §28.
+> **How Cal "knew."** In Ch 3 he studied an ancient mural of a wounded King pouring his aura into his two Wings. His stolen star passing through the King's palm was the wound. He couldn't be sure the King would answer the way the mural said, which is why his laugh is the laugh of a gamble that paid off.
+>
+> **What Backlash shows, and what it never says.** The player half-sees the Commanders' rebirth through smoke and dying eyes, then sees two archdemons with the Commanders' wings. **No one says it.** In-world, **only Cal** (and the King, who made them) knows who they are. Backlash never translates their language, never explains why they took Cal instead of bringing him to the King, never shows what is beyond the doorway, and never explains how he woke up human in Liraen. Canon and rules: GDD §28.
 
 ### Chapter 6: The Other World
 Black, for several seconds. Then a low, glassy tone that bends upward and stops: the **Void Note**, half-familiar from the drone of the Astral Path, and never heard again except as a rare clue. Breathing. A heartbeat. Another. Eyes open.
@@ -250,15 +261,15 @@ Gameplay resumes. He opens a door frame, sits on it, swings his legs, and the re
 | 2 | **The Monthly Trial** | #1 → #2 | 7 min | 9 min | 85 / 15 | The order fades |
 | 3 | **The Question** | #2 | 4 min | 7 min | 75 / 25 | *"What exactly are you?"* |
 | 4 | **Sacrifice** | #2 | 4 min | 5 min | 55 / 45 | *"…what exactly is death?"* |
-| 5 | **The Final Battle** | #2 | 11 min | 12 min | 55 / 45 | The Astral Path; black |
+| 5 | **The Final Battle** | #2 | 12 min | 13 min | 50 / 50 | The Astral Path; black |
 | 6 | **The Other World** | #3 | 4 min | 6 min | 80 / 20 | The orphanage step |
 | 7 | **The Human** | #3 | 6 min | 9 min | 70 / 30 | *"Take the one-pager."* |
 | 8 | **The Mask** | #3 → #4 | 4 min | 5 min | 70 / 30 | The tear opens |
 | R | **Return** | #4 | 1 min | 1 min | 0 / 100 | The smirk → fight resumes |
-| | **Total** | | **≈ 47 min** | **≈ 64 min** | **≈ 69 / 31** | |
+| | **Total** | | **≈ 48 min** | **≈ 65 min** | **≈ 68 / 32** | |
 
 **Pacing rules:**
-- No cinematic runs longer than **90 seconds** except CIN-05B (*The Void*, ~115s) and its continuation CIN-05C (*The Astral Path*, ~60s). They are the scenes allowed to break the chapter's rules, and their length is part of the effect.
+- No cinematic runs longer than **90 seconds** except CIN-05B (*The Void*, ~150s) and its continuation CIN-05C (*The Astral Path*, ~60s). They are the scenes allowed to break the chapter's rules, and their length is part of the effect.
 - Control returns within **2 seconds** after every cinematic. No black loading screens: chapters stream in during the preceding cinematic.
 - Each chapter follows the anime pacing template in miniature (hook → development → conflict → beat → hook), and each ends on a line, never a fade.
 
@@ -302,7 +313,7 @@ Gameplay resumes. He opens a door frame, sits on it, swings his legs, and the re
 | CIN-03 | **What Exactly Are You?** | 35s | The King's glance; first star UI (King's POV) | §21 |
 | CIN-04 | **Sacrifice** | 50s | Maelis dies and is reborn | §21 |
 | CIN-05 | **For the Demon King** | 50s | The kneel; his star leaves him; *"Return to the line."* | §21 |
-| CIN-05B | **The Void** | ~115s | The apparent death, frozen time, the two figures, the smile, the laugh. (With CIN-05, mirrors Ep 18 cut for cut) | §21 |
+| CIN-05B | **The Void** | ~150s | The dying view (the King defeats the heroes and pours his aura into the Commanders), the apparent death, frozen time, the two figures, the smile, the laugh. (With CIN-05, mirrors Ep 18 cut for cut) | §21 |
 | CIN-05C | **The Astral Path** | ~60s | The tunnel: butler and maid revealed, horns and wings, the hummed march, the first ★★★★★ | §21 |
 | CIN-06 | **Heartbeat** | 35s | The Void Note; waking human in Larkspur | §21 |
 | CIN-07 | **Nobody's Written Your Story** | 45s | Dagrun at the lighthouse | §21 |
@@ -321,7 +332,7 @@ Gameplay resumes. He opens a door frame, sits on it, swings his legs, and the re
 | E4 | **Trial 3** | Hero tier 3 | Counter the Knight's charge with *Read: Charge* once | First success |
 | E5 | **Trial 4** | Hero tier 4 | Free experiment: any of 4 strategies (§8.4); ends after one "result" | Agency |
 | E6 | **Trial 5** | Knight tier 5 (focused duel inside the battle) | ORDER: ATTACK. Perfect dodge → **spare** (no attack input in the kill window) | Disobedience as mechanic |
-| E7 | **Culling Drill** (Ch 3 morning) | **Vaelith** (sparring) | Survive 60s; optional: land one hit | Commander-tier terror; she doesn't care either way |
+| E7 | **Culling Drill** (Ch 3 morning) | A **Line Sergeant**, while **Vaelith** watches from above | Survive 60s; optional: land one hit. Vaelith culls the weakest soldier beside Cal without a word | Hierarchy made visible; Cal never fights a Commander |
 | E8 | **The Losing Heroes** | Hero tier 5 (weakened) | ORDER: STOP THE PRAYER; prayer completes regardless after 10s | Witness, not prevent |
 | E9 | **The Breach** | Hero tier 6 + Commanders (NPC) | Reach the castle gate checkpoint | Scale and chaos |
 | E9b | **The Last Line** | Shattered Line (allies), Hero tier 6 (Knight in Surge) | Survive ~90s, then the Knight's scripted Surge charge (dodge produces a stumble) | Peak chaos; weaker than ever |
@@ -470,7 +481,7 @@ A squad-level **PartyBrain** (blackboard + state machine) coordinates three role
 | 4 | + Charge Feint | — | — | Adapts to the player's T4 strategy |
 | 5 | + Guard Ally | — | — | Knight focuses Cal (duel) |
 | Ch 4 | Tier 5, weakened | **Sacrifice** | Tier 5 | PROTECT_PRAYER |
-| Ch 5 | **Surge** (gained star) | Tier 5 (reborn, weaker) | Pierce through plate | BREACH → castle |
+| Ch 5 | **Surge** (4★), then **5★** after the second Sacrifice | Tier 5 (reborn, weaker); **Sacrifices again** in the throne room | Pierce through plate; **killed by Ghorran** | BREACH → castle → throne room → **defeated by the King and recalled by the Goddess's light** |
 
 All tiers are **one `HeroTierData` asset per Trial**: the same arena and agents, with different data.
 
@@ -505,34 +516,22 @@ As in the main game: at most 2 hostile attackers on Cal at once. The *heroes* al
 
 ---
 
-## 10. Demon Commander Boss Behavior
+## 10. The Demon Commanders → the Archdemons
 
-The same two Commanders appear in three places: **Backlash** (sparring/NPC), the **Siege of Aurelin** (Ghorran, killed by the Sable Knight), and **Arc 7** (Vaelith, full boss). They are built once and tuned per appearance.
+**Cal never fights Ghorran or Vaelith.** He serves under them, watches them, and is carried by them. They are the King's only two Commanders, and at the end of Backlash they stop being Commanders at all.
 
-### 10.1 Vaelith, the Right Wing (3★): precise, cold
-| Ability | Telegraph | Notes |
+| | **Ghorran, the Left Wing** | **Vaelith, the Right Wing** |
 |---|---|---|
-| Twin Flurry | Spears cross | 6-hit string |
-| Wing Dash | Wings snap open | Closes 15 m instantly |
-| Aerial Plunge | Rises, shadow marks landing | AoE |
-| **Cull** | Spears part, 0.5s freeze | Grab. In the Backlash sparring: instant KO, ending the drill early ("*Replaceable.*") |
-| Wing Wall | Wings closed | Frontal block; must be flanked |
+| **As Commander (3★)** | Axe, brute force. Cleave, Wing Slam, Sky Fall (lands on his own soldiers if they're in the way), Rally Roar | Twin spears, precise and cold. Twin Flurry, Wing Dash, Aerial Plunge, Wing Wall |
+| **In Backlash** | NPC set pieces: drives the Lines, **kills King A** in Ch 5, guards the throne | NPC: watches the Culling Drill and culls the weakest without a word (E7); guards the throne |
+| **Rebirth** | The King pours half his **aura** into him | The other half |
+| **As archdemon (5★)** | **The butler.** Intelligent for the first time. Immaculate black butler's suit. Carries Cal | **The maid** (and musician). Intelligent for the first time. Black maid's dress cut with suit and tie, instrument case. Hums the march; the one who looks back at Cal |
+| **Concealed form** | Plain black suit, tie, gloves, featureless mask; horns and wings hidden | The same |
+| **Combat** | **None in this game.** Exclusive, rare NPCs (GDD §28) | **None in this game** |
 
-- **Backlash (E7, Culling Drill):** survive 60s. Landing a hit is optional. She says nothing either way, which is the point.
-- **Arc 7 boss (full):** P1 kit above → P2 airborne, dives with spear rain → P3 **orders a Line** (formation enemies join; break the Sergeant to stop the orders) → P4 hidden ability *Right-Hand Decree*, mirroring the King's silent cast once → Final: a dive across the chamber. Cal (ally, three-way): *"You never looked at me once."*
+**The contrast is the point:** the brute becomes an immaculate butler; the cold commander becomes a maid who hums lullabies. Mindless obedience becomes intelligence, and the first thing they do with it is take the soldier who taught himself to ask questions.
 
-### 10.2 Ghorran, the Left Wing (3★): brute
-| Ability | Notes |
-|---|---|
-| Cleave | Huge arc |
-| Wing Slam | Shockwave, knockdown |
-| Sky Fall | Lifts off, lands where soldiers clustered (he doesn't care) |
-| Rally Roar | Buffs Lines in range |
-
-- **Backlash (Ch 5):** NPC set piece; he kills King A.
-- **Siege of Aurelin:** the Sable Knight drops him out of his own sky (GDD §15.8). Not a player boss; a spectacle.
-
----
+**Reuse:** their Commander kits are still built (they fight heroes as NPCs in Backlash), and their winged silhouettes are reused for the archdemon forms in CIN-05C.
 
 ## 11. Demon Lord King Encounter Design
 
@@ -540,6 +539,8 @@ The same two Commanders appear in three places: **Backlash** (sparring/NPC), the
 - **The Gaze (Ch 3, Throne Guard):** the King's attention is a slow-sweeping cone (a subtle light shift, a heartbeat in the audio, controller rumble). While it passes over Cal, the player must keep their posture: no movement but **formation pace**. Breaking pace makes nearby soldiers turn their heads. There is no fail state, only dread.
 - **Silent casting, demonstrated:** the Commanders argue; the King looks at a pillar; it folds in half. No incantation, no particles: just a **distortion** in the air and the sound of stone giving way. Restraint makes it terrifying.
 - **The Walk (Ch 5):** the player walks the length of the throne chamber at a constrained pace while every soldier faces forward and the King watches. Control is removed at the kneel.
+- **The King's Answer (Ch 5, seen through Cal's dying eyes):** the King defeats the Hero Party **without standing**: he stops the Knight's charge in mid-air with a look, lets Maelis's Sacrifice raise the Knight to 5★ (*"…Five."*), then breaks them with one glance. The Goddess's light recalls the survivors. (His standing up stays reserved for Arc 7.)
+- **The Aura Sacrifice:** the King looks at his own palm, confused for the first time, and within minutes tears his aura out of himself in two streams and pours it into Ghorran and Vaelith. **Consequence for Arc 7:** for fifteen years, the two places beside his throne have stood empty, and his presence has never been quite as crushing as it was. The Gaze in Ch 3 is the full aura; in Arc 7 it is noticeably weaker, which is part of how Rook and Cal can stand in front of him at all.
 
 ### 11.2 Arc 7 boss (preview; full design in GDD §27)
 | Phase | Behavior | Counterplay |
@@ -570,6 +571,8 @@ The same two Commanders appear in three places: **Backlash** (sparring/NPC), the
 |---|---|
 | **Backlash Ch 4** | Witnessed: the player can't stop it, and learns it with Observe |
 | **Backlash Ch 5** | **Performed** (by Cal, as a whispered "vow") in CIN-05. The audio is the same ten syllables |
+| **Backlash Ch 5, the throne room** | Maelis **sacrifices again** (4★ → 3★ in Ch 4, → 2★ here); the Knight reaches **5★**. They lose anyway. The first time the player sees Sacrifice fail to save anyone |
+| **The Aura Sacrifice** | Not the Saint's prayer: the King's own version. He gives **aura** (presence and power), not stars, and the recipients are **reborn as something new** rather than strengthened |
 | **Arc 7** | **Maelis as a guest party member:** Low Heal (protect her for 10s) and Sacrifice (once per battle, an ally gains a temporary *Star Surge*; Maelis drops a star *for real*, a permanent and heartbreaking cost the player chooses whether to accept) |
 | **Arc 7 King boss, Final** | The King's own Sacrifice; Cal intercepts the transfer |
 | **Final battle** | Inverted by the **Shared Star** (GDD §25.4): stars given freely, nobody loses anything |
@@ -589,7 +592,7 @@ The prayer is **ten distinct syllables in an original constructed language**, su
 | **Ch 3, CIN-03** | **The King's eye** (one cut) | ★ above soldiers, ★★★ above Commanders. The first stars the player has ever seen. Gone the moment the camera leaves his eye |
 | Ch 4 | Ash Eleven | The **star mote** of Sacrifice is visible as light (everyone can see light), never as a ★ glyph |
 | **Ch 5, CIN-05** | King's POV, one cut | The ★ above Ash Eleven **leaves him**, crosses into the King's palm, and fades. A **hollow ☆ outline** (0★) remains over him. *"…Four,"* the King says, looking at the Knight |
-| Ch 5, CIN-05B | Nobody's (frozen time) | **No stars are shown** on the battlefield while time is frozen |
+| Ch 5, CIN-05B | Cal's dying eyes, then frozen time | **No stars are shown.** The King's *"…Five."* is only a faint word through the doorway |
 | **Ch 5, CIN-05C** | **Cal's eyes** (one cut) | **★★★★★** flicker above each archdemon, then vanish. Cal's perception wakes here, at 0★, on the Astral Path. Full perception arrives in Ch 6 |
 | **Ch 6 onward** | **Reincarnated Cal (can see)** | Ink ★ above every human. **Above the infant: nothing.** The player sees ratings for the whole of Ch 6–8 |
 | **Return to present** | Rook (can't see) | The stars **vanish**. The player realizes **Cal has been seeing ratings over all of them for the entire game** |
@@ -819,7 +822,7 @@ Total silence is used exactly **four times**: the death in Ch 1 (one second afte
 |---|---|---|
 | **Ash Line Eleven (player)** | Demon Soldier enemy set (built for the Siege) | **~25**: player-quality locomotion blends, drill steps, Brace, Observe idle, formation shuffle, step-over, carry-body-glance, kneel |
 | **Demon Soldiers (crowd)** | Enemy set | ~8 life-station loops |
-| **Commanders** | Siege / Arc 7 sets | 0 (Vaelith sparring uses her kit) |
+| **Commanders** | Built for Backlash (NPC use) | **~4** for the rebirth: kneel, aura-receive, wings fold away, rise human-shaped (seen only through smoke) |
 | **Demon Lord King** | Arc 7 set (built here first) | **~10**: seated idles, gaze turn, hand-open, stand (reserved for Arc 7) |
 | **Knight Hero** | New | **~30** |
 | **Goddess Saint** | New | **~15** (prayer kneel loop, rise, dissolve-ready pose, rebirth) |
@@ -830,7 +833,7 @@ Total silence is used exactly **four times**: the death in Ch 1 (one second afte
 | **The Void Figures** | New | **~16**: concealment lift, horn emergence, wing unfurl, walking-with-wings, the musician's humming idle, the butler's free-hand gesture as the path forms, plus the original ~10: a shared unhurried walk (identical cadence for both), step-out-of-void, step-around (an obstacle they don't look at), the effortless lift-to-shoulder (**no anticipation, no strain**), shoulder-carry walk, conversational idles, the woman's stop / slow turn / small step back, step-into-void |
 | **Faces** | — | High-detail facial pass for Ash Eleven's demon face (CIN-05 smile, CIN-05B: eyes opening, smile → grin → four-stage laugh). The most expressive face work in the chapter |
 | **Liraen NPCs** | Existing | 0 |
-| **Total new** | | **≈ 148 clips**, most of them hero-party combat that Arc 7 reuses |
+| **Total new** | | **≈ 152 clips**, most of them hero-party combat that Arc 7 reuses |
 
 ### 20.2 Anime timing rules
 - **Standard attacks:** pose-to-pose, **stepped on twos** (12 fps sampling), 8–15 keys (GDD §19.7).
@@ -945,55 +948,63 @@ Format: **CUT · PICTURE · ACTION / STAGE · DIALOGUE / AUDIO · TIME / FRAMES 
 | 019 | OTS: he walks back down the chamber toward the white glare of the gate | Slow dolly behind | War drums swelling | 3.0s / 72 | — |
 | → | **Control: The Last Line (P5.3)** | — | — | — | — |
 
-### CIN-05B "The Void" (≈ 115s; Ch 5; the add-on. The player must believe Cal died)
+### CIN-05B "The Void" (≈ 150s; Ch 5; the player must believe Cal died)
 | CUT | PICTURE | ACTION / STAGE | DIALOGUE / AUDIO | TIME / FRAMES | Mirrors Ep 18 |
 |---|---|---|---|---|---|
 | — | *(Gameplay P5.4 Failing Body ends: the player's last attempt to stand fails; control removed on the collapse)* | — | — | — | — |
-| 001 | **Cal falling.** Low wide: Ash Eleven's body hits the ash; glaive skids out of frame; fire and smoke fill the battlefield behind | Static; the fall uses a **held frame** on impact (6f) | A heavy armor crash; battle at full mix | 1.5s / 36 | — |
-| 002 | MS, ground level: smoke rolling over him; a soldier's legs run past in the foreground | Very slow push in | Battle begins to **muffle** (low-pass sweeping down) | 2.5s / 60 | — |
-| 003 | **Final breathing.** CU, his face sideways on the ground; the faceplate cracked half away; one demon eye half-open, unfocused | Slow push continues; shallow focus; background chaos smeared | **Breathing** comes to the front: slow, heavy, weak. Battle now a distant hum | 4.0s / 96 | — |
-| 004 | ECU: his lips behind the broken plate | Static | **Final words:** three faint syllables, unintelligible, **no subtitle** | 2.5s / 60 | — |
-| 005 | CU (as 003) | Static | One last breath out. Then **nothing** | 2.0s / 48 | — |
-| 006 | **Apparent death.** CU (as 003): completely still. Behind him, out of focus, the battle goes on (figures running, an arrow streak, a burning banner falling) | **Hold. Do not cut.** No camera movement | Muffled battle only. No music. No narration | 5.0s / 120 | — |
-| 007 | Same frame | The hold continues past comfort. *(That's it?)* | — | 3.0s / 72 | — |
-| 008 | **Portal begins.** Same frame: a tiny ripple appears in the air **behind his head**, like a rendering glitch | Static | A single faint **click** | 1.0s / 24 | — |
-| 009 | Wide over his body: the air **bends** around a point 2 m behind him; light drains toward it; smoke begins drifting *backward*; ash lifts | Slow crane up | **Sub-bass** swells; world sounds pull in pitch toward the point | 3.0s / 72 | — |
-| 010 | MS: a **perfect black circle** opens from the point: no glow, a hole through the world; loose debris slides toward it | Static | Sub-bass deepens | 3.0s / 72 | — |
-| 011 | **Time freezing.** Wide, high: the instant it is fully open, **everything stops**: smoke, fire, arrows mid-flight, a soldier mid-fall, the Knight mid-swing, dust | **Hard freeze** (single-frame transition) | **Every world sound cuts at once.** Only sub-bass and a thin high tone remain | 2.0s / 48 | — |
-| 012 | Slow lateral dolly through the frozen battlefield: hanging arrows, frozen embers, a scream frozen on a face | The **only** moving camera in the sequence; even the film grain is frozen | Tone and sub-bass only | 4.0s / 96 | — |
-| 013 | ECU, framed **off-center** (not emphasized): Cal's eye. The lid lifts a few millimetres | Static, no push-in | — | 1.0s / 24 | — |
-| 014 | **Male figure enters.** MS, the void: a black-gloved hand, then a black suit sleeve; the MALE FIGURE steps out onto the ash in one unhurried step. Black suit, shirt, tie, mask. No skin | Static | A single **footstep**: dry, close, perfectly clear | 2.5s / 60 | — |
-| 015 | **Female figure enters.** MS: the FEMALE FIGURE steps out beside him, in the same suit and mask, with the same cadence | Static | Second footstep. Cloth rustle | 2.0s / 48 | — |
-| 016 | **Dark aura.** Low wide: both figures standing still in the frozen battlefield, looking toward Cal | Vignette closes ~15% and breathes once; color drains toward black; edges squeeze | Sub-bass rises; controller pulses a heartbeat… then **stops**. All UI and avatar breath sounds removed | 3.0s / 72 | — |
-| 017 | Tracking from behind: they walk; the male steps **around** a frozen arrow without looking at it; they pass the frozen Knight without turning their heads | Slow tracking | Only their footsteps | 4.0s / 96 | — |
-| 018 | **Indecipherable conversation.** Two-shot profile, walking | Static | MALE: *[unknown language, quiet, casual]* | 2.0s / 48 | — |
-| 019 | Same | — | FEMALE: *[unknown language]* | 1.5s / 36 | — |
-| 020 | Same | They stop beside Cal | MALE: *[unknown language, short]*. **No subtitles. No captions except CC: [Speaking an unknown language]** | 1.5s / 36 | — |
-| 021 | MS: the female's mask turns toward the male | Slight turn; held | — | 1.5s / 36 | — |
-| 022 | **Cal being picked up.** Low angle: the male bends and lifts Cal onto his shoulder in **one smooth motion**, no anticipation, no strain | Static | Armor shifting; nothing else | 2.0s / 48 | — |
-| 023 | Wide: the male walks toward the void carrying Cal; the female follows a step behind | Static | Two sets of footsteps | 3.0s / 72 | — |
-| 024 | **Cal's face.** Orbit CU: the camera circles around Cal's face over the male's shoulder. **His eyes are open.** Calm. Not afraid | Slow orbit, 90° | — | 3.0s / 72 | — |
-| 025 | ECU: a **slight smile** | Hold | — | 1.5s / 36 | — |
-| 026 | ECU: the smile becomes a **grin** | Hold | — | 1.5s / 36 | — |
-| 027 | **Cal's laugh.** CU: a breath out through the nose; a small chuckle | Static | Chuckle with an **unnaturally long reverb tail** | 1.5s / 36 | — |
-| 028 | MS: a deeper laugh, shoulders shaking on the male's shoulder. **The male does not react at all** | Static | Laugh, echoing | 2.0s / 48 | — |
-| 029 | CU: a brief, unsettling **manic** laugh, then it stops | Stepped animation, held final frame | Manic laugh, cut off | 1.5s / 36 | — |
-| 030 | **Male figure enters the portal.** Wide: the male steps into the black; Cal's face stays faintly visible in the dark just past the edge, rim-lit by frozen firelight | Static | A footstep that sounds far away | 2.0s / 48 | — |
-| 031 | **Female figure turning.** MS: the female takes one step toward the void… stops | Static | Footstep. Silence | 1.5s / 36 | — |
-| 032 | MS from behind her: she **slowly turns around** | Slow | Cloth rustle | 2.0s / 48 | — |
-| 033 | **Final look.** CU: her mask, featureless, facing Cal | **Hold** | Nothing | 2.5s / 60 | — |
-| 034 | MS: she takes **one small step backward** toward the void | Static | One footstep | 1.0s / 24 | — |
-| 035 | ECU: Cal's face in the dark: **still smiling** | Hold | — | 1.0s / 24 | — |
-| 036 | CU: Cal **laughs maniacally**, full and wild, echoing through frozen time | Full anime exaggeration; smear on the head throw | The manic laugh | 2.0s / 48 | — |
-| 037 | **HARD CUT** to MS: the female steps back into the void and **is gone** | Hard cut mid-laugh | The laugh is **cut off by the edit** | 0.6s / 14 | — |
-| 038 | **Portal closing.** MS: the void's edge **folds inward**, like paper sealing a wound, shrinking to a point, gone. Not an explosion | Static | Sub-bass drawn into one soft, muffled **close** | 2.0s / 48 | ↔ The door slams |
-| 039 | Wide (as 011): the empty place where Cal lay; a faint body-shaped hollow in the ash | **0.5s of stillness** | Only the high tone, fading | 0.8s / 19 | ↔ Empty plateau |
-| 040 | **Time resuming.** Same wide: **everything resumes in the same frame**: fire roars, smoke rolls, arrows land, the soldier finishes falling, the Knight completes his swing | Hard resume | **All world sound returns at full level at once** | 2.0s / 48 | — |
-| 041 | **Battlefield continuing.** MS: a Demon Soldier glances toward the spot where Cal was. Nothing. He turns back to the fight | Static | Battle | 2.0s / 48 | — |
-| 042 | Wide: the Hero Party pushes on; another soldier fights on, unaware | Handheld drift | Battle | 2.0s / 48 | — |
-| 043 | Wide: a soldier from the rear steps into the gap in the line | Static | SERGEANT: ***"Mind the step."*** | 2.5s / 60 | ↔ The dark lantern |
-| 044 | **CUT TO BLACK** | Hard cut | **Total silence** | 3.0s / 72 | — |
-| → | **Transition to reincarnation: CIN-06** | — | — | — | — |
+| 001 | **Cal falling.** Low wide: Ash Eleven's body hits the stone threshold of the throne chamber; glaive skids away; fire and smoke behind | Static; **held frame** on impact (6f) | Heavy armor crash; battle at full mix | 1.5s / 36 | — |
+| 002 | MS, ground level: the **Knight's boots step over him** without pausing; Maelis's hem follows; they walk into the throne chamber | Static | Battle begins to **muffle** (low-pass sweep) | 2.5s / 60 | — |
+| 003 | **Final breathing.** CU: Cal's face sideways on the stone, faceplate cracked half away, one demon eye half-open. **Behind him, through the great doors, the throne chamber**, out of focus | Shallow focus on the eye | **Breathing** comes to the front: slow, heavy, weak | 3.0s / 72 | — |
+| 004 | **Focus pull** past his eye to the chamber: the King, seated; the Knight's charge **stops in mid-air**, held by nothing | Rack focus; the image stays soft | Muffled, distant | 2.5s / 60 | — |
+| 005 | Focus back to Cal's eye. A slow blink | Rack focus | Breathing | 1.5s / 36 | — |
+| 006 | Focus pull: Maelis kneels; her glyph circle; her light pours into the Knight, who blazes | Rack focus, soft | Faint, far away: KING: "…Five." | 3.0s / 72 | — |
+| 007 | Focus back to Cal. A slower blink | Rack focus | Breathing, weaker | 1.5s / 36 | — |
+| 008 | Focus pull: one glance from the throne; the Knight is hurled across the chamber; Maelis collapses; a **pillar of light** tears the heroes out of the world | Rack focus, soft | A distant impact; a faint choir, cut off | 3.0s / 72 | — |
+| 009 | Focus back to Cal. Eye nearly closed | Rack focus | Breathing | 1.5s / 36 | — |
+| 010 | Focus pull, very soft: the King, motionless, **looking at his own open palm** | Hold | Silence from the chamber | 2.5s / 60 | — |
+| 011 | Soft jump (time passes; his consciousness fades in): through smoke, **the two Commanders kneel** before the throne. Black aura tears from the King in **two streams** into them; their silhouettes twist, **wings fold away**, they shrink to **human shape**. Smoke swallows the image | Very soft focus; smoke drifts across | A deep, distant tearing sound, felt more than heard | 4.0s / 96 | — |
+| 012 | ECU: Cal's lips behind the broken plate | Static | **Final words:** three faint syllables, unintelligible, **no subtitle** | 2.5s / 60 | — |
+| 013 | CU (as 003): one last breath out. Then **nothing** | Static | — | 2.0s / 48 | — |
+| 014 | **Apparent death.** CU: completely still. Behind him, through the doors, the smoke-filled chamber (out of focus) | **Hold. Do not cut.** No camera movement | Muffled fire and collapse. No music. No narration | 5.0s / 120 | — |
+| 015 | Same frame | The hold continues past comfort. *(That's it?)* | — | 3.0s / 72 | — |
+| 016 | **Portal begins.** Same frame: a tiny ripple appears in the air **behind his head**, like a rendering glitch | Static | A single faint **click** | 1.0s / 24 | — |
+| 017 | Wide over his body: the air **bends** around a point 2 m behind him; light drains toward it; smoke drifts *backward*; ash lifts | Slow crane up | **Sub-bass** swells; world sounds pull in pitch toward the point | 3.0s / 72 | — |
+| 018 | MS: a **perfect black circle** opens: no glow, a hole through the world; loose debris slides toward it | Static | Sub-bass deepens | 3.0s / 72 | — |
+| 019 | **Time freezing.** Wide, high: the instant it is fully open, **everything stops**: smoke, fire, falling stone, a routing soldier mid-stride, embers | **Hard freeze** (single-frame transition) | **Every world sound cuts at once.** Only sub-bass and a thin high tone remain | 2.0s / 48 | — |
+| 020 | Slow lateral dolly through the frozen gallery, ending on the doorway: inside, **the King, frozen mid-turn of his head** | The **only** moving camera; even the film grain is frozen | Tone and sub-bass only | 4.0s / 96 | — |
+| 021 | ECU, framed **off-center**: Cal's eye. The lid lifts a few millimetres | Static, no push-in | — | 1.0s / 24 | — |
+| 022 | **Male figure enters.** MS, the void: a black-gloved hand, then a black suit sleeve; the MAN steps out onto the ash in one unhurried step. Black suit, shirt, tie, mask. No skin, no horns, no wings | Static | A single **footstep**: dry, close, perfectly clear | 2.5s / 60 | — |
+| 023 | **Female figure enters.** MS: the WOMAN steps out beside him, in the same suit and mask, with the same cadence | Static | Second footstep. Cloth rustle | 2.0s / 48 | — |
+| 024 | **Dark aura.** Low wide: both standing still, looking toward Cal | Vignette closes ~15% and breathes once; color drains toward black; edges squeeze | Sub-bass rises; controller pulses a heartbeat (**the same pattern as the King's Gaze in Ch 3**)… then **stops** | 3.0s / 72 | — |
+| 025 | Tracking from behind: they walk; the man steps **around** a frozen ember without looking at it | Slow tracking | Only their footsteps | 3.0s / 72 | — |
+| 026 | **Indecipherable conversation.** Two-shot profile, walking | Static | MAN: *[unknown language, quiet, casual]* | 2.0s / 48 | — |
+| 027 | Same | — | WOMAN: *[unknown language]* | 1.5s / 36 | — |
+| 028 | Same | They stop beside Cal | MAN: *[unknown language, short]*. **No subtitles. CC only: [Speaking an unknown language]** | 1.5s / 36 | — |
+| 029 | MS: the woman's mask turns toward the man | Slight turn; held | — | 1.5s / 36 | — |
+| 030 | **Cal being picked up.** Low angle: the man lifts Cal onto his shoulder in **one smooth motion**, no anticipation, no strain | Static | Armor shifting; nothing else | 2.0s / 48 | — |
+| 031 | Wide: the man walks toward the void carrying Cal; the woman follows a step behind | Static | Two sets of footsteps | 3.0s / 72 | — |
+| 032 | **Cal's face.** Orbit CU around his face over the man's shoulder. **His eyes are open.** Calm. Not afraid | Slow orbit, 90° | — | 3.0s / 72 | — |
+| 033 | ECU: a **slight smile** | Hold | — | 1.5s / 36 | — |
+| 034 | ECU: the smile becomes a **grin** | Hold | — | 1.5s / 36 | — |
+| 035 | **Cal's laugh.** CU: a breath out through the nose; a small chuckle | Static | Chuckle with an **unnaturally long reverb tail** | 1.5s / 36 | — |
+| 036 | MS: a deeper laugh, shoulders shaking. **The man does not react at all** | Static | Laugh, echoing | 2.0s / 48 | — |
+| 037 | CU: a brief, unsettling **manic** laugh, then it stops | Stepped animation, held final frame | Manic laugh, cut off | 1.5s / 36 | — |
+| 038 | **Male figure enters the portal.** Wide: the man steps into the black; Cal's face stays faintly visible in the dark just past the edge, rim-lit by frozen fire | Static | A footstep that sounds far away | 2.0s / 48 | — |
+| 039 | **Female figure turning.** MS: the woman takes one step toward the void… stops | Static | Footstep. Silence | 1.5s / 36 | — |
+| 040 | MS from behind her: she **slowly turns around** | Slow | Cloth rustle | 2.0s / 48 | — |
+| 041 | **Final look.** CU: her mask, featureless, facing Cal | **Hold** | Nothing | 2.5s / 60 | — |
+| 042 | MS: she takes **one small step backward** toward the void | Static | One footstep | 1.0s / 24 | — |
+| 043 | ECU: Cal's face in the dark: **still smiling** | Hold | — | 1.0s / 24 | — |
+| 044 | CU: Cal **laughs maniacally**, full and wild, echoing through frozen time | Full anime exaggeration; smear on the head throw | The manic laugh | 2.0s / 48 | — |
+| 045 | **HARD CUT** to MS: the woman steps back into the void and **is gone** | Hard cut mid-laugh | The laugh is **cut off by the edit** | 0.6s / 14 | — |
+| 046 | **Portal closing.** MS: the void's edge **folds inward**, like paper sealing a wound, shrinking to a point, gone | Static | Sub-bass drawn into one soft, muffled **close** | 2.0s / 48 | ↔ The door slams |
+| 047 | Wide (as 019): the empty threshold where Cal lay; a faint body-shaped hollow in the ash | **0.5s of stillness** | Only the high tone, fading | 0.8s / 19 | ↔ Empty plateau |
+| 048 | **Time resuming.** Same wide: **everything resumes in the same frame**: fire roars, smoke rolls, stone falls, the routing soldier finishes his stride | Hard resume | **All world sound returns at full level at once** | 2.0s / 48 | — |
+| 049 | **Battlefield continuing.** MS: a Demon Soldier glances toward the spot where Cal was. Nothing. He turns back | Static | Fire, collapse, shouted orders | 2.0s / 48 | — |
+| 050 | Wide through the doorway: the King **finishes turning his head** and stares at the empty threshold for a long moment. Beside his throne, the places where his Commanders knelt are **empty** | Slow push in | Silence from the chamber | 3.5s / 84 | — |
+| 051 | Wide: a soldier from the rear steps into the gap in the Line | Static | SERGEANT: ***"Mind the step."*** | 2.5s / 60 | ↔ The dark lantern |
+| 052 | **CUT TO BLACK** | Hard cut | **Total silence** | 3.0s / 72 | — |
+| → | **CIN-05C "The Astral Path"** | — | — | — | — |
 
 ### CIN-05C "The Astral Path" (≈ 60s; Ch 5; follows CIN-05B's cut to black)
 | CUT | PICTURE | ACTION / STAGE | DIALOGUE / AUDIO | TIME / FRAMES |
@@ -1011,7 +1022,7 @@ Format: **CUT · PICTURE · ACTION / STAGE · DIALOGUE / AUDIO · TIME / FRAMES 
 | 011 | CU: Cal over the man's shoulder, eyes half-closed, still smiling | Static | CAL: *[two words in the unknown language]*. No subtitles | 2.5s / 60 |
 | 012 | MS: the woman, walking, begins to **hum** | Tracking | Four slow notes: **the march as a lullaby** | 4.0s / 96 |
 | 013 | CU: Cal whistles it back, off-key | Hold | Whistle, once | 2.5s / 60 |
-| 014 | **POV (Cal's eyes):** looking up at the two of them; faint ink **★★★★★** flicker above each | One cut; the stars fade within 1s | A high resonance, then gone | 2.0s / 48 |
+| 014 | **POV (Cal's eyes):** looking up at the two of them; faint ink **★★★★★** flicker above each (the Commanders' 3★ are gone; the King's aura made them 5★) | One cut; the stars fade within 1s | A high resonance, then gone | 2.0s / 48 |
 | 015 | Extreme wide, behind them: the path runs on and on; far ahead, a tall dark doorway at the very edge of the Continent | Very slow push | The hum continues, fading | 5.0s / 120 |
 | 016 | **CUT TO BLACK** before they reach the doorway | Hard cut | **Silence** | 2.0s / 48 |
 | → | **CIN-06 "Heartbeat"** | — | — | — |
