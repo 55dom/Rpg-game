@@ -1,5 +1,7 @@
 # UNWRITTEN — Knights of the Last Lantern
-### Game Design Document · Foundation Draft v0.7 (awaiting approval)
+### Game Design Document · Foundation Draft v0.8 (awaiting approval)
+
+> **v0.8 changes:** After the Aura Sacrifice, the Demon Lord King sleeps in his coffin for **1000 years**. The archdemons treat him as a god and travel through **time and other worlds**, destroying them, to find the power to restore him. They find Cal **by accident**, and they are excited. The Siege, Arc 7, and §28 updated. Assumed (please confirm): the archdemons **wake the King early in Arc 7**.
 
 > **v0.7 changes:** Corrected canon. The archdemons are **Ghorran and Vaelith**, the King's own Commanders, reborn when the King **sacrificed his aura** to them after defeating the Hero Party. **Cal never fights the Commanders**: the Siege of Aurelin is now led by a Line Marshal, and Arc 7's Vaelith boss is replaced by the empty places beside the throne. §28 rewritten.
 
@@ -684,7 +686,7 @@ He is introduced early, mentors the protagonist, carries the most charm in the s
 
 ### 15.2 🔒 The complete truth (revealed in 10 layers)
 
-**Who he really is.** Cal was once **Ash Line Eleven**, a 1★ Demon Soldier on the **Demon Continent**, serving the **Demon Lord King** (6★). He was a nobody: identical armor, no wings, no name, only a line designation. He began asking a question no demon asks: *"Why am I only supposed to obey?"* He studied the Hero Party that invaded every month in the **Goddess Trial**, watched the **Goddess Saint** use *Sacrifice* to die and be reborn, and memorized her prayer. Then he knelt before the Demon Lord King, whispered the stolen prayer disguised as a vow, said *"For the Demon King,"* and gave away the only star he had. Nothing visible happened. The King sent him back to the line at **0★**, and he was cut down at the gate by the very Knight he had once spared. He lay still. Then **time stopped**, a perfect black circle opened in the air, and **two calm figures in black suits and masks** stepped out, spoke in a language no one has ever heard, and carried him away. **He was smiling.** On a dark astral path, their disguises fell away: **archdemons**, a butler and a maid, horns and wings. 🔒 They are **Ghorran and Vaelith**, the King's own Commanders, reborn minutes earlier when the King, having defeated the Hero Party and confused for the first time by the star that passed through his palm, **sacrificed his aura** to them. Now 5★. Only Cal knows (§28). He woke up in a human body in the ashes of a burning village in Liraen: **Larkspur**, fifteen years before the game. (Full detail: §26 and `docs/BACKLASH.md`.)
+**Who he really is.** Cal was once **Ash Line Eleven**, a 1★ Demon Soldier on the **Demon Continent**, serving the **Demon Lord King** (6★). He was a nobody: identical armor, no wings, no name, only a line designation. He began asking a question no demon asks: *"Why am I only supposed to obey?"* He studied the Hero Party that invaded every month in the **Goddess Trial**, watched the **Goddess Saint** use *Sacrifice* to die and be reborn, and memorized her prayer. Then he knelt before the Demon Lord King, whispered the stolen prayer disguised as a vow, said *"For the Demon King,"* and gave away the only star he had. Nothing visible happened. The King sent him back to the line at **0★**, and he was cut down at the gate by the very Knight he had once spared. He lay still. Then **time stopped**, a perfect black circle opened in the air, and **two calm figures in black suits and masks** stepped out, spoke in a language no one has ever heard, and carried him away. **He was smiling.** On a dark astral path, their disguises fell away: **archdemons**, a butler and a maid, horns and wings. 🔒 They are **Ghorran and Vaelith**, the King's own Commanders, reborn minutes earlier when the King, having defeated the Hero Party and confused for the first time by the star that passed through his palm, **sacrificed his aura** to them. Now 5★. Emptied, the King lay down in his coffin for a **thousand-year sleep**, and his archdemons, who worship him as a god, went searching through time and other worlds for a way to restore him. They found Cal by accident. Only Cal knows who they are (§28). He woke up in a human body in the ashes of a burning village in Liraen: **Larkspur**, fifteen years before the game. (Full detail: §26 and `docs/BACKLASH.md`.)
 
 **What he did in Liraen.** In the ashes he found an infant the system could not rate at all: **Rook**. He carried the baby to Thornwick without speaking a word (he didn't know the language yet). He learned the language, customs, and magic, was feared, hunted by the Crimson Bell, and courted by Aldric Valcourt as a weapon. Dagrun Holt took him in when no one else would. He forged a grimoire (his doors need none; it's a prop), rose to vice captain, and waited for Rook to climb the Tower. At the Knight Exam, it was Cal who told Dagrun: *"Take the one-pager."*
 
@@ -853,7 +855,7 @@ That's **six encounters across ~25 hours**, including **three full boss fights a
 
 ### 15.8 THE REVEAL: The Siege of Aurelin (Arc 5 finale, Eps 47–48)
 
-**Setup:** Hesper Voss opens the Hollow Gate above the capital using the Gate Key. She believes it leads into the Hollow. **It leads through the Hollow, to the Demon Continent.** The Demon Lord King perceives a new world for the first time and sends his army through: ranks of **Demon Soldiers** (1★, dark red and black, no wings) led by a wingless **Line Marshal** (2★, a brute in heavy plate). There are no Commanders: the two places beside the King's throne have stood empty for fifteen years (§28). At the same moment, Aldric Valcourt launches his coup. Demon lines, Choir cantors, rebel Lances, and Crown knights fight in the streets. The sky turns red-black. This is the largest battle in the game so far, and the first time Liraen sees a demon.
+**Setup:** Hesper Voss opens the Hollow Gate above the capital using the Gate Key. She believes it leads into the Hollow. **It leads through the Hollow, to the Demon Continent.** On the other side, the Demon Lord King has slept in his coffin for fifteen years, and his army still obeys its last standing order: *hold the line; destroy the intruders*. When the Gate opens onto it, the Lines march through: ranks of **Demon Soldiers** (1★, dark red and black, no wings) led by a wingless **Line Marshal** (2★, a brute in heavy plate). There are no Commanders: the two places beside the King's throne have stood empty for fifteen years (§28). At the same moment, Aldric Valcourt launches his coup. Demon lines, Choir cantors, rebel Lances, and Crown knights fight in the streets. The sky turns red-black. This is the largest battle in the game so far, and the first time Liraen sees a demon.
 
 > **Director's Note: "chaos is authored, not simulated."** The battle *looks* like thousands of combatants but runs within normal budgets: max 8 active enemies near the player; armies in the distance are animated impostors and baked vignettes; destruction is pre-authored (pooled debris, swapped building states); the sky and lighting change via timeline. The player is always in a **readable pocket of chaos**, moving between pockets. Demon Soldiers share one armor model with color and weapon variants. (Full budgets in §21.7.)
 >
@@ -874,7 +876,7 @@ That's **six encounters across ~25 hours**, including **three full boss fights a
 - He kills Demon Soldiers in single cuts. Each time, unprocessed for a fraction of a syllable, he murmurs ***"Rest, soldier."*** (D8 again. A player who remembers Ep 17 will notice. Most will hear only the mask.)
 - **T2 cinematic (6s):** Sable cuts a tear beneath the **Line Marshal**, who falls *out of the sky* onto his own lines. Sable kills him with one glaive cut from a backstep.
 - Rook (in-engine bark, not a cutscene): ***"That technique…"*** The battle continues; no one follows up.
-- **Through the Gate**, a vast silhouette on a throne watches. The **Demon Lord King** speaks for the first time, without moving his lips: ***"…What are you?"*** (He once believed nothing was stronger than his commanders. Players will only understand the echo after Backlash, §26.)
+- **Through the Gate**, framed in the red sky: a vast empty throne, and before it a **sealed black coffin**. When the Marshal falls, the coffin's lid **shifts, very slightly**. No one in Liraen understands what they're looking at. (After Backlash, players will.)
 - **Turn:** Sable heads for the **Gate Key's anchor**, built into the Grand Archive where civilians are sheltering. Rook steps into his path.
 
 #### PHASE 3: MASK DAMAGE (boss fight)
@@ -1481,7 +1483,7 @@ A secret layer of the cosmos that no ordinary being can see, which grows more im
 | Goddess Saint (Maelis) | 4★ (Backlash) → **1★** (Arc 7) | She has sacrificed again and again. One more, and she falls off the page |
 | King A (Teo) | 3★ | Dies permanently in the Backlash Arc; replaced by "King B"… by Arc 7 the archer is "King D" |
 | 🔒 **The Clergy Duo** (Ghorran & Vaelith, reborn) | **5★** | Exclusive, rare NPCs; archdemons created by the King's Aura Sacrifice (§28) |
-| Demon Lord King | **6★** | First anomaly |
+| Demon Lord King | **6★** | First anomaly. Asleep in his coffin since Backlash (a 1000-year slumber) |
 | Cal | **★?** | Second anomaly |
 | Rook | **∅** | Third anomaly |
 
@@ -1580,7 +1582,7 @@ The Demon Continent is the only known civilization of its world. It's isolated, 
 ### 26.5 CONTENT: The Demon Lord King
 - **Abilities:** magic (which no one else on his continent understands; to his subjects it is simply what the King *does*), instant casting, silent enchantments, extreme physical ability, **perception of the Star Rating**, and abilities nobody has ever seen.
 - **Worldview:** nothing in this world can challenge him. His commanders are the strongest beings he has ever needed. He has never met anything above them.
-- **Arc of his assumption:** Backlash Ch 3: he looks once at Ash Line Eleven and sees a 1★ nothing. Siege of Aurelin: a masked stranger kills his Left Wing: *"…What are you?"* (the same question Ash Eleven once asked about *him*). Arc 7: he faces the two beings he cannot read: Cal (★?) and Rook (∅).
+- **Arc of his assumption:** Backlash Ch 3: he looks once at Ash Line Eleven and sees a 1★ nothing. End of Backlash: emptied by the Aura Sacrifice, he lies down in his coffin for a thousand years. Siege of Aurelin: his coffin stirs when a masked stranger kills his Marshal. Arc 7: he faces the two beings he cannot read: Cal (★?) and Rook (∅).
 - He is not a cartoon tyrant. He is the system's apex, and he believes the system is the world.
 
 ### 26.6 CONTENT: The Hero Party & the Goddess Trial
@@ -1629,12 +1631,13 @@ The Goddess designates the heroes by role, not name. **The heroes are numbered t
 
 **Outline (Eps ~59–70):**
 1. **The Key.** Rook opens Cal's sealed door with the brass key: *"Doors don't have locks. They have keys."* (S7 pays off.) The Lanterns, Severin, and a reluctant Bas cross to the Demon Continent.
-2. **The Continent Today.** The same map as Backlash, fifteen years later. Some Demon Soldiers have started **asking questions** (Cal has been teaching them, as pieces; some remember a soldier who once stepped out of line). The King purges them. Rook's party meets demons who are people.
+2. **The Continent Today.** The same map as Backlash, fifteen years later. The King sleeps in his coffin; the army still obeys orders fifteen years old, with no one to give new ones. Some Demon Soldiers have started **asking questions** (Cal has been teaching them, as pieces; some remember a soldier who once stepped out of line). Rook's party meets demons who are people.
+2b. **The Clergy at the Coffin.** The archdemons return from their travels through time and other worlds. They tend the coffin like priests at a shrine and treat their King as a god. They have found (or been promised, by Cal) what they need to **wake him early**: the power of Rook's Palimpsest, delivered through Cal's plan. 🔒 *(Assumed canon, pending confirmation: the King is woken in Arc 7.)*
 3. **The Trial Continues.** The present Hero Party: **Corin** (5★ since the throne room fifteen years ago, the only known 5★), **Maelis** (1★, frail; one more Sacrifice and she falls off the page), **King D**. They hate demons, and Rook's friend *was* one. A tense alliance. **Maelis joins as a guest:** Low Heal (10s prayer: protect her), Sacrifice (once per battle: an ally gains a temporary star surge, at a terrible personal cost she keeps offering to pay).
 4. **The Soldier Who Stepped Aside.** Corin meets Cal: ***"You. The one who didn't kill me."*** Cal: *"You were more interesting alive."* Then, cheerfully: *"You did kill me, actually. Didn't take."*
 5. **The Empty Wings.** The throne room's approach is held by the **Throne Guard Lines** (formation boss fight for Rook's party; Cal is elsewhere). Inside, beside the throne, two places have stood empty for fifteen years. Cal, arriving, looks at them a moment too long.
-6. **Star Sight.** Rook reaches the throne room. The King forces Rook to see: stars over everyone, a 6★ crown of light over himself, a smear of **★?** over Cal… and **nothing** over Rook. The King, for the first time in his existence, is uncertain.
-7. **Alliance.** **Boss: the Demon Lord King**, fought by Rook and Cal together. **Cal is playable** (tag-swap); the team attack **Thousand-Door Verse** unlocks (Rook writes a line across the sky; Cal opens a door along every letter). His aura is noticeably weaker than in Backlash (he gave it away, §28), which is part of why they can stand before him at all. Phases: silent casting by gaze; the throne room's soldiers ordered to sacrifice themselves into him; the King's own **Sacrifice** used defensively.
+6. **The Waking.** The coffin opens, centuries early. The King rises, weakened, aura gone, and furious. His first act forces **Star Sight** on Rook: stars over everyone, a 6★ crown of light over himself, a smear of **★?** over Cal… and **nothing** over Rook. The King, for the first time in his existence, is uncertain.
+7. **Alliance.** **Boss: the Demon Lord King**, fought by Rook and Cal together. **Cal is playable** (tag-swap); the team attack **Thousand-Door Verse** unlocks (Rook writes a line across the sky; Cal opens a door along every letter). His aura is gone, given to his archdemons, and he has woken centuries before his time, which is part of why they can stand before him at all. The archdemons, who would do anything for him, are torn between their god and Cal, the one who helped wake him. Phases: silent casting by gaze; the throne room's soldiers ordered to sacrifice themselves into him; the King's own **Sacrifice** used defensively.
 8. **The Last Move.** The King, defeated, attempts Sacrifice to be reborn. Cal **opens a door inside the prayer** and takes the transferring stars for himself. Layer 10 lands all at once: Hesper, Aldric, the Gate, Rook's recruitment, Larkspur (his arrival is what erased it; he didn't choose where he landed, but he never told Rook). He becomes the first being above the scale, and the sky of the Demon Continent **cracks like a page**. *"Now, Rook. Write me."*
 9. **Final Battle: Rook vs. Cal.** The arena is the world's page tearing. Cal uses everything: every companion move, every Sable move, every King technique he stole. Final phase: **the Shared Star** (§25.4). Maelis offers her last star (it would erase her). Juno, Bas, Tamsin, Lio, Severin, and Dagrun offer theirs. Given freely, **nobody loses anything**, and Rook becomes Unwritten. Final clash: the Godfall glaive against the last line of the Palimpsest.
 10. **The Clause (ending choice, `CAL_FATE`).** Rook writes one clause about Cal:
@@ -1657,7 +1660,9 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 2. The heroes reach the throne room. Maelis **sacrifices herself again** and the Knight reaches **5★**. The King defeats them anyway, **without standing**; the Goddess's light recalls the survivors.
 3. The King **notices**: a soldier's star passed through him, a human reached 5★, and something is wrong with the rules he alone can see. For the first time, he is **confused**.
 4. **Within minutes**, he performs the **Aura Sacrifice**: he tears his aura out of himself and pours it into his two trusted Commanders. **Ghorran and Vaelith are reborn as intelligent archdemons**, a butler and a maid, **5★**.
-5. Their first act: they open the black circle, stop time, and **take Cal**. Not to the King. Down the Astral Path toward a doorway at the edge of the Continent. Cal is smiling.
+5. Emptied, the King lies down in a black **coffin** behind his throne and enters a **1000-year slumber**.
+6. The archdemons, who now treat their King as a **god** and would do anything to have him back, use their new abilities to travel **through time and other worlds**, searching for the power to restore him and **destroying worlds and planets** as they go. (Their black suits come from one of those worlds.)
+7. On that road, they arrive **by accident** at the moment of Cal's "death": the black circle, the stopped time. They recognize the soldier whose star passed through their King's palm and are **excited**: luck, for them, too. They take Cal down the Astral Path, past the wreckage of other worlds. Cal is smiling.
 
 | | **The butler** | **The maid** (musician) |
 |---|---|---|
@@ -1668,24 +1673,26 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 | **True outfit** (CIN-05C) | Immaculate black **butler's suit**: waistcoat, tie, gloves, black watch-chain | Black **maid's dress cut with a suit jacket and tie**, gloves, a slim black **instrument case** on her back |
 | **Archdemon form** (CIN-05C) | Horns from the brow; the Commander's vast wings, from slits in the coat; mask stays on | The same |
 | **As shown** | Unhurried, precise; does the lifting; opens the path | Watchful; **turns back to look at Cal**; hums the army's march as a lullaby |
-| **Abilities shown** | Stopping time locally (even the King froze); the black circle; the Astral Path; changing form; concealing horns and wings. All of it is **the King's aura** | |
+| **Abilities shown** | **Time travel** and stopping time locally; travelling between worlds; the black circle; the Astral Path; changing form; concealing horns and wings. All of it is **the King's aura** | |
+| **Goal** | **Restore their sleeping King**, whom they treat as a god, by any means: across time, across worlds, destroying whatever stands in the way | |
 | **Status** | **Exclusive, rare NPCs.** Never fought in this game, by Cal or anyone. A future superboss or reveal arc can use them | |
 
-**The King's lost certainty:** he believed nothing was stronger than his Commanders. Then he made them stronger than anything but himself, and they walked away with the soldier who caused it. For fifteen years, the places beside his throne have stood **empty**, and his presence has never been as crushing as it was (Arc 7, §27).
+**The King's lost certainty:** he believed nothing was stronger than his Commanders. Then he made them stronger than anything but himself and fell asleep, emptied. For fifteen years the throne has been empty, the coffin sealed, and his archdemons away across time and worlds, searching for a way to bring their god back (Arc 7, §27).
 
-**How Cal "knew":** in Backlash Ch 3, he studied an ancient cavern mural of a wounded King pouring his aura into his two Wings, who rise as robed, human-shaped servants. He arranged the "wound" (the star through the palm). Whether the King would answer the way the mural said was a gamble. His laugh is the laugh of a gamble that paid off.
+**Did Cal "know"?** The player is meant to read his smile as *"he knew."* The truth: from the Ch 3 mural he knew how a wounded King answers, so he arranged the "wound" (the star through the palm) and gambled that falling to 0★ would *do something*. He did **not** know the archdemons would come; they found him by accident. What he recognized in the frozen moment, faster than anyone, was what they were and what he could be to them. His laugh is a gambler's who just hit a jackpot he never knew was on the table.
 
-**Who knows:** **Cal**, and **the King** (who made them and lost them). The player half-sees the rebirth through smoke and dying eyes (CIN-05B, cut 011) and sees the Commanders' wings on the archdemons (CIN-05C). No character ever says it.
+**Who knows:** **Cal**, and **the King** (who made them, asleep). The player half-sees the rebirth through smoke and dying eyes (CIN-05B, cut 011) and sees the Commanders' wings on the archdemons (CIN-05C). No character ever says it.
 
 ### 28.2 What the player has seen (canon of appearances)
 | Fact | Where |
 |---|---|
 | An ancient mural: a wounded King pouring aura into two Wings, who become human-shaped servants | Backlash Ch 3 |
 | Through Cal's dying eyes: the King defeats the heroes without standing, looks at his palm, then pours his aura into the two kneeling Commanders, whose silhouettes fold into human shape | CIN-05B (cuts 004–011) |
-| A glitch, a **perfect black circle**, **time stops** (the King too), two calm figures in black suits and masks take Cal, who is awake and smiling, then laughing | CIN-05B |
-| The King stares at the empty threshold; the places beside his throne are empty | CIN-05B (cut 050) |
+| A glitch, a **perfect black circle**, **time stops**, two calm figures in black suits and masks take Cal, who is awake and smiling, then laughing | CIN-05B |
+| The King lies down in a black coffin; the lid closes | CIN-05B (cut 011a) |
+| After time resumes: the sealed coffin, the empty throne, the empty places beside it | CIN-05B (cut 050) |
 | A **language no one has heard**, never subtitled | CIN-05B, CIN-05C |
-| On a **dark astral path**: **butler and maid** outfits, **horns**, **the Commanders' wings**; the maid hums the march; Cal whistles it back; **★★★★★** through Cal's eyes; a doorway at the edge of the Continent | CIN-05C |
+| On a **dark astral path** past the **wreckage of other worlds**: **butler and maid** outfits, **horns**, **the Commanders' wings**; their excitement; the maid hums the march; Cal whistles it back; **★★★★★** through Cal's eyes; a doorway at the edge of the Continent | CIN-05C |
 
 ### 28.3 Design rules
 1. **Calm is the horror.** They never run, pose, shout, threaten, or fight on screen. They walk like people arriving at a meeting, even while transforming.
@@ -1713,9 +1720,10 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 
 ### 28.5 Still open (deliberately)
 The **who** and the **how** are decided. These stay undecided until a later arc needs them:
-- **Why** the archdemons took Cal instead of returning to the King, and what Cal promised them (or they him).
+- What exactly the archdemons hope Cal can do for their King, and what Cal promised them (or they him).
+- Which worlds they have destroyed, and whether Liraen is on their list.
+- How their time travel works, and whether they have already visited Liraen's past (the Sea of Marrow, drunk dry a century ago? Larkspur?).
 - **What lies beyond the doorway** at the edge of the Continent, and how Cal went from there to waking human in Larkspur.
-- Whether the King **sent** them after the anomaly, or they chose it the moment they could think.
 - Their relationship to the **Goddess**, the **Scribe**, and the possibility that the Demon Continent is a training ground (§25.5).
 - Whether "the dead who fall wrong" means every 0★ being.
 
@@ -1730,7 +1738,7 @@ Whatever is decided must stay consistent with §28.1–28.4.
 5. **The deepest layer (§25.5):** should the Demon Continent being a Goddess-built training ground be **hinted** (my recommendation), **confirmed**, or **cut**?
 6. **Endings (§27):** are three endings (Fall / Stay / Lantern) the right number? They share one final battle.
 7. **Backlash placement:** inside the reveal fight (Ep 48 → 49 → 50), as designed in `docs/BACKLASH.md`?
-8. **Clergy Duo:** Ghorran and Vaelith reborn by the King's Aura Sacrifice (§28). The Astral Path leads to a doorway at the edge of the Continent. Is that the right destination, and is the 8-clue budget (§28.4) the right density?
+8. **The King's slumber:** I've assumed the archdemons **wake him early in Arc 7**, which keeps the three-way finale (§27). Confirm, or tell me if he should sleep through the whole game. Also: is the 8-clue budget (§28.4) the right density?
 
 The foundation questions from v0.1 are still open:
 
