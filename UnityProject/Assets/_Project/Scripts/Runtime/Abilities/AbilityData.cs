@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Unwritten.Core.Abilities;
+using Unwritten.Core.Combat;
 using Unwritten.Core.Input;
 
 namespace Unwritten.Runtime.Abilities
@@ -21,9 +22,9 @@ namespace Unwritten.Runtime.Abilities
         {
             [Min(0)] public int frame;
             public AbilityEventType type;
-            [Tooltip("Animator state, hitbox id, tag id, sound path... depending on the type.")]
+            [Tooltip("Animator state, hitbox id, tag id, sound path... depending on the type.\nMove: unused. Custom 'jump': jump.")]
             public string key;
-            [Tooltip("Optional number: hitbox active frames, invulnerable frames, move distance...")]
+            [Tooltip("SpawnHitbox: active frames. Invulnerable: frames. Move: distance in metres. Custom 'jump': upward speed.")]
             public float value;
         }
 
@@ -37,6 +38,23 @@ namespace Unwritten.Runtime.Abilities
             public bool requiresHit;
         }
 
+        [Serializable]
+        public struct HitEntry
+        {
+            [Min(0)] public float damage;
+            [Min(0)] public float postureDamage;
+            [Tooltip("Freeze frames on impact. Light 3–4, heavy 6, finisher 10, ultimate 18.")]
+            [Min(0)] public int hitstopFrames;
+            [Tooltip("Frames the target can't act after being hit.")]
+            [Min(0)] public int hitstunFrames;
+            [Tooltip("The red-glint attack: can't be blocked or parried.")]
+            public bool unblockable;
+            [Tooltip("Upward speed (m/s) for launchers. 0 = none.")]
+            [Min(0)] public float launch;
+            [Tooltip("Push away from the attacker (m/s).")]
+            [Min(0)] public float knockback;
+        }
+
         [Tooltip("Leave empty to use the asset name.")]
         [SerializeField] string id;
 
@@ -48,6 +66,9 @@ namespace Unwritten.Runtime.Abilities
         [Header("Cost")]
         [SerializeField, Min(0)] float manaCost;
         [SerializeField, Min(0)] int cooldownFrames;
+
+        [Header("On hit (leave damage at 0 for non-attacks)")]
+        [SerializeField] HitEntry hit = new HitEntry { hitstopFrames = 4, hitstunFrames = 18 };
 
         [Header("Timeline")]
         [SerializeField] List<EventEntry> events = new List<EventEntry>();
@@ -71,8 +92,11 @@ namespace Unwritten.Runtime.Abilities
             foreach (var w in cancelWindows)
                 builtWindows.Add(new CancelWindow(w.startFrame, w.endFrame, w.into, w.requiresHit));
 
+            var hitSpec = new HitSpec(hit.damage, hit.postureDamage, hit.hitstopFrames, hit.hitstunFrames,
+                hit.unblockable, hit.launch, hit.knockback);
+
             return new AbilityDefinition(Id, startupFrames, activeFrames, recoveryFrames,
-                builtEvents, builtWindows, manaCost, cooldownFrames);
+                builtEvents, builtWindows, manaCost, cooldownFrames, hitSpec);
         }
 
         void OnEnable() => _definition = null;

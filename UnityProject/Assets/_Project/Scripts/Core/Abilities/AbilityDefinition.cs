@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unwritten.Core.Combat;
 using Unwritten.Core.Input;
 
 namespace Unwritten.Core.Abilities
@@ -33,6 +34,9 @@ namespace Unwritten.Core.Abilities
         public float ManaCost { get; }
         public int CooldownFrames { get; }
 
+        /// <summary>What this ability's hitboxes do on contact. <see cref="HitSpec.None"/> for non-attacks.</summary>
+        public HitSpec Hit { get; }
+
         /// <summary>Sorted by frame.</summary>
         public IReadOnlyList<AbilityEvent> Events => _events;
 
@@ -49,7 +53,8 @@ namespace Unwritten.Core.Abilities
             IEnumerable<AbilityEvent> events = null,
             IEnumerable<CancelWindow> cancelWindows = null,
             float manaCost = 0f,
-            int cooldownFrames = 0)
+            int cooldownFrames = 0,
+            HitSpec hit = default)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Ability id is required.", nameof(id));
             if (startupFrames < 0) throw new ArgumentOutOfRangeException(nameof(startupFrames), $"{id}: startup frames can't be negative.");
@@ -65,6 +70,9 @@ namespace Unwritten.Core.Abilities
             RecoveryFrames = recoveryFrames;
             ManaCost = manaCost;
             CooldownFrames = cooldownFrames;
+            if (hit.Damage < 0f || hit.PostureDamage < 0f || hit.HitstopFrames < 0 || hit.HitstunFrames < 0)
+                throw new ArgumentOutOfRangeException(nameof(hit), $"{id}: hit values can't be negative.");
+            Hit = hit;
 
             var eventList = events != null ? new List<AbilityEvent>(events) : new List<AbilityEvent>();
             foreach (var e in eventList)

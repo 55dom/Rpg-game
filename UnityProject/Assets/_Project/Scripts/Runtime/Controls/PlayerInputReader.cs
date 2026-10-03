@@ -11,9 +11,10 @@ namespace Unwritten.Runtime.Controls
     ///
     /// Bindings (built in code, so they're versioned with the project):
     ///   Gamepad   Light = X/Square, Heavy = Y/Triangle, Jump = A/Cross, Dodge = B/Circle,
-    ///             Block = LB/L1, hold RB/R1 + face button = Spell 1–4, LB + RB together = Ultimate
+    ///             Block = LB/L1 (tap at impact = parry, hold = block), hold RB/R1 + face button = Spell 1–4,
+    ///             LB + RB together = Ultimate, Lock-on = R3 (right stick click)
     ///   Keyboard  Move = WASD, Light = J or left mouse, Heavy = K or right mouse, Jump = Space,
-    ///             Dodge = Left Shift, Block = Q, Spells = 1–4, Ultimate = R
+    ///             Dodge = Left Shift, Block = Q, Spells = 1–4, Ultimate = R, Lock-on = Tab or middle mouse
     ///   Touch     On-Screen Controls drive a virtual gamepad, so they use the gamepad bindings
     ///             above with no extra code (see docs/SETUP.md).
     /// </summary>
@@ -26,12 +27,22 @@ namespace Unwritten.Runtime.Controls
         /// <summary>Movement input, -1..1 on each axis.</summary>
         public Vector2 Move => _move != null ? _move.ReadValue<Vector2>() : Vector2.zero;
 
+        /// <summary>Raised when the lock-on button is pressed.</summary>
+        public event Action LockOnPressed;
+
+        /// <summary>True while block is held.</summary>
+        public bool BlockHeld => _block != null && _block.IsPressed();
+
+        /// <summary>Camera input (right stick / mouse delta), for the camera rig.</summary>
+        public Vector2 Look => _look != null ? _look.ReadValue<Vector2>() : Vector2.zero;
+
         /// <summary>The last intent raised (for the debug HUD).</summary>
         public InputIntent LastIntent { get; private set; }
 
         InputAction _move;
         InputAction _light, _heavy, _jump, _dodge, _block;
         InputAction _spellModifier, _spell1, _spell2, _spell3, _spell4, _ultimate;
+        InputAction _lockOn, _look;
         InputAction[] _all;
 
         void Awake()
@@ -55,8 +66,13 @@ namespace Unwritten.Runtime.Controls
             _spell3 = Button("Spell3", "<Keyboard>/3");
             _spell4 = Button("Spell4", "<Keyboard>/4");
             _ultimate = Button("Ultimate", "<Keyboard>/r");
+            _lockOn = Button("LockOn", "<Gamepad>/rightStickPress", "<Keyboard>/tab", "<Mouse>/middleButton");
 
-            _all = new[] { _move, _light, _heavy, _jump, _dodge, _block, _spellModifier, _spell1, _spell2, _spell3, _spell4, _ultimate };
+            _look = new InputAction("Look", InputActionType.Value, expectedControlType: "Vector2");
+            _look.AddBinding("<Gamepad>/rightStick");
+            _look.AddBinding("<Mouse>/delta");
+
+            _all = new[] { _move, _light, _heavy, _jump, _dodge, _block, _spellModifier, _spell1, _spell2, _spell3, _spell4, _ultimate, _lockOn, _look };
         }
 
         void OnEnable()
@@ -72,6 +88,7 @@ namespace Unwritten.Runtime.Controls
             _spell3.performed += OnSpell3;
             _spell4.performed += OnSpell4;
             _ultimate.performed += OnUltimate;
+            _lockOn.performed += OnLockOn;
             foreach (var action in _all) action.Enable();
         }
 
@@ -89,6 +106,7 @@ namespace Unwritten.Runtime.Controls
             _spell3.performed -= OnSpell3;
             _spell4.performed -= OnSpell4;
             _ultimate.performed -= OnUltimate;
+            _lockOn.performed -= OnLockOn;
         }
 
         void OnDestroy()
@@ -115,6 +133,7 @@ namespace Unwritten.Runtime.Controls
         void OnSpell3(InputAction.CallbackContext ctx) => Raise(InputIntent.Spell3);
         void OnSpell4(InputAction.CallbackContext ctx) => Raise(InputIntent.Spell4);
         void OnUltimate(InputAction.CallbackContext ctx) => Raise(InputIntent.Ultimate);
+        void OnLockOn(InputAction.CallbackContext ctx) => LockOnPressed?.Invoke();
 
         bool IsGamepadSpellHeld(InputAction.CallbackContext ctx)
         {

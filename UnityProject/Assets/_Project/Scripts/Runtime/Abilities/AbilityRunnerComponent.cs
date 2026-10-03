@@ -9,14 +9,20 @@ using Unwritten.Runtime.Controls;
 
 namespace Unwritten.Runtime.Abilities
 {
+    /// <summary>Anything that can tell the combo graph the character's situation (grounded, after a dash...).</summary>
+    public interface IMoveContextSource
+    {
+        MoveContext CurrentContext { get; }
+    }
+
     /// <summary>
-    /// Gives a character abilities: buffers input from <see cref="PlayerInputReader"/>,
-    /// starts the bound <see cref="AbilityData"/> assets, and runs them on the 60 Hz
-    /// <see cref="LogicClock"/>.
+    /// Gives a character abilities: buffers input from <see cref="PlayerInputReader"/> (or AI),
+    /// picks moves through a <see cref="ComboGraphData"/> moveset (or simple bindings),
+    /// and runs them on the 60 Hz <see cref="LogicClock"/>.
     ///
-    /// Phase 1 handles PlayAnimation directly. Every other event is published through
-    /// <see cref="AbilityEventFired"/>, so hitboxes, VFX, sound, and camera systems
-    /// (Phase 1, Step 2+) can subscribe without changing this class.
+    /// Handles PlayAnimation directly. Every other event is published through
+    /// <see cref="AbilityEventFired"/> so hitboxes, movement, VFX, sound, and camera
+    /// systems subscribe without changing this class.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class AbilityRunnerComponent : MonoBehaviour, IAbilityEventSink
@@ -29,72 +35,110 @@ namespace Unwritten.Runtime.Abilities
         }
 
         [Header("References")]
-        [Tooltip("Optional. Without it, abilities can still be triggered from code via Press().")]
+        [Tooltip("Optional. Players have one; enemies are driven by their AI instead.")]
         [SerializeField] PlayerInputReader input;
         [Tooltip("Optional. Receives PlayAnimation events as CrossFade calls.")]
         [SerializeField] Animator animator;
 
-        [Header("Abilities")]
+        [Header("Moves")]
+        [Tooltip("The character's combo graph. If set, the Bindings list below is ignored.")]
+        [SerializeField] ComboGraphData moveset;
+        [Tooltip("Simple one-button-one-move setup, used when no moveset is assigned.")]
         [SerializeField] List<Binding> bindings = new List<Binding>();
 
         [Header("Tuning")]
         [SerializeField, Min(0)] float maxMana = 100f;
         [SerializeField, Min(0)] float manaRegenPerSecond = 5f;
+        [Tooltip("Mana gained each time one of this character's hits connects (melee feeds magic).")]
+        [SerializeField, Min(0)] float manaPerHit = 4f;
         [SerializeField, Range(0, 30)] int inputBufferFrames = InputBuffer.DefaultWindowFrames;
         [SerializeField, Min(0)] float animationCrossFadeSeconds = 0.05f;
 
         [Header("Debug")]
-        [SerializeField] bool logEvents = true;
+        [SerializeField] bool logEvents;
 
         /// <summary>Everything the abilities do, for other systems to react to.</summary>
         public event Action<AbilityDefinition, AbilityEvent> AbilityEventFired;
         public event Action<AbilityDefinition> AbilityStarted;
+        /// <summary>Raised when an ability finishes, is cancelled, or is interrupted.</summary>
         public event Action<AbilityDefinition> AbilityEnded;
 
         public AbilityController Controller { get; private set; }
         public AbilityRunner Runner => Controller?.Runner;
         public ResourcePool Mana => Controller?.Mana;
         public PlayerInputReader InputReader => input;
+        public ComboGraph Graph { get; private set; }
+
+        IMoveContextSource _contextSource;
 
         void Awake()
         {
-            Controller = new AbilityController(
-                new AbilityRunner(this),
-                new InputBuffer(8, inputBufferFrames),
-                new ResourcePool(maxMana));
+            _contextSource = GetComponent<IMoveContextSource>();
 
-            foreach (var binding in bindings)
+            IAbilityResolver resolver = null;
+            if (moveset != null)
             {
-                if (binding.ability == null || binding.intent == InputIntent.None) continue;
                 try
                 {
-                    Controller.Bind(binding.intent, binding.ability.Definition);
+                    Graph = moveset.Build(ReadContext);
+                    resolver = Graph;
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"[Abilities] {name}: couldn't bind {binding.intent} to {binding.ability.name}: {ex.Message}", this);
+                    Debug.LogError($"[Abilities] {name}: moveset {moveset.name} is invalid: {ex.Message}", this);
+                }
+            }
+
+            Controller = new AbilityController(
+                new AbilityRunner(this),
+                new InputBuffer(8, inputBufferFrames),
+                new ResourcePool(maxMana),
+                resolver);
+
+            if (resolver == null)
+            {
+                foreach (var binding in bindings)
+                {
+                    if (binding.ability == null || binding.intent == InputIntent.None) continue;
+                    try
+                    {
+                        Controller.Bind(binding.intent, binding.ability.Definition);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"[Abilities] {name}: couldn't bind {binding.intent} to {binding.ability.name}: {ex.Message}", this);
+                    }
                 }
             }
         }
 
+        MoveContext ReadContext() => _contextSource != null ? _contextSource.CurrentContext : MoveContext.Grounded;
+
         void OnEnable()
         {
             if (input != null) input.IntentPressed += Press;
-            LogicClock.Instance.Ticked += OnLogicTick;
+            LogicClock.Instance.Register(TickPhase.Abilities, OnLogicTick);
         }
 
         void OnDisable()
         {
             if (input != null) input.IntentPressed -= Press;
-            // During shutdown the clock may already be gone; don't recreate it.
-            if (LogicClock.HasInstance) LogicClock.Instance.Ticked -= OnLogicTick;
+            LogicClock.UnregisterIfAlive(TickPhase.Abilities, OnLogicTick);
         }
 
         /// <summary>Buffer a press (from input, AI, or tests).</summary>
         public void Press(InputIntent intent) => Controller.Press(intent, LogicClock.Instance.Frame);
 
-        /// <summary>Report that the current ability connected (Step 2: called by the hit system).</summary>
-        public void NotifyHit(int hitstopFrames) => Controller.Runner.NotifyHit(hitstopFrames);
+        /// <summary>Start an ability directly, bypassing input (AI, scripted moves).</summary>
+        public StartResult StartDirect(AbilityDefinition ability) =>
+            Controller.StartDirect(ability, InputIntent.Light, LogicClock.Instance.Frame);
+
+        /// <summary>The current ability connected: open on-hit cancels, freeze for hitstop, refill a little mana.</summary>
+        public void NotifyHit(int hitstopFrames)
+        {
+            Controller.Runner.NotifyHit(hitstopFrames);
+            Controller.Mana.Add(manaPerHit);
+        }
 
         void OnLogicTick(long frame)
         {

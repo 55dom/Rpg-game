@@ -2,7 +2,7 @@
 
 This gets the Unity 6 project running with the **combat core**: the 60 Hz logic clock, the input buffer, and the data-driven ability system, plus an on-screen debug HUD. At the end you can press buttons and watch abilities play frame by frame, chain, and cancel.
 
-**What's not here yet** (next steps): movement, hitboxes and damage, animations, camera, and enemies.
+**What's not here yet:** movement, hitboxes and damage, and enemies are in **Step 2: `docs/SETUP_STEP2.md`**. Animations, the camera rig, and VFX come in Phase 2.
 
 ---
 
@@ -155,7 +155,7 @@ UnityProject/Assets/_Project/Scripts/
     Abilities/AbilityData.cs        The ability asset (Create → Unwritten → Ability)
     Abilities/AbilityRunnerComponent.cs  Gives a character abilities
     Debugging/CombatDebugHud.cs     Frame-data overlay (editor and dev builds)
-tests/Unwritten.Core.Tests/  Unit tests for Core (31 tests)
+tests/Unwritten.Core.Tests/  Unit tests for Core
 ```
 
 **How the pieces talk:** `PlayerInputReader` raises an intent → `AbilityRunnerComponent` buffers it with the current logic frame → on every `LogicClock` tick, `AbilityController` starts the bound ability if the current one allows it → `AbilityRunner` fires that ability's events on their frames → `AbilityRunnerComponent` plays animations and publishes every event (`AbilityEventFired`) for the hitbox, VFX, sound, and camera systems that come next.
