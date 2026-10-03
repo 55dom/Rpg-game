@@ -1,0 +1,15 @@
+{
+  "name": "unwritten",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "UNWRITTEN — Knights of the Last Lantern. Browser action RPG built on Babylon.js.",
+  "scripts": {
+    "test": "node --test",
+    "build": "node build.mjs",
+    "dev": "node build.mjs --serve"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

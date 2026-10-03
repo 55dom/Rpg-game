@@ -698,7 +698,7 @@ The memory palette fades to white → the golden frame **folds shut** from the o
 
 ## 16. Camera System
 
-Built on the main game's Cinemachine rig (GDD §19.5), with profile overrides. **Rule: gameplay readability beats cinematic flair in every gameplay segment.**
+Built on the main game's camera director (GDD §19.5, §20), with profile overrides. **Rule: gameplay readability beats cinematic flair in every gameplay segment.**
 
 | Profile | Use | Settings |
 |---|---|---|
@@ -760,7 +760,7 @@ Yarn Spinner (GDD §20), with three **voice channels**:
 
 ## 18. Audio System
 
-### 18.1 Buses & snapshots (FMOD)
+### 18.1 Buses & snapshots (Web Audio)
 | Bus | Content | Behavior |
 |---|---|---|
 | `NARRATION` | Present-day Cal | Dry; **sidechain-ducks** MUSIC −6 dB and SFX −3 dB while active |
@@ -1239,7 +1239,7 @@ OrdersSystem  ObserveSystem  FormationCtrl   PartyBrain     NarrationService  St
 
 ## 25. Example Implementation Sketches
 
-> **These are illustrative C# sketches for Unity, not drop-in files.** They show structure and data flow. Complete, working files come once the engine is confirmed and the Phase 1 combat core (AbilityData / AbilityRunner) exists, because these systems sit on top of it.
+> **These are illustrative sketches, written when the engine was Unity (C#).** The project now runs on Babylon.js (GDD §20), but the structure carries over directly: each class becomes a plain JavaScript module beside the fight simulation in `game/src/sim/`, and `MonoBehaviour` update loops become steps of the fixed 60 Hz clock. The working versions will be written in JavaScript when the Backlash prototype starts.
 
 ### 25.1 ChapterGraph (data)
 ```csharp

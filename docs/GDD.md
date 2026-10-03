@@ -1,5 +1,7 @@
 # UNWRITTEN — Knights of the Last Lantern
-### Game Design Document · Foundation Draft v1.1
+### Game Design Document · Foundation Draft v1.2
+
+> **v1.2 changes:** **Engine changed to Babylon.js (web).** The game runs in any modern browser on PC and phones, free to build and free to host, and is playable straight from a link (§20). The tested combat core was ported from C# to JavaScript with the same rules and tests. Phase 1 Step 3 is done: hit effects, impact frames, parry → counter, perfect dodge → Afterimage, posture break → Lantern Break, synthesized sound, touch controls (`docs/DEV.md`).
 
 > **v1.1 changes:** **Engine decided: Unity 6 LTS.** Platforms: **Windows PC** (lead) + **mobile (Android & iOS)**. Release builds compile to native C++ through **IL2CPP** (§20.2). New §20.3 (mobile design) and mobile performance budgets in §21.7. Phase 1 has started: see `docs/SETUP.md`.
 
@@ -1015,7 +1017,7 @@ The original scene (§19.3) was always honest:
 - **Frame-step**, slow-motion, free pause, and **side-by-side** playback of paired scenes.
 - **"Annotated Edition"** unlocks after the player has rewatched a scene once on their own: optional margin notes in Rook's handwriting appear at clue moments. The player always gets the chance to spot clues first.
 
-**Voice processing:** an FMOD effect chain (`SNAP_MASK_VOICE`) with a parameter `MaskIntegrity` (1.0 → 0.6 across encounters) that controls pitch-shift and resonance depth. In Phase 4, one syllable plays at 0.0.
+**Voice processing:** a Web Audio effect chain (`SNAP_MASK_VOICE`) with a parameter `MaskIntegrity` (1.0 → 0.6 across encounters) that controls pitch-shift and resonance depth. In Phase 4, one syllable plays at 0.0.
 
 **Music:** the Lighthouse Tune exists as a motif stem. Sable's theme uses an inverted, augmented version on a low string layer. The death scene uses a 3-note truncation. The reveal uses the full statement. The Backlash Arc uses the **same four notes as the Demon Army's march drum**.
 
@@ -1198,7 +1200,7 @@ Players can play at their own pace. The template structures *authored* content, 
 |---|---|---|---|
 | **T1: Combat cues** (< 1s) | Hitstop, shake, FOV punch, impact frame, speed lines | Player keeps control | `CameraCue` + `FeedbackData` assets, triggered by ability events |
 | **T2: Ultimates / Team Attacks** (3–6s) | Ultimate sequences | Temporarily taken | Timeline sequence, **skippable**, with a "short version" option after first view |
-| **T3: Story cutscenes** | Episode cinematics | Full cinematic | Timeline + Cinemachine + dialogue system, built from storyboards |
+| **T3: Story cutscenes** | Episode cinematics | Full cinematic | JSON timeline + camera director + dialogue system, built from storyboards |
 
 ### 19.2 Production pipeline (anime-adapted)
 **Storyboard (5-column doc) → Animatic (Timeline with grey-box poses and temp audio) → Layout (final cameras) → Key animation → In-betweens/cleanup → FX → Lighting → Audio & voice → Compositing (post FX)**
@@ -1242,7 +1244,7 @@ The animatic is the most important gate. If it isn't exciting in grey-box, polis
 Each Ultimate is a **Timeline asset with standard track slots** (Camera, Character anim, VFX, SFX, Voice, Post-FX), so building a new one is filling a template, not starting over.
 
 ### 19.5 Camera language library
-Cinemachine presets, each a reusable asset: **Pan, Tilt, Dolly, Tracking, Crane, Zoom, Orbit, Handheld shake, Whip pan, Snap zoom, Dutch angle, Low angle, High angle, ECU, Wide establishing**. Storyboards reference them by name (`CAM_WHIP_PAN_FAST`), so layout is quick.
+Camera presets, each a reusable data asset: **Pan, Tilt, Dolly, Tracking, Crane, Zoom, Orbit, Handheld shake, Whip pan, Snap zoom, Dutch angle, Low angle, High angle, ECU, Wide establishing**. Storyboards reference them by name (`CAM_WHIP_PAN_FAST`), so layout is quick.
 
 ### 19.6 2D-in-3D visual language
 - **Cel shading:** 2–3 tone ramp shader + rim light; **inverted-hull outlines** (cheap, controllable per material); later, SDF face shadows (anime-clean faces).
@@ -1266,67 +1268,69 @@ Toggles for camera shake, motion blur, impact-frame flashes (photosensitivity: i
 
 ## 20. ENGINE & PLATFORMS
 
-### Decision: **Unity 6 (LTS), Universal Render Pipeline (URP), C#** ✅ *(confirmed)*
+### Decision: **Babylon.js 9 (WebGL 2 / WebGPU), JavaScript, runs in the browser** ✅ *(v1.2, replaces Unity 6)*
 
-| Criterion | Unity 6 + URP | Unreal 5 | Godot 4 |
-|---|---|---|---|
-| 3D anime visuals | ★★★★★ Large toon-shader ecosystem; many shipped anime-styled games | ★★★★ Excellent, but its default look fights stylization | ★★★ Possible, less tooling |
-| Action combat | ★★★★ Custom ability system needed (we're designing one) | ★★★★★ Gameplay Ability System is built for this | ★★★ |
-| Animation / cinematics | ★★★★ Animator, Timeline, Cinemachine | ★★★★★ Sequencer, Control Rig | ★★★ |
-| VFX | ★★★★ Shuriken + VFX Graph | ★★★★★ Niagara | ★★★ |
-| Zone streaming | ★★★★ Addressables + additive scenes | ★★★★★ World Partition | ★★★ |
-| Beginner accessibility | ★★★★★ C#, huge learning corpus | ★★ C++/Blueprint complexity | ★★★★ |
-| Performance on mid hardware | ★★★★★ URP is lean | ★★★ Heavy baseline | ★★★★ |
-| Small-team iteration speed | ★★★★★ | ★★★ | ★★★★ |
+**Why the change:** the project runs on a **zero budget**, and the game has to be **playable from a link** (a Claude artifact or any static host) on PC and phones without installing anything. Unity Personal is free, but a Unity WebGL build is heavy, slow to load, and weak on mobile browsers. Babylon.js is free (Apache 2.0), loads from a CDN, has cel shading and outlines built in, and runs on every device with a browser.
 
-**Why Unity:** the target is **stylized, not photoreal**, so Unreal's biggest advantage (high-end rendering) matters less. Our ability system is data-driven by design, so we don't need GAS's complexity. C# iteration speed, a lean renderer, Cinemachine/Timeline for anime camera language, and a beginner-friendly stack make Unity the most realistic tool for a solo dev or small team.
+| Criterion | **Babylon.js** | three.js | PlayCanvas | Unity 6 WebGL |
+|---|---|---|---|---|
+| Cost | Free, Apache 2.0 | Free, MIT | Engine free; editor is a paid service for teams | Free (Personal) |
+| Playable from a link, no install | ★★★★★ | ★★★★★ | ★★★★★ | ★★ multi-MB download, slow start |
+| Mobile browsers | ★★★★ | ★★★★ | ★★★★★ | ★★ |
+| Built-in game features (cameras, glow, outlines, toon, particles, animation, glTF) | ★★★★★ batteries included | ★★★ assemble it yourself | ★★★★ | ★★★★★ |
+| Anime look | Toon material, outline renderer, glow layer | Toon material, community outlines | Custom shaders | Large toon ecosystem |
+| Iteration | Edit, rebuild in under a second, reload | Same | Same | Minutes per WebGL build |
+
+**What we keep:** every design rule from the Unity plan survives because it was never engine-specific: the fixed 60 Hz logic clock, abilities as data, the combo graph, attack tokens, pooling, quality tiers. **What we give up:** Unity's editor tools (Timeline, Cinemachine, Shader Graph). Cutscenes and camera states will be authored as data (JSON timelines) instead, which suits the "everything is an Ability" architecture anyway.
 
 ### 20.1 Platforms
-| Platform | Role | Scripting backend | Renderer | Target |
-|---|---|---|---|---|
-| **Windows PC** (Steam) | **Lead platform**: developed and tuned first | **IL2CPP** (native C++) for release; Mono in the editor for fast iteration | URP, `PC` quality tier | 60 fps @ 1080p on GTX 1660-class |
-| **Android** | Mobile | **IL2CPP**, ARM64 only (required by Google Play) | URP, `Mobile` quality tier | 30 fps locked (60 fps option on high-end), dynamic resolution |
-| **iOS** | Mobile | **IL2CPP** (Apple requires it) | URP, `Mobile` quality tier | 30 fps locked (60 fps on recent devices) |
+| Platform | How it runs | Target |
+|---|---|---|
+| **PC browser** (Chrome, Edge, Firefox, Safari) | **Lead platform**. Keyboard and mouse or any standard gamepad | 60 fps at 1080p on integrated graphics from 2020+ |
+| **Mobile browser** (Android Chrome, iOS Safari) | Same build. Touch controls appear automatically on touch screens | 60 fps target, 30 fps floor on 2021+ mid-range phones |
+| **Installable app** (later, optional) | Wrap the same build as a PWA, or with Capacitor (stores) / Electron or Tauri (Steam) | Same as above |
 
-### 20.2 "C++ for Windows": how it actually works in Unity
-In Unity, **all game code is written in C#**; the engine doesn't support writing gameplay in C++. What we *do* get is native C++ performance on Windows:
-- **IL2CPP** (Intermediate Language To C++) is Unity's build backend. At build time it **converts our C# into C++** and compiles it with Visual Studio's C++ compiler (MSVC) into a native Windows executable. No C# runtime ships with the game.
-- It's **required on iOS**, effectively required on Android (ARM64), and we use it on **Windows release builds** too, so every platform ships native code from the same C# source.
-- It needs **Visual Studio 2022 with the "Desktop development with C++" workload** on the build machine (`docs/SETUP.md`).
-- **Hand-written C++ native plugins** (a `.dll` called from C#) are allowed only if the Profiler shows a hot spot that C# and the Burst compiler can't handle. None are planned; they would also need separate Android and iOS builds.
+There is **one codebase and one build**. "Mobile version" means the same page detects touch and switches its controls and quality tier.
 
-> **Director's Note.** Writing the game itself in C++ would mean switching to Unreal (or a custom engine) and giving up everything that made Unity the right choice: iteration speed, URP's lean mobile renderer, and beginner-friendly tooling. IL2CPP gives us native code on every platform while keeping one C# codebase.
+### 20.2 Native performance (what replaced "C++ for Windows")
+With Unity, native speed came from IL2CPP turning C# into C++. On the web:
+- The browser's JavaScript JIT runs our combat logic far faster than it needs: one 60 Hz frame of the whole fight simulation costs well under a millisecond.
+- Rendering runs on the GPU through **WebGL 2**, with **WebGPU** available in Babylon by switching engines. That is the same hardware path a native game uses.
+- If profiling ever shows a hot spot JavaScript can't handle (unlikely for this genre), that one module can be written in **C++ or Rust and compiled to WebAssembly**. None is planned.
+- A desktop download, if wanted for Steam, wraps the same build (Electron or Tauri). No rewrite.
 
 ### 20.3 Mobile version
-**Approach: PC first, mobile-ready from day one.** Every system is built so mobile is a port, not a rewrite. Mobile ships **after** the PC vertical slice proves performance on real phones.
+**Approach: one build, touch-aware from day one.**
 
 | Area | Mobile design |
 |---|---|
-| **Logic** | Combat runs on a **fixed 60 Hz logic clock** independent of render frame rate, so a 30 fps phone plays *exactly* the same frame data as a 60 fps PC |
-| **Controls** | Virtual stick (left) + on-screen buttons (right): Light, Heavy, Jump, Dodge; a **Magic button** that opens a 4-spell ring; Block; Ultimate and Team Attack buttons appear when charged. Built with Input System **On-Screen Controls** that act as a virtual gamepad, so **gameplay code is identical** to PC |
-| **Touch assists** (optional, on by default on touch) | Auto lock-on to the nearest threat; slightly wider perfect-dodge/parry windows (+3f); **Smart Combo** (holding Light auto-continues the current string). Assists never change damage numbers |
-| **Camera** | Auto-framing in combat; swipe on the right half to orbit; Ultimate and cutscene cameras unchanged |
-| **UI** | Separate HUD layout for touch (larger hit areas, safe-area aware for notches); the same menus re-laid-out with UI anchors |
-| **Rendering** | URP `Mobile` tier: dynamic resolution (720p–1080p), shorter shadow distance, outlines on heroes only, simplified post-processing (no motion blur; impact frames and speed lines kept, since they're cheap and core to the style) |
-| **Content scale** | Half the VFX particle budgets; max **5** active enemies near the player (vs 8 on PC); crowd impostors start closer; ASTC textures; lower LODs |
-| **Cinematics** | Same Timeline assets; mobile LOD and post-processing tiers only |
-| **Suspend & resume** | Autosave on app pause (`OnApplicationPause`); resume mid-combat into a checkpoint |
-| **Install size** | Core install under ~2 GB; later arcs downloadable via **Addressables remote content** |
-| **Thermals & battery** | 30 fps default; "Battery Saver" mode caps at 30 fps with lower resolution |
+| **Logic** | Combat runs on a **fixed 60 Hz logic clock** independent of render frame rate, so a 30 fps phone plays *exactly* the same frame data as a 144 Hz PC ✅ *built* |
+| **Controls** | Floating virtual stick (left half), on-screen buttons (right): Slash, Heavy, Dodge, Jump, Guard, Gale, Lock; drag the upper right to orbit the camera. Touch, keyboard, and gamepad all produce the same intents, so **gameplay code is identical** ✅ *built*. Later: a **Magic button** that opens the 4-spell ring; Ultimate and Team Attack appear when charged |
+| **Touch assists** (later, on by default on touch) | Auto lock-on; +3f parry and perfect-dodge windows; **Smart Combo** (hold Slash to continue the string). Assists never change damage |
+| **Fairness** | Only **1** enemy attacks at a time on mobile (2 on PC) through the attack-token pool ✅ *built* |
+| **UI** | Touch HUD layout, safe-area aware for notches ✅ *built*; the frame-data panel starts hidden |
+| **Rendering** | Mobile tier: render resolution capped at 1.5× pixel ratio, smaller glow buffer, fewer arena props and particles ✅ *built*; later dynamic resolution |
+| **Suspend & resume** | Autosave when the tab is hidden (`visibilitychange`) |
+| **Download size** | Engine from CDN (cached across sites), game code ~90 KB today; later, art streams per zone as compressed glTF (Draco/KTX2) |
+| **Thermals & battery** | "Battery Saver" caps at 30 fps with lower resolution |
 
-> **Director's Note: the cost of mobile.** Mobile roughly adds **25–35%** to production: a second control scheme, a second UI layout, performance work, device QA across many phones, and store compliance. Keeping it as a constraint from day one (fixed-step logic, input abstraction, quality tiers, Addressables) is what keeps that cost from doubling. The first mobile build happens at the **end of Phase 1** as a smoke test on one mid-range Android phone.
+> **Director's Note: the cost of mobile.** Browser mobile is far cheaper than native mobile (no stores, no second build, no device-specific SDKs), but touch controls, a second HUD layout, and testing on real phones still add roughly **15–20%** to production. Fixed-step logic and the input abstraction, both already built, are what keep it there.
 
 **Supporting stack:**
 | Need | Choice | Why |
 |---|---|---|
-| Input | Unity Input System | Rebinding; gamepad, KB/M, and **touch via On-Screen Controls** (one code path) |
-| Camera | Cinemachine 3 | Camera states, presets, impulse shake |
-| Cinematics | Timeline | Ultimates + cutscenes |
-| Dialogue | **Yarn Spinner** (free, open source) | Writer-friendly scripts, flag-driven branching, Unity integration |
-| Audio | **FMOD** (free indie license under its revenue threshold) | Adaptive music layers, boss-phase transitions |
-| Streaming | Addressables + additive scenes | Zones, async loading |
-| Data | ScriptableObjects | Designer-editable data, no code |
-| Save | JSON via versioned DTOs | Debuggable, migratable |
+| Engine | **Babylon.js 9** from jsDelivr | Free; cel shading (`CellMaterial`), outline renderer, glow layer, glTF, animation groups, WebGPU path |
+| Language | Modern JavaScript (ES modules) with JSDoc types | No compile step for logic; type-checkable later with `tsc --checkJs` |
+| Build | **esbuild** → one self-contained HTML file | Sub-second builds; publishes anywhere, including as a Claude artifact |
+| Tests | `node --test` | The combat core and fight simulation run headless, without a browser ✅ *39 tests* |
+| Input | Own `Controls` layer: keyboard, mouse, Gamepad API, Pointer Events | One intent stream for every device ✅ *built* |
+| Camera | Own camera director (follow, lock-on, shake, punch-in) | Replaces Cinemachine; states as data later |
+| Cinematics | JSON timelines played by the same event system as abilities | Replaces Unity Timeline |
+| Dialogue | **ink** (inkjs) or Yarn (yarn-bound): decided in Phase 3 | Both are free, writer-friendly, and run in the browser |
+| Audio | Web Audio API: synthesized placeholders now ✅ *built*; recorded SFX and adaptive music layers later | Free; no middleware |
+| Art pipeline | Blender → glTF 2.0 (Draco meshes, KTX2 textures) | The web's native 3D format |
+| Data | Plain JS/JSON modules (abilities, enemies, combo graphs) | Designer-editable; validated on load ✅ *built* |
+| Save | Versioned JSON in IndexedDB, with export/import | Debuggable, migratable |
 | Version control | Git + Git LFS | Large binary assets |
 
 ---
@@ -1348,11 +1352,11 @@ INPUT ─▶ PlayerController ─▶ CombatController ─▶ AbilityRunner ─�
                                     │                    │                                 Posture)
                                     ▼                    ▼                                     │
                               Animation             Feedback ◀─────────────────────────────────┘
-                          (Animator + override    (FeedbackData: VFX from pool, FMOD SFX,
+                          (animation groups +     (FeedbackData: VFX from pool, Web Audio SFX,
                            controllers, stepped    CameraCue, hitstop, rumble)
                            playback)                    │
                                                         ▼
-                                                CameraDirector (Cinemachine states:
+                                                CameraDirector (camera states:
                                                 Explore / Combat / LockOn / Ability / Ultimate / Cutscene)
 ```
 
@@ -1374,7 +1378,7 @@ AbilityData "GaleCutter"
 ```
 A new spell is a new data asset. New *behavior* only means writing a new **event type** (e.g., `SpawnThreshold`), which every future ability can then reuse.
 
-### 21.3 Core data schemas (ScriptableObjects)
+### 21.3 Core data schemas (JS data modules, validated on load)
 - **CharacterData:** id, displayName, magicType, baseStats + growth curve, weapon, comboGraph, abilities[], ultimate, passives[], aiProfile, animOverrideController, voiceSet, barkSet, dialogueNodePrefix, bondTable.
 - **SpellData (extends AbilityData):** spellName, magicType, rarity, manaCost, cooldown, range, tagsApplied[], evolution {levelReq, branchA, branchB}, animation, vfx, hitEffect, cameraCue, unlockCondition.
 - **EnemyData:** stats, resistTags[], posture, aiProfile, abilities[], attackTokenCost, lootTable, lod settings.
@@ -1398,30 +1402,35 @@ A new spell is a new data asset. New *behavior* only means writing a new **event
 - Autosave at episode beats + manual slots. A **migration step** per version, so old saves survive updates.
 
 ### 21.7 Performance plan
-| Area | Strategy / budget: **PC** 60 fps @ 1080p on GTX 1660-class · **Mobile** 30 fps on 2022+ mid-range phones (e.g., Snapdragon 7-series, iPhone 12+) |
+| Area | Strategy / budget: **PC browser** 60 fps @ 1080p on 2020+ integrated graphics · **Mobile browser** 30 fps floor (60 target) on 2021+ mid-range phones (e.g., Snapdragon 7-series, iPhone 12+) |
 |---|---|
-| Characters | Hero 30–50k tris + 2 LODs (mobile uses LOD1, ~15k); enemies 8–20k; texture atlases; shared materials |
+| Characters | Hero 30–50k tris + 2 LODs (mobile uses LOD1, ~15k); enemies 8–20k; texture atlases; shared materials. *(Today: procedural placeholder rigs from primitives.)* |
 | Enemies | Max 8 active in combat (mobile: 5); attack tokens; pooled |
 | VFX | Pooled; per-spell particle budget (≤ 300 normal, ≤ 1500 ultimate; **mobile: half**); flipbooks over simulation |
-| Hitboxes / projectiles | Pooled; `Physics.OverlapBoxNonAlloc` (no GC) |
-| World | Zone streaming (Addressables), occlusion culling, LOD groups, baked lighting where possible |
+| Hitboxes / projectiles | Exact box-vs-capsule tests in the pure-JS simulation; no physics engine in combat ✅ *built* |
+| World | Zone streaming (lazy-loaded glTF per zone), occlusion queries, LODs, baked lighting where possible |
 | NPCs | Distant NPCs are animated impostors / no AI; crowds are cosmetic |
-| Animation | Compression, override controllers (shared state machines), stepped playback reduces evaluation cost |
+| Animation | Shared animation groups retargeted across characters; stepped (on-twos) playback halves evaluation cost |
 | Physics | Minimal rigidbodies; scripted debris for destruction (pooled, timed despawn) |
 | Memory | Async loading; unload previous zone; audio streamed |
-| GC | No allocations in combat hot paths; profile every phase |
-| Draw calls | PC ≤ 2,000; **mobile ≤ 300** (SRP Batcher, GPU instancing, atlases) |
-| Memory (mobile) | ≤ 1.5 GB resident on a 4 GB phone; per-zone Addressables unload |
+| GC | Pooled VFX, sparks, and damage numbers; no per-frame allocations in combat hot paths; profile with Chrome DevTools every phase |
+| Draw calls | PC ≤ 1,000; **mobile ≤ 250** (thin instances, merged static meshes, atlases, frozen materials) |
+| Memory (mobile) | ≤ 600 MB for the tab on a 4 GB phone; dispose each zone's assets on exit |
 
-### 21.8 Project layout (when we code)
-The Unity project lives in **`UnityProject/`**. `Scripts/Core/` is **engine-independent C#** (no `UnityEngine`), unit-tested outside Unity in `tests/`; `Scripts/Runtime/` holds the thin Unity layer.
+### 21.8 Project layout
+The game lives in **`game/`**. The rule from the Unity plan still holds: **logic never touches rendering**. `src/core/` and `src/sim/` are pure JavaScript, unit-tested in Node; `src/runtime/` is the thin Babylon layer that only *reads* the simulation and its events.
 ```
-UnityProject/Assets/_Project/
-  Scripts/  Core/ (pure C#)  Runtime/ (Unity)  … later: Combat/  AI/  Camera/
-            Feedback/  Story/ (Flags, Quests, Dialogue)  Party/  Save/  UI/  World/
-  Data/     Characters/  Abilities/  Spells/  Enemies/  Reactions/  Quests/  Episodes/
-  Art/  Animation/  VFX/  Audio/  Scenes/  Settings/
+game/
+  src/core/     input · timing · stats · combat rules · abilities + combo graph · enemy AI   (pure, tested)
+  src/data/     rook.js (moveset, poses, hitboxes) · acolyte.js                              (designer data)
+  src/sim/      world.js (the fight: movement, hitboxes, juggles, parry, Afterimage) · overlap.js   (pure, tested)
+  src/runtime/  rig · vfx · audio · controls · camera · hud · arena · look                  (Babylon + DOM)
+  src/main.js   wires sim → presentation
+  test/         node --test suites (core, abilities, ai, sim)
+  template.html · build.mjs → dist/index.html (one self-contained page)
+  … later: src/story/ (flags, quests, dialogue) · src/party/ · src/save/ · assets/ (glTF, audio)
 ```
+How to run, test, build, and publish: `docs/DEV.md`.
 
 ---
 
@@ -1430,7 +1439,7 @@ UnityProject/Assets/_Project/
 **Goal: prove the combat is fun with grey boxes.** If it's not fun with a capsule, art won't fix it.
 
 **In scope**
-- 1 character: protagonist (placeholder humanoid, Mixamo-style animations), **Duelist** stance.
+- 1 character: protagonist (placeholder humanoid built from primitives, posed procedurally from frame data), **Duelist** stance.
 - 1 weapon: sword. ComboGraph: L×4, L-L-H launcher, air L×3, air slam, dash strike, parry counter.
 - 1 spell: **Gale Cutter** (launcher, applies AIRBORNE). Spell cancels from light attacks.
 - Movement: run, jump, double jump, air dash, lock-on.
@@ -1440,17 +1449,26 @@ UnityProject/Assets/_Project/
 - 1 small arena (grey box, a couple of pillars).
 - Feedback: hitstop, camera shake, basic hit VFX (pooled), placeholder SFX.
 - Debug HUD: frame data, input buffer display, FPS.
-- **Mobile smoke test:** one Android build on a mid-range phone with on-screen controls (end of phase).
+- **Mobile smoke test:** the same page on a mid-range Android phone and an iPhone with on-screen controls (end of phase).
 
-**Out of scope (deliberately):** story, dialogue, party, grimoire UI, saves, cel shading, ultimates.
+**Out of scope (deliberately):** story, dialogue, party, grimoire UI, saves, ultimates. *(Basic cel shading and outlines came in early because Babylon provides them for free.)*
+
+**Progress** (all playable at the artifact link; details in `docs/DEV.md`):
+| Step | Content | Status |
+|---|---|---|
+| 1 | Input intents + buffer, fixed 60 Hz clock, resources, ability runner | ✅ Done (Unity), ported to JS |
+| 2 | Combo graph, hit/block/parry/dodge/posture rules, movement, hitboxes, Acolyte AI with attack tokens | ✅ Done (Unity), ported to JS |
+| **3** | **Feedback and rewards:** hit sparks, starburst flashes, blade trails, damage numbers, hitstop shake, camera shake and punch-in, impact frames; **parry → Counter**; **perfect dodge → Afterimage** (enemies at 0.35× for 0.6 s, 3 s cooldown, ghost trail); **posture break → Lantern Break** (priority route that cuts any recovery, cinematic slow-mo on the kill); synthesized SFX; touch controls; frame-data panel | ✅ **Done** (Babylon.js) |
+| 4 | Movement set: double jump, air dash, lock-on switching; second spell as a data-only test (Definition of Done #4) | Next |
+| 5 | Phone smoke test, performance pass, Definition of Done review | — |
 
 **Definition of done:**
 1. The chain *L → L → Gale Cutter → jump-cancel → air L ×2 → air dash → air L → slam* executes reliably at 60 fps with no dropped inputs.
 2. Perfect dodge and parry feel learnable within 5 minutes.
 3. 3 acolytes at once stay readable (token system works).
 4. Adding a second spell takes **only a new data asset + VFX**, with no code changes. (This proves the architecture.)
-5. Zero GC allocations per frame in combat (Profiler verified).
-6. The same combat runs on a mid-range Android phone at a locked 30 fps with on-screen controls, with identical frame data.
+5. No per-frame allocations in combat hot paths (Chrome DevTools memory profile).
+6. The same page runs on a mid-range Android phone at 30 fps or better with on-screen controls, with identical frame data.
 
 ---
 
@@ -1462,9 +1480,9 @@ Estimates assume **1–2 people, part-time-ish**. Every phase ends with a **go/n
 |---|---|---|---|
 | **0: Pre-production** | This GDD → approval; style tests (one cel-shaded character still); input + feel references | 2–3 wks | Foundation approved |
 | **1: Prototype** | §22 | 6–10 wks | "Is the combat fun with grey boxes?" |
-| **2: Combat Vertical Slice** | 3 characters (Rook + 2 AI companions w/ assists), 5 enemy types, 1 mini-boss (Hask), tag/reaction system, 4 spells + page evolution, Cinemachine camera states, cel-shading v1, impact frames, 1 ultimate (Skyrender), combat HUD | 3–5 months | A playable 10–15 min combat run that *feels anime* |
-| **3: Story Vertical Slice** | Episodes 1–3 playable: Tower, Exam duel (B1), Lighthouse hub, Yarn dialogue, flags, saves, first storyboarded cutscenes, title cards + next-episode preview; **fake-death setup lines planted** | 4–6 months | "Does it feel like an anime episode?" Playtest with outsiders |
-| **4: World** | Aurelin hub, Greywater Fens, Thornwick, Undercroft; NPCs, shops, zone streaming, squads, reputation | 6–9 months | Performance budget met in the largest zone **on PC and on the mobile reference phone** |
+| **2: Combat Vertical Slice** | 3 characters (Rook + 2 AI companions w/ assists), 5 enemy types, 1 mini-boss (Hask), tag/reaction system, 4 spells + page evolution, data-driven camera states, cel-shading v2 (custom toon shader), impact frames, 1 ultimate (Skyrender), combat HUD | 3–5 months | A playable 10–15 min combat run that *feels anime* |
+| **3: Story Vertical Slice** | Episodes 1–3 playable: Tower, Exam duel (B1), Lighthouse hub, ink/Yarn dialogue, flags, saves, first storyboarded cutscenes, title cards + next-episode preview; **fake-death setup lines planted** | 4–6 months | "Does it feel like an anime episode?" Playtest with outsiders |
+| **4: World** | Aurelin hub, Greywater Fens, Thornwick, Undercroft; NPCs, shops, zone streaming, squads, reputation | 6–9 months | Performance budget met in the largest zone **in a PC browser and on the mobile reference phone** |
 | **5: Full RPG** | Progression, equipment, bonds + bond events, party switching (3 chars), crafting-lite, HQ upgrades, quests, Arc 1–2 bosses, hidden lore | 9–12 months | Arc 1 + 2 complete, content pipeline proven |
 | **6: Narrative Expansion** | Arc 3+, Cal's death & clue network, Brannoc, the Sable Knight encounters, transformations, the Siege of Aurelin reveal | ongoing | Mystery playtest targets met (§15.5 note) |
 
@@ -1793,9 +1811,9 @@ Whatever is decided must stay consistent with §28.1–28.4.
 
 The foundation questions from v0.1 are still open:
 
-1. ~~Engine~~ **Decided:** Unity 6 + URP + C#, IL2CPP native builds.
-2. ~~Platforms~~ **Decided:** Windows PC first; Android and iOS as the mobile version (§20).
+1. ~~Engine~~ **Decided (v1.2):** Babylon.js in the browser, replacing Unity 6 for zero cost and link-playability.
+2. ~~Platforms~~ **Decided:** PC browsers first; phones through the same page with touch controls (§20).
 3. **Cast & story:** Brannoc's real death, Aurek Valcourt as the red herring, the Palimpsest protagonist. Anything to change?
 4. **Scope calls:** 4 player affinities at launch, AI companions first (tag-swap for Rook, Severin, and Cal later), zones rather than a seamless open world, "Season 1" = Arcs 1–3.
 
-**Phase 1 progress:** Step 1 (project setup, input, ability core: `docs/SETUP.md`) and Step 2 (combo graphs, hit/block/parry/dodge/posture rules, movement, hitboxes, enemy AI with attack tokens: `docs/SETUP_STEP2.md`) are done in code. **Next: Step 3**: feedback pass (hit VFX, sound hooks, impact frames), perfect-dodge Afterimage slow-motion, parry counters and posture-break finishers, then the Phase 1 mobile smoke test. Story systems (flags, Theatre mode) come in Phase 3. **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.
+**Phase 1 progress:** Steps 1–3 are done and playable in the browser (§22 progress table, `docs/DEV.md`). **Next: Step 4**: double jump, air dash, lock-on switching, and a second spell added as data only (the architecture test), then the phone smoke test. Story systems (flags, Theatre mode) come in Phase 3. **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.
