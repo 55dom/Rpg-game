@@ -1,6 +1,8 @@
 # BACKLASH — Playable Flashback Design Package
 ### UNWRITTEN — Knights of the Last Lantern · Companion to `GDD.md` §26 · v1.1
 
+> **v1.6:** **The King does not wake in this game.** The archdemons' secret plan is the **Rite of Waking**: sacrificing **themselves and Cal** to wake their King. They never tell Cal. Their excitement at finding him shows only in calm body language (masks stay on): they have found a power like their own, a source of power for the Rite. CIN-10 and the King sections updated.
+>
 > **v1.5:** **The flashback now ends on Cal's grin**, which match-cuts to present-day Cal, and the player then **chooses who to play** in the rest of the fight: Rook or Cal. Choosing Cal opens **Cal's Path**, the rest of his story (through the void, the Astral Path, Liraen, the mask) plus a scene after he steps through his door at the Siege. The archdemons **don't know who Cal is**: they take him because he is the **only one who can move** in their frozen time and he **answers in their language**.
 >
 > **v1.4:** The King's **1000-year slumber**: emptied by the Aura Sacrifice, he lies down in his coffin. The archdemons, who now treat him as a god, travel through time and destroy other worlds searching for the power to restore him, and they **find Cal by accident**: the void is their time-travel arrival. CIN-05B and CIN-05C updated.
@@ -183,7 +185,7 @@ Cal's eye nearly closes. He tries to say something: three faint syllables, unint
 
 Two figures step out: a man and a woman in **identical black suits**, black shirts, black ties, black gloves, featureless black masks. No skin, no insignia, no horns, no wings. They look absurdly formal in a burning castle, like people arriving at a meeting, because their clothes **come from another world**. 🔒 For them, this is not minutes after their rebirth: they have spent a long time travelling through time and other worlds, searching for a way to restore their sleeping King, and this moment is a stop on that road they arrived at **by accident**. **They don't know who Cal is.** Their presence is unbearable: the screen presses in, the air feels thick, the avatar's breathing sound is gone. It is **the same pressure as the King's gaze** in Ch 3, because it *is* the King's aura. Yet they simply **walk**, looking out over the frozen battlefield, stepping around a frozen ember without looking at it, talking quietly to each other in a language nobody has ever heard (**no subtitles, no translation**). They pass within a step of the dead soldier without a glance.
 
-Then **a voice answers them, from the ground**: two faint words in their own language. Both stop. In a world where nothing moves, the dead soldier **lifts his head an inch off the stone**, eyes open, and speaks again. **He is the only thing in their frozen world that can move, and he understands them.** The man crouches and asks a question; Cal answers. The woman looks at the man, and there is a small, unmistakable lift in her shoulders: **excitement**. The man lifts Cal onto his shoulder in one effortless motion and walks toward the void. The woman follows.
+Then **a voice answers them, from the ground**: two faint words in their own language. Both stop. In a world where nothing moves, the dead soldier **lifts his head an inch off the stone**, eyes open, and speaks again. **He is the only thing in their frozen world that can move, and he understands them.** The man crouches and asks a question; Cal answers. The woman looks at the man, and there is a small, unmistakable lift in her shoulders: **excitement**. Their masks never show it, and they stay perfectly nonchalant; only their posture gives it away. 🔒 What they have found is something as powerful as themselves: **a source of power**, the missing third offering for the rite that will wake their King (GDD §28). They will never tell him. The man lifts Cal onto his shoulder in one effortless motion and walks toward the void. The woman follows.
 
 The camera circles Cal's face. His eyes are open. He isn't afraid, unconscious, or dying. **He's smiling.** The smile becomes a **grin**.
 
@@ -214,7 +216,7 @@ For a single cut through Cal's eyes, faint ink **★★★★★** flicker above
 >
 > **What the deception targets.** The player already knows a human Cal exists in the present. The trick is not "Cal no longer exists." It is ***"this is how his demon life ended: a real, sad, pointless death."*** The void turns that into: *it wasn't a death at all; it was an exit he arranged.*
 >
-> **Did Cal "know"?** The player is meant to read his grin as *"he knew."* 🔒 The truth is subtler. Cal knew from the Ch 3 mural how a wounded King answers, and he gambled that falling to 0★ would *do something*. He did **not** know the archdemons would come, and **they did not know him**. They were passing through by accident. What caught them was that he was **the only thing that could move in their frozen time** (a 0★ being is no longer held by it) and that he **spoke their language**, which he had taught himself from the cavern glyphs in Ch 3. He recognized them, and the opportunity, faster than they recognized him. His grin is a gambler's who just hit a jackpot he never knew was on the table. For them, it was luck too, and they are excited.
+> **Did Cal "know"?** The player is meant to read his grin as *"he knew."* 🔒 The truth is subtler. Cal knew from the Ch 3 mural how a wounded King answers, and he gambled that falling to 0★ would *do something*. He did **not** know the archdemons would come, and **they did not know him**. Nor does he know what they want him *for*: to them he is an offering, kept for the day they sacrifice themselves and him to wake their King. They were passing through by accident. What caught them was that he was **the only thing that could move in their frozen time** (a 0★ being is no longer held by it) and that he **spoke their language**, which he had taught himself from the cavern glyphs in Ch 3. He recognized them, and the opportunity, faster than they recognized him. His grin is a gambler's who just hit a jackpot he never knew was on the table. For them, it was luck too, and they are excited.
 >
 > **What Backlash shows, and what it never says.** The player half-sees the Commanders' rebirth through smoke and dying eyes, sees the King lie down in his coffin, then sees two archdemons with the Commanders' wings carry Cal past the wreckage of other worlds. **No one says it.** In-world, **only Cal** knows who they are. Backlash never translates their language, never explains why they were excited by him, never shows where the path ends, and never explains how he woke up human in Liraen. Canon and rules: GDD §28.
 
@@ -271,7 +273,7 @@ A split screen, half Rook's face, half Cal's grin, and one line: ***Whose story?
 > **Director's note.** Both choices tell the same story; the choice is about *whose eyes*, not *what happens*. Cal's Path is ~25 minutes of extra content, never locked away: Rook players can play it from the Lore Archive. Playing as Cal costs: a player-controlled version of Cal's kit (built anyway for Arc 7, now needed earlier), an AI opponent using Rook's kit (on top of the companion AI framework), and a board-view mode for Phase 5 (a top-down camera plus a drag-to-door command layer).
 
 ### Cal's Path, Part 3: After the Door (present day; CIN-10)
-At the end of the reveal fight, Cal steps through his door and closes it from the other side. The Astral Path again, the same road between worlds, walked on his own feet this time. At its end, before the sealed black coffin and the empty throne, the butler and the maid are waiting. They incline their heads to him, a fraction: not as servants, not as equals. Something stranger. He answers them in their language. The maid begins to hum the march. Cal looks at the coffin, tilts his head, and says, in Liraen's tongue: ***"Morning's coming early, Your Majesty."*** Cut to black. (Sets up Arc 7's early waking.)
+At the end of the reveal fight, Cal steps through his door and closes it from the other side. The Astral Path again, the same road between worlds, walked on his own feet this time. At its end, before the sealed black coffin and the empty throne, the butler and the maid are waiting. They incline their heads to him, a fraction: not as servants, not as equals. Something stranger. He answers them in their language. The maid begins to hum the march. Cal looks at the coffin, tilts his head, and says, in Liraen's tongue: ***"You two still haven't told me what I'm for."*** The butler says nothing. The maid keeps humming. Their masks show nothing at all. Cut to black. (Dramatic irony for Cal's Path players: he is the offering, and he doesn't know it.)
 
 > After the Void scene, *"That's how I died"* is a **lie told with a smile**, and the player knows it. That irony is intended: he is telling Rook the story the world believes while standing in front of someone who has just seen the truth.
 
@@ -294,7 +296,7 @@ At the end of the reveal fight, Cal steps through his door and closes it from th
 | 6 | **The Other World** (Cal's Path 2) | #3 | 4 min | 6 min | 80 / 20 | The orphanage step |
 | 7 | **The Human** (Cal's Path 2) | #3 | 6 min | 9 min | 70 / 30 | *"Take the one-pager."* |
 | 8 | **The Mask** (Cal's Path 2) | #3 → #4 | 4 min | 5 min | 70 / 30 | The tear opens |
-| C3 | **Cal's Path 3: After the Door** (present) | #4 | 1 min | 1 min | 0 / 100 | *"Morning's coming early."* |
+| C3 | **Cal's Path 3: After the Door** (present) | #4 | 1 min | 1 min | 0 / 100 | *"…what I'm for."* |
 | R | **Return** (all players, after Ch 5) | #4 | 1 min | 1 min | 0 / 100 | The smirk → **Perspective Choice** |
 | | **Flashback, all players (Ch 0–5 + R)** | | **≈ 32 min** | **≈ 44 min** | **≈ 75 / 25** | |
 | | **Cal's Path (C1, Ch 6–8, C3), optional** | | **≈ 18 min** | **≈ 24 min** | **≈ 65 / 35** | |
@@ -577,11 +579,18 @@ As in the main game: at most 2 hostile attackers on Cal at once. The *heroes* al
 - **Silent casting, demonstrated:** the Commanders argue; the King looks at a pillar; it folds in half. No incantation, no particles: just a **distortion** in the air and the sound of stone giving way. Restraint makes it terrifying.
 - **The Walk (Ch 5):** the player walks the length of the throne chamber at a constrained pace while every soldier faces forward and the King watches. Control is removed at the kneel.
 - **The King's Answer (Ch 5, seen through Cal's dying eyes):** the King defeats the Hero Party **without standing**: he stops the Knight's charge in mid-air with a look, lets Maelis's Sacrifice raise the Knight to 5★ (*"…Five."*), then breaks them with one glance. The Goddess's light recalls the survivors. (He stands only once in Backlash, afterwards, to walk to his coffin.)
-- **The Aura Sacrifice:** the King looks at his own palm, confused for the first time, and within minutes tears his aura out of himself in two streams and pours it into Ghorran and Vaelith. Emptied, he then lies down in a black coffin behind his throne and enters a **1000-year slumber**. **Consequence for Arc 7:** for fifteen years the throne has been empty, the coffin sealed, and the places beside it vacant; the army still obeys its last orders, with no one left to give new ones. The Gaze in Ch 3 is the full aura. If he is woken early (Arc 7), it is noticeably weaker, which is part of how Rook and Cal can stand in front of him at all.
+- **The Aura Sacrifice:** the King looks at his own palm, confused for the first time, and within minutes tears his aura out of himself in two streams and pours it into Ghorran and Vaelith. Emptied, he then lies down in a black coffin behind his throne and enters a **1000-year slumber**. **Consequence for Arc 7:** for fifteen years the throne has been empty, the coffin sealed, and the places beside it vacant; the army still obeys its last orders, with no one left to give new ones. The Gaze in Ch 3 is the full aura; it now lives in his archdemons. **He does not wake in this game.**
 
-### 11.2 Arc 7 boss (preview; full design in GDD §27)
-| Phase | Behavior | Counterplay |
-|---|---|---|
+### 11.2 Arc 7: the King sleeps
+**The Demon Lord King does not wake in this game. There is no King boss fight.** He is present as:
+- **The coffin:** a sealed black coffin before an empty throne, tended by the archdemons like a shrine. It shudders when great power is spent nearby (the Siege; the Rite).
+- **His army:** Lines still obeying fifteen-year-old orders, with no one to give new ones.
+- **His archdemons:** who carry his aura, worship him as a god, and plan the **Rite of Waking**: sacrificing themselves **and Cal** to wake him (GDD §27–28).
+- **His voice, once:** a single word from inside the coffin, in the archdemons' tongue, when Cal speaks it nearby (GDD §28.4, V8).
+
+His waking, and the fight against a 6★ King, are reserved for a sequel.
+
+---|---|---|
 | **1: Seated** | Never stands. Casts by **looking**: wherever his gaze settles, an effect lands 0.8s later | Break line of sight (pillars, door frames) |
 | **2: Command** | Orders the throne-room soldiers to sacrifice themselves into him (a buff per soldier) | **Knock soldiers out instead of killing them**: mercy reduces his power |
 | **3: Standing** | Woken centuries early and weakened, he stands from the throne and fights. Physical combat at 6★ scale | Team attacks (Rook + Cal) |
@@ -611,7 +620,7 @@ As in the main game: at most 2 hostile attackers on Cal at once. The *heroes* al
 | **Backlash Ch 5, the throne room** | Maelis **sacrifices again** (4★ → 3★ in Ch 4, → 2★ here); the Knight reaches **5★**. They lose anyway. The first time the player sees Sacrifice fail to save anyone |
 | **The Aura Sacrifice** | Not the Saint's prayer: the King's own version. He gives **aura** (presence and power), not stars, and the recipients are **reborn as something new** rather than strengthened |
 | **Arc 7** | **Maelis as a guest party member:** Low Heal (protect her for 10s) and Sacrifice (once per battle, an ally gains a temporary *Star Surge*; Maelis drops a star *for real*, a permanent and heartbreaking cost the player chooses whether to accept) |
-| **Arc 7 King boss, Final** | The King's own Sacrifice; Cal intercepts the transfer |
+| **Arc 7, the Rite of Waking** | The archdemons sacrifice themselves and Cal to wake their King. Cal opens a door inside the rite and takes the power for himself (GDD §27) |
 | **Final battle** | Inverted by the **Shared Star** (GDD §25.4): stars given freely, nobody loses anything |
 
 ### 12.3 Audio identity
@@ -1150,7 +1159,8 @@ Format: **CUT · PICTURE · ACTION / STAGE · DIALOGUE / AUDIO · TIME / FRAMES 
 | 004 | MS: they incline their heads, a fraction. Not as servants. Not as equals | Hold | — | 2.0s / 48 |
 | 005 | CU: Cal | Static | CAL: *[unknown language, short]* | 2.0s / 48 |
 | 006 | MS: the maid begins to hum the march | Static | The four notes | 3.0s / 72 |
-| 007 | CU: Cal looks at the coffin and tilts his head (S4) | Hold | CAL: ***"Morning's coming early, Your Majesty."*** | 3.5s / 84 |
+| 007 | CU: Cal looks at the coffin and tilts his head (S4) | Hold | CAL: ***"You two still haven't told me what I'm for."*** | 3.5s / 84 |
+| 007a | Two-shot: the butler and the maid, masks blank, perfectly still. She keeps humming. Neither answers | **Held 2s** | The hum | 2.5s / 60 |
 | 008 | **CUT TO BLACK** | Hard cut | Silence | 2.0s / 48 |
 | → | **Back to Rook: Ep 50's ending** (GDD §15.8) | — | — | — |
 

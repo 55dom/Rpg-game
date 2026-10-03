@@ -1,5 +1,7 @@
 # UNWRITTEN — Knights of the Last Lantern
-### Game Design Document · Foundation Draft v0.9 (awaiting approval)
+### Game Design Document · Foundation Draft v1.0 (awaiting approval)
+
+> **v1.0 changes:** **The King does not wake in this game** (no King boss; sequel hook). The archdemons' secret plan is the **Rite of Waking**: sacrificing **themselves and Cal** to wake him. They never tell Cal; their excitement shows only in calm body language behind their masks. Arc 7 rebuilt around the Rite.
 
 > **v0.9 changes:** The Backlash flashback **ends on Cal's grin**, match-cutting to the present. The player then **chooses who to play** in the rest of the reveal fight: Rook, or Cal (which opens the optional **Cal's Path**). The archdemons **don't know Cal**: they take him because he alone can move in their frozen time and speaks their language.
 
@@ -140,7 +142,7 @@ There are 12 important characters. 🔒 marks hidden truths.
 | + | **Captain Brannoc Steelhart** | Iron Wardens captain | Oath | A mentor figure who **truly dies** in Arc 3 (see §14 for why this matters). |
 | + | **The Sable Knight** | Masked antagonist / antihero (Arcs 3–5) | "Severance" (space-cutting) | A nameless masked knight who raids Crown vaults, executes Choir agents, and fights the Lanterns three times. Players should believe he is a new character. 🔒 He is Cal (§15). |
 | + | **Aurek Valcourt** | Severin's older brother, presumed dead | Starlight | Lost in the Hollowmarch six years ago; body never found. **Red herring**: players and Severin come to believe he is the Sable Knight. 🔒 He truly died, on Cal's watch. |
-| + | **The Demon Lord King** | 🔒 Ruler of the Demon Continent (Arc 5 glimpse → Arc 7) | Silent, wordless magic | The world's first anomaly (6★). Calm, never angry, believes nothing can challenge him (§26.5). |
+| + | **The Demon Lord King** | 🔒 Ruler of the Demon Continent; **asleep in his coffin for the whole game** (sequel) | Silent, wordless magic | The world's first anomaly (6★). Calm, never angry, believes nothing can challenge him (§26.5). |
 | + | **Ghorran & Vaelith** | 🔒 The King's Left and Right Wing commanders | — (3★ might → 5★) | Seen only in Backlash. At its end the King pours his aura into them and they are reborn as **intelligent archdemons, a butler and a maid**: the Clergy Duo (§28). Cal never fights them. |
 | + | **The Hero Party: Corin, Maelis, "King A"** | 🔒 Goddess Trial heroes (Backlash Arc, Arc 7) | Sword & shield / Saint's prayers / bow | Demon-hating heroes; the Saint's *Sacrifice* is the key to Cal's reincarnation (§26.6). |
 | + | **Wraithe** | Pale Choir rift-assassin | Hollow rifts | **Red herring**: establishes "space-tearing" as a Choir technique before the Sable Knight appears. Executed by the Sable Knight in Arc 4. |
@@ -1497,7 +1499,7 @@ A secret layer of the cosmos that no ordinary being can see, which grows more im
 | A hint | Cal's offhand remarks: *"That one's tougher than he looks"*, always right (Arcs 1–2). Alibi: he's experienced | Arcs 1–2 |
 | The concept | **Backlash** (Ep 49): as Ash Line Eleven, the player sees heroes return stronger and the Saint's light pass between them, but **can't see stars**. Then, for **one cut through the King's eye** (CIN-03), ★ glyphs appear over the ranks. After reincarnation (Ch 6–8), the player sees ratings **as Cal does**, over everyone, and nothing over the infant. On returning to the present, the stars vanish: Cal has seen them all game | Ep 49 |
 | A word for it | Cal's Field Notes list a ★ count for every Lantern, in his hand | Arc 6 |
-| **Star Sight** | In the Demon Lord King's presence, Rook is *forced to see* (the King: *"Look. This is what you are."*). From here on, the UI shows ratings above enemies and allies, rendered as ink stars. Above Rook's own head: **nothing** | Arc 7 |
+| **Star Sight** | During the **Rite of Waking**, the rite is written onto the hidden system itself, and everyone inside its circle is *forced to see*. From here on, the UI shows ratings above enemies and allies, rendered as ink stars. Above Rook's own head: **nothing** | Arc 7 |
 
 > **Director's Note: hidden stats must never feel like cheating.** Ratings **do not drive any hidden math** in normal combat. A secret multiplier the player can't see or affect feels arbitrary and unfair. Instead, ratings are used for (1) narrative, (2) **enemy tier design** (a 3★ enemy is designed as a miniboss-class threat), and (3) **visible set-piece rules** after Star Sight (e.g., the King's aura shrugs off attacks from beings two stars below him, shown on screen, explained by the fiction, and solved by the Shared Star). Normal Levels (1–60) stay the player's visible progression.
 
@@ -1542,7 +1544,7 @@ Then the player returns to the frozen battlefield and Cal's smirk. It should mak
 | 7 | *Cal's Path:* The Human | #3 | Rejection; Ascended Demon Slash; Dagrun: *"Nobody's written your story. Good."* |
 | 8 | *Cal's Path:* The Mask | #3 → #4 | Ep 18 from his side; Godfall Demon Slash; the mask |
 | R | Return (all players, after Ch 5) | #4 | Match cut on the grin. *"So. That's how I died. …The first time."* *"It was an introduction."* → **Perspective Choice** |
-| C3 | *Cal's Path:* After the Door (present) | #4 | The coffin; the archdemons waiting; *"Morning's coming early, Your Majesty."* |
+| C3 | *Cal's Path:* After the Door (present) | #4 | The coffin; the archdemons waiting; *"You two still haven't told me what I'm for."* |
 
 ### 26.2 DESIGN: The Demon Continent (a functioning society)
 The Demon Continent is the only known civilization of its world. It's isolated, ancient, and built on one chain of value:
@@ -1587,7 +1589,7 @@ The Demon Continent is the only known civilization of its world. It's isolated, 
 ### 26.5 CONTENT: The Demon Lord King
 - **Abilities:** magic (which no one else on his continent understands; to his subjects it is simply what the King *does*), instant casting, silent enchantments, extreme physical ability, **perception of the Star Rating**, and abilities nobody has ever seen.
 - **Worldview:** nothing in this world can challenge him. His commanders are the strongest beings he has ever needed. He has never met anything above them.
-- **Arc of his assumption:** Backlash Ch 3: he looks once at Ash Line Eleven and sees a 1★ nothing. End of Backlash: emptied by the Aura Sacrifice, he lies down in his coffin for a thousand years. Siege of Aurelin: his coffin stirs when a masked stranger kills his Marshal. Arc 7: he faces the two beings he cannot read: Cal (★?) and Rook (∅).
+- **Arc of his assumption:** Backlash Ch 3: he looks once at Ash Line Eleven and sees a 1★ nothing. End of Backlash: emptied by the Aura Sacrifice, he lies down in his coffin for a thousand years. Siege of Aurelin: his coffin stirs when a masked stranger kills his Marshal. Arc 7: he sleeps on while his archdemons try to sacrifice themselves and Cal to wake him. **He does not wake in this game.**
 - He is not a cartoon tyrant. He is the system's apex, and he believes the system is the world.
 
 ### 26.6 CONTENT: The Hero Party & the Goddess Trial
@@ -1630,21 +1632,21 @@ The Goddess designates the heroes by role, not name. **The heroes are numbered t
 
 | Philosophy | Who | Belief |
 |---|---|---|
-| **Rule through absolute power** | The Demon Lord King | The hierarchy is the world. Strength decides place |
+| **Rule through absolute power** | The sleeping Demon Lord King, and the archdemons who worship him | The hierarchy is the world. Strength decides place. The god must return, at any price |
 | **Rule through knowledge and manipulation** | Cal | Everyone is a piece. Better to move them than be moved |
 | **Strength through bonds and choices** | Rook | People are partners, not pieces |
 
 **Outline (Eps ~59–70):**
 1. **The Key.** Rook opens Cal's sealed door with the brass key: *"Doors don't have locks. They have keys."* (S7 pays off.) The Lanterns, Severin, and a reluctant Bas cross to the Demon Continent.
 2. **The Continent Today.** The same map as Backlash, fifteen years later. The King sleeps in his coffin; the army still obeys orders fifteen years old, with no one to give new ones. Some Demon Soldiers have started **asking questions** (Cal has been teaching them, as pieces; some remember a soldier who once stepped out of line). Rook's party meets demons who are people.
-2b. **The Clergy at the Coffin.** The archdemons return from their travels through time and other worlds. They tend the coffin like priests at a shrine and treat their King as a god. They have found (or been promised, by Cal) what they need to **wake him early**: the power of Rook's Palimpsest, delivered through Cal's plan. 🔒 *(Assumed canon, pending confirmation: the King is woken in Arc 7.)*
+2b. **The Clergy at the Coffin.** The archdemons return from their travels through time and other worlds. They tend the coffin like priests at a shrine and treat their King as a god. Their plan, which they have **never told Cal**, is the **Rite of Waking**: they will **sacrifice themselves and Cal**, the source of power they found by luck fifteen years ago, to wake their King. Cal believes he is their partner. They are calm, courteous, and give nothing away; their masks never come off.
 3. **The Trial Continues.** The present Hero Party: **Corin** (5★ since the throne room fifteen years ago, the only known 5★), **Maelis** (1★, frail; one more Sacrifice and she falls off the page), **King D**. They hate demons, and Rook's friend *was* one. A tense alliance. **Maelis joins as a guest:** Low Heal (10s prayer: protect her), Sacrifice (once per battle: an ally gains a temporary star surge, at a terrible personal cost she keeps offering to pay).
 4. **The Soldier Who Stepped Aside.** Corin meets Cal: ***"You. The one who didn't kill me."*** Cal: *"You were more interesting alive."* Then, cheerfully: *"You did kill me, actually. Didn't take."*
 5. **The Empty Wings.** The throne room's approach is held by the **Throne Guard Lines** (formation boss fight for Rook's party; Cal is elsewhere). Inside, beside the throne, two places have stood empty for fifteen years. Cal, arriving, looks at them a moment too long.
-6. **The Waking.** The coffin opens, centuries early. The King rises, weakened, aura gone, and furious. His first act forces **Star Sight** on Rook: stars over everyone, a 6★ crown of light over himself, a smear of **★?** over Cal… and **nothing** over Rook. The King, for the first time in his existence, is uncertain.
-7. **Alliance.** **Boss: the Demon Lord King**, fought by Rook and Cal together. **Cal is playable** (tag-swap); the team attack **Thousand-Door Verse** unlocks (Rook writes a line across the sky; Cal opens a door along every letter). His aura is gone, given to his archdemons, and he has woken centuries before his time, which is part of why they can stand before him at all. The archdemons, who would do anything for him, are torn between their god and Cal, the one who helped wake him. Phases: silent casting by gaze; the throne room's soldiers ordered to sacrifice themselves into him; the King's own **Sacrifice** used defensively.
-8. **The Last Move.** The King, defeated, attempts Sacrifice to be reborn. Cal **opens a door inside the prayer** and takes the transferring stars for himself. Layer 10 lands all at once: Hesper, Aldric, the Gate, Rook's recruitment, Larkspur (his arrival is what erased it; he didn't choose where he landed, but he never told Rook). He becomes the first being above the scale, and the sky of the Demon Continent **cracks like a page**. *"Now, Rook. Write me."*
-9. **Final Battle: Rook vs. Cal.** The arena is the world's page tearing. Cal uses everything: every companion move, every Sable move, every King technique he stole. Final phase: **the Shared Star** (§25.4). Maelis offers her last star (it would erase her). Juno, Bas, Tamsin, Lio, Severin, and Dagrun offer theirs. Given freely, **nobody loses anything**, and Rook becomes Unwritten. Final clash: the Godfall glaive against the last line of the Palimpsest.
+6. **The Warning.** Rook's party learns the truth Cal doesn't know: the Rite needs three offerings, and Cal is the third. (Sources: the stranded soldier from Arc 6, a Hero Party record of a past Rite, and Elodie, who can hear the march drums on the far side.) Rook tries to tell him. Cal laughs it off: *"They'd have told me."*
+7. **Alliance.** The archdemons begin the Rite at the coffin and order the Demon Army's last Lines to protect it. Rook and Cal fight side by side through them. **Cal is playable** (tag-swap); the team attack **Thousand-Door Verse** unlocks (Rook writes a line across the sky; Cal opens a door along every letter). Boss: the **Throne Guard** and the Line Marshals, in formation (the archdemons do not fight).
+8. **The Rite of Waking.** The circle closes around the coffin. The rite is written onto the hidden system itself, so everyone inside it is forced to see the stars: **Star Sight**. Rook sees ratings over everyone, ★★★★★ over the butler and the maid, **★?** over Cal… and **nothing** over themself. The archdemons calmly offer themselves, and the circle reaches for Cal. For a moment, his smile falters: he finally understands what he was for. Then he laughs, with something like respect, and **opens a door inside the rite**, taking the power meant for the King for himself. The archdemons' stars pour into him instead. They do not resist; they only turn their masks toward him. **The coffin shudders, and stays shut.** Layer 10 lands all at once: Hesper, Aldric, the Gate, Rook's recruitment, Larkspur (his arrival is what erased it; he didn't choose where he landed, but he never told Rook). He becomes the first being above the scale, and the sky of the Demon Continent **cracks like a page**. *"Now, Rook. Write me."*
+9. **Final Battle: Rook vs. Cal.** The arena is the world's page tearing. Cal uses everything: every companion move, every Sable move, and the archdemons' stolen power. Final phase: **the Shared Star** (§25.4). Maelis offers her last star (it would erase her). Juno, Bas, Tamsin, Lio, Severin, and Dagrun offer theirs. Given freely, **nobody loses anything**, and Rook becomes Unwritten. Final clash: the Godfall glaive against the last line of the Palimpsest.
 10. **The Clause (ending choice, `CAL_FATE`).** Rook writes one clause about Cal:
     - **"Fall."** He drops to 0★. Time stops. A perfect black circle opens behind him, and a butler and a musician in black step out of it (§28). He laughs: *"Another one? Lucky me."* (Bittersweet; sequel-shaped.)
     - **"Stay."** He is written back to 1★: an ordinary human in Liraen, powerless, alive. *"A soldier again. Huh."* (Grounded.)
@@ -1680,6 +1682,7 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 | **As shown** | Unhurried, precise; does the lifting; opens the path | Watchful; **turns back to look at Cal**; hums the army's march as a lullaby |
 | **Abilities shown** | **Time travel** and stopping time locally; travelling between worlds; the black circle; the Astral Path; changing form; concealing horns and wings. All of it is **the King's aura** | |
 | **Goal** | **Restore their sleeping King**, whom they treat as a god, by any means: across time, across worlds, destroying whatever stands in the way | |
+| **Secret plan** | **The Rite of Waking**: sacrifice **themselves and Cal**, the source of power they found, to wake the King. **Never told to Cal.** Their excitement at finding him shows only as calm body language behind unchanging masks | |
 | **Status** | **Exclusive, rare NPCs.** Never fought in this game, by Cal or anyone. A future superboss or reveal arc can use them | |
 
 **The King's lost certainty:** he believed nothing was stronger than his Commanders. Then he made them stronger than anything but himself and fell asleep, emptied. For fifteen years the throne has been empty, the coffin sealed, and his archdemons away across time and worlds, searching for a way to bring their god back (Arc 7, §27).
@@ -1695,7 +1698,7 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 | Through Cal's dying eyes: the King defeats the heroes without standing, looks at his palm, then pours his aura into the two kneeling Commanders, whose silhouettes fold into human shape | CIN-05B (cuts 004–011) |
 | A glitch, a **perfect black circle**, **time stops**; two calm figures in black suits and masks walk past the dead soldier; he **moves and answers them in their language**; they take him; he grins (the flashback ends) | CIN-05B |
 | *(Cal's Path)* The laugh; the woman looks back; the void closes; time resumes | CIN-05B-2 |
-| *(Cal's Path, present day)* The archdemons waiting by the coffin for Cal: *"Morning's coming early, Your Majesty."* | CIN-10 |
+| *(Cal's Path, present day)* The archdemons waiting by the coffin for Cal: *"You two still haven't told me what I'm for."* They don't answer | CIN-10 |
 | The King lies down in a black coffin; the lid closes | CIN-05B (cut 011a) |
 | After time resumes: the sealed coffin, the empty throne, the empty places beside it | CIN-05B (cut 050) |
 | A **language no one has heard**, never subtitled | CIN-05B, CIN-05C |
@@ -1723,11 +1726,12 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 | V5 | **Cal recognizes the clothing** | Arc 7, Juno's sketchbook | A stranger once commissioned two odd garments from Juno: a black butler's suit and a black maid's dress *with a tie*. Cal goes quiet for a full beat. *"Don't make those for anyone."* | Juno: *"…Fashion critic now?"* |
 | V6 | **Quiet about portals** | Arc 7 banter skit | Tamsin: *"Why don't you just portal us to the throne room?"* Cal: *"Doors, Tamsin. I make doors."* Not a joke, for once | He's touchy about his magic |
 | V7 | **Direct question** | Arc 7, after the alliance | Rook: *"The two in black. Who were they?"* Cal's smile falters, the only time in Arc 7. *"…Family. Sort of. Not yet."* | — |
-| V8 | **The King recognizes the language** | Arc 7, the Demon Lord King fight | Mid-fight, Cal mutters the three syllables he whispered as he "died." The King **stops**: *"Where did you learn that tongue?"* Cal: *"From your Wings."* For the first time, the King understands where they went | — |
+| V8 | **The sleeping King recognizes the language** | Arc 7, at the coffin | Cal mutters the three syllables he whispered as he "died." From inside the sealed coffin, **one word answers** in the same tongue. The archdemons go perfectly still. Cal, for once, says nothing | — |
 
 ### 28.5 Still open (deliberately)
 The **who** and the **how** are decided. These stay undecided until a later arc needs them:
-- What exactly the archdemons hope Cal can do for their King, and what Cal promised them (or they him).
+- What becomes of the archdemons after Cal takes their stars in the Rite (they gave themselves willingly; they fall to 0★).
+- What Cal believed he was getting from them all those years, since they never told him his part.
 - Which worlds they have destroyed, and whether Liraen is on their list.
 - How their time travel works, and whether they have already visited Liraen's past (the Sea of Marrow, drunk dry a century ago? Larkspur?).
 - **What lies beyond the doorway** at the edge of the Continent, and how Cal went from there to waking human in Larkspur.
@@ -1745,7 +1749,7 @@ Whatever is decided must stay consistent with §28.1–28.4.
 5. **The deepest layer (§25.5):** should the Demon Continent being a Goddess-built training ground be **hinted** (my recommendation), **confirmed**, or **cut**?
 6. **Endings (§27):** are three endings (Fall / Stay / Lantern) the right number? They share one final battle.
 7. **Backlash placement:** inside the reveal fight (Ep 48 → 49 → 50), as designed in `docs/BACKLASH.md`?
-8. **The King's slumber:** I've assumed the archdemons **wake him early in Arc 7**, which keeps the three-way finale (§27). Confirm, or tell me if he should sleep through the whole game. Also: is the 8-clue budget (§28.4) the right density?
+8. **The Rite of Waking (§27):** the King stays asleep; the archdemons try to sacrifice themselves and Cal; Cal hijacks the Rite and takes the power. What happens to the archdemons afterward (they gave their stars away) is left open. Is the 8-clue budget (§28.4) the right density?
 
 The foundation questions from v0.1 are still open:
 
