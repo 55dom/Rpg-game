@@ -1,6 +1,8 @@
 # BACKLASH — Playable Flashback Design Package
 ### UNWRITTEN — Knights of the Last Lantern · Companion to `GDD.md` §26 · v1.1
 
+> **v1.2:** The Void Figures are now defined: the King's **former** Left and Right Wing, now 5★ archdemons, called **the Clergy Duo** (a butler and a musician). Added **CIN-05C "The Astral Path"**, where they carry Cal down a dark astral tunnel with horns and wings fully revealed, and a defaced commanders' mural in Ch 3. Identity canon: GDD §28.
+>
 > **v1.1:** Added **The Void Figures** (Chapter 5, CIN-05B), the scene where the player watches Cal "die" and two calm figures in black step out of a hole in reality, stop time, and carry him away smiling. Mystery canon and the rules for future clues: GDD §28.
 
 > 🔒 **DIRECTOR'S EYES ONLY.** Everything in this document is a late-game spoiler. Leak rules from GDD §15.11 apply: nothing here appears in data names, codex, loading screens, achievements, or marketing before Episode 49.
@@ -128,7 +130,7 @@ Five condensed Trials, each shorter than the last:
 5. **Trial 5:** ORDER: *ATTACK THE KNIGHT.* The Knight charges. A perfect sidestep. The opening to kill him is right there. **The player doesn't take it, and the order text flickers and fades.** The Knight retreats, alive. Cal smiles under the faceplate. *"Nothing happened. I broke an order, and the sky stayed exactly where it was."*
 
 ### Chapter 3: The Question
-- **Night.** Cal slips out of the barracks into the forbidden caverns beneath the castle. Ancient ruins. Glyphs on the walls (the same script as Liraen's Tower murals, the glyph Cal "guessed" in Ep 8). Old hero relics. A broken helm with tally marks scratched inside, left by another soldier who once asked questions and vanished.
+- **Night.** Cal slips out of the barracks into the forbidden caverns beneath the castle. Ancient ruins. Glyphs on the walls (the same script as Liraen's Tower murals, the glyph Cal "guessed" in Ep 8). Old hero relics. A broken helm with tally marks scratched inside, left by another soldier who once asked questions and vanished; beside the tallies, a small, perfectly round, filled-in circle. Deeper in, a vast **defaced mural**: the Demon Lord King enthroned between **two winged commanders whose faces and names have been chiselled away**. A patrolling soldier, if Observed nearby, mutters the official truth: *"There have only ever been the Left Wing and the Right Wing."* Cal stands in front of the mural for a long time. Then a **memory splice**: the scene jumps, and Cal is walking back to the barracks before dawn. (What happened in the missing minutes is never shown in Backlash.)
 - **Day.** Guard duty in the throne chamber. The Demon Lord King settles a dispute between his two Commanders **without a word**: a glance, and the air bends.
 - **For one cut, the camera is the King's eye**, and the player sees what he sees: a faint **★** above every soldier, ★★★ above each Commander. The King's gaze passes over Cal. One star. Nothing. He looks away.
 - **Cal (internal):** ***"What exactly are you?"***
@@ -173,14 +175,25 @@ The void **folds inward**, like reality sealing a wound, and vanishes. The press
 
 **Cut to black.**
 
+**The Astral Path (CIN-05C).** Out of the black, a different place. A **dark astral realm**: a starfield of black and violet, cold aurora rippling through it, no ground, no sky. A path of black glass forms under the figures' feet one tile ahead of each step and dissolves behind them. **Dark magic** without gesture or word. They are still walking, at exactly the same unhurried pace, the man still carrying Cal over his shoulder.
+
+Here, the concealment falls away. In the realm's light, the plain black suits **resolve into what they really are**: the man in an immaculate **black butler's suit**, waistcoat, tie, and gloves, a black watch-chain at his vest; the woman in a **black maid's dress cut with a suit jacket and tie**, gloved, a slim black instrument case on her back. Midway down the path, without breaking stride, they let the disguise go completely: **horns** rise from their brows, and **vast dark wings** unfurl from slits in their coats. Their masks stay on. **Fully revealed as archdemons.**
+
+The tunnel is enormous. Far below the translucent path, the whole Demon Continent drifts past like a map: the castle a speck, the battlefield a smear of fire. They walk on for a long time. The woman begins to **hum**: four slow notes, the Demon Army's march cadence turned into a lullaby. Over the man's shoulder, Cal, eyes half-closed and still smiling, **whistles it back**, badly. (This is where his whistled tune comes from.)
+
+For a single cut through Cal's eyes, faint ink **★★★★★** flicker above each of them, then vanish: the first time Cal ever sees a rating, and the first 5★ ratings anyone has ever seen. Far ahead, at the end of the path, a tall dark doorway waits at the very edge of the Continent.
+
+**Cut to black** before they reach it.
+
+
 > **The intended order of thoughts:** 1. *Cal is almost dead.* → 2. *Cal died.* → 3. *Wait… what is that?* → 4. *Why did time stop?* → 5. *Who the hell are those people?* → 6. *Why can't anyone else move?* → 7. *Why are they so calm?* → 8. *Why are they taking Cal?* → 9. ***Wait… Cal is smiling.*** → 10. ***He knew.*** → 11. *What the hell just happened?*
 >
 > **What the deception targets.** The player already knows a human Cal exists in the present. The trick is not "Cal no longer exists." It is ***"this is how his demon life ended: a real, sad, pointless death."*** The void turns that into: *it wasn't a death at all; it was an exit he arranged.*
 >
-> **What is never explained here (or anywhere in Backlash):** who the figures are, where they come from, what their language means, why they took him, how Cal knew them, whether they are gods, demons, humans, or something else, whether they belong to another world, and whether they are connected to reincarnation or the Star Rating. Mystery canon and rules: GDD §28.
+> **What Backlash shows, and what it never says.** The player now *sees* that the figures are **archdemons** (horns, wings, 5★) who **know Cal** and are taking him somewhere at the edge of the Demon Continent. Backlash **never** names them, never says they were the King's former commanders (only Cal knows that; attentive players can connect it to the defaced mural in Ch 3), never translates their language, and never explains why they took him, what happened at the doorway, or how he woke up human in Liraen. Identity canon and rules: GDD §28.
 
 ### Chapter 6: The Other World
-Black, for several seconds. Then a sound the game has never played before: a low, glassy tone that bends upward and stops (the **Void Note**, never heard again except as a rare clue). Breathing. A heartbeat. Another. Eyes open.
+Black, for several seconds. Then a low, glassy tone that bends upward and stops: the **Void Note**, half-familiar from the drone of the Astral Path, and never heard again except as a rare clue. Breathing. A heartbeat. Another. Eyes open.
 - A **human** hand, thin, young. Fire everywhere: **Larkspur** burning (the cold open of Episode 1, from the other side).
 - **The player has control.** The body is light, fast, fragile. There is no armor.
 - And there are stars: **★ above every panicked villager**, rendered in ink. The player is seeing what only the King could see. *(Cal can see the system now.)*
@@ -200,7 +213,7 @@ Years, in short playable vignettes:
 - **High Chancellor Aldric Valcourt's study.** An offer: *"A weapon like you needs an owner."* (A memory **splice** flickers here: something is cut out of this scene.)
 - *"Different world. Different species. Same hierarchy."*
 - **The Lighthouse.** Rain. A huge, lazy man shares a bowl of stew with a wet, dangerous stranger and doesn't ask what he is. **Dagrun:** *"Nobody's written your story. Good."* For the first time in two lives, someone doesn't rank him.
-- **Becoming Cal.** He picks a name for the first time in his existence: Calder. He forges a grimoire (a prop; his doors never needed one). Knighthood. Vice captain. Aurek. Rain and laughter in the Lanterns' kitchen, where he learns to whistle the march drum as a cooking tune.
+- **Becoming Cal.** He picks a name for the first time in his existence: Calder. He forges a grimoire (a prop; his doors never needed one). Knighthood. Vice captain. Aurek. Rain and laughter in the Lanterns' kitchen, where the lullaby he whistled on the Astral Path becomes his cooking tune.
 - **Thornwick fence, years apart.** A child practicing sword swings with a stick. No star above them, ever.
 - **The Knight Exam (Ep 2), from his seat:** *"Take the one-pager."*
 
@@ -237,15 +250,15 @@ Gameplay resumes. He opens a door frame, sits on it, swings his legs, and the re
 | 2 | **The Monthly Trial** | #1 → #2 | 7 min | 9 min | 85 / 15 | The order fades |
 | 3 | **The Question** | #2 | 4 min | 7 min | 75 / 25 | *"What exactly are you?"* |
 | 4 | **Sacrifice** | #2 | 4 min | 5 min | 55 / 45 | *"…what exactly is death?"* |
-| 5 | **The Final Battle** | #2 | 10 min | 11 min | 60 / 40 | The void closes; black |
+| 5 | **The Final Battle** | #2 | 11 min | 12 min | 55 / 45 | The Astral Path; black |
 | 6 | **The Other World** | #3 | 4 min | 6 min | 80 / 20 | The orphanage step |
 | 7 | **The Human** | #3 | 6 min | 9 min | 70 / 30 | *"Take the one-pager."* |
 | 8 | **The Mask** | #3 → #4 | 4 min | 5 min | 70 / 30 | The tear opens |
 | R | **Return** | #4 | 1 min | 1 min | 0 / 100 | The smirk → fight resumes |
-| | **Total** | | **≈ 46 min** | **≈ 63 min** | **≈ 70 / 30** | |
+| | **Total** | | **≈ 47 min** | **≈ 64 min** | **≈ 69 / 31** | |
 
 **Pacing rules:**
-- No cinematic runs longer than **90 seconds** except CIN-05B (*The Void*, ~115s). It is the one scene allowed to break the chapter's rules, and its length is part of the effect.
+- No cinematic runs longer than **90 seconds** except CIN-05B (*The Void*, ~115s) and its continuation CIN-05C (*The Astral Path*, ~60s). They are the scenes allowed to break the chapter's rules, and their length is part of the effect.
 - Control returns within **2 seconds** after every cinematic. No black loading screens: chapters stream in during the preceding cinematic.
 - Each chapter follows the anime pacing template in miniature (hook → development → conflict → beat → hook), and each ends on a line, never a fade.
 
@@ -290,6 +303,7 @@ Gameplay resumes. He opens a door frame, sits on it, swings his legs, and the re
 | CIN-04 | **Sacrifice** | 50s | Maelis dies and is reborn | §21 |
 | CIN-05 | **For the Demon King** | 50s | The kneel; his star leaves him; *"Return to the line."* | §21 |
 | CIN-05B | **The Void** | ~115s | The apparent death, frozen time, the two figures, the smile, the laugh. (With CIN-05, mirrors Ep 18 cut for cut) | §21 |
+| CIN-05C | **The Astral Path** | ~60s | The tunnel: butler and maid revealed, horns and wings, the hummed march, the first ★★★★★ | §21 |
 | CIN-06 | **Heartbeat** | 35s | The Void Note; waking human in Larkspur | §21 |
 | CIN-07 | **Nobody's Written Your Story** | 45s | Dagrun at the lighthouse | §21 |
 | CIN-08 | **The Mask** | 35s | Shaping and putting on the mask | §21 |
@@ -575,7 +589,8 @@ The prayer is **ten distinct syllables in an original constructed language**, su
 | **Ch 3, CIN-03** | **The King's eye** (one cut) | ★ above soldiers, ★★★ above Commanders. The first stars the player has ever seen. Gone the moment the camera leaves his eye |
 | Ch 4 | Ash Eleven | The **star mote** of Sacrifice is visible as light (everyone can see light), never as a ★ glyph |
 | **Ch 5, CIN-05** | King's POV, one cut | The ★ above Ash Eleven **leaves him**, crosses into the King's palm, and fades. A **hollow ☆ outline** (0★) remains over him. *"…Four,"* the King says, looking at the Knight |
-| Ch 5, CIN-05B | Nobody's (frozen time) | **No stars are shown.** Whether ratings exist inside the void's frozen time is unknown, and the UI must not answer that question |
+| Ch 5, CIN-05B | Nobody's (frozen time) | **No stars are shown** on the battlefield while time is frozen |
+| **Ch 5, CIN-05C** | **Cal's eyes** (one cut) | **★★★★★** flicker above each archdemon, then vanish. Cal's perception wakes here, at 0★, on the Astral Path. Full perception arrives in Ch 6 |
 | **Ch 6 onward** | **Reincarnated Cal (can see)** | Ink ★ above every human. **Above the infant: nothing.** The player sees ratings for the whole of Ch 6–8 |
 | **Return to present** | Rook (can't see) | The stars **vanish**. The player realizes **Cal has been seeing ratings over all of them for the entire game** |
 | Arc 7 | Rook gains Star Sight | Permanent UI (GDD §25.3) |
@@ -748,9 +763,19 @@ Total silence is used exactly **four times**: the death in Ch 1 (one second afte
 | **Time resumes** | **Every world sound returns at full level in the same frame**: fire, arrows, screams, steel. It should feel like surfacing |
 | **Cut to black** | Silence (one of the four) → the **Void Note** (§1, Ch 6) → breathing → heartbeat |
 
+**The Astral Path (CIN-05C):**
+| Layer | Treatment |
+|---|---|
+| Realm bed | A slow, enormous, airy drone with the **Void Note** (§1, Ch 6) woven into it, so the sound that wakes Cal in Ch 6 will feel half-familiar |
+| Footsteps | Glass-like, ringing softly, each tile forming with a tiny chime and dissolving with a hiss |
+| Transformation | No roar, no effort sound. Horns: a low creak like old wood. Wings: one long fabric-and-leather unfurl, then slow, heavy beats that are never actually used to fly |
+| The hum | The musician hums the **four-note march as a lullaby** (solo female voice, close, warm, no reverb tail). Cal whistles it back, off-key, once |
+| Speech | One exchange in the unknown language, softer than on the battlefield. Cal **answers in it** (two words). No subtitles |
+
 **Unknown-language production rules:**
 - A dedicated phoneme set that shares **nothing** with the game's other constructed languages (demon orders, the Saint's prayer, Liraen's spell names) and doesn't resemble any real language. A linguist builds a small, consistent grammar so the language can return later and *sound the same*.
 - **Script (3 lines + Cal's 3 syllables):** Male → Female → Male. The written meaning is kept in a **sealed director's envelope** that only the narrative lead holds. Until the mystery's truth is decided (GDD §28), the performance direction is fixed and the meaning is not: ***"colleagues confirming a routine pickup. Calm. Slightly bored. One small note of interest at the end."***
+- **The language is the archdemons' tongue.** The Demon Lord King understands it (they were once his commanders, GDD §28). Cal speaks it.
 - **Cal's dying syllables are in the same language.** This is never pointed out. A player who frame-steps CIN-05B in Theatre mode with the volume up may notice the cadence matches.
 
 ## 19. VFX Requirements
@@ -779,6 +804,11 @@ Total silence is used exactly **four times**: the death in Ch 1 (one second afte
 | **Time freeze** | CIN-05B | Global freeze of all scaled-time systems (particles, animation, physics, projectiles) + **frozen film grain** | 0 extra |
 | **Dark aura** | CIN-05B | Vignette closes ~15% and breathes once; colors pulled toward black; a slight chromatic "squeeze" at the edges; no particles around the figures | Post-process |
 | **Body impression** | CIN-05B | A faint body-shaped hollow left in the ash where Cal lay | Decal |
+| **Astral realm** | CIN-05C | A black and violet starfield skybox with slow dark-aurora ribbons (shader); the Demon Continent far below as a low-detail map mesh with fire decals | Skybox + 1 mesh |
+| **Black-glass path** | CIN-05C | Tiles spawn one step ahead (scale-in + chime) and dissolve behind (pooled) | ≤ 30 tiles live |
+| **Concealment lifting** | CIN-05C | A thin ripple passes down each figure; the plain suit material swaps to the detailed butler / maid outfits | Material swap + ripple shader |
+| **Horns & wings** | CIN-05C | Horns grow from the brow (blend-shape + mesh); wings unfurl from coat slits (skinned, cloth-sim **off**, hand-keyed) | 0 particles |
+| **Ink stars ★★★★★** | CIN-05C | Same ink-star renderer as §13, one cut | Instanced |
 
 ---
 
@@ -797,10 +827,10 @@ Total silence is used exactly **four times**: the death in Ch 1 (one second afte
 | **Cal (youth)** | Cal companion set (Arcs 1–2), scaled | **~12**: wake, stumble-run, carry locomotion (6), first-door fall |
 | **Cal (Ch 7–8)** | Cal companion + Sable sets | **~4** |
 | **Ash Eleven, injured (Ch 5)** | Soldier set | **~8**: injured locomotion, stumble-dodge, thrown-into-debris, push-up-and-buckle, glaive-lift-and-drop, flinch, final collapse, being-carried (limp → relaxed) |
-| **The Void Figures** | New | **~10**: a shared unhurried walk (identical cadence for both), step-out-of-void, step-around (an obstacle they don't look at), the effortless lift-to-shoulder (**no anticipation, no strain**), shoulder-carry walk, conversational idles, the woman's stop / slow turn / small step back, step-into-void |
+| **The Void Figures** | New | **~16**: concealment lift, horn emergence, wing unfurl, walking-with-wings, the musician's humming idle, the butler's free-hand gesture as the path forms, plus the original ~10: a shared unhurried walk (identical cadence for both), step-out-of-void, step-around (an obstacle they don't look at), the effortless lift-to-shoulder (**no anticipation, no strain**), shoulder-carry walk, conversational idles, the woman's stop / slow turn / small step back, step-into-void |
 | **Faces** | — | High-detail facial pass for Ash Eleven's demon face (CIN-05 smile, CIN-05B: eyes opening, smile → grin → four-stage laugh). The most expressive face work in the chapter |
 | **Liraen NPCs** | Existing | 0 |
-| **Total new** | | **≈ 142 clips**, most of them hero-party combat that Arc 7 reuses |
+| **Total new** | | **≈ 148 clips**, most of them hero-party combat that Arc 7 reuses |
 
 ### 20.2 Anime timing rules
 - **Standard attacks:** pose-to-pose, **stepped on twos** (12 fps sampling), 8–15 keys (GDD §19.7).
@@ -965,11 +995,32 @@ Format: **CUT · PICTURE · ACTION / STAGE · DIALOGUE / AUDIO · TIME / FRAMES 
 | 044 | **CUT TO BLACK** | Hard cut | **Total silence** | 3.0s / 72 | — |
 | → | **Transition to reincarnation: CIN-06** | — | — | — | — |
 
-### CIN-06 "Heartbeat" (≈ 35s; Ch 6; continues from CIN-05B's black)
+### CIN-05C "The Astral Path" (≈ 60s; Ch 5; follows CIN-05B's cut to black)
+| CUT | PICTURE | ACTION / STAGE | DIALOGUE / AUDIO | TIME / FRAMES |
+|---|---|---|---|---|
+| 001 | Black | Hold | Silence | 2.0s / 48 |
+| 002 | Extreme wide: a vast dark starfield, black and violet; cold aurora rippling. Tiny in the center: two walking figures, one carrying a third | Slow fade up from black | Realm drone rises; the Void Note woven in | 4.0s / 96 |
+| 003 | Low, at path level: a black-glass tile forms one step ahead of a polished black shoe; the tile behind dissolves | Tracking backward with their feet | Glass chime; dissolve hiss; their unchanged cadence | 3.0s / 72 |
+| 004 | MS: the man, carrying Cal over his shoulder. His free gloved hand moves slightly, and the path ahead extends (**dark magic, no word**) | Tracking | — | 2.5s / 60 |
+| 005 | MS: a thin ripple passes down the man's plain suit: it resolves into an immaculate **black butler's suit**, waistcoat, tie, watch-chain | Tracking; ripple 12f | A faint shimmer | 3.0s / 72 |
+| 006 | MS: the same ripple down the woman: a **black maid's dress cut with a suit jacket and tie**, gloves, a slim black instrument case on her back | Tracking | Shimmer | 3.0s / 72 |
+| 007 | CU, profile: the man's masked head. **Horns** rise from his brow, curving back, slow and unhurried | Static; he doesn't break stride | Low creak, like old wood | 2.5s / 60 |
+| 008 | MS from behind: **vast dark wings** unfurl from slits in his coat, then the woman's. They keep walking | Slow crane up | One long unfurl; two heavy wingbeats, never used to fly | 4.0s / 96 |
+| 009 | Extreme wide from below the path: through the translucent glass, the entire **Demon Continent** drifts past far beneath, the castle a speck, the battlefield a small smear of fire | Slow tilt up to the figures | Drone | 4.0s / 96 |
+| 010 | Two-shot, walking: the archdemons, fully revealed (horns, wings, masks, butler and maid) | Tracking | MAN: *[unknown language, soft]* · WOMAN: *[unknown language]* | 4.0s / 96 |
+| 011 | CU: Cal over the man's shoulder, eyes half-closed, still smiling | Static | CAL: *[two words in the unknown language]*. No subtitles | 2.5s / 60 |
+| 012 | MS: the woman, walking, begins to **hum** | Tracking | Four slow notes: **the march as a lullaby** | 4.0s / 96 |
+| 013 | CU: Cal whistles it back, off-key | Hold | Whistle, once | 2.5s / 60 |
+| 014 | **POV (Cal's eyes):** looking up at the two of them; faint ink **★★★★★** flicker above each | One cut; the stars fade within 1s | A high resonance, then gone | 2.0s / 48 |
+| 015 | Extreme wide, behind them: the path runs on and on; far ahead, a tall dark doorway at the very edge of the Continent | Very slow push | The hum continues, fading | 5.0s / 120 |
+| 016 | **CUT TO BLACK** before they reach the doorway | Hard cut | **Silence** | 2.0s / 48 |
+| → | **CIN-06 "Heartbeat"** | — | — | — |
+
+### CIN-06 "Heartbeat" (≈ 35s; Ch 6; continues from CIN-05C's black)
 | CUT | PICTURE | ACTION / STAGE | DIALOGUE / AUDIO | TIME / FRAMES |
 |---|---|---|---|---|
 | 001 | Black | Hold (several seconds; the player should wonder if the game froze) | Silence | 4.0s / 96 |
-| 001a | Black | — | **The Void Note**: a low glassy tone, bending upward, then gone. Nothing in the game has sounded like it | 2.0s / 48 |
+| 001a | Black | — | **The Void Note**: a low glassy tone, bending upward, then gone. Half-familiar from the Astral Path's drone | 2.0s / 48 |
 | 001b | Black | — | Breathing: young, human, not muffled by a faceplate | 2.0s / 48 |
 | 002 | Black | — | Heartbeat | 1.5s / 36 |
 | 003 | Black | — | Heartbeat | 1.5s / 36 |
@@ -1097,7 +1148,7 @@ OrdersSystem  ObserveSystem  FormationCtrl   PartyBrain     NarrationService  St
 - **Everything authored is data:** `ChapterGraph`, `HeroTierData`, `MoveTierData`, `NarrationLine` (text, trigger, priority), `MemoryProfile`.
 
 **New data assets:**
-`MEM_BACKLASH` (MemoryProfile) · `CG_BACKLASH_CH0..CH8` (ChapterGraphs) · `HTD_TRIAL_1..5, CH4, CH5` (HeroTierData) · `ABL_DEMON_SLASH_T1/T2/T3` · `CHR_ASH_ELEVEN` · `CHR_CAL_YOUTH` · `NAR_BACKLASH` (narration table) · `LANG_HUMAN_CIPHER` · `CHR_UNK_A` / `CHR_UNK_B` (the two figures; deliberately meaningless IDs, see GDD §15.11) · `VFX_CIRCLE_RESERVED`.
+`MEM_BACKLASH` (MemoryProfile) · `CG_BACKLASH_CH0..CH8` (ChapterGraphs) · `HTD_TRIAL_1..5, CH4, CH5` (HeroTierData) · `ABL_DEMON_SLASH_T1/T2/T3` · `CHR_ASH_ELEVEN` · `CHR_CAL_YOUTH` · `NAR_BACKLASH` (narration table) · `LANG_HUMAN_CIPHER` · `CHR_UNK_A` / `CHR_UNK_B` (the two archdemons; deliberately meaningless IDs, see GDD §15.11) · `ENV_ASTRAL_PATH` · `VFX_CIRCLE_RESERVED`.
 
 ---
 
