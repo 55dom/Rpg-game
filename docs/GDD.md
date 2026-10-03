@@ -1,5 +1,7 @@
 # UNWRITTEN — Knights of the Last Lantern
-### Game Design Document · Foundation Draft v0.3 (awaiting approval)
+### Game Design Document · Foundation Draft v0.4 (awaiting approval)
+
+> **v0.4 changes:** Backlash is now a **30–60 minute playable flashback told by Cal himself, inside the reveal fight** (Ep 49), with a full production package in **`docs/BACKLASH.md`**. Arc 7 moved to **§27**. Arc 6 is now *"The Light Left On."* Cal's signature move is the **Demon Slash** lineage (Demon Slash → Ascended → Godfall).
 
 > **v0.3 changes:** Cal is now a **reincarnated Demon Soldier** and the story's mastermind. §15 was rewritten (the v0.2 "tether" version is retired), and two sections were added: **§25 The Hidden Star Rating** and **§26 The Backlash Arc** (a playable flashback, plus Arc 7's three-way finale). The cast, Arcs 4–7 outline, seeds, and the Ep 1 cold open were updated.
 
@@ -128,9 +130,9 @@ There are 12 important characters. 🔒 marks hidden truths.
 | + | **Captain Brannoc Steelhart** | Iron Wardens captain | Oath | A mentor figure who **truly dies** in Arc 3 (see §14 for why this matters). |
 | + | **The Sable Knight** | Masked antagonist / antihero (Arcs 3–5) | "Severance" (space-cutting) | A nameless masked knight who raids Crown vaults, executes Choir agents, and fights the Lanterns three times. Players should believe he is a new character. 🔒 He is Cal (§15). |
 | + | **Aurek Valcourt** | Severin's older brother, presumed dead | Starlight | Lost in the Hollowmarch six years ago; body never found. **Red herring**: players and Severin come to believe he is the Sable Knight. 🔒 He truly died, on Cal's watch. |
-| + | **The Demon Lord King** | 🔒 Ruler of the Demon Continent (Arc 5 glimpse → Arc 7) | Silent, wordless magic | The world's first anomaly (6★). Calm, never angry, believes nothing can challenge him (§26.4). |
+| + | **The Demon Lord King** | 🔒 Ruler of the Demon Continent (Arc 5 glimpse → Arc 7) | Silent, wordless magic | The world's first anomaly (6★). Calm, never angry, believes nothing can challenge him (§26.5). |
 | + | **Ghorran & Vaelith** | 🔒 The King's Left and Right Wing commanders | — (3★ might) | Ghorran dies to the Sable Knight in the Siege of Aurelin; Vaelith is an Arc 7 boss. |
-| + | **The Hero Party: Corin, Maelis, "King A"** | 🔒 Goddess Trial heroes (Backlash Arc, Arc 7) | Sword & shield / Saint's prayers / bow | Demon-hating heroes; the Saint's *Sacrifice* is the key to Cal's reincarnation (§26.5). |
+| + | **The Hero Party: Corin, Maelis, "King A"** | 🔒 Goddess Trial heroes (Backlash Arc, Arc 7) | Sword & shield / Saint's prayers / bow | Demon-hating heroes; the Saint's *Sacrifice* is the key to Cal's reincarnation (§26.6). |
 | + | **Wraithe** | Pale Choir rift-assassin | Hollow rifts | **Red herring**: establishes "space-tearing" as a Choir technique before the Sable Knight appears. Executed by the Sable Knight in Arc 4. |
 
 **Relationship seeds (party members interact with each other):**
@@ -597,7 +599,7 @@ Every episode follows the anime pacing template (§18). Episodes listed in brief
 ### ARC 1: "The One-Page Mage" (Episodes 1–8)
 *Theme: being underestimated. Tone: bright, funny, a few sharp shadows.*
 
-1. **The Tower of Choosing.** Cold open: a burning village (**Larkspur**, 🔒) and an infant's cry. Far off, a thin silhouette walks out of the flames carrying something (🔒 Cal, minutes after reincarnation; the reverse angle plays in Backlash B9). Hard cut to 15 years later. Rook and Severin climb the Tower. Severin receives a seven-clasp tome; Rook receives one page. Brother Moss: *"Some books are better read twice."* 🔒 A Choir acolyte attacks the ceremony. First combat tutorial. **Hook:** the acolyte, dying, stares at Rook's grimoire: *"…It's you."*
+1. **The Tower of Choosing.** Cold open: a burning village (**Larkspur**, 🔒) and an infant's cry. Far off, a thin silhouette walks out of the flames carrying something (🔒 Cal, minutes after reincarnation; the reverse angle plays in Backlash Ch 6). Hard cut to 15 years later. Rook and Severin climb the Tower. Severin receives a seven-clasp tome; Rook receives one page. Brother Moss: *"Some books are better read twice."* 🔒 A Choir acolyte attacks the ceremony. First combat tutorial. **Hook:** the acolyte, dying, stares at Rook's grimoire: *"…It's you."*
 2. **The Knight Exam.** Trials across the training grounds. **Boss 1: Severin (duel).** Every squad rejects Rook, until Dagrun yawns: *"I'll take the one-pager."*
 3. **The Lighthouse with No Sea.** Squad-life episode. Meet the Lanterns. Cal teaches doors: 🔒 *"A door I open, I can only close from the other side. So don't make me close one, kid."* (S1) Dagrun explains the **squad lanterns**: 🔒 *"A Lantern goes out when the knight dies… or when their mana can't find its way home."* Cal jokes at dinner: *"Dying's overrated. Did it once, didn't care for it."* (🔒 D1) Cal is the sparring partner in the dodge tutorial; his AI always evades left, left, backstep (🔒 S3, never mentioned). He whistles the Lighthouse Tune while cooking (🔒 S5). First "Mind the step" (🔒 S2).
 4. **The Village That Wasn't There.** First mission in Greywater Fens: a village is missing from the map. **Boss 2: Hask the Bogwarden.** Choice: chase the fleeing acolyte *or* save the child **Mirren** from the bog (🔒 in Arc 3 Mirren tells of "a black knight who fixed our well", a Sable Knight sighting that gains a second meaning after the reveal).
@@ -636,20 +638,20 @@ Every episode follows the anime pacing template (§18). Episodes listed in brief
 
 ### Beyond Arc 3 (outline only)
 - **Arc 4: "The Unanswered Door" (Eps 29–38):** Aldric's coup takes shape; the Severed Isles; Severin hunts the Sable Knight, believing he is Aurek. **Sable Encounters III** (Wraithe's execution, "Mind the step"), **IV** (Aldric's convoy: *"Brother…?"*), and **V** (Sable carries Elodie out of the Hollow and places her in Rook's arms).
-- **Arc 5: "Writ of Return" (Eps 39–48):** the Paragon's Gate Key; **Sable Encounter VI** (boss: *"Go home, Lantern."*); *Revision* stage; finale **The Siege of Aurelin**: the Gate opens onto the **Demon Continent**, the first demons enter Liraen, the **mask breaks**, and the player fights Cal (§15.8).
-- **Arc 6: "BACKLASH" (Eps 49–58, WHY):** a playable flashback as **Ash Line Eleven**, a Demon Soldier, through to his reincarnation in Liraen, with present-day bookends (§26).
-- **Arc 7: "Unwritten" (Eps 59–70, WHAT HE WAS DOING):** the Demon Continent today; the Hero Party alliance; the Demon Lord King; Cal's last move; the Shared Star; the ending clause (§26.10).
+- **Arc 5: "Writ of Return" (Eps 39–50):** the Paragon's Gate Key; **Sable Encounter VI** (boss: *"Go home, Lantern."*); *Revision* stage; finale **The Siege of Aurelin** (Eps 47–50): the Gate opens onto the **Demon Continent**, the first demons enter Liraen, the **mask breaks**, and the player fights Cal (§15.8). Mid-fight, **Ep 49 "BACKLASH"**: Cal opens a door into his own memory, and the player *plays* his past life as a Demon Soldier and his reincarnation (30–60 min; `docs/BACKLASH.md`). **Ep 50** returns to the frozen battlefield, the smirk, and the end of the fight.
+- **Arc 6: "The Light Left On" (Eps 51–58):** the aftermath. The squad under Crimson Bell suspicion; stranded Demon Soldiers in Liraen who begin asking questions; Aldric's trial; Hesper captured (*"A boy with no grimoire taught me about the Hollow."*); Cal's **Field Notes** found in the lighthouse (Layers 8–9); Brother Moss's truth; Larkspur's ruins; preparing to cross the Gate.
+- **Arc 7: "Unwritten" (Eps 59–70):** the Demon Continent today; the Hero Party alliance; the Demon Lord King; Cal's last move; the Shared Star; the ending clause (§27).
 
 ### Long-range seeds (Ch. 1 → Ch. 8+)
 
 | Seed | First appears | Pays off |
 |---|---|---|
-| Brother Moss, the sweeper | Ep 1 (one line) | Arc 6: the Last Scribe who erased your grimoire to hide it |
-| "Larkspur" burning (cold open) | Ep 1 | Backlash B9: the same fire from Cal's eyes; Arc 7: his arrival is what erased it |
-| The silhouette carrying the infant | Ep 1 | Backlash B9: it's Cal, carrying Rook |
-| The Saint mural in the Tower | Ep 8 | Backlash B7: it depicts the Goddess Saint's *Sacrifice* |
+| Brother Moss, the sweeper | Ep 1 (one line) | Arc 6 ("The Light Left On"): the Last Scribe who erased your grimoire to hide it |
+| "Larkspur" burning (cold open) | Ep 1 | Backlash Ch 6: the same fire from Cal's eyes; Arc 7: his arrival is what erased it |
+| The silhouette carrying the infant | Ep 1 | Backlash Ch 6: it's Cal, carrying Rook |
+| The Saint mural in the Tower | Ep 8 | Backlash Ch 4: it depicts the Goddess Saint's *Sacrifice* |
 | Mirren, the fen child | Ep 4 (optional save) | Arc 3: witness to "the black knight who fixed our well"; reinterpreted after the reveal |
-| Aurek Valcourt's pendant | Ep 9 | Arc 3–4 red herring; Backlash B10: Aurek was Cal's partner |
+| Aurek Valcourt's pendant | Ep 9 | Arc 3–4 red herring; Backlash Ch 7 / Arc 7: Aurek was Cal's partner |
 | The armored husks in the Hollowmarch | Ep 17 | Arc 5: they were Demon Soldiers |
 | Brass key | Ep 7 | Arc 5 reveal, Phase 4: *"…It never had a lock."*; Arc 7: it opens his door from this side |
 | Elodie's silence | Ep 9 | Arc 4: she can hear the Hollow |
@@ -694,11 +696,11 @@ He is introduced early, mentors the protagonist, carries the most charm in the s
 | 2 | He apparently died | Ep 18 |
 | 3 | He returns as the masked enemy | Siege of Aurelin reveal (Arc 5) |
 | 4 | He knows things he shouldn't | Pre-reveal seeds (D-clues); confirmed in the reveal fight |
-| 5 | He was reincarnated | Reveal fight, Phase 3 (in his own words, briefly) |
-| 6 | His life as a Demon Soldier | **Backlash Arc** (playable, §26) |
-| 7 | Both of his sacrifices were intentional | Backlash finale mirrors Ep 18 shot-for-shot |
-| 8 | He was studying the world the whole time | Backlash "Second World" episodes + his **Field Notes** |
-| 9 | The friendship was partially genuine | Reveal fight ending line; Field Notes about each squadmate; Arc 7 alliance |
+| 5 | He knows things no one could (Larkspur), and he was reincarnated | Reveal fight, Phase 3 → **Backlash** (Ep 49) |
+| 6 | His life as a Demon Soldier | **Backlash** (playable, Ep 49; `docs/BACKLASH.md`) |
+| 7 | Both of his sacrifices were intentional | Backlash Ch 5 (CIN-05 mirrors Ep 18 shot for shot) and Ch 8 (he walks into the Ep 18 door) |
+| 8 | He was studying the world the whole time | Backlash Ch 6–7 (Observe, Language Resolve) + his **Field Notes** (Arc 6) |
+| 9 | The friendship was partially genuine | Backlash Ch 7 (the Lighthouse, the one scene he won't narrate); reveal fight ending line; Field Notes; Arc 7 alliance |
 | 10 | He has been manipulating events (Hesper, Aldric, the Gate, Rook's recruitment) | Arc 7 |
 
 > **Director's Note: what changed from v0.2.** v0.2 made Cal a protector hiding from a "tether." That version is **retired**: no tether, no "Lock me up," and no Hollow Sovereign. Everything the previous brief required still holds: the disguise, the subtle clues, the reveal inside a massive battle, the piece-by-piece face reveal, the one-line confirmation, gameplay that continues immediately, and a bigger WHY after the WHO. Cal is now **playable in two ways**: as Ash Line Eleven in the Backlash Arc, and as a temporary ally against the Demon Lord King in Arc 7.
@@ -713,7 +715,7 @@ Every department has rules to keep Cal and the Sable Knight from reading as the 
 | **Name** | Calder "Cal" Wynn (the first thing he ever chose for himself) | Never speaks a name. The Crown names him **"the Sable Knight"** on bounty posters (we need *some* label for subtitles, codex, and dialogue) | He had a designation before he had a name |
 | **Face** | Shown constantly | Smooth black full mask. **The face is never shown, not even in shadow** | The mask's slit pattern matches a **Demon Soldier faceplate** (players first see one on the armored husks in the Hollowmarch, Ep 17, and later in the Backlash Arc) |
 | **Silhouette** | Lanky, light coat, loose hair, saber on the hip | Heavy high-collared cloak, **asymmetric left pauldron**, polearm across the back. Padding makes him look broader | Same height, exactly (never shown side by side). The pauldron is modeled on Demon Soldier armor |
-| **Weapon** | Slim saber, one-handed | **A long black glaive** | It's the god-like evolution of his old Demon Soldier **ash-pike** (§26). The saber was a disguise |
+| **Weapon** | Slim saber, one-handed | **A long black glaive** | It's the god-like evolution of his old Demon Soldier **ash-glaive** (§26). The saber was a disguise |
 | **Magic** | **Threshold**: golden rectangular door frames, clean geometry, warm light | **Severance**: jagged black tears cut with the blade, ink-like edges, cold light | Severance tears still **close from the far side**. **Both never speak a spell name** (B9) |
 | **Fighting style** | Fast, playful, one-handed, right-side lead | Heavy, economical, two-handed, **left side guarded** | **Dodge pattern unchanged: left, left, backstep**. It's a Demon Soldier formation drill (§26) |
 | **Voice** | Casual, teasing, quick | Formal, clipped, few words. **Same voice actor**, processed through the mask (resonance, pitch-down) | Processing **thins slightly with each encounter** |
@@ -751,7 +753,7 @@ The danger is that the player connects "Cal might be alive" with "who is the mas
 |---|---|---|---|
 | **S1. "A door I open, I can only close from the other side."** | Ep 3, Cal's Threshold tutorial | A gameplay rule, stated once | — |
 | **S2. "Mind the step."** | Eps 3–17: Cal's incidental bark whenever he opens a door for someone (~8 times) | A throwaway catchphrase, a pun on his doors | **It's the order demon commanders give when a column marches over its own dead** |
-| **S3. The dodge pattern: left, left, backstep** | Ep 3: Cal is the **sparring partner** in the dodge tutorial; his AI always evades in this pattern | Pure animation; never mentioned | **The Demon Soldier formation drill: "Left. Left. Back. Thrust."** The player performs it in Backlash Ep 1 |
+| **S3. The dodge pattern: left, left, backstep** | Ep 3: Cal is the **sparring partner** in the dodge tutorial; his AI always evades in this pattern | Pure animation; never mentioned | **The Demon Soldier formation drill: "Left. Left. Back. Cut."** The player performs it in Backlash Ch 1; its finisher is the **Demon Slash** |
 | **S4. Head tilt** | All Cal dialogue: he tilts his head right when listening | Pure animation | Soldiers on the Demon Continent tilt their heads toward the rank speaking to them |
 | **S5. The Lighthouse Tune**: four notes Cal whistles while cooking | Eps 3, 7, 16 (HQ ambient scenes) | Diegetic whistling; never named | **The Demon Army's four-beat march cadence** |
 | **S6. Juno's knots**: red cords with the unique **"Quill knot"** | Ep 5: Juno ties one on every Lantern's wrist, Cal's included. Ep 9: Juno **sells** the same cords at a Lowmarket stall | Squad bonding + a side hustle | — (Layer 9: he kept it) |
@@ -799,7 +801,7 @@ The danger is that the player connects "Cal might be alive" with "who is the mas
 | B8 | **Behavior** | Sable never lands a killing blow on a Lantern and never harms a civilian. He **does** brutally kill Choir agents and badly injures Bas | All | — | He's ruthless and unpredictable. The injury to Bas makes "he's secretly a friend" feel *wrong* |
 | B9 | **Casting** | Sable never speaks a spell name | All | D3 | Hollow casters (Wraithe) are silent too |
 
-> **Director's Note: tuning the mystery.** We test this with outsiders. Targets: **10–20%** of playtesters suspect Cal before the reveal; **80%+** recall at least one clue when they rewatch. If more than 25% guess, remove a bridge clue (B4 first). If fewer than 50% recall a clue on rewatch, strengthen the seeds, never the bridge clues. **Track D is tested separately:** after the Backlash Arc, players should recognize at least 3 of S2, S3, S5, and D1–D12 *without being prompted*.
+> **Director's Note: tuning the mystery.** We test this with outsiders. Targets: **10–20%** of playtesters suspect Cal before the reveal; **80%+** recall at least one clue when they rewatch. If more than 25% guess, remove a bridge clue (B4 first). If fewer than 50% recall a clue on rewatch, strengthen the seeds, never the bridge clues. **Track D is tested separately:** after Backlash, players should recognize at least 3 of S2, S3, S5, and D1–D12 *without being prompted*.
 
 ---
 
@@ -925,8 +927,9 @@ Cut 017 hands control straight back. Cal rolls his shoulders, opens a **golden d
 |---|---|---|
 | **1: The companion** | Cal fights with **his Arcs 1–2 kit**: golden doors, saber-like strikes (formed from door light), and his **old Assist moves, now used against you** (the *Drop* that used to juggle enemies for you, the door-swap he used to save you) | *"I've been fighting beside this guy the entire game."* |
 | **2: Evolution** | Each companion move evolves mid-fight into the Sable Knight's version: doors become black tears; the Drop becomes a sky-wide fall; the swap becomes a party-wide scramble | *"He was holding back. The whole time."* |
-| **3: The reincarnated power** | Silent casting at speed, regeneration, floating spatial blades, and the **glaive's true form**: the *Thousand-Line Thrust*, a single backstep-thrust that splits the arena (the god-like version of a Demon Soldier's basic pike drill). Mid-fight, between exchanges, he tells Rook the headline: *"I was a soldier once. Not here. Somewhere with a king who never had to speak to cast. I died on purpose. I woke up here. Then I found you."* (Layer 5. No more detail.) | *"I never knew what he actually was."* |
-| **4: Not serious** | He sits on a floating door frame, swinging his legs, and **grades** the player. He only attacks when the player does something *interesting* (reactions, perfect dodges, team attacks). Boring play gets nothing but commentary. An **"Interest" gauge** replaces his HP bar for this phase | Unsettling. Playful. The most dangerous moments are quiet |
+| **3: The reincarnated power** | Silent casting at speed, regeneration, floating spatial blades, and the **glaive's true form**: **Godfall Demon Slash**, a backstep-cut that splits the arena (the god-like version of a Demon Soldier's basic drill). At the end of the phase he says something no one could know: *"You were lighter than my glaive, you know. That night in Larkspur."* Rook: *"…What are you?"* Cal: ***"You really want to know?"*** **(Ep 48 ends.)** | *"I never knew what he actually was."* |
+| **BACKLASH** (Ep 49) | *"Then don't just listen."* Cal opens a golden door into his own memory; the battlefield freezes mid-collapse. The player **plays Cal's past**: a 1★ Demon Soldier, the monthly Goddess Trial, the Saint's *Sacrifice*, *"For the Demon King,"* waking human in burning Larkspur, rejection, Dagrun, the mask (30–60 min, 8 chapters; **`docs/BACKLASH.md`**). **Return (Ep 50):** the frozen debris finishes falling. *"So. That's how I died."* *(smile grows)* *"…The first time."* *(the smirk)* *"Don't mistake that for a confession. It was an introduction."* | *"I WAS Cal."* Then: *"I was playing the villain before I even knew he was the villain."* |
+| **4: Not serious** | He sits on the golden door frame he opened at the end of the flashback, swinging one leg, and **grades** the player (*"Your move."*). He only attacks when the player does something *interesting* (reactions, perfect dodges, team attacks). Boring play gets nothing but commentary. An **"Interest" gauge** replaces his HP bar for this phase | Unsettling. Playful. The most dangerous moments are quiet |
 | **5: The board** | He manipulates the battlefield itself: the camera rises to a **high-angle "board" view** (his point of view), districts rotate through doors, and party members are **split across the city**, each fighting alone against demon squads while he moves them like pieces | Helplessness: *"pieces on a board"* made literal |
 | **6: Bonds** | The party fights its way back together. Each reunited ally restores a **Link**; each Link enables a team attack. With all Links restored, the party performs the **Lantern Chain** (every Lantern's team attack in sequence) | The protagonist's strength is people, not power |
 
@@ -935,7 +938,7 @@ Cut 017 hands control straight back. Cal rolls his shoulders, opens a **golden d
 - Cal: ***"That's the funny part."*** He looks past Rook, at Juno, Bas, Tamsin, Dagrun. ***"I actually liked you."*** Pause. ***"I just never said I had to be on your side."***
 - He opens a door to the Gate, steps through, and closes it **from the other side** (S1). The Gate seals. The demon army left in Liraen loses its order and breaks. The siege is over.
 
-**Ending hook, WHAT HAPPENS NEXT?:** Rook picks up a shard of the shattered mask. On its inside surface, lines of unfamiliar script glow faintly, the same script as the Tower glyph Cal once "guessed" (D5). The Palimpsest in Rook's hands begins to translate it. The first line reads: ***"Ash Line, Eleventh."***
+**Ending hook, WHAT HAPPENS NEXT?:** That night, the lighthouse. Cal's room has been untouched since Ep 18, but on the bed lies a stack of notebooks that wasn't there yesterday. The cover: ***FIELD NOTES — for Rook.*** The first page is a careful sketch of every Lantern, each with a small note. Under Rook's sketch, there is no note. Just a drawing of the brass key.
 
 ---
 
@@ -948,20 +951,20 @@ Cut 017 hands control straight back. Cal rolls his shoulders, opens a **golden d
 | **Dagrun** | Guilt: he took Cal in. Says nothing for an episode. Then, to Rook: *"I still leave the light on. Don't know if that makes me a fool."* | Dagrun's Arc 7 quest *"The Light Left On"* |
 | **Bas** | Vindicated distrust. *"He broke my arm. I kept telling myself it wasn't him."* | Bas gains a resolve passive; refuses any truce with Cal until Arc 7 |
 | **Tamsin** | Denial, then grief: *"He said he liked us. He said it."* | Tamsin's bond event on what "liking someone" is worth |
-| **Lio** | Recognizes the mask script from Choir archives; becomes the squad's translator of the Field Notes | Drives the Backlash Arc framing (§26) |
+| **Lio** | Recognizes the mask script from Choir archives; becomes the translator of the demon script in the Field Notes' margins | Drives Arc 6's Field Notes quests |
 | **Severin** | Hollow anger. His hope that Sable was Aurek dies in the same moment. And Cal used his father. *"You let me believe."* | Arc 7 rival-turned-ally scene |
 | **Elodie** | Complicates everything: *"He carried me out of the dark. He was gentle."* | Keeps "pure villain" readings honest |
 | **The Crown / Crimson Bell** | The Lanterns' vice captain was a demon in human skin. The squad is under suspicion | Squad Rep −−; Crimson Bell investigation quests |
 | **Rook** | *"If you were alive this whole time… why didn't you come back?"* | The question the Backlash Arc answers |
 
 #### Why the reveal doesn't explain everything
-The fight reveals **WHO** (Layer 3) and the bare fact of **reincarnation** (Layer 5). The **Backlash Arc** (§26) answers **WHY** he disappeared and what he was. **Arc 7** answers **WHAT he's been doing**: the manipulation (Layer 10) and what he wants from the Palimpsest.
+The fight reveals **WHO** (Layer 3). **Backlash**, told by Cal himself mid-fight, shows **WHAT he was** (Layers 5–7), but as a **curated narrator**: everything shown is true, and not everything true is shown (three visible memory splices). Arc 6's Field Notes cover **WHY he stayed away** (Layers 8–9). **Arc 7** answers **WHAT he's been doing**: the manipulation (Layer 10) and what he wants from the Palimpsest.
 
 #### Permanent gameplay changes after the reveal
 | Requirement | Implementation |
 |---|---|
-| **Playable** | **Ash Line Eleven** is the playable character for the whole Backlash Arc (§26). In Arc 7, **Cal joins the tag-swap roster temporarily** (Rook, Severin, Cal) during the alliance against the Demon Lord King |
-| **New combat abilities** | Backlash: the Demon Soldier kit (pike drill, formation moves, "Observe"). Arc 7: Cal's full kit (Threshold doors + Severance + Thousand-Line glaive) |
+| **Playable** | **Ash Line Eleven** and young Cal are playable for the whole of Backlash (Ep 49). In Arc 7, **Cal joins the tag-swap roster temporarily** (Rook, Severin, Cal) during the alliance against the Demon Lord King |
+| **New combat abilities** | Backlash: the Demon Soldier kit (drill → Demon Slash, formation, Observe/Insight) and young Cal's unlock ladder (doors, Ascended Demon Slash). Arc 7: Cal's full kit (Threshold doors + Severance + Godfall Demon Slash) |
 | **New combo trees** | Ash-pike ComboGraph (Backlash); glaive ComboGraph with "tear-cancel" edges (Arc 7) |
 | **New party interactions** | ~30 Arc 7 banter skits; pair flags with every party member; the Hero Party guests (§26) |
 | **New bond quests** | Cal's bond resumes in Arc 7 from his pre-death rank **minus 3** (*"You don't know me anymore." "Did I ever?"*); quest chain *"Field Notes"* |
@@ -980,7 +983,7 @@ The original scene (§19.3) was always honest:
 - Cut 013: the door slams **toward the camera**, which means it was pushed from beyond. Frame-stepping the 2-frame impact flash shows a silhouette **standing in the doorway, a hand on the door, pushing it shut from the far side**.
 - Cut 015: the key *rings* in Rook's palm. It's resonating with an open door.
 - The Lighthouse Tune plays only three notes. It never resolved, because the story wasn't over.
-- After the Backlash Arc, Theatre mode offers **side-by-side playback** of Ep 18 and Backlash Ep 8 (*"For the Demon King"*). They are the same shot list.
+- After the Backlash Arc, Theatre mode offers **side-by-side playback** of Ep 18 and Backlash CIN-05 (*"For the Demon King"*). They are the same shot list.
 
 ---
 
@@ -1030,7 +1033,7 @@ SEVERIN_ECLIPSED       : bool
 EXAM_DUEL_WON          : bool
 CORRUPTION             : int 0–100
 STAR_SIGHT_UNLOCKED    : bool (§25)
-CAL_FATE               : 0 unresolved | 1 erased | 2 grounded | 3 lantern (§26, final choice)
+CAL_FATE               : 0 unresolved | 1 erased | 2 grounded | 3 lantern (§27, final choice)
 ```
 
 **What the investigation score changes** (deliberately small, so the reveal is the same for everyone):
@@ -1057,7 +1060,7 @@ CAL_FATE               : 0 unresolved | 1 erased | 2 grounded | 3 lantern (§26,
 - Voice processing is a single real-time DSP chain (negligible cost).
 
 ### 15.13 NEXT STEP (for this storyline)
-Lock the Disguise Bible (§15.3) before any character art begins. The Sable Knight's silhouette must pass a **squint test** against Cal's (side by side, blurred, they must not read as the same person), and the concept artist should design Sable *without being told who he is*. The Demon Soldier armor (§26.6) must be designed **before** the Sable mask, because the mask's slit pattern is derived from it.
+Lock the Disguise Bible (§15.3) before any character art begins. The Sable Knight's silhouette must pass a **squint test** against Cal's (side by side, blurred, they must not read as the same person), and the concept artist should design Sable *without being told who he is*. The Demon Soldier armor (§26.4, visual design) must be designed **before** the Sable mask, because the mask's slit pattern is derived from it.
 
 ---
 
@@ -1431,7 +1434,7 @@ Estimates assume **1–2 people, part-time-ish**. Every phase ends with a **go/n
 | Fake-death flag network | **Yes** (core story) | Yes | Flag system reused everywhere | Trivial | Yes | Yes | **Keep** |
 | Stepped animation | Yes (style) | Yes | All moves | **Cheaper** | Yes | Yes | **Keep; huge value per cost** |
 | Hidden Star Rating (§25) | Yes (story spine) | Yes, once visible (Star Sight) | A single hidden data field | Trivial | Yes | Yes | **Keep; no hidden combat math** |
-| Backlash Arc (playable flashback) | Yes | Yes (a new perspective, new verbs) | **Reuses Demon Soldier kit + Demon Continent map (Arc 7)** | Yes | Yes, ~10 short episodes | Yes | **Keep** |
+| Backlash (playable flashback, Ep 49) | Yes | Yes (a new perspective, new verbs) | **Reuses Demon Soldier kit + Demon Continent map (Arc 7)** | Yes | Yes: 8 chapters, 30–60 min | Yes | **Keep; prototype after the combat core (`docs/BACKLASH.md` §26)** |
 | A third "isekai" world | No | No | — | — | No | — | **Cut; the second world is Liraen** |
 | Masked-survivor clue network | **Yes** (the defining story beat) | Yes | Flags, Echo lines, and Theatre mode serve other mysteries too | Trivial | Yes, if scoped to ~20 authored clues | Yes | **Keep; cap at the ledger in §15.5** |
 | Playable Cal after reveal | Yes | Yes | **Reuses the Sable boss AbilityData** | Yes | Yes | Yes | **Keep** |
@@ -1479,14 +1482,14 @@ A secret layer of the cosmos that no ordinary being can see, which grows more im
 |---|---|---|
 | Nothing | Ratings are completely invisible. Strong things are just strong | Arcs 1–5 |
 | A hint | Cal's offhand remarks: *"That one's tougher than he looks"*, always right (Arcs 1–2). Alibi: he's experienced | Arcs 1–2 |
-| The concept | The Backlash Arc: Ash Line Eleven watches heroes return stronger and the Saint's star pass between them. **He can't see stars either**, so the player sees only effects (the heroes' auras flare, their movesets grow) | Arc 6 |
-| A word for it | Cal's Field Notes contain a page of tallies: his guesses at a hidden ranking, written before he could see it | Arc 6 |
+| The concept | **Backlash** (Ep 49): as Ash Line Eleven, the player sees heroes return stronger and the Saint's light pass between them, but **can't see stars**. Then, for **one cut through the King's eye** (CIN-03), ★ glyphs appear over the ranks. After reincarnation (Ch 6–8), the player sees ratings **as Cal does**, over everyone, and nothing over the infant. On returning to the present, the stars vanish: Cal has seen them all game | Ep 49 |
+| A word for it | Cal's Field Notes list a ★ count for every Lantern, in his hand | Arc 6 |
 | **Star Sight** | In the Demon Lord King's presence, Rook is *forced to see* (the King: *"Look. This is what you are."*). From here on, the UI shows ratings above enemies and allies, rendered as ink stars. Above Rook's own head: **nothing** | Arc 7 |
 
 > **Director's Note: hidden stats must never feel like cheating.** Ratings **do not drive any hidden math** in normal combat. A secret multiplier the player can't see or affect feels arbitrary and unfair. Instead, ratings are used for (1) narrative, (2) **enemy tier design** (a 3★ enemy is designed as a miniboss-class threat), and (3) **visible set-piece rules** after Star Sight (e.g., the King's aura shrugs off attacks from beings two stars below him, shown on screen, explained by the fiction, and solved by the Shared Star). Normal Levels (1–60) stay the player's visible progression.
 
 ### 25.4 The finale rule-break: the Shared Star 🔒
-Every star transfer the world has ever seen was a **trade**: the Saint pays with her rating, soldiers pay with their lives, Cal paid with his world. In the final battle (§26.10), Rook's companions **give** stars to Rook freely, expecting nothing. The system has no rule for a gift. **The givers lose nothing.** Rook, who has no rating to add to, becomes something the scale cannot describe. Bonds are the one power the hierarchy cannot count.
+Every star transfer the world has ever seen was a **trade**: the Saint pays with her rating, soldiers pay with their lives, Cal paid with his world. In the final battle (§27), Rook's companions **give** stars to Rook freely, expecting nothing. The system has no rule for a gift. **The givers lose nothing.** Rook, who has no rating to add to, becomes something the scale cannot describe. Bonds are the one power the hierarchy cannot count.
 
 ### 25.5 Director's proposal (needs your call): the deepest layer
 The Goddess Trial runs on monthly cycles, resurrection, ratings, and designations, and the King is described as an *"abnormally powerful NPC."* A possible final truth: **the Demon Continent was built by the Goddess as a training ground.** The demons were made to be defeated, and the heroes are sent in to grow stronger. The King knows this and accepted it. Ash Line Eleven is a training enemy that asked *why*. That would make his story, literally, an NPC walking out of the game.
@@ -1496,18 +1499,35 @@ The Goddess Trial runs on monthly cycles, resurrection, ratings, and designation
 
 ---
 
-## 26. THE BACKLASH ARC: "THE SOLDIER WHO REFUSED TO REMAIN A SOLDIER" 🔒
+## 26. BACKLASH: "THE SOLDIER WHO REFUSED TO REMAIN A SOLDIER" 🔒
+
+> **Full production package: [`docs/BACKLASH.md`](BACKLASH.md)**, covering the story, 8 chapters, playable and cinematic sequences, combat encounters, both of Cal's movesets, Hero Party / Demon Army / Commander / King AI, the Sacrifice mechanic, Star Rating integration, reincarnation gameplay, transition/camera/dialogue/audio/VFX/animation systems, 10 five-column storyboards, saves, performance, architecture, code sketches, and the prototype plan. This section keeps only the world and character canon that the rest of the GDD depends on.
 
 ### 26.0 OBJECTIVE
-A fully playable flashback arc (**Arc 6, about 10 episodes**) in which the player **becomes Ash Line Eleven**, a disposable 1★ Demon Soldier, and lives through the questions, boredom, curiosity, disobedience, and sacrifice that turned him into Cal. It is not villain exposition. It should make the player understand that he **wasn't born evil**: he was born into a hierarchy, questioned it, died, was reborn, became powerful, and built his own philosophy:
+A **30–60 minute playable flashback** (Ep 49) placed *inside* the reveal fight. Present-day Cal opens a door into his own memory, and the player **becomes him**:
+- a disposable 1★ Demon Soldier (Ash Line Eleven),
+- the questioning demon who watches the monthly Goddess Trial, learns the Saint's *Sacrifice*, and kneels: *"For the Demon King,"*
+- a reincarnated human in Liraen, powerful, rejected, studying.
+
+Then the player returns to the frozen battlefield and Cal's smirk. It should make the player understand that he **wasn't born evil**: he was born into a hierarchy, questioned it, died, was reborn, became powerful, and built his own philosophy:
 
 > ***"If the world treats everyone like pieces, I'll become the person moving the pieces."***
 
-### 26.1 DESIGN: Framing
-- **Device:** the shattered Sable mask is engraved inside with Cal's own record of his first life, written in demon script. It's half confession and half experiment ("Let's see what you do with this"). Rook's Palimpsest translates it line by line. Lio helps. Each Backlash episode is **one translated passage**.
-- **Bookends:** each episode opens and closes with a short present-day scene (2–3 min): the Lanterns in the aftermath of the siege, reading together, reacting, arguing. This keeps the present cast alive during the flashback and lets reactions build (Juno refusing to listen, then listening).
-- **Look:** a different color script. The Demon Continent is rendered in ash-grey, black, and dark red with heavy shadow; title cards read **BACKLASH** with the episode number in demon script. The HUD is stripped down to a soldier's world: HP and an **Orders** line. No grimoire. No magic.
-- **Episode format:** the same anime pacing template (§18.3), including **"WHAT HAPPENS NEXT?"** previews narrated by Cal, in present tense, as if he's enjoying telling it.
+**The test:** the player finishes it thinking *"I WAS Cal,"* and, at the smirk, *"I was playing the villain before I even knew he was the villain."*
+
+### 26.1 Structure at a glance
+| Ch | Title | Cal | Key beat |
+|---|---|---|---|
+| 0 | The Door | Present | *"You really want to know?" … "Then don't just listen."* |
+| 1 | The Soldier | #1 | *"Left. Left. Back. Cut."* · *"Continue formation." "Mind the step."* · *"That is enough."* |
+| 2 | The Monthly Trial | #1 → #2 | Five condensed Trials; Observe; the order he ignores |
+| 3 | The Question | #2 | Forbidden ruins; the King's glance (first ★, through the King's eye) |
+| 4 | Sacrifice | #2 | The Saint dies and is reborn; *"…what exactly is death?"* |
+| 5 | The Final Battle | #2 | The player walks him to the throne; *"For the Demon King."* |
+| 6 | The Other World | #3 | Heartbeat; human; burning Larkspur; an infant with no star |
+| 7 | The Human | #3 | Rejection; Ascended Demon Slash; Dagrun: *"Nobody's written your story. Good."* |
+| 8 | The Mask | #3 → #4 | Ep 18 from his side; Godfall Demon Slash; the mask |
+| R | Return | #4 | *"So. That's how I died. …The first time."* *"It was an introduction."* |
 
 ### 26.2 DESIGN: The Demon Continent (a functioning society)
 The Demon Continent is the only known civilization of its world. It's isolated, ancient, and built on one chain of value:
@@ -1519,7 +1539,7 @@ The Demon Continent is the only known civilization of its world. It's isolated, 
 | **Demon Castle** | The seat of the King; endless corridors of guards | Guard-duty episodes; stealth-like movement where breaking formation is noticed |
 | **Throne Chamber** | Enormous; soldiers line every wall; the two Commanders flank the throne | The sacrifice (B8); Arc 7 final battle |
 | **The Lines (barracks)** | Soldiers are raised, fed, and housed by Line, not by name | The daily loop: drill → ration → patrol → sleep |
-| **Training grounds** | Formation drill: *"Left. Left. Back. Thrust."* | Tutorial; the dodge pattern (S3) |
+| **Training grounds** | Formation drill: *"Left. Left. Back. Cut."* | Tutorial; the dodge pattern (S3) |
 | **Demon villages** | Non-soldier demons: smiths, ash-grain farmers, Line-keepers who raise the young. They never question anything either | Show that the hierarchy is a society, not just an army |
 | **Ruined battlefields** | Centuries of Goddess Trials | Exploration; hero relics; an old helm with a scratched tally |
 | **Ancient demon ruins** | Glyphs identical to Liraen's Tower murals | Where he finds his questions (and Layer 4 of Arc 7) |
@@ -1532,95 +1552,66 @@ The Demon Continent is the only known civilization of its world. It's isolated, 
 | Rank | Rating | Look | Behavior |
 |---|---|---|---|
 | **Demon Soldiers** | 1★ | Dark red and black heavy armor, faceplate with vertical slits, **no wings**, near-identical | Obey almost automatically. Don't know magic exists. Don't understand reincarnation. Loyalty = hierarchy |
-| **Demon Commanders** | 3★ | Larger, more elaborate armor; **large demonic wings**; bigger weapons | **Ghorran, the Left Wing** (axe, brute force, killed by the Sable Knight in the Siege) and **Vaelith, the Right Wing** (twin spears, precise, cold; an Arc 7 boss) |
+| **Demon Commanders** | 3★ | Larger, more elaborate armor; **large demonic wings**; bigger weapons | **Ghorran, the Left Wing** (axe, brute force; kills King A in Backlash; killed by the Sable Knight in the Siege) and **Vaelith, the Right Wing** (twin spears, precise, cold; an Arc 7 boss) |
 | **Demon Lord King** | 6★ | Unique silhouette, massive dark wings, royal armor, crown-helm. Instantly *not a normal demon* | Calm. Never angry. Casts **without words, by looking**. Believes nothing can challenge him |
 
-### 26.4 CONTENT: The Demon Lord King
+### 26.4 DESIGN: Visual design
+| Character | Design brief |
+|---|---|
+| **Demon Soldier / Ash Line Eleven** | Dark red and black, heavy, simple, **no wings**, slit faceplate, plain **ash-glaive** (a long-hafted pole-cleaver). Ash Eleven is **visually identical to the others**. The camera alone tells the player which one they are. He was nobody special |
+| **Demon Commanders** | Same palette, larger and more ornate armor, **large wings**, oversized weapons. Clearly superior silhouette |
+| **Demon Lord King** | Unique silhouette, massive dark wings, royal armor, crown-helm. Reads as *not normal* at a glance, even in shadow |
+| **Hero Party** | Bright, warm palette (gold, white, sky blue) against the continent's ash. They look like heroes, which makes their hatred feel righteous from their side |
+| **Cal (Liraen)** | Approachable human: light coat, loose hair, saber, easy smile. Nothing demonic |
+| **The Sable Knight** | Mask (slit pattern from the Demon Soldier faceplate), long coat over armor, pauldron modeled on demon plate, black glaive (the ash-glaive reborn) |
+| **Cal, final (Arc 7)** | Demon Soldier + human + god-like: his face uncovered, the faceplate motif as a crown-like crest, faint ink-star markings along his arms, floating door frames orbiting him, and a soft aura that makes the air ripple |
+
+**The weapon's evolution:** ash-glaive (Backlash, 1★ soldier) → saber (Liraen disguise; the drill hidden inside a sword style) → black glaive (the Sable Knight) → the god-like glaive (Arc 7). One motion runs through all of them: **Demon Slash → Ascended Demon Slash → Godfall Demon Slash** (`docs/BACKLASH.md` §7.1).
+
+### 26.5 CONTENT: The Demon Lord King
 - **Abilities:** magic (which no one else on his continent understands; to his subjects it is simply what the King *does*), instant casting, silent enchantments, extreme physical ability, **perception of the Star Rating**, and abilities nobody has ever seen.
 - **Worldview:** nothing in this world can challenge him. His commanders are the strongest beings he has ever needed. He has never met anything above them.
-- **Arc of his assumption:** Backlash: he looks once at Ash Line Eleven and sees a 1★ nothing. Siege of Aurelin: a masked stranger kills his Left Wing: *"…What are you?"* (the same question Ash Eleven once asked about *him*). Arc 7: he faces the two beings he cannot read: Cal (★?) and Rook (∅).
+- **Arc of his assumption:** Backlash Ch 3: he looks once at Ash Line Eleven and sees a 1★ nothing. Siege of Aurelin: a masked stranger kills his Left Wing: *"…What are you?"* (the same question Ash Eleven once asked about *him*). Arc 7: he faces the two beings he cannot read: Cal (★?) and Rook (∅).
 - He is not a cartoon tyrant. He is the system's apex, and he believes the system is the world.
 
-### 26.5 CONTENT: The Hero Party & the Goddess Trial
+### 26.6 CONTENT: The Hero Party & the Goddess Trial
 Once every month, a Hero Party enters the Demon Continent for the **Goddess Trial**. They despise demons and believe them inherently evil. Their goal: kill demons, grow stronger, reach the King. They lose, retreat, and return stronger. The cycle repeats.
 
 The Goddess designates the heroes by role, not name. **The heroes are numbered too.** (They whisper their real names to each other when they think no one is listening. Ash Eleven hears them.)
 
 | Hero | Rating | Kit | Personality |
 |---|---|---|---|
-| **The Knight Hero (Corin)** | 3★ | Sword + medium shield: charges, shield parries, counters, defensive positioning | Aggressive toward demons; genuinely wants the King dead. The man Ash Eleven spares (B3) |
+| **The Knight Hero (Corin)** | 3★ | Sword + medium shield: charges, shield parries, counters, defensive positioning | Aggressive toward demons; genuinely wants the King dead. The man Ash Eleven spares (Ch 2, Trial 5) |
 | **The Goddess Saint (Maelis)** | 4★ | **Low Heal:** kneels and prays for 10 spoken seconds (vulnerable), then restores a small amount of HP. **Sacrifice:** gives up her life and is reborn one star lower; a chosen ally gains that star | The only being in her world known to use magic; treated as a living miracle. Exhausted, devout, kinder than her party |
-| **King A, the Archer (Teo)** | 3★ | Bow: long range, piercing arrows, critical shots, target tracking | Lethal against Demon Soldiers. Dies permanently in B6; the next archer arrives as "King B" |
+| **King A, the Archer (Teo)** | 3★ | Bow: long range, piercing arrows, critical shots, target tracking | Lethal against Demon Soldiers. Killed by Ghorran in Ch 5; the next archer arrives as "King B" |
 
 **"King A"** is the Goddess's designation. The party never questions why it has a letter. By Arc 7 the archer is **King D**. The heroes' side has a hierarchy that treats people as replaceable too, which is exactly the pattern Cal later sees in Liraen: *different world, different species, same hierarchy.*
 
-### 26.6 DESIGN: Visual design
-| Character | Design brief |
+### 26.7 Themes, made playable
+| Theme | Where the player *does* it |
 |---|---|
-| **Demon Soldier / Ash Line Eleven** | Dark red and black, heavy, simple, **no wings**, slit faceplate, plain **ash-pike** (a long iron pike with a hooked blade). Ash Eleven is **visually identical to the others**. The camera alone tells the player which one they are. He was nobody special |
-| **Demon Commanders** | Same palette, larger and more ornate armor, **large wings**, oversized weapons. Clearly superior silhouette |
-| **Demon Lord King** | Unique silhouette, massive dark wings, royal armor, crown-helm. Reads as *not normal* at a glance, even in shadow |
-| **Hero Party** | Bright, warm palette (gold, white, sky blue) against the continent's ash. They look like heroes, which makes their hatred feel righteous from their side |
-| **Cal (Liraen)** | Approachable human: light coat, loose hair, saber, easy smile. Nothing demonic |
-| **The Sable Knight** | Mask (slit pattern from the Demon Soldier faceplate), long coat over armor, pauldron modeled on demon plate, black glaive (the ash-pike reborn) |
-| **Cal, final (Arc 7)** | Demon Soldier + human + god-like: his face uncovered, the faceplate motif as a crown-like crest, faint ink-star markings along his arms, floating door frames orbiting him, and a soft aura that makes the air ripple |
+| Hierarchy vs. freedom | The **Orders** UI and the first ignored order (Ch 2, Trial 5) |
+| Power vs. connection | The Shared Star beats the Godfall glaive |
+| Identity vs. origin | Playing a soldier indistinguishable from his line, then a human who isn't trusted |
+| Friendship vs. manipulation | The reveal fight's "board" phase; Field Notes; the three endings |
+| Reincarnation vs. destiny | Two sacrifices, one shot list |
+| Being used vs. using others | Ash Eleven obeying (Ch 1) → Cal moving Hesper, Aldric, and Rook (Arc 7) |
+| What makes someone human? | Demons who ask questions; humans who number their heroes; a demon who kept Juno's knot |
 
-**The weapon's evolution:** ash-pike (Backlash, 1★ soldier) → saber (Liraen disguise; the pike drill hidden inside a sword style) → black glaive (the Sable Knight) → **the Thousand-Line Glaive** (Arc 7, god-like): the same backstep-thrust, now able to split a battlefield.
+### 26.8 Director's notes (scope)
+1. **Second world = Liraen.** Skills are grimoire pages; levels are Levels + Knight Rank; guilds and adventurers are Lowmarket guilds and freeblades. No third world.
+2. **Told by Cal, not read from a document.** His narration makes the flashback personal. It also makes him a *curated* narrator whose omissions (three visible splices) pay off in Arc 7.
+3. **Cheap to build:** the Demon Soldier kit, Commanders, and King are built once and reused in the Siege and in Arc 7. The Demon Continent map is reused in Arc 7. About 124 new animation clips (`docs/BACKLASH.md` §20), mostly the Hero Party, who return in Arc 7.
+4. **Hidden ratings never change combat math** (§25.3).
+5. **Naming:** "King A" is lore (the Goddess numbers her heroes). Ghorran, Vaelith, Corin, Maelis, and Teo are original names.
+6. **Originality:** Demon Soldier armor must not resemble any famous sci-fi trooper or existing anime demon army: heavy red-black plate, slit faceplates, pole-cleavers, no glossy white. All music is original; the march motif is our own four notes.
 
-### 26.7 GAMEPLAY: Playing as Ash Line Eleven
-| System | How it works | Why |
-|---|---|---|
-| **Kit** | The **Demon Soldier enemy kit** from the Siege of Aurelin (pike thrusts, shield-wall, formation moves) plus the drill **Left-Left-Back-Thrust** as his combo opener. **No magic. No grimoire.** | Cheap: built from existing assets. The player *feels* weak |
-| **Orders** | Objectives appear as **ORDERS** in a stark line at the top of the screen (*HOLD THE LINE. ATTACK THE KNIGHT.*). Most of the time, the player obeys | The hierarchy is the UI |
-| **Disobedience** | At key moments the player can **ignore an order**. The first time (B3) the order text **flickers and fades**, the first time the game's own directive is ignored. The world doesn't end | Breaking orders is the arc's core verb |
-| **Observe** | Hold a button to **watch instead of fight**. Watching heroes builds **Insight**, which unlocks counters, new drill variants, and the pieces of the Saint's prayer | *"He studies"* as gameplay |
-| **No leveling** | Ash Eleven stays 1★ the whole arc. He grows only through Insight and technique, never stats | Power through knowledge, the seed of his philosophy |
-| **The boredom loop** | The daily cycle (drill → ration → patrol → Trial → sleep) repeats several times, **shorter each time**, with one new anomaly per loop (a hero's new move, a dead soldier's replacement, a glyph in the barracks wall) | Boredom must be **represented, not inflicted** on the player |
-| **The march** | The army's four-beat drum cadence plays under every march (S5) | The player realizes it's Cal's whistled tune |
+---
 
-### 26.8 CONTENT: Episodes (Arc 6, B1–B10)
+## 27. ARC 7: "UNWRITTEN" — THE COLLISION OF THREE PHILOSOPHIES 🔒
 
-| # | Title | Content |
-|---|---|---|
-| **B1** | **Ash Line, Eleventh** | Drill tutorial: *"Left. Left. Back. Thrust."* (S3, and the player recognizes Cal's dodge pattern). The march (S5). The first Trial skirmish. A soldier beside him dies; the column steps over him: ***"Mind the step."*** (S2). That night: *"Was he important?"* / *"He served."* / *"That's all?"* / ***"That is enough."*** He begins thinking. |
-| **B2** | **The Cycle** | Several short Trial loops. The heroes return stronger every time. The player uses **Observe** for the first time: the Knight's charge angle, the Archer's tracking, the Saint's 10-second prayer. Boredom loop introduced. |
-| **B3** | **The Step Aside** | ORDER: *ATTACK THE KNIGHT.* The Knight charges, shield up. The only way through is a **perfect dodge** at the last instant. The Knight misses; the opening to kill him is right there. The order flickers and fades. The Knight retreats. Ash Eleven smiles: breaking one command didn't destroy him. |
-| **B4** | **Ruins Below** | Night. He slips away to the forbidden caverns and ancient ruins. Glyphs on the walls (the same script as Liraen's Tower: D5). Old hero relics. A broken helm with tally marks scratched inside, the record of a soldier who asked questions before him and disappeared. He tests his limits alone in the demon forest. |
-| **B5** | **The Throne Room** | Guard duty in the throne chamber. The King resolves an argument between the Commanders **without a word**: a glance, and the air bends. Ash Eleven, against every rule, keeps watching. The King looks at him once, sees a 1★ nothing, and looks away. Ash Eleven (internal, the first time we hear his inner voice): ***"What exactly are you?"*** |
-| **B6** | **The Goddess Trial** | The big battle. The heroes are much stronger. King A's arrows pierce demon plate; the Knight is relentless; the Saint keeps them alive. Ghorran and Vaelith take the field. Chaos. **King A dies permanently.** Playable at scale (staged chaos, §15.8 note). |
-| **B7** | **Sacrifice** | The heroes are losing. The Saint begins **Sacrifice**: 10 seconds. **Boss fight with a twist:** the player's order is *STOP THE PRAYER*; the Knight shields her, the next archer covers. Whether or not the player reaches her, the prayer completes. Her body dissolves into light. She is reborn, one star lower; the Knight surges with new power (visible as an aura and new moves, since no one can see stars). A human who died has returned. The demons are terrified. Ash Eleven isn't. He has **Observed every word.** |
-| **B8** | **For the Demon King** | The King orders the lines to hold. Ash Eleven walks out of formation toward the throne. *"Why are you here?"* He kneels. **The player holds a single input for 10 seconds** while he whispers the stolen prayer under his breath, disguised as a vow, the King's gaze resting on him. ***"For the Demon King."*** The King accepts his loyalty. His body dissolves. His one star leaves him and passes through the King, who has no room for it; it fades. The line closes. The column moves on. Nobody mourns. (Storyboard §26.8.1.) |
-| **B9** | **The Second World** | Black. Silence. A human hand. Fire: **Larkspur burning** (the Ep 1 cold open from the reverse angle). An infant crying in the ashes. He sees ratings for the first time, floating over everything that's burning, and **nothing** over the baby. He picks the child up and walks out of the fire. Thornwick: he leaves the baby at the orphanage door without a word (*"brought in by a boy who didn't speak"*). Montage gameplay: learning language, customs, magic; feared; hunted by the Crimson Bell; courted by Aldric Valcourt as a weapon; humans treating him as strange and dangerous. *Different world. Different species. Same hierarchy.* |
-| **B10** | **The One Who Moves the Pieces** | Dagrun finds him and takes him in: *"Nobody's written your story. Good."* The first real kindness he has known. Aurek. The forged grimoire. Watching Thornwick from afar for years. Quiet guidance of a bitter Choir novice named Hesper toward the Hollow. The Knight Exam (Ep 2), from Cal's seat: ***"Take the one-pager."*** Final translated line, in his voice: ***"If the world treats everyone like pieces, I'll become the person moving the pieces."*** **Hook — WHAT HAPPENS NEXT?** The Field Notes' last page: a sketch of the brass key, and the words *"Come find me."* |
+> Boss details for Vaelith and the Demon Lord King: `docs/BACKLASH.md` §10–11. Maelis as a guest and *Sacrifice* rules: §12 of the same document.
 
-#### 26.8.1 Storyboard: B8, "For the Demon King" (mirrors Ep 18 cut for cut)
-| CUT | PICTURE | ACTION / STAGE | DIALOGUE / AUDIO | TIME / FRAMES | Mirrors Ep 18 |
-|---|---|---|---|---|---|
-| 001 | Wide: the battlefield before the castle, the heroes' gold light against black ranks | Slow crane down | War drums, wind | 3.0s / 72 | Bloom wide |
-| 002 | MS: the Saint, kneeling in the dirt, newly reborn | Static, slight handheld | Ragged breathing | 1.5s / 36 | Rook on one knee |
-| 003 | CU: the last motes of her old body dissolving | Snap zoom | Heartbeat | 0.8s / 19 | Bloom core |
-| 004 | OTS from Ash Eleven toward the throne | Slow dolly in | ASH (internal): *"Huh."* | 2.0s / 48 | *"Huh. That's a big one."* |
-| 005 | CU: Ash Eleven tilts his head, listening to the King's order | **Hold pose** | The march drum: **three of its four beats**, then stops | 1.2s / 29 | Head tilt + 3 notes |
-| 006 | Two-shot: Ash Eleven kneeling; the King above, looking down | Static | KING: *"Why are you here?"* | 2.5s / 60 | *"Kid. Keep the key."* |
-| 007 | ECU: the King's eye. Nothing in it | Static | (whispered prayer, under the music, unintelligible) | 1.0s / 24 | Rook's widening eyes |
-| 008 | Low angle: light seeping from the seams of his armor | Tilt up, Dutch angle | Rising whisper | 1.8s / 43 | The door tears open |
-| 009 | Wide: the ranks; nobody turns | Whip pan along the line | Silence under the drums | 1.2s / 29 | Door swallows the Bloom |
-| 010 | MS from behind: he bows forward *into* the light, deliberately | Tracking, slow | Armor creak | 2.0s / 48 | Cal walks toward the door |
-| 011 | CU: faceplate raised; the only time we see his demon face. He is smiling | Held frame | ASH: ***"For the Demon King."*** | 2.5s / 60 | *"I'll hold the door. Don't wait up."* |
-| 012 | MS: Vaelith glances over, mildly, and looks away | Static | — | 0.6s / 14 | Rook lunges (inverted: no one reacts) |
-| 013 | **Impact frame**: white silhouette; in one frame he stands with a hand raised, as if pushing open a door | 2-frame flash | A single soft toll | 0.15s / 4 | The door slams |
-| 014 | Wide: a gap in the line. A soldier steps sideways to fill it | Static, held | **Total silence** | 3.5s / 84 | Empty plateau |
-| 015 | Insert: the King's open hand. A faint star passes through it and fades | Slow push in | A faint ringing | 2.0s / 48 | The brass key |
-| 016 | Wide: the column marches on. A Commander's voice: ***"Mind the step."*** | Slow pull back | The march resumes | 4.0s / 96 | The dark lantern |
-
-### 26.9 What the player understands after the Backlash Arc
-- **Layer 6:** his life as a Demon Soldier.
-- **Layer 7:** both sacrifices were intentional, and the same move. (Theatre side-by-side unlocks.)
-- **Layer 8:** he was studying everything: heroes, demons, humans, the King, Rook.
-- **Layer 9:** his notes on the Lanterns are full of small, warm details (Tamsin's terrible songs, Juno's knots, Bas's mining stories, Dagrun leaving the light on). Some of it was data. Some of it clearly wasn't.
-- **Reverse recognition:** the dodge pattern, the tune, "Mind the step," "soldier," the head tilt, the silent casting, the sky-watching. The player *performed* the sources. ***"That was his."***
-
-### 26.10 CONTENT: Arc 7, "Unwritten" (the collision of three philosophies)
 | Philosophy | Who | Belief |
 |---|---|---|
 | **Rule through absolute power** | The Demon Lord King | The hierarchy is the world. Strength decides place |
@@ -1629,14 +1620,14 @@ The Goddess designates the heroes by role, not name. **The heroes are numbered t
 
 **Outline (Eps ~59–70):**
 1. **The Key.** Rook opens Cal's sealed door with the brass key: *"Doors don't have locks. They have keys."* (S7 pays off.) The Lanterns, Severin, and a reluctant Bas cross to the Demon Continent.
-2. **The Continent Today.** The same map as the Backlash Arc, fifteen years later. Some Demon Soldiers have started **asking questions** (Cal has been teaching them, as pieces). The King purges them. Rook's party meets demons who are people.
+2. **The Continent Today.** The same map as Backlash, fifteen years later. Some Demon Soldiers have started **asking questions** (Cal has been teaching them, as pieces; some remember a soldier who once stepped out of line). The King purges them. Rook's party meets demons who are people.
 3. **The Trial Continues.** The present Hero Party: **Corin** (now 5★, the first ever), **Maelis** (1★, frail; one more Sacrifice and she falls off the page), **King D**. They hate demons, and Rook's friend *was* one. A tense alliance. **Maelis joins as a guest:** Low Heal (10s prayer: protect her), Sacrifice (once per battle: an ally gains a temporary star surge, at a terrible personal cost she keeps offering to pay).
 4. **The Soldier Who Stepped Aside.** Corin meets Cal: ***"You. The one who didn't kill me."*** Cal: *"You were more interesting alive."*
 5. **The Right Wing.** Boss: **Vaelith**, a three-way fight with Cal. Cal, to the Commander who walked past him every day: ***"You never looked at me once."***
 6. **Star Sight.** Rook reaches the throne room. The King forces Rook to see: stars over everyone, a 6★ crown of light over himself, a smear of **★?** over Cal… and **nothing** over Rook. The King, for the first time in his existence, is uncertain.
 7. **Alliance.** **Boss: the Demon Lord King**, fought by Rook and Cal together. **Cal is playable** (tag-swap); the team attack **Thousand-Door Verse** unlocks (Rook writes a line across the sky; Cal opens a door along every letter). Phases: silent casting by gaze; the throne room's soldiers ordered to sacrifice themselves into him; the King's own **Sacrifice** used defensively.
 8. **The Last Move.** The King, defeated, attempts Sacrifice to be reborn. Cal **opens a door inside the prayer** and takes the transferring stars for himself. Layer 10 lands all at once: Hesper, Aldric, the Gate, Rook's recruitment, Larkspur (his arrival is what erased it; he didn't choose where he landed, but he never told Rook). He becomes the first being above the scale, and the sky of the Demon Continent **cracks like a page**. *"Now, Rook. Write me."*
-9. **Final Battle: Rook vs. Cal.** The arena is the world's page tearing. Cal uses everything: every companion move, every Sable move, every King technique he stole. Final phase: **the Shared Star** (§25.4). Maelis offers her last star (it would erase her). Juno, Bas, Tamsin, Lio, Severin, and Dagrun offer theirs. Given freely, **nobody loses anything**, and Rook becomes Unwritten. Final clash: the Thousand-Line Glaive against the last line of the Palimpsest.
+9. **Final Battle: Rook vs. Cal.** The arena is the world's page tearing. Cal uses everything: every companion move, every Sable move, every King technique he stole. Final phase: **the Shared Star** (§25.4). Maelis offers her last star (it would erase her). Juno, Bas, Tamsin, Lio, Severin, and Dagrun offer theirs. Given freely, **nobody loses anything**, and Rook becomes Unwritten. Final clash: the Godfall glaive against the last line of the Palimpsest.
 10. **The Clause (ending choice, `CAL_FATE`).** Rook writes one clause about Cal:
     - **"Fall."** He drops to 0★ and falls off the page into some other world. He laughs: *"Another one? Lucky me."* (Bittersweet; sequel-shaped.)
     - **"Stay."** He is written back to 1★: an ordinary human in Liraen, powerless, alive. *"A soldier again. Huh."* (Grounded.)
@@ -1644,42 +1635,15 @@ The Goddess designates the heroes by role, not name. **The heroes are numbered t
 
 All three endings share the same final battle and epilogue structure; only the closing scenes and the Demon Continent epilogue differ (soldiers choosing names in every ending; how far that freedom spreads depends on the choice).
 
-### 26.11 Themes, made playable
-| Theme | Where the player *does* it |
-|---|---|
-| Hierarchy vs. freedom | The **Orders** UI and the first ignored order (B3) |
-| Power vs. connection | The Shared Star beats the Thousand-Line Glaive |
-| Identity vs. origin | Playing a soldier indistinguishable from his line, then a human who isn't trusted |
-| Friendship vs. manipulation | The reveal fight's "board" phase; Field Notes; the three endings |
-| Reincarnation vs. destiny | Two sacrifices, one shot list |
-| Being used vs. using others | Ash Eleven obeying (B1) → Cal moving Hesper, Aldric, and Rook (Arc 7) |
-| What makes someone human? | Demons who ask questions; humans who number their heroes; a demon who kept Juno's knot |
-
-### 26.12 TECHNICAL IMPLEMENTATION & PERFORMANCE
-- **One map, two eras:** the Demon Continent is built once and used twice: Backlash (past) and Arc 7 (present), with era-state swaps (ruins, banners, populations).
-- **One armor, many soldiers:** Demon Soldiers share one rigged model with color and weapon variants. Massed ranks are **GPU-instanced impostors**; only nearby soldiers run AI.
-- **Orders UI:** a thin wrapper over the existing objective system (`QuestService`), with a "disobeyed" state that fires a story flag.
-- **Observe:** a camera mode + an `InsightTracker` that counts observed AbilityData events by tag (e.g., `HERO_KNIGHT_CHARGE`). No new combat code.
-- **Data:** `CHR_ASH_ELEVEN` (playable), `ENM_DEMON_SOLDIER` (shared kit), `BOSS_HERO_PARTY` (three-actor boss using the existing ability framework), `BOSS_DEMON_KING`, `BOSS_VAELITH`, `CHR_CAL_ALLY`, `BOSS_CAL_FINAL`.
-- **Star Sight:** a UI layer that reads the (always present, normally hidden) `starRating` field from CharacterData/EnemyData and renders ink stars. Disabled until `STAR_SIGHT_UNLOCKED`.
-
-### 26.13 Director's notes (pushback and scope)
-1. **Second world vs. Liraen.** Your brief describes the second world as having magic, skills, levels, nobility, guilds, and adventurers. **I've mapped it onto Liraen** rather than inventing a third, generic "isekai" world: skills = grimoire pages; levels = Levels + Knight Rank; guilds and adventurers = Lowmarket guilds and freeblade mercenaries (light additions). This keeps the game's identity (magic knights and grimoires) and avoids building a third world.
-2. **The reveal fight now has six phases after a five-phase reveal.** That's a lot of climax. It's split across two episodes (Ep 47/48) and each phase is short (2–4 min). Playtests will decide whether Phase 4 ("not serious") stays a full phase or becomes a mid-fight beat.
-3. **Hidden ratings don't secretly change combat math** (§25.3 note).
-4. **The Backlash protagonist is cheap to build**, because it reuses the Demon Soldier enemy kit and the Siege's staged-chaos tools. The new work is the Demon Continent map (reused in Arc 7), the Hero Party boss, and the King.
-5. **Character naming.** I kept your titles (Knight Hero, Goddess Saint, King A, Demon Lord King) and turned "King A" into lore: the Goddess's designations are numbered too. The commanders (Ghorran, Vaelith) and the heroes' private names (Corin, Maelis, Teo) are new and original.
-6. **Originality.** Demon Soldier armor must avoid resembling any famous sci-fi trooper design or existing anime demon army: heavy red-black plate with slit faceplates, hooked ash-pikes, and no glossy white. All music is original; the march motif is our own four notes.
-
 ---
 
 ## NEXT STEP
 
-**Your approval of this foundation.** New decisions from v0.3:
+**Your approval of this foundation.** Settled: **Cal is Ash Line Eleven** (confirmed). Still open from v0.3:
 
-5. **Cal = Ash Line Eleven.** Cal is now the reincarnated Demon Soldier and the true mastermind, replacing the v0.2 "protector" version. If you intended a *separate* new companion instead, tell me. (I'd advise against it: two companions who fake their deaths and return masked would undercut each other.)
-6. **The deepest layer (§25.5):** should the Demon Continent being a Goddess-built training ground be **hinted** (my recommendation), **confirmed**, or **cut**?
-7. **Endings (§26.10):** are three endings (Fall / Stay / Lantern) the right number? They share one final battle.
+5. **The deepest layer (§25.5):** should the Demon Continent being a Goddess-built training ground be **hinted** (my recommendation), **confirmed**, or **cut**?
+6. **Endings (§27):** are three endings (Fall / Stay / Lantern) the right number? They share one final battle.
+7. **Backlash placement:** inside the reveal fight (Ep 48 → 49 → 50), as designed in `docs/BACKLASH.md`?
 
 The foundation questions from v0.1 are still open:
 
@@ -1688,4 +1652,4 @@ The foundation questions from v0.1 are still open:
 3. **Cast & story:** Brannoc's real death, Aurek Valcourt as the red herring, the Palimpsest protagonist. Anything to change?
 4. **Scope calls:** 4 player affinities at launch, AI companions first (tag-swap for Rook, Severin, and Cal later), zones rather than a seamless open world, "Season 1" = Arcs 1–3.
 
-Once approved, the first implementation task is **Phase 1, Step 1: project setup + input + the AbilityData / AbilityRunner core**, with complete files, exact folder locations, and setup steps in the Unity editor. Story systems (flags, Theatre mode, Orders UI) come in Phase 3, and the Backlash Arc is Phase 6 content.
+Once approved, the first implementation task is **Phase 1, Step 1: project setup + input + the AbilityData / AbilityRunner core**, with complete files, exact folder locations, and setup steps in the Unity editor. Story systems (flags, Theatre mode) come in Phase 3. **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.
