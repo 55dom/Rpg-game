@@ -1,5 +1,7 @@
 # UNWRITTEN — Knights of the Last Lantern
-### Game Design Document · Foundation Draft v0.4 (awaiting approval)
+### Game Design Document · Foundation Draft v0.5 (awaiting approval)
+
+> **v0.5 changes:** **The Void Figures** added to Backlash Chapter 5 (`docs/BACKLASH.md`, CIN-05B) and to a new **§28**. Cal's sacrifice in the throne room no longer ends his demon life: he is sent back to the line at 0★, apparently dies, and is taken alive, smiling, by two calm figures in black through a hole in reality. Their nature is a deliberately unresolved mystery.
 
 > **v0.4 changes:** Backlash is now a **30–60 minute playable flashback told by Cal himself, inside the reveal fight** (Ep 49), with a full production package in **`docs/BACKLASH.md`**. Arc 7 moved to **§27**. Arc 6 is now *"The Light Left On."* Cal's signature move is the **Demon Slash** lineage (Demon Slash → Ascended → Godfall).
 
@@ -678,7 +680,7 @@ He is introduced early, mentors the protagonist, carries the most charm in the s
 
 ### 15.2 🔒 The complete truth (revealed in 10 layers)
 
-**Who he really is.** Cal was once **Ash Line Eleven**, a 1★ Demon Soldier on the **Demon Continent**, serving the **Demon Lord King** (6★). He was a nobody: identical armor, no wings, no name, only a line designation. He began asking a question no demon asks: *"Why am I only supposed to obey?"* He studied the Hero Party that invaded every month in the **Goddess Trial**, watched the **Goddess Saint** use *Sacrifice* to die and be reborn, and memorized her prayer. Then he knelt before the Demon Lord King, whispered the stolen prayer disguised as a vow, said *"For the Demon King,"* and sacrificed himself. He had one star to give. At **0★ a being falls off its world's page**, and he woke up in a human body in the ashes of a burning village in Liraen: **Larkspur**, fifteen years before the game. (Full detail: §26.)
+**Who he really is.** Cal was once **Ash Line Eleven**, a 1★ Demon Soldier on the **Demon Continent**, serving the **Demon Lord King** (6★). He was a nobody: identical armor, no wings, no name, only a line designation. He began asking a question no demon asks: *"Why am I only supposed to obey?"* He studied the Hero Party that invaded every month in the **Goddess Trial**, watched the **Goddess Saint** use *Sacrifice* to die and be reborn, and memorized her prayer. Then he knelt before the Demon Lord King, whispered the stolen prayer disguised as a vow, said *"For the Demon King,"* and gave away the only star he had. Nothing visible happened. The King sent him back to the line at **0★**, and he was cut down at the gate by the very Knight he had once spared. He lay still. Then **time stopped**, a perfect black circle opened in the air, and **two calm figures in black suits and masks** stepped out, spoke in a language no one has ever heard, and carried him away. **He was smiling.** (Who they are is never explained; see §28.) He woke up in a human body in the ashes of a burning village in Liraen: **Larkspur**, fifteen years before the game. (Full detail: §26 and `docs/BACKLASH.md`.)
 
 **What he did in Liraen.** In the ashes he found an infant the system could not rate at all: **Rook**. He carried the baby to Thornwick without speaking a word (he didn't know the language yet). He learned the language, customs, and magic, was feared, hunted by the Crimson Bell, and courted by Aldric Valcourt as a weapon. Dagrun Holt took him in when no one else would. He forged a grimoire (his doors need none; it's a prop), rose to vice captain, and waited for Rook to climb the Tower. At the Knight Exam, it was Cal who told Dagrun: *"Take the one-pager."*
 
@@ -698,7 +700,7 @@ He is introduced early, mentors the protagonist, carries the most charm in the s
 | 4 | He knows things he shouldn't | Pre-reveal seeds (D-clues); confirmed in the reveal fight |
 | 5 | He knows things no one could (Larkspur), and he was reincarnated | Reveal fight, Phase 3 → **Backlash** (Ep 49) |
 | 6 | His life as a Demon Soldier | **Backlash** (playable, Ep 49; `docs/BACKLASH.md`) |
-| 7 | Both of his sacrifices were intentional | Backlash Ch 5 (CIN-05 mirrors Ep 18 shot for shot) and Ch 8 (he walks into the Ep 18 door) |
+| 7 | Both of his "deaths" were exits he arranged | Backlash Ch 5 (CIN-05 + CIN-05B mirror Ep 18 shot for shot; the Void Figures take him, smiling) and Ch 8 (he walks into the Ep 18 door) |
 | 8 | He was studying the world the whole time | Backlash Ch 6–7 (Observe, Language Resolve) + his **Field Notes** (Arc 6) |
 | 9 | The friendship was partially genuine | Backlash Ch 7 (the Lighthouse, the one scene he won't narrate); reveal fight ending line; Field Notes; Arc 7 alliance |
 | 10 | He has been manipulating events (Hesper, Aldric, the Gate, Rook's recruitment) | Arc 7 |
@@ -983,7 +985,7 @@ The original scene (§19.3) was always honest:
 - Cut 013: the door slams **toward the camera**, which means it was pushed from beyond. Frame-stepping the 2-frame impact flash shows a silhouette **standing in the doorway, a hand on the door, pushing it shut from the far side**.
 - Cut 015: the key *rings* in Rook's palm. It's resonating with an open door.
 - The Lighthouse Tune plays only three notes. It never resolved, because the story wasn't over.
-- After the Backlash Arc, Theatre mode offers **side-by-side playback** of Ep 18 and Backlash CIN-05 (*"For the Demon King"*). They are the same shot list.
+- After the Backlash Arc, Theatre mode offers **side-by-side playback** of Ep 18 and Backlash CIN-05 + CIN-05B (*"For the Demon King"* and *"The Void"*). They are the same shot list.
 
 ---
 
@@ -1051,7 +1053,8 @@ CAL_FATE               : 0 unresolved | 1 erased | 2 grounded | 3 lantern (§27,
 | Achievements | Reveal and Backlash achievements are **hidden** until earned |
 | Credits | "The Sable Knight ……… ???" and "Ash Line Eleven ……… ???" until the reveal; updated afterward |
 | Data files | No shared names between `CHR_SABLE`, Cal, and demon assets (dataminers read file names) |
-| Marketing | No trailer shows the Sable Knight's voice unprocessed, his face, a Demon Soldier, the Demon Continent, or the Demon Lord King. **The Backlash Arc is never marketed** |
+| Marketing | No trailer shows the Sable Knight's voice unprocessed, his face, a Demon Soldier, the Demon Continent, or the Demon Lord King. **The Backlash Arc is never marketed. The Void Figures, the black circle, and the unknown language never appear in any marketing, ever** |
+| Void Figures data | IDs `CHR_UNK_A` / `CHR_UNK_B`; no names, factions, or descriptive file names anywhere in the build. The unknown language's script ships only as audio, never as text |
 
 ### 15.12 PERFORMANCE
 - The Siege of Aurelin uses the staged-chaos approach (§15.8 note): impostor armies, pre-authored destruction states, timeline-driven sky. Budget: ≤ 8 active enemies near the player, ≤ 2 bosses with full AI at once, VFX capped per zone.
@@ -1457,7 +1460,7 @@ A secret layer of the cosmos that no ordinary being can see, which grows more im
 | **No confirmed 5★** | No 5★ being has ever existed, as far as anyone knows |
 | **The first anomaly** | The **Demon Lord King is 6★**, beyond the scale. He can **perceive** ratings and senses something beyond the world's limits |
 | **Sacrifice** | The Goddess Saint's prayer. She gives up her life and is reborn **one star lower**; one chosen ally gains that star |
-| **0★ = falling off the page** | 🔒 A being reduced to 0★ is erased from its world and written into another. Nobody knows this until Cal does it |
+| **0★: the unknown** | 🔒 What happens at 0★ is **not known, even to the design canon yet**. Cal reached 0★, apparently died, and was taken alive by the **Void Figures** (§28) before waking in Liraen. Whether every 0★ being is collected, and whether the figures *cause* reincarnation, is deliberately undecided (§28.5) |
 | **The second anomaly** | 🔒 **Cal** after reincarnation: he perceives ratings, and his own reads as **"★?"**, unreadable even to the King |
 | **The third anomaly** | 🔒 **Rook** reads as **"∅"**: not 0★, but *no rating at all*. The only survivor of an erasure (Larkspur). The system never wrote them. This is why Cal saved the baby, why the Palimpsest chose them, and what *Unwritten* means |
 
@@ -1523,7 +1526,7 @@ Then the player returns to the frozen battlefield and Cal's smirk. It should mak
 | 2 | The Monthly Trial | #1 → #2 | Five condensed Trials; Observe; the order he ignores |
 | 3 | The Question | #2 | Forbidden ruins; the King's glance (first ★, through the King's eye) |
 | 4 | Sacrifice | #2 | The Saint dies and is reborn; *"…what exactly is death?"* |
-| 5 | The Final Battle | #2 | The player walks him to the throne; *"For the Demon King."* |
+| 5 | The Final Battle | #2 | *"For the Demon King"*, but nothing happens; sent back at 0★; cut down; **The Void**: time stops, two figures in black take him, and he's smiling |
 | 6 | The Other World | #3 | Heartbeat; human; burning Larkspur; an infant with no star |
 | 7 | The Human | #3 | Rejection; Ascended Demon Slash; Dagrun: *"Nobody's written your story. Good."* |
 | 8 | The Mask | #3 → #4 | Ep 18 from his side; Godfall Demon Slash; the mask |
@@ -1622,18 +1625,72 @@ The Goddess designates the heroes by role, not name. **The heroes are numbered t
 1. **The Key.** Rook opens Cal's sealed door with the brass key: *"Doors don't have locks. They have keys."* (S7 pays off.) The Lanterns, Severin, and a reluctant Bas cross to the Demon Continent.
 2. **The Continent Today.** The same map as Backlash, fifteen years later. Some Demon Soldiers have started **asking questions** (Cal has been teaching them, as pieces; some remember a soldier who once stepped out of line). The King purges them. Rook's party meets demons who are people.
 3. **The Trial Continues.** The present Hero Party: **Corin** (now 5★, the first ever), **Maelis** (1★, frail; one more Sacrifice and she falls off the page), **King D**. They hate demons, and Rook's friend *was* one. A tense alliance. **Maelis joins as a guest:** Low Heal (10s prayer: protect her), Sacrifice (once per battle: an ally gains a temporary star surge, at a terrible personal cost she keeps offering to pay).
-4. **The Soldier Who Stepped Aside.** Corin meets Cal: ***"You. The one who didn't kill me."*** Cal: *"You were more interesting alive."*
+4. **The Soldier Who Stepped Aside.** Corin meets Cal: ***"You. The one who didn't kill me."*** Cal: *"You were more interesting alive."* Then, cheerfully: *"You did kill me, actually. Didn't take."*
 5. **The Right Wing.** Boss: **Vaelith**, a three-way fight with Cal. Cal, to the Commander who walked past him every day: ***"You never looked at me once."***
 6. **Star Sight.** Rook reaches the throne room. The King forces Rook to see: stars over everyone, a 6★ crown of light over himself, a smear of **★?** over Cal… and **nothing** over Rook. The King, for the first time in his existence, is uncertain.
 7. **Alliance.** **Boss: the Demon Lord King**, fought by Rook and Cal together. **Cal is playable** (tag-swap); the team attack **Thousand-Door Verse** unlocks (Rook writes a line across the sky; Cal opens a door along every letter). Phases: silent casting by gaze; the throne room's soldiers ordered to sacrifice themselves into him; the King's own **Sacrifice** used defensively.
 8. **The Last Move.** The King, defeated, attempts Sacrifice to be reborn. Cal **opens a door inside the prayer** and takes the transferring stars for himself. Layer 10 lands all at once: Hesper, Aldric, the Gate, Rook's recruitment, Larkspur (his arrival is what erased it; he didn't choose where he landed, but he never told Rook). He becomes the first being above the scale, and the sky of the Demon Continent **cracks like a page**. *"Now, Rook. Write me."*
 9. **Final Battle: Rook vs. Cal.** The arena is the world's page tearing. Cal uses everything: every companion move, every Sable move, every King technique he stole. Final phase: **the Shared Star** (§25.4). Maelis offers her last star (it would erase her). Juno, Bas, Tamsin, Lio, Severin, and Dagrun offer theirs. Given freely, **nobody loses anything**, and Rook becomes Unwritten. Final clash: the Godfall glaive against the last line of the Palimpsest.
 10. **The Clause (ending choice, `CAL_FATE`).** Rook writes one clause about Cal:
-    - **"Fall."** He drops to 0★ and falls off the page into some other world. He laughs: *"Another one? Lucky me."* (Bittersweet; sequel-shaped.)
+    - **"Fall."** He drops to 0★. Time stops. A perfect black circle opens behind him (§28). He laughs: *"Another one? Lucky me."* (Bittersweet; sequel-shaped; only include the circle if the §28 truth supports it.)
     - **"Stay."** He is written back to 1★: an ordinary human in Liraen, powerless, alive. *"A soldier again. Huh."* (Grounded.)
     - **"Lantern."** (Requires Juno's, Dagrun's, and Bas's Arc 7 quests resolved and Cal bond ≥ 6.) Rook writes **no rating at all**: *"You're a Lantern. That's all you have to be."* He becomes unwritten too, outside every hierarchy. The last shot is the lighthouse, with his lantern **relit**. (The earned ending.)
 
 All three endings share the same final battle and epilogue structure; only the closing scenes and the Demon Continent epilogue differ (soldiers choosing names in every ending; how far that freedom spreads depends on the choice).
+
+---
+
+## 28. THE VOID FIGURES 🔒
+
+### 28.0 OBJECTIVE
+Create a mystery, not explain one. A single scene in Backlash (CIN-05B) shows the player that Cal's demon "death" was an exit: two impossibly calm figures in black stepped out of a hole in reality, stopped time, and carried him away, smiling. Nothing about them is explained in this game unless a later arc is explicitly designed to do it.
+
+### 28.1 What the player has seen (canon of appearances)
+| Fact | Shown |
+|---|---|
+| A tiny glitch, then a **perfect black circle** that absorbs light and pulls smoke, ash, and debris toward it | Yes |
+| **Time stops** for everything except the circle, the two figures, and (barely) Cal's eyes | Yes |
+| **Two figures**, one male and one female in build, in identical black suits, shirts, ties, gloves, and featureless black masks. No skin. No insignia | Yes |
+| Overwhelming **pressure** (bloodlust, fear, control) without any aggressive action | Yes |
+| They speak a **language no one has ever heard**, briefly and casually. Never subtitled or translated | Yes |
+| The man carries Cal effortlessly. **Cal is awake and smiling, then laughs** | Yes |
+| The woman stops, turns, and **looks at Cal** before leaving | Yes |
+| The circle **folds inward** and vanishes; time resumes; **no one noticed** | Yes |
+
+### 28.2 Design rules
+1. **Calm is the horror.** They never run, pose, shout, threaten, or fight on screen. They walk like people arriving at a meeting.
+2. **Smooth is wrong.** They are the only characters animated on ones with no anticipation or held frames (`docs/BACKLASH.md` §20.2).
+3. **The circle is reserved.** No other effect in the game may use a perfect, smooth, light-absorbing black circle.
+4. **The language is consistent.** A small constructed grammar exists so later appearances *sound the same*. Its meaning sits in a sealed director's envelope.
+5. **No UI ever describes them.** No codex entry, no bestiary entry, no star rating, no name. The Lore Archive's Theatre lists the scene only as *"Chapter 5 — ???"*.
+6. **Cal never explains them.** If asked, his smile falters. It's the only thing that does that.
+
+### 28.3 Foreshadowing & later references (rare by design)
+**Budget:** at most **8** references across the whole game, **never two in the same episode**, and never more than one per arc before Arc 7.
+
+| # | Clue type | Where | What happens | Alibi |
+|---|---|---|---|---|
+| V1 | **Refuses to explain an ability** | Arc 1, Ep 7 bond event (before anyone knows anything) | Rook asks where he learned doors. Cal: *"Somebody showed me a door once."* Changes the subject | A deflection; Cal jokes about everything |
+| V2 | **A symbol resembling their masks** | Backlash Ch 3, the caverns | Inside the broken helm of the soldier who "asked questions and vanished": tally marks… and a small, perfectly round, filled-in circle scratched beside them | Just a scratch, until Ch 5 |
+| V3 | **Records of disappearances** | Arc 6, Silent Quill archive (side quest) | Centuries of unexplained vanishings: witnesses report *"the world held its breath"* and *"two people dressed for a funeral."* One entry: a shepherd near Larkspur, fifteen years ago, *"lost a moment of time."* | Folk superstition, filed under *Unexplained* |
+| V4 | **Someone mentions "black figures"** | Arc 6, a stranded Demon Soldier in Liraen | *"The black ones come for those who fall wrong."* He won't say more | A soldier's battlefield superstition |
+| V5 | **Cal recognizes a similar black suit** | Arc 7, Juno's sketchbook | A stranger once commissioned an odd garment from Juno: a black jacket, a narrow black tie. Cal sees the sketch and goes quiet for a full beat. *"Don't make that for anyone."* | Juno: *"…Fashion critic now?"* |
+| V6 | **Quiet about portals** | Arc 7 banter skit | Tamsin: *"Why don't you just portal us to the throne room?"* Cal: *"Doors, Tamsin. I make doors."* Not a joke, for once | He's touchy about his magic |
+| V7 | **Direct question** | Arc 7, after the alliance | Rook: *"The two in black. Who were they?"* Cal's smile falters, the only time in Arc 7. *"…Not yet."* | — |
+| V8 | **A later antagonist recognizes the language** | Arc 7, the Demon Lord King fight | Mid-fight, Cal mutters the same three syllables he whispered as he "died." The King **stops**: *"Where did you learn that tongue?"* Cal: *"Same place you did."* Neither explains | — |
+
+### 28.4 Future recontextualization
+When Arc 7 reveals Cal's manipulation (Layer 10), players should remember the Void and realize that **the "sacrifice" was never a sacrifice**: the death was an escape he had arranged with someone. Even then, the figures stay unexplained. V8 implies the Demon Lord King knows of them too, which widens the mystery instead of closing it.
+
+### 28.5 Open truth (needs your call, but not now)
+The truth behind the Void Figures is **deliberately undecided** so it can anchor a later arc or a sequel. Whatever answer is chosen must stay consistent with what's already canon:
+- They can **stop time** locally and open a hole in reality.
+- They **know Cal** (and he knew they were coming), and the Demon Lord King knows their language.
+- They took Cal **at 0★**, and he next appears **reincarnated** in Liraen.
+- Their presence is terrifying, but they showed **no hostility**.
+- The world has a hidden **Star Rating**, an entity called the **Goddess**, a **Scribe**, and the possibility that the Demon Continent is a training ground (§25.5).
+
+Candidate directions (for later discussion only): custodians or "collectors" of beings who fall off the rating system; agents of whatever wrote the ratings; former anomalies like Cal; a third world's envoys; or something that answers none of those.
 
 ---
 
@@ -1644,6 +1701,7 @@ All three endings share the same final battle and epilogue structure; only the c
 5. **The deepest layer (§25.5):** should the Demon Continent being a Goddess-built training ground be **hinted** (my recommendation), **confirmed**, or **cut**?
 6. **Endings (§27):** are three endings (Fall / Stay / Lantern) the right number? They share one final battle.
 7. **Backlash placement:** inside the reveal fight (Ep 48 → 49 → 50), as designed in `docs/BACKLASH.md`?
+8. **Void Figures:** the truth stays undecided (§28.5). Is the 8-clue budget (§28.3) the right density?
 
 The foundation questions from v0.1 are still open:
 
