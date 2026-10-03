@@ -117,7 +117,7 @@ The Thrust is the red-glint attack: you can't block or parry it, only dodge.
    - **Ability Runner Component**: Input = Rook's reader, **Moveset = `CG_Rook_Duelist`** (Bindings stay empty)
    - **Character Motor** (defaults are fine)
    - **Combatant Component**: Team **Player**, Max Health 100, Max Posture 100
-   - **Hitbox Set**, with two shapes:
+   - **Hitbox Set**, with three shapes:
      - `Blade`: Center (0, 1, 1.1), Size (2.2, 1.6, 2.0)
      - `Cutter`: Center (0, 1, 2.6), Size (1.2, 1.4, 5.0)
      - `Slam`: Center (0, 0.5, 0.8), Size (3, 1.4, 3)
