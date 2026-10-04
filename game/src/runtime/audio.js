@@ -97,6 +97,16 @@ export class Sfx {
         this._noise(t, 0.6, { type: "lowpass", f0: 5000, f1: 200, gain: 0.5 });
         for (const [f, g] of [[523, 0.12], [784, 0.1], [1046, 0.08]]) this._tone(t + 0.04, 1.2, { f0: f, gain: g });
         break;
+      case "ultActivate":
+        this._noise(t, 0.9, { f0: 200, f1: 4000, q: 2, gain: 0.25, attack: 0.5 });
+        for (const [f, g] of [[220, 0.1], [330, 0.08], [440, 0.07], [660, 0.05]]) this._tone(t, 1.4, { type: "triangle", f0: f, f1: f * 1.5, gain: g, attack: 0.3 });
+        break;
+      case "detonate":
+        this._tone(t, 0.5, { f0: 140, f1: 40, gain: 0.5 });
+        this._noise(t, 0.35, { type: "lowpass", f0: 6000, f1: 300, gain: 0.45 });
+        this._tone(t, 0.3, { type: "square", f0: 1400, f1: 700, gain: 0.06 });
+        break;
+      case "surgeFull": for (const [i, f] of [523, 659, 784, 1046].entries()) this._tone(t + i * 0.06, 0.5, { type: "triangle", f0: f, gain: 0.08 }); break;
       case "vacuum":
         this._noise(t, 0.45, { f0: 3500, f1: 400, q: 4, gain: 0.22, attack: 0.3 });
         this._tone(t, 0.45, { type: "sawtooth", f0: 900, f1: 120, gain: 0.05, attack: 0.25 });

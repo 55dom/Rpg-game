@@ -12,8 +12,9 @@ const LABELS = {
   gamepad: { Light: "X", Heavy: "Y", Dodge: "B", Block: "LB", Jump: "A", Spell1: "RB", Lock: "R3" },
   touch: { Light: "Slash", Heavy: "Heavy", Dodge: "Dodge", Block: "Guard", Jump: "Jump", Spell1: "Gale", Spell2: "Pull", Spell3: "Edge", Lock: "Lock" },
 };
-LABELS.keyboard.Spell2 = "R"; LABELS.keyboard.Spell3 = "T";
-LABELS.gamepad.Spell2 = "RT"; LABELS.gamepad.Spell3 = "LT";
+LABELS.keyboard.Spell2 = "R"; LABELS.keyboard.Spell3 = "T"; LABELS.keyboard.Ultimate = "V";
+LABELS.gamepad.Spell2 = "RT"; LABELS.gamepad.Spell3 = "LT"; LABELS.gamepad.Ultimate = "LB+RB";
+LABELS.touch.Ultimate = "ULT";
 
 export class Hud {
   constructor(root, spells = []) {
@@ -28,6 +29,7 @@ export class Hud {
       return el;
     });
     this.el = {
+      surge: $(root, "[data-surge]"),
       hp: $(root, "[data-hp]"), hpLag: $(root, "[data-hp-lag]"), posture: $(root, "[data-posture]"), mana: $(root, "[data-mana]"),
       target: $(root, "[data-target]"), thp: $(root, "[data-thp]"), tposture: $(root, "[data-tposture]"), tbroken: $(root, "[data-tbroken]"),
       combo: $(root, "[data-combo]"), comboN: $(root, "[data-combo-n]"),
@@ -94,6 +96,7 @@ export class Hud {
     this.set("hpLag", e.hpLag, "width", pct(this.hpLag));
     this.set("posture", e.posture, "width", pct(c.posture.normalized));
     this.set("mana", e.mana, "width", pct(p.mana.normalized));
+    this.set("surge", e.surge, "width", pct(p.surge.normalized));
     this.spells.forEach((sp, i) => {
       const el = this.spellEls[i];
       this.set(`sp${i}`, el, "class", p.mana.current >= sp.ability.manaCost ? "spell" : "spell low");
@@ -116,7 +119,8 @@ export class Hud {
 
     // Context prompts: tell the player the reward is available, in their device's words.
     let prompt = "", kind = "";
-    if (p.alive && world.brokenTarget(p) && p.grounded) { prompt = `${this.label(device, "Heavy")} · LANTERN BREAK`; kind = "finisher"; }
+    if (p.alive && p.surge.isFull && p.grounded && !p.current?.surgeCost) { prompt = `${this.label(device, "Ultimate")} · SKYRENDER`; kind = "ultimate"; }
+    else if (p.alive && world.brokenTarget(p) && p.grounded) { prompt = `${this.label(device, "Heavy")} · LANTERN BREAK`; kind = "finisher"; }
     else if (p.counterFrames > 0) { prompt = `${this.label(device, "Light")} · COUNTER`; kind = "counter"; }
     this.set("prompt", e.prompt, "text", prompt);
     this.set("promptCls", e.prompt, "class", prompt ? `prompt show ${kind}` : "prompt");

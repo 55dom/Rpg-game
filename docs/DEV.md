@@ -72,5 +72,19 @@ After any change, run `npm test`. The scripted fights in `test/sim.test.js` chec
 
 Keys added: **R** Vacuum Pull, **T** Tempest Edge, **Tab** switch target. Restart moved to **Backspace**.
 
+## Phase 2, Step 1: Surge, Skyrender, reactions
+| Feature | Where |
+|---|---|
+| Tags and the reaction engine | `core/tags.js`; reaction rows in `data/reactions.js`; `_react` in `sim/world.js` |
+| Hits that apply tags | `applyTags` in `hitSpec` (e.g. Launcher, L4, Counter MARK for 4–5 s) |
+| Surge gauge | `surge` in `sim/world.js`, gains in `ROOK_STATS.surgeGain` |
+| Skyrender | `data/rook.js`: one ability whose hitboxes carry their own hits (`SkyRing`, `SkyCut`, `SkyFinal`) |
+| Time stop | `timeStop` custom event → `world.stopFrames` |
+| Camera shots as data | `runtime/shots.js`, played by `camera.cue(name)` from `CameraCue` events |
+
+To add a reaction, add a row to `data/reactions.js`: `when` (tag on the target), `with` (a tag the hit applies, an ability tag like `burst`/`gust`, or `airborne`), and an `effect` (`damage`, `posture`, `hitstop`, `radius`, `launch`, `stagger`). No code changes.
+
+Keys added: **V** (gamepad LB+RB, touch ULT) for Skyrender when the Surge bar is full.
+
 ## Publishing the artifact
 `npm run build` also writes `dist/fragment.html` (the page without its outer `<html>` shell). That file is what gets published to the Claude artifact link.

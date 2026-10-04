@@ -4,6 +4,10 @@
 import { B, PALETTE, toon, glow, inkOutline, refreshWorld, lerp, clamp01, easeOut, easeInOut } from "./look.js";
 import { ROOK_POSES } from "../data/rook.js";
 import { ACOLYTE_POSES } from "../data/acolyte.js";
+import { EventType } from "../core/abilities.js";
+
+/** Attacks animate over their active frames; a move counts as an attack if it hits (directly or via hitboxes). */
+const isAttack = (a) => a.hasHit || a.events.some((e) => e.type === EventType.SpawnHitbox);
 
 const SWORD_TIP = 1.95, SWORD_HILT = 0.72;
 
@@ -52,8 +56,14 @@ export class Rig {
     if (p) {
       const face = add(MB.CreateSphere("head", { diameter: 0.46, segments: 12 }, scene), this.head, 0, 0, 0);
       face.material = skin;
-      const cap = add(MB.CreateSphere("hairCap", { diameter: 0.5, segments: 12, slice: 0.62 }, scene), this.head, 0, 0.03, -0.05, 0.02);
-      cap.rotation.x = -1.15; // covers the crown and the back of the head, leaves the face open
+      const eyeMat = toon(scene, `${id}-eye`, "#1a1c26");
+      for (const x of [-0.085, 0.085]) {
+        const eye = add(MB.CreateSphere("eye", { diameter: 0.09, segments: 6 }, scene), this.head, x, 0.03, 0.218, 0);
+        eye.scaling.set(0.8, 1.4, 0.85); // must clear the face's ink-outline shell (+0.03) to show
+        eye.material = eyeMat;
+      }
+      // Hair: a full sphere set back and up. The face sphere pokes out of its front, eyes included.
+      const cap = add(MB.CreateSphere("hairCap", { diameter: 0.5, segments: 12 }, scene), this.head, 0, 0.06, -0.07, 0.02);
       cap.material = dark;
       // Spiky hair: a crown of cones swept back.
       const spikes = [[0, 0.2, -0.05, -0.5, 0], [0.14, 0.16, -0.06, -0.6, -0.5], [-0.14, 0.16, -0.06, -0.6, 0.5],
@@ -131,6 +141,13 @@ export class Rig {
     shadow.isPickable = false;
     this.shadow = shadow;
 
+    // MARKED indicator: a small spinning gold ring over the head.
+    const mark = MB.CreateTorus(`${id}-mark`, { diameter: 0.55, thickness: 0.05, tessellation: 24 }, scene);
+    mark.material = glow(scene, `${id}-markMat`, PALETTE.lantern);
+    mark.parent = this.root; mark.position.y = 2.45; mark.rotation.x = Math.PI / 2.4; mark.isPickable = false;
+    mark.setEnabled(false);
+    this.markRing = mark;
+
     this.flash = 0;
     this.time = Math.random() * 10;
     this.visibility = 1;
@@ -146,8 +163,9 @@ export class Rig {
     const s = a.startup, act = a.active;
     // Optional full turns: over the active frames for attacks, over the whole move otherwise.
     let spin = 0;
+    const attack = isAttack(a);
     if (p.spin) {
-      const k = a.hasHit ? clamp01((f - s) / Math.max(1, act)) : clamp01(f / a.total);
+      const k = attack ? clamp01((f - s) / Math.max(1, act)) : clamp01(f / a.total);
       spin = easeOut(k) * p.spin * Math.PI * 2;
     }
     let rot, lean = 0, active = false;
@@ -160,9 +178,9 @@ export class Rig {
     } else {
       const k = clamp01((f - s - act) / Math.max(1, a.recovery));
       const back = easeInOut(clamp01((k - 0.35) / 0.65)); // hold the follow-through a beat
-      rot = mix(p.to, rest, back); lean = (p.lean ?? 0) * (1 - back); active = k < 0.25 && a.hasHit;
+      rot = mix(p.to, rest, back); lean = (p.lean ?? 0) * (1 - back); active = k < 0.25 && attack;
     }
-    return { rot, lean, active: active || (p.spin > 0 && a.hasHit && f >= s && f < s + act), spin };
+    return { rot, lean, active: active || (p.spin > 0 && attack && f >= s && f < s + act), spin };
   }
 
   /** Apply one render frame. */
@@ -219,6 +237,10 @@ export class Rig {
       if (f) { m.overlayColor = this.flashColor ?? BB.Color3.White(); m.overlayAlpha = 0.85; }
       m.visibility = this.visibility;
     }
+
+    const marked = fighter.tags.has("MARKED") && fighter.alive;
+    this.markRing.setEnabled(marked);
+    if (marked) { this.markRing.rotation.y += dt * 4; this.markRing.scaling.setAll(1 + Math.sin(this.time * 8) * 0.08); }
 
     this.shadow.position.set(x, 0.03, z);
     const s = Math.max(0.35, 1 - y * 0.12);

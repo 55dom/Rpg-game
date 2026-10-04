@@ -6,6 +6,7 @@ import { Intent } from "../core/input.js";
 const KEYS = {
   KeyJ: Intent.Light, KeyK: Intent.Heavy, Space: Intent.Jump, ShiftLeft: Intent.Dodge, ShiftRight: Intent.Dodge,
   KeyL: Intent.Dodge, KeyF: Intent.Block, KeyE: Intent.Spell1, KeyR: Intent.Spell2, KeyT: Intent.Spell3,
+  KeyV: Intent.Ultimate,
 };
 // Standard gamepad mapping.
 const PAD = { 0: Intent.Jump, 1: Intent.Dodge, 2: Intent.Light, 3: Intent.Heavy, 4: Intent.Block, 5: Intent.Spell1, 7: Intent.Spell2, 6: Intent.Spell3 };
@@ -158,7 +159,10 @@ export class Controls {
         const was = this.padPrev[i];
         if (down && !was) {
           this._first(); this.device = "gamepad";
-          if (PAD[i] !== undefined) this.presses.push(PAD[i]);
+          // LB + RB together = Ultimate (GDD §9.1).
+          const other = i === 4 ? 5 : i === 5 ? 4 : -1;
+          if (other >= 0 && this.padPrev[other]) this.presses.push(Intent.Ultimate);
+          else if (PAD[i] !== undefined) this.presses.push(PAD[i]);
           if (i === PAD_LOCK) this.commands.push("lock");
           if (i === PAD_HELP) this.commands.push("help");
           if (i === PAD_RESET) this.commands.push("reset");

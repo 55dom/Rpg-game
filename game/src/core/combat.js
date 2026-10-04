@@ -18,6 +18,7 @@ export const HitOutcome = Object.freeze({
  * @param {number} [o.damage] @param {number} [o.posture] @param {number} [o.hitstop]
  * @param {number} [o.hitstun] @param {boolean} [o.unblockable] @param {number} [o.launch]
  * @param {number} [o.knockback] @param {number} [o.pull] drag the target up to this far toward the attacker
+ * @param {[string, number][]} [o.applyTags] tags this hit puts on the target, with durations in frames
  */
 export function hitSpec(o = {}) {
   const spec = Object.freeze({
@@ -29,6 +30,10 @@ export function hitSpec(o = {}) {
     launch: o.launch ?? 0,
     knockback: o.knockback ?? 0,
     pull: o.pull ?? 0,
+    applyTags: Object.freeze((o.applyTags ?? []).map(([tag, frames]) => {
+      if (!tag || !(frames > 0)) throw new RangeError("applyTags entries are [tag, positive frames]");
+      return Object.freeze([tag, frames]);
+    })),
   });
   for (const k of ["damage", "posture", "hitstop", "hitstun", "launch", "knockback", "pull"]) {
     if (spec[k] < 0) throw new RangeError(`hit ${k} can't be negative`);

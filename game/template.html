@@ -51,6 +51,20 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
 .bar.hp b { background: #f3ead2; opacity: 0.55; }
 .bar.posture { height: 5px; } .bar.posture i { background: var(--steel); }
 .bar.mana { height: 5px; } .bar.mana i { background: var(--gale); }
+.bar.surge { height: 6px; margin-top: 6px; }
+.bar.surge i { background: linear-gradient(90deg, #8fe9ff, #ffffff, #ffe08a); }
+.surge-full .bar.surge { box-shadow: 0 0 10px rgba(143, 233, 255, 0.8); animation: pulse 0.6s ease-in-out infinite alternate; }
+.prompt.ultimate { color: var(--ink); background: linear-gradient(90deg, #8fe9ff, #ffe08a); border-color: #fff; animation: pulse 0.5s ease-in-out infinite alternate; }
+.ult-desat .stage { filter: saturate(0.15) contrast(1.15) brightness(0.85); }
+.ultcard { position: absolute; left: 0; right: 0; top: 66%; text-align: center; pointer-events: none; opacity: 0; }
+.ultcard::before { content: ""; position: absolute; left: -10%; right: -10%; top: -18px; bottom: -14px; background: linear-gradient(90deg, transparent, rgba(15,17,23,0.85) 20%, rgba(15,17,23,0.85) 80%, transparent); transform: skewY(-3deg); }
+.ultcard b { position: relative; display: block; font: 400 clamp(40px, 10vw, 92px)/1 var(--font-display); letter-spacing: 0.22em; color: #effcff; text-shadow: 0 0 30px rgba(143, 233, 255, 0.9), 0 4px 0 #000; }
+.ultcard span { position: relative; font: 600 12px/1 var(--font-mono); letter-spacing: 0.4em; color: var(--gale); }
+.ultcard.show { animation: ultcard 1.3s cubic-bezier(.2,.9,.2,1) forwards; }
+@keyframes ultcard { 0% { opacity: 0; transform: translateX(-30%) skewX(-12deg); } 14% { opacity: 1; transform: none; } 78% { opacity: 1; transform: translateX(2%); } 100% { opacity: 0; transform: translateX(30%) skewX(12deg); } }
+.pad .b-ult { right: 196px; bottom: 140px; width: 58px; height: 58px; font-size: 11px; border-color: #fff; display: none;
+  background: linear-gradient(135deg, rgba(143,233,255,0.85), rgba(255,224,138,0.85)); color: var(--ink); animation: pulse 0.6s ease-in-out infinite alternate; }
+.surge-full .pad .b-ult { display: block; }
 .spells { display: flex; gap: 6px; margin-top: 7px; font: 400 10px/1 var(--font-mono); color: var(--gale); }
 .spell { display: inline-flex; align-items: center; gap: 4px; padding: 3px 5px; border: 1px solid rgba(120, 212, 178, 0.35); border-radius: 4px; }
 .spell kbd { font: 600 9px/1 var(--font-mono); color: var(--ink); background: var(--gale); border-radius: 3px; padding: 2px 3px; }
@@ -180,6 +194,7 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
       <div class="bar hp"><i data-hp></i><b data-hp-lag></b></div>
       <div class="bar posture" title="Posture"><i data-posture></i></div>
       <div class="bar mana" title="Mana"><i data-mana></i></div>
+      <div class="bar surge" title="Surge: fills as you fight; full = Skyrender"><i data-surge></i></div>
       <div class="spells" data-spells></div>
     </div>
     <div class="card target-card" data-target hidden>
@@ -201,6 +216,7 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
   <div class="toast" data-toast></div>
   <div class="wave" data-wave></div>
   <div class="prompt" data-prompt></div>
+  <div class="ultcard" data-ultcard><b>SKYRENDER</b><span>WIND GRIMOIRE · LEGENDARY PAGE</span></div>
 
   <section class="fd" data-fd aria-label="Frame data">
     <div class="fd-head"><b data-fd-name>idle</b><span class="fd-phase" data-fd-phase></span><span data-fd-frame></span></div>
@@ -225,6 +241,7 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
       <button class="b-gale" data-intent="Spell1">GALE</button>
       <button class="b-pull" data-intent="Spell2">PULL</button>
       <button class="b-edge" data-intent="Spell3">EDGE</button>
+      <button class="b-ult" data-intent="Ultimate">ULT</button>
       <button class="b-lock" data-intent="Lock">LOCK</button>
     </div>
   </div>
@@ -244,6 +261,7 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
         <tr><td>Gale Cutter (15 mana)</td><td><kbd>E</kbd></td><td>RB / R1</td></tr>
         <tr><td>Vacuum Pull (20 mana)</td><td><kbd>R</kbd></td><td>RT / R2</td></tr>
         <tr><td>Tempest Edge (25 mana)</td><td><kbd>T</kbd></td><td>LT / L2</td></tr>
+        <tr><td>Ultimate: Skyrender (full Surge)</td><td><kbd>V</kbd></td><td>LB + RB</td></tr>
         <tr><td>Lock on · switch target</td><td><kbd>Q</kbd> · <kbd>Tab</kbd> (<kbd>Shift</kbd>+<kbd>Tab</kbd> left)</td><td>R3 · flick right stick</td></tr>
         <tr><td>Frame data · restart · pause</td><td><kbd>G</kbd> · <kbd>Backspace</kbd> · <kbd>Esc</kbd></td><td>— · Back · —</td></tr>
         <tr><td>Touch</td><td colspan="2">Drag left side to move, upper right to look. Tap LOCK to lock or switch, hold it to release.</td></tr>
@@ -261,6 +279,8 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
         <li><b>Signature chain:</b> Slash, Slash, Gale, Jump, Slash, Slash, Dodge, Slash, Heavy.</li>
         <li><b>Vacuum Pull</b> drags enemies to your blade, even up into the air. <b>Tempest Edge</b> spins three hits all around you.</li>
         <li><b>Mana</b> refills a little with every sword hit.</li>
+        <li><b>Surge</b> (the bright bar) fills as you deal and take damage, parry, and dodge perfectly. When it's full, unleash <b>Skyrender</b>.</li>
+        <li><b>Marks:</b> Launcher, the 4th Slash, Counter, and Skyrender's finish MARK a foe (gold ring). Hit a marked foe with any spell to <b>Detonate</b> it, splashing anyone close.</li>
         <li><b>Assist (AST):</b> wider parry and perfect-dodge windows, and holding Slash keeps the combo going on touch. On by default on touch screens.</li>
       </ul>
       <button class="close" data-help-close>BACK TO THE YARD</button>
@@ -271,7 +291,7 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
     <div class="start-card">
       <h1>UNWRITTEN</h1>
       <div class="sub">KNIGHTS OF THE LAST LANTERN</div>
-      <p>Combat prototype, complete: combos and juggles, air dash, three spells, parry counters, Afterimage, Lantern Break.</p>
+      <p>Phase 2 · Step 1: the Skyrender ultimate, Surge, and Detonate reactions, on top of the full combat prototype.</p>
       <p>Keyboard and mouse, gamepad, or touch. Press <b>H</b> or <b>?</b> for controls.</p>
       <span class="go">PRESS ANY KEY · CLICK · TAP</span>
     </div>

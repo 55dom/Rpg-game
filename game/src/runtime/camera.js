@@ -1,6 +1,7 @@
 // Third-person camera with lock-on framing, shake (trauma), and punch-in for big hits.
 
 import { B, lerp, lerpAngle } from "./look.js";
+import { SHOTS } from "./shots.js";
 
 export class FollowCamera {
   constructor(scene, { mobile = false } = {}) {
@@ -16,10 +17,40 @@ export class FollowCamera {
     this.shoulder = 1.1; // over-the-shoulder: Rook sits left of center so targets stay visible
     this.focus = new BB.Vector3(0, 1.3, -4);
     this.tmp = new BB.Vector3();
+    this.shot = null;          // active cinematic shot, or null for gameplay
+    this.shotPos = new BB.Vector3();
+    this.shotLook = new BB.Vector3();
+    this.returnBlend = 0;      // 1 → 0 while easing from the last shot back to gameplay
     this.trauma = 0;
     this.punch = 0;
     this.reduceMotion = false;
     this.t = 0;
+  }
+
+  /** Play a named shot from SHOTS. Returns the shot (for desaturation etc.) or null. */
+  cue(name) {
+    const s = SHOTS[name];
+    if (!s) return null;
+    if (s.clear) { if (this.shot) this.returnBlend = 1; this.shot = null; return s; }
+    this.shot = { ...s, t: 0, fresh: true };
+    return s;
+  }
+
+  get inShot() { return !!this.shot; }
+
+  _shotTarget(s, p, yaw) {
+    const f = { x: Math.sin(yaw), z: Math.cos(yaw) };
+    let ang;
+    switch (s.mode) {
+      case "behind": ang = yaw + Math.PI; break;
+      case "front": ang = yaw - (s.angle ?? 0); break;
+      case "orbit": ang = yaw + Math.PI + s.t * (s.orbitSpeed ?? 1); break;
+      default: ang = yaw + Math.PI + (s.angle ?? 0);
+    }
+    this.tmp.set(p.x + Math.sin(ang) * s.dist, p.y + s.height, p.z + Math.cos(ang) * s.dist);
+    const ahead = s.mode === "behind" ? 2 : 0;
+    const side = s.lookSide ?? 0; // subject's right is (cos yaw, -sin yaw)
+    return { pos: this.tmp, lx: p.x + f.x * ahead + Math.cos(yaw) * side, ly: p.y + (s.lookHeight ?? 1.5), lz: p.z + f.z * ahead - Math.sin(yaw) * side };
   }
 
   shake(amount) { this.trauma = Math.min(1, this.trauma + amount * (this.reduceMotion ? 0.4 : 1)); }
@@ -31,7 +62,26 @@ export class FollowCamera {
     return { fx: s, fz: c, rx: c, rz: -s };
   }
 
-  update(dt, playerPos, lockPos, look) {
+  update(dt, playerPos, lockPos, look, playerYaw = 0) {
+    if (this.shot) {
+      const s = this.shot;
+      s.t += dt;
+      const { pos, lx, ly, lz } = this._shotTarget(s, playerPos, playerYaw);
+      const k = s.fresh && s.cut ? 1 : 1 - Math.exp(-(s.ease ?? 8) * dt);
+      s.fresh = false;
+      this.shotPos.x = lerp(this.shotPos.x, pos.x, k); this.shotPos.y = lerp(this.shotPos.y, pos.y, k); this.shotPos.z = lerp(this.shotPos.z, pos.z, k);
+      this.shotLook.x = lerp(this.shotLook.x, lx, k); this.shotLook.y = lerp(this.shotLook.y, ly, k); this.shotLook.z = lerp(this.shotLook.z, lz, k);
+      const sh = this.trauma * this.trauma * 0.3;
+      this.cam.position.set(this.shotPos.x + Math.sin(this.t * 71) * sh, this.shotPos.y + Math.sin(this.t * 83) * sh, this.shotPos.z);
+      this.cam.setTarget(this.shotLook);
+      this.cam.fov = lerp(this.cam.fov, s.fov ?? this.baseFov, k);
+      this.trauma = Math.max(0, this.trauma - dt * 2.2);
+      this.t += dt;
+      // Keep the gameplay camera behind the action so the hand-back is short.
+      this.yaw = playerYaw;
+      this.focus.set(playerPos.x, playerPos.y * 0.6 + 1.3, playerPos.z);
+      return;
+    }
     this.t += dt;
     this.yaw += look.x;
     this.pitch = Math.max(0.08, Math.min(0.95, this.pitch + look.y));
@@ -67,6 +117,11 @@ export class FollowCamera {
       pos.y += Math.sin(this.t * 83) * s * 0.5;
     }
     this.trauma = Math.max(0, this.trauma - dt * 2.2);
+    if (this.returnBlend > 0) { // ease out of a cinematic instead of cutting
+      const b = this.returnBlend * this.returnBlend;
+      pos.x = lerp(pos.x, this.shotPos.x, b); pos.y = lerp(pos.y, this.shotPos.y, b); pos.z = lerp(pos.z, this.shotPos.z, b);
+      this.returnBlend = Math.max(0, this.returnBlend - dt * 2.2);
+    }
     this.cam.position.copyFrom(pos);
     this.cam.setTarget(this.focus);
     this.punch = Math.max(0, this.punch - dt * 2.5);

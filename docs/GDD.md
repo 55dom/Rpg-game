@@ -1498,6 +1498,15 @@ Estimates assume **1–2 people, part-time-ish**. Every phase ends with a **go/n
 | **5: Full RPG** | Progression, equipment, bonds + bond events, party switching (3 chars), crafting-lite, HQ upgrades, quests, Arc 1–2 bosses, hidden lore | 9–12 months | Arc 1 + 2 complete, content pipeline proven |
 | **6: Narrative Expansion** | Arc 3+, Cal's death & clue network, Brannoc, the Sable Knight encounters, transformations, the Siege of Aurelin reveal | ongoing | Mystery playtest targets met (§15.5 note) |
 
+### 23.1 Phase 2 plan (Combat Vertical Slice)
+| Step | Content | Status |
+|---|---|---|
+| 1 | **Surge** gauge (fills from damage dealt and taken, parries, perfect dodges, reactions) · **Skyrender** ultimate on the §19.4 template (time stop, activation, charge orbit, close-up with name card, release, aerial combo, impact frame, aftermath, return) · **data-driven camera shots** (`runtime/shots.js`) · **Tags & Reactions engine** (§7.2) with its first row: heavy finishers MARK, any spell **Detonates** the mark with splash | ✅ Done |
+| 2 | Companions **Bas** (Stone, tank) and **Juno** (Thread): AI stances (Press / Guard / Support), Assist calls, their tags (BOUND and more) and reactions (e.g. Crush) | Next |
+| 3 | Four new enemy types (five in total) with distinct roles; juggle decay (§9.3) | — |
+| 4 | Mini-boss **Hask the Bogwarden** (§16 B2): submerge, mud waves that apply WEIGHTED, bog-drain phase | — |
+| 5 | Page evolution (4 spells), cel-shading v2, combat HUD pass, and the 10–15 minute combat run; gate review | — |
+
 **Honest scope note:** a three-arc release (Episodes 1–28) is already a substantial game. Consider shipping **Arcs 1–3 as "Season 1"**. It ends with the Sable Knight at Aurek's grave, a perfect anime season cliffhanger that points players toward the wrong answer. Arcs 4–7 become Season 2, with the reveal as its centerpiece.
 
 ---
@@ -1828,4 +1837,4 @@ The foundation questions from v0.1 are still open:
 3. **Cast & story:** Brannoc's real death, Aurek Valcourt as the red herring, the Palimpsest protagonist. Anything to change?
 4. **Scope calls:** 4 player affinities at launch, AI companions first (tag-swap for Rook, Severin, and Cal later), zones rather than a seamless open world, "Season 1" = Arcs 1–3.
 
-**Phase 1 progress:** all five steps are done and playable in the browser (§22 progress table and Definition of Done review). Two checks need a human: is it fun and learnable, and does it run well on your phone. **Next: Phase 2, the Combat Vertical Slice** (§23). Story systems (flags, Theatre mode) come in Phase 3. **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.
+**Phase 1:** complete (§22). **Phase 2 progress** (§23.1): Step 1 is done (Surge, the Skyrender ultimate, data-driven camera shots, Tags & Reactions with Detonate). **Next: Step 2**, companions Bas and Juno. Story systems (flags, Theatre mode) come in Phase 3. **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.

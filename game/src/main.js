@@ -132,9 +132,27 @@ export function boot(doc = document) {
             }
             if (e.key === "glint") { vfx.flash(head(f), 1.4, PALETTE.danger, 0.35); sfx.play("glint"); }
             if (e.key === "charge" && rig) { vfx.flash(rig.bladeWorld().tip, 2.2, PALETTE.lantern, 0.3); vfx.ring({ x: f.pos.x, y: 0.05, z: f.pos.z }, 4, PALETTE.lantern, 0.3); }
+            if (e.key === "ultCharge") {
+              if (rig) rig.grimoireGlow = 1;
+              for (const [h, s, life] of [[0.1, 9, 0.7], [1, 6, 0.6], [2, 4, 0.5]]) vfx.ring({ x: f.pos.x, y: f.pos.y + h, z: f.pos.z }, s, PALETTE.gale, life, true);
+              vfx.sparksAt({ x: f.pos.x, y: f.pos.y + 1, z: f.pos.z }, 14, "mint", 5, 3);
+            }
+            if (e.key === "ultName") showUltCard();
+            if (e.key === "ultBurst") {
+              vfx.ring({ x: f.pos.x, y: 0.06, z: f.pos.z }, 20, PALETTE.gale, 0.6);
+              vfx.ring({ x: f.pos.x, y: 1.2, z: f.pos.z }, 14, "#ffffff", 0.45);
+              vfx.flash({ x: f.pos.x, y: f.pos.y + 1.2, z: f.pos.z }, 5, "#d9fff2", 0.25);
+              vfx.sparksAt({ x: f.pos.x, y: 0.5, z: f.pos.z }, 30, "mint", 16, 8);
+              camera.shake(0.5);
+            }
           } else if (e.type === EventType.CameraCue) {
             if (e.key === "punch") { camera.kick(0.35); camera.shake(0.2); }
             if (e.key === "finisher") { camera.kick(1); camera.shake(0.45); }
+            if (e.key.startsWith("ult-") && isPlayer(f)) {
+              const shot = camera.cue(e.key);
+              root.classList.toggle("ult-desat", !!shot?.desaturate);
+              if (e.key === "ult-impact") { impact(4, true); camera.shake(0.8); }
+            }
           }
           break;
         }
@@ -158,6 +176,7 @@ export function boot(doc = document) {
             state.cinematic = 0.55; state.cinematicScale = result.killed ? 0.2 : 0.35;
           }
           if (ability.tags.includes("counter")) { impact(2); hud.toast("COUNTER", "counter"); }
+          if (ability.id === "Skyrender" && spec.hitstop >= 18 && !state.ultToast) { state.ultToast = true; hud.toast("SKYRENDER", "finisher"); later(1.5, () => { state.ultToast = false; }); }
           if (settings.frameData) hud.pushLog(`${a.kind === "player" ? "Rook" : "Acolyte"} ${ability.id} → ${result.healthDamage | 0}`);
           break;
         }
@@ -171,6 +190,22 @@ export function boot(doc = document) {
           vfx.flash(ev.at, 3, "#ffffff", 0.2); vfx.sparksAt(ev.at, 16, "white", 13); vfx.ring({ x: ev.at.x, y: 0.05, z: ev.at.z }, 5, "#dfe9ff", 0.4);
           sfx.play("parry"); impact(2); camera.kick(0.4); hud.toast("PARRY", "parry");
           break;
+        case "reaction": {
+          const { reaction: rx, defender: d, targets } = ev;
+          for (const t of targets) {
+            const c = chest(t);
+            vfx.flash(c, 3.2, "#ffd27a", 0.22);
+            vfx.sparksAt(c, 16, "gold", 14, 3);
+            vfx.number(c, rx.effect.damage ?? 0, "big");
+            viewFor(t)?.hitFlash(0.12, "#ffd27a");
+          }
+          vfx.ring({ x: d.pos.x, y: d.pos.y + 0.1, z: d.pos.z }, (rx.effect.radius || 1.5) * 2.4, PALETTE.lantern, 0.45);
+          sfx.play("detonate"); camera.shake(0.45); camera.kick(0.4); impact(2);
+          hud.toast(rx.id.toUpperCase(), "finisher");
+          if (settings.frameData) hud.pushLog(`Reaction ${rx.id} on ${targets.length}`);
+          break;
+        }
+        case "surgeFull": sfx.play("surgeFull"); hud.toast("SURGE FULL", "afterimage"); break;
         case "perfectDodge": sfx.play("perfectDodge"); vfx.number(chest(world.player), "PERFECT", "text"); break;
         case "afterimage":
           sfx.play("afterimage"); hud.toast("AFTERIMAGE", "afterimage");
@@ -228,6 +263,10 @@ export function boot(doc = document) {
     world.assist = settings.assist;
     controls.smartCombo = settings.assist;
   };
+  // Ultimate name card (the "technique shout" beat).
+  const ultCard = root.querySelector("[data-ultcard]");
+  const showUltCard = () => { ultCard.classList.remove("show"); void ultCard.offsetWidth; ultCard.classList.add("show"); };
+
   const toggleHelp = (on = !state.help) => { state.help = on; root.querySelector("[data-help]").hidden = !on; };
   menu("help", () => toggleHelp());
   menu("frameData", () => { settings.frameData = !settings.frameData; applySettings(); });
@@ -333,7 +372,10 @@ export function boot(doc = document) {
 
     const p = world.player;
     const pr = views.get(p)?.root.position ?? p.pos;
-    camera.update(dt, pr, lock?.pos ?? null, look);
+    const pyaw = views.get(p)?.root.rotation.y ?? p.yaw;
+    if (camera.inShot && !(p.current?.surgeCost > 0)) { camera.cue("ult-return"); root.classList.remove("ult-desat"); } // safety: never strand the camera
+    camera.update(dt, pr, lock?.pos ?? null, look, pyaw);
+    root.classList.toggle("surge-full", !!p.surge?.isFull);
     vfx.update(dt, camera.cam, engine);
     arena.update(dt, state.time);
     hud.update(dt, world, controls.device);
@@ -350,7 +392,7 @@ export function boot(doc = document) {
 
   // Test hook: freeze the live clock so automated checks can step the sim frame-exactly.
   const freezeLogic = (on) => { state.frozen = on; };
-  return { engine, scene, world, start, restart, freezeLogic, data: { acolyte: ACOLYTE_ABILITIES } };
+  return { engine, scene, world, camera, start, restart, freezeLogic, data: { acolyte: ACOLYTE_ABILITIES } };
 }
 
 if (typeof document !== "undefined" && !globalThis.__UNWRITTEN_NO_BOOT__) {

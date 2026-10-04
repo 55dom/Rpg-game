@@ -9,6 +9,8 @@ import { AbilityRunner, AbilityController, EventType, MoveContext, StartResult }
 import { AttackTokenPool, EnemyBrain, MoveIntent } from "../core/ai.js";
 import { seededRandom, SECONDS_PER_TICK } from "../core/timing.js";
 import { boxHitsCapsule, hitboxCenter } from "./overlap.js";
+import { TagSet, matchReactions } from "../core/tags.js";
+import { REACTIONS } from "../data/reactions.js";
 import { ROOK_STATS, ROOK_ABILITIES, ROOK_HITBOXES, buildRookGraph } from "../data/rook.js";
 import { ACOLYTE_STATS, ACOLYTE_HITBOXES, acolyteOptions } from "../data/acolyte.js";
 
@@ -42,6 +44,8 @@ export class Fighter {
     this.hitboxDefs = o.hitboxes;
     this.combatant = new Combatant(o.team, o.stats.maxHealth, o.stats.maxPosture);
     this.mana = o.stats.maxMana ? new ResourcePool(o.stats.maxMana) : null;
+    this.surge = o.stats.maxSurge ? new ResourcePool(o.stats.maxSurge, 0) : null;
+    this.tags = new TagSet();
     this.buffer = new InputBuffer();
     this.runner = new AbilityRunner({
       started: (a) => this._started(a),
@@ -114,13 +118,15 @@ export class Fighter {
       if (HANG.has(a.id) && !this.grounded) this.vel.y = Math.max(1.5, Math.min(this.vel.y, 4)); // hang, keeping a little rise
       this.combatant.blocking = false;
     }
+    if (a.surgeCost > 0 && this.surge) this.surge.trySpend(Math.min(a.surgeCost, this.surge.current));
     this.world.emit({ type: "started", fighter: this, ability: a });
   }
 
   _event(a, e) {
     switch (e.type) {
       case EventType.SpawnHitbox:
-        this.hitboxes.push({ def: this.hitboxDefs[e.key], key: e.key, frames: e.value, spec: a.hit, ability: a, hitSet: new Set() });
+        // A hitbox may carry its own hit (multi-part moves like ultimates); otherwise the move's hit.
+        this.hitboxes.push({ def: this.hitboxDefs[e.key], key: e.key, frames: e.value, spec: this.hitboxDefs[e.key].hit ?? a.hit, ability: a, hitSet: new Set() });
         break;
       case EventType.Move: {
         const frames = Math.max(1, a.active);
@@ -146,6 +152,8 @@ export class Fighter {
         if (e.key === "jump") { this.vel.y = e.value; this.grounded = false; }
         else if (e.key === "airJump") { this.vel.y = e.value; this.airJumps = 0; }
         else if (e.key === "airDash") { this.vel.y = 0; this.hoverFrames = e.value; this.airDashes = 0; }
+        else if (e.key === "hover") { this.vel.y = 0; this.hoverFrames = e.value; }
+        else if (e.key === "timeStop") this.world.stopFrames = Math.max(this.world.stopFrames, e.value);
         else if (e.key === "slam") { this.vel.y = -e.value; this.slamming = true; }
         else if (e.key === "parry") this.combatant.startParry(e.value + (this === this.world.player && this.world.assist ? Tuning.assistFrames : 0));
         break;
@@ -169,6 +177,7 @@ export class Fighter {
     if (this.world.brokenTarget(this)) c |= MoveContext.TargetStaggered;
     if (!this.grounded && this.airJumps > 0) c |= MoveContext.AirJumpReady;
     if (!this.grounded && this.airDashes > 0) c |= MoveContext.AirDashReady;
+    if (this.surge?.isFull) c |= MoveContext.SurgeFull;
     return c;
   }
 }
@@ -182,6 +191,7 @@ export class World {
     this.tokens = new AttackTokenPool(o.tokens ?? 2);
     this.rng = seededRandom(o.seed ?? 1234);
     this.slowFrames = 0;
+    this.stopFrames = 0; // ultimate time stop: everyone but the caster freezes
     this.afterimageReadyFrame = 0;
     this.lockTarget = null;
     this.wave = 0;
@@ -235,7 +245,8 @@ export class World {
     const p = this.player;
     p.combatant.reset(); p.mana?.fill(); p.runner.interrupt(); p.buffer.clear();
     p.pos = v3(0, 0, -4); p.prev = v3(0, 0, -4); p.vel = v3(); p.knock = v3(); p.grounded = true; p.yaw = 0;
-    p.counterFrames = 0; p.hitstop = 0; this.lockTarget = null; this.slowFrames = 0;
+    p.counterFrames = 0; p.hitstop = 0; this.lockTarget = null; this.slowFrames = 0; this.stopFrames = 0;
+    p.surge?.set(0); p.tags.clear();
   }
 
   /** The posture-broken enemy a finisher would hit, if any. */
@@ -288,7 +299,8 @@ export class World {
     this.frame++;
     const frame = this.frame;
     if (this.slowFrames > 0) this.slowFrames--;
-    const enemyScale = this.slowFrames > 0 ? Tuning.afterimageScale : 1;
+    if (this.stopFrames > 0) this.stopFrames--;
+    const enemyScale = this.stopFrames > 0 ? 0 : this.slowFrames > 0 ? Tuning.afterimageScale : 1;
 
     for (const f of this.fighters) {
       f.timeScale = f.team === Team.Enemy ? enemyScale : 1;
@@ -308,7 +320,7 @@ export class World {
     this._brains(frame, live);
     this._abilities(frame, live);
     this._hitboxes(live);
-    for (const f of this.fighters) if (live(f)) f.combatant.tick();
+    for (const f of this.fighters) if (live(f)) { f.combatant.tick(); f.tags.tick(); }
     for (const f of this.fighters) if (live(f)) this._move(f);
     this._late(live);
   }
@@ -351,6 +363,7 @@ export class World {
         let o = 0;
         if (f.counterFrames > 0) o |= mask(Intent.Light);
         if (f.grounded && this.brokenTarget(f)) o |= mask(Intent.Heavy);
+        if (f.grounded && f.surge?.isFull) o |= mask(Intent.Ultimate); // the ultimate cuts through anything
         f.controller.overrideMask = o;
         if (f.mana) f.mana.add(f.stats.manaRegenPerSecond * SECONDS_PER_TICK);
       }
@@ -410,7 +423,10 @@ export class World {
         if (att === this.player) {
           this.comboCount++; this.comboTimer = 120;
           if (att.mana && hb.ability.manaCost === 0) att.mana.add(Tuning.meleeManaGain); // melee feeds magic
+          if (!hb.ability.surgeCost) this._surge(att.stats.surgeGain.dealt * r.healthDamage);
         }
+        if (def === this.player) this._surge(def.stats.surgeGain.taken * r.healthDamage);
+        if (def.alive) this._react(att, def, hb, at);
         if (spec.pull > 0) this._pull(att, def, spec.pull);
         if (def === this.player) { this.comboCount = 0; def.buffer.clear(); }
         this.emit({ type: "hit", ...base });
@@ -436,13 +452,14 @@ export class World {
         def.hitstop = Math.max(def.hitstop, r.defenderHitstop);
         att.runner.interrupt(); att.combatant.stagger(26);
         att.knock.x -= away.x * 1.2 * Tuning.knockbackSpeed; att.knock.z -= away.z * 1.2 * Tuning.knockbackSpeed;
-        if (def === this.player) def.counterFrames = def.stats.counterWindowFrames;
+        if (def === this.player) { def.counterFrames = def.stats.counterWindowFrames; this._surge(def.stats.surgeGain.parry); }
         this.emit({ type: "parry", ...base });
         if (r.attackerPostureBroken) this.emit({ type: "postureBreak", ...base, defender: att });
         break;
       case HitOutcome.PerfectDodge:
         if (def === this.player) {
           def.counterFrames = def.stats.counterWindowFrames;
+          this._surge(def.stats.surgeGain.perfectDodge);
           if (this.frame >= this.afterimageReadyFrame) {
             this.slowFrames = Tuning.afterimageFrames;
             this.afterimageReadyFrame = this.frame + def.stats.afterimageCooldownFrames;
@@ -453,6 +470,49 @@ export class World {
         break;
       default: break;
     }
+  }
+
+  _surge(amount) {
+    const s = this.player.surge;
+    if (!s || amount <= 0) return;
+    const was = s.isFull;
+    s.add(amount);
+    if (!was && s.isFull) this.emit({ type: "surgeFull" });
+  }
+
+  /** Fire any reactions this hit triggers on `def`, then apply the hit's own tags. */
+  _react(att, def, hb, at) {
+    const spec = hb.spec;
+    const incoming = new Set(hb.ability.tags);
+    for (const [tag] of spec.applyTags) incoming.add(tag);
+    if (!def.grounded) incoming.add("airborne");
+    for (const row of matchReactions(REACTIONS, def.tags, incoming)) {
+      if (row.consume) def.tags.remove(row.when);
+      const fx = row.effect;
+      const targets = [def];
+      if (fx.radius > 0) {
+        for (const o of this.fighters) {
+          if (o !== def && o.team === def.team && o.alive && flatDistance(o.pos, def.pos) <= fx.radius) targets.push(o);
+        }
+      }
+      for (const t of targets) {
+        const c = t.combatant;
+        if (fx.damage) c.takeDamage(fx.damage);
+        const broke = fx.posture ? c.takePostureDamage(fx.posture) : false;
+        if (fx.stagger) { c.stagger(fx.stagger); t.runner.interrupt(); }
+        if (fx.launch) { t.vel.y = fx.launch; t.grounded = false; }
+        if (fx.hitstop) t.hitstop = Math.max(t.hitstop, fx.hitstop);
+        if (broke) this.emit({ type: "postureBreak", attacker: att, defender: t, ability: hb.ability, spec, at: { x: t.pos.x, y: t.pos.y + 1.2, z: t.pos.z } });
+        if (c.isDead) {
+          this.emit({ type: "kill", attacker: att, defender: t, ability: hb.ability, spec, at });
+          if (this.lockTarget === t) this.lockTarget = this.nearestEnemy(20, t);
+        }
+      }
+      if (fx.hitstop) att.hitstop = Math.max(att.hitstop, fx.hitstop);
+      if (att === this.player) this._surge(att.stats.surgeGain.reaction);
+      this.emit({ type: "reaction", reaction: row, attacker: att, defender: def, targets, at });
+    }
+    if (def.alive) for (const [tag, frames] of spec.applyTags) def.tags.add(tag, frames);
   }
 
   /** Drag a target to just in front of the attacker, at the attacker's height. */
