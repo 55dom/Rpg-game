@@ -1,6 +1,8 @@
 # UNWRITTEN — Knights of the Last Lantern
 ### Game Design Document · Foundation Draft v1.2
 
+> **v1.4 changes:** Clergy Duo revised (§28): **the same smooth white mask for both, hers smiling and his turned upside down into a frown**; Ghorran's silky dark-blue hair (white and light-blue gloss); Vaelith's short silky pink twin ponytails (light-pink gloss) and **maid detailing** on her suit and slit skirt. New **§19.6.1 Color grading** for the whole game, modeled on the anime *That Time I Got Reincarnated as a Slime*.
+
 > **v1.3 changes:** The Clergy Duo's true look is set from owner reference art (§28, `docs/art/clergy-duo/`): black suits, white shirts, black ties, and white masks with painted, unchanging faces. The butler has long blue hair in a low ponytail and a cracked-grin mask with a red dot nose. The musician wears a long black skirt slit high at the side and a closed-eye smiling mask.
 
 > **v1.2 changes:** **Engine changed to Babylon.js (web).** The game runs in any modern browser on PC and phones, free to build and free to host, and is playable straight from a link (§20). The tested combat core was ported from C# to JavaScript with the same rules and tests. Phase 1 Step 3 is done: hit effects, impact frames, parry → counter, perfect dodge → Afterimage, posture break → Lantern Break, synthesized sound, touch controls (`docs/DEV.md`).
@@ -1256,6 +1258,30 @@ Camera presets, each a reusable data asset: **Pan, Tilt, Dolly, Tracking, Crane,
 - **Hand-authored VFX:** flipbook textures (2D-drawn) on particles, not physically simulated effects.
 - **Limited animation:** an **animation stepping** option per move. Pose playback can be sampled at 12 fps ("animating on twos") for a held, punchy anime look, while gameplay logic stays at 60 Hz. Major attacks switch to full-rate for smoothness at the key moment. **This costs almost nothing and is the single biggest "it looks like anime" lever.**
 
+### 19.6.1 Color grading and character shading
+**Reference:** the TV anime *That Time I Got Reincarnated as a Slime*. We match its *qualities*, not its assets: bright, clean, saturated color with glossy, readable characters.
+
+| Element | Target |
+|---|---|
+| **Palette** | High saturation, clean hues, little grey. **Shadows shift hue** (toward cool blue or violet) instead of going grey or brown, so colors stay vivid in shade |
+| **Cel shading** | One crisp shadow step on characters (two tones), plus a soft gradient only on large forms. Minimal texture noise; flat, clean color areas |
+| **Hair** | Silky, with a bright **"angel ring" band** that follows the head and sharp **white streak highlights**, plus a second **tinted gloss** in the hair's own light color (light blue on dark blue, light pink on pink) |
+| **Eyes** | Large and glossy, with layered highlights (one big, one small) |
+| **Line art** | Thin and clean; **tinted dark lines** (local color, darkened) rather than pure black, except on deliberately black designs |
+| **Lighting** | A clear key light, cool ambient fill, and a **rim light** on every character, so dark clothing (black suits, coats) always reads against the background |
+| **Glow** | Soft bloom on light sources, magic, and highlights; gentle diffusion on bright areas |
+| **Backgrounds** | Painterly and slightly softer, lower in contrast than characters, so characters pop |
+| **Dark scenes** | Night, the Astral Path, and the Demon Continent stay **colorful-dark**: deep violets, blues, and reds, never muddy black |
+
+**Implementation:** Phase 2 Step 5 ("cel-shading v2") builds this as a custom toon shader:
+- a two-tone ramp with hue-shifted shadows
+- rim light
+- a hair gloss band and streak highlights
+- tinted outlines
+- a final color-grade pass (saturation, lift, soft bloom)
+
+The current prototype only approximates it (Babylon's CellMaterial plus the glow layer).
+
 ### 19.7 Animation quality tiers
 | Tier | Use | Keys | Playback |
 |---|---|---|---|
@@ -1758,9 +1784,10 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 | **Now** | Archdemon, **5★**, intelligent for the first time | Archdemon, **5★**, intelligent for the first time |
 | **Collectively** | **The Clergy Duo** | |
 | **Concealed form** (CIN-05B) | Plain black suit, black shirt, tie, gloves, featureless black mask | The same |
-| **True outfit** (CIN-05C) | Black suit, **white shirt**, black tie, black shoes. **Long dark-blue hair**, a low ponytail to the knees. Walks with a hand in his pocket | The same black suit jacket, **white shirt** and black tie, with a **long black skirt slit high at the side**; a slim black **instrument case** on her back |
-| **Mask** (true form; never removed) | **White, cracked black lines over the eyes, a jagged painted grin, a red dot at the nose** | **Smooth white, closed crescent eyes, a wide serene smile** |
-| **Reference art** | `docs/art/clergy-duo/ref-01-suit-and-cracked-grin-mask.jpg` | Mask: `docs/art/clergy-duo/ref-02-smiling-mask.jpg`; suit top: ref-01 |
+| **True outfit** (CIN-05C) | Black suit, **white shirt**, black tie, black shoes. Walks with a hand in his pocket | The same black suit jacket, **white shirt** and black tie, with a **long black skirt slit high at the side** and **maid detailing** (short frilled apron, frilled cuffs, lace collar, small lace headdress); a slim black **instrument case** on her back |
+| **Hair** | Long, silky **dark blue** with **white and light-blue glossy highlights**; loose bangs, a low ponytail to the knees | Short, silky **pink**, in **two ponytails**, with **light-pink glossy highlights** |
+| **Mask** (true form; never removed) | The **same smooth white mask** as hers, **turned upside down**: closed crescent eyes, a **frown** | **Smooth white, closed crescent eyes, a smile** |
+| **Reference art** | Outfit, hair silhouette, pose: `docs/art/clergy-duo/ref-01-suit-and-cracked-grin-mask.jpg` (its mask is retired). Mask: `ref-02`, inverted | Mask: `docs/art/clergy-duo/ref-02-smiling-mask.jpg`. Jacket, shirt, tie: ref-01 |
 | **Archdemon form** (CIN-05C) | Horns from the brow; the Commander's vast wings, from slits in the coat; mask stays on | The same |
 | **As shown** | Unhurried, precise; does the lifting; opens the path | Watchful; **turns back to look at Cal**; hums the army's march as a lullaby |
 | **Abilities shown** | **Time travel** and stopping time locally; travelling between worlds; the black circle; the Astral Path; changing form; concealing horns and wings. All of it is **the King's aura** | |
@@ -1806,7 +1833,7 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 | V2 | **The mural + a symbol** | Backlash Ch 3, the caverns | The filled black circle scratched beside a dead soldier's tallies; the mural of a King giving his aura to two Wings; a **memory splice** right after Cal studies it | Ancient history; a scratch |
 | V3 | **Records of disappearances** | Arc 6, Silent Quill archive (side quest) | Centuries of vanishings: witnesses report *"the world held its breath"* and *"two people dressed for a funeral, one of them humming."* One entry: a shepherd near Larkspur, fifteen years ago, *"lost a moment of time."* | Folk superstition, filed under *Unexplained* |
 | V4 | **Someone mentions "black figures"** | Arc 6, a stranded Demon Soldier in Liraen | *"The Wings left the King. Now the black ones come for those who fall wrong."* He won't say more | Battlefield superstition |
-| V5 | **Cal recognizes the clothing** | Arc 7, Juno's sketchbook | A stranger once commissioned two odd outfits from Juno: two black suits with ties, one cut with a **long skirt slit to the thigh**, and in the margin, two white masks, one **grinning**, one **smiling with its eyes closed**. Cal goes quiet for a full beat. *"Don't make those for anyone."* | Juno: *"…Fashion critic now?"* |
+| V5 | **Cal recognizes the clothing** | Arc 7, Juno's sketchbook | A stranger once commissioned two odd outfits from Juno: two black suits with ties, one cut with a **long skirt slit to the thigh**, and in the margin, the same white mask drawn twice: once **smiling**, once **upside down, frowning**. Cal goes quiet for a full beat. *"Don't make those for anyone."* | Juno: *"…Fashion critic now?"* |
 | V6 | **Quiet about portals** | Arc 7 banter skit | Tamsin: *"Why don't you just portal us to the throne room?"* Cal: *"Doors, Tamsin. I make doors."* Not a joke, for once | He's touchy about his magic |
 | V7 | **Direct question** | Arc 7, after the alliance | Rook: *"The two in black. Who were they?"* Cal's smile falters, the only time in Arc 7. *"…Family. Sort of. Not yet."* | — |
 | V8 | **The sleeping King recognizes the language** | Arc 7, at the coffin | Cal mutters the three syllables he whispered as he "died." From inside the sealed coffin, **one word answers** in the same tongue. The archdemons go perfectly still. Cal, for once, says nothing | — |
