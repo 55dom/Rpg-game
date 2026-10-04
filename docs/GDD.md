@@ -1,5 +1,7 @@
 # UNWRITTEN — Knights of the Last Lantern
-### Game Design Document · Foundation Draft v1.2
+### Game Design Document · Foundation Draft v1.3
+
+> **v1.3 changes:** The archdemons' **Astral Path is a long tunnel of dark aura that leads to the Demon Continent**; the continent at its far end shows **no battle fires**, because the tunnel runs through time as well as space (§28). Backlash consistency pass (`docs/BACKLASH.md` v1.7): storyboard and clip counts corrected, four memory splices, and the King's fight kept as a sequel-only sketch.
 
 > **v1.2 changes:** **Engine changed to Babylon.js (web).** The game runs in any modern browser on PC and phones, free to build and free to host, and is playable straight from a link (§20). The tested combat core was ported from C# to JavaScript with the same rules and tests. Phase 1 Step 3 is done: hit effects, impact frames, parry → counter, perfect dodge → Afterimage, posture break → Lantern Break, synthesized sound, touch controls (`docs/DEV.md`).
 
@@ -9,7 +11,7 @@
 
 > **v0.9 changes:** The Backlash flashback **ends on Cal's grin**, match-cutting to the present. The player then **chooses who to play** in the rest of the reveal fight: Rook, or Cal (which opens the optional **Cal's Path**). The archdemons **don't know Cal**: they take him because he alone can move in their frozen time and speaks their language.
 
-> **v0.8 changes:** After the Aura Sacrifice, the Demon Lord King sleeps in his coffin for **1000 years**. The archdemons treat him as a god and travel through **time and other worlds**, destroying them, to find the power to restore him. They find Cal **by accident**, and they are excited. The Siege, Arc 7, and §28 updated. Assumed (please confirm): the archdemons **wake the King early in Arc 7**.
+> **v0.8 changes:** After the Aura Sacrifice, the Demon Lord King sleeps in his coffin for **1000 years**. The archdemons treat him as a god and travel through **time and other worlds**, destroying them, to find the power to restore him. They find Cal **by accident**, and they are excited. The Siege, Arc 7, and §28 updated. Assumed (please confirm): the archdemons **wake the King early in Arc 7**. *(Superseded in v1.0: the King does not wake in this game.)*
 
 > **v0.7 changes:** Corrected canon. The archdemons are **Ghorran and Vaelith**, the King's own Commanders, reborn when the King **sacrificed his aura** to them after defeating the Hero Party. **Cal never fights the Commanders**: the Siege of Aurelin is now led by a Line Marshal, and Arc 7's Vaelith boss is replaced by the empty places beside the throne. §28 rewritten.
 
@@ -694,7 +696,7 @@ He is introduced early, mentors the protagonist, carries the most charm in the s
 
 ### 15.2 🔒 The complete truth (revealed in 10 layers)
 
-**Who he really is.** Cal was once **Ash Line Eleven**, a 1★ Demon Soldier on the **Demon Continent**, serving the **Demon Lord King** (6★). He was a nobody: identical armor, no wings, no name, only a line designation. He began asking a question no demon asks: *"Why am I only supposed to obey?"* He studied the Hero Party that invaded every month in the **Goddess Trial**, watched the **Goddess Saint** use *Sacrifice* to die and be reborn, and memorized her prayer. Then he knelt before the Demon Lord King, whispered the stolen prayer disguised as a vow, said *"For the Demon King,"* and gave away the only star he had. Nothing visible happened. The King sent him back to the line at **0★**, and he was cut down at the gate by the very Knight he had once spared. He lay still. Then **time stopped**, a perfect black circle opened in the air, and **two calm figures in black suits and masks** stepped out, spoke in a language no one has ever heard, and carried him away. **He was smiling.** On a dark astral path, their disguises fell away: **archdemons**, a butler and a maid, horns and wings. 🔒 They are **Ghorran and Vaelith**, the King's own Commanders, reborn minutes earlier when the King, having defeated the Hero Party and confused for the first time by the star that passed through his palm, **sacrificed his aura** to them. Now 5★. Emptied, the King lay down in his coffin for a **thousand-year sleep**, and his archdemons, who worship him as a god, went searching through time and other worlds for a way to restore him. They found Cal by accident. Only Cal knows who they are (§28). He woke up in a human body in the ashes of a burning village in Liraen: **Larkspur**, fifteen years before the game. (Full detail: §26 and `docs/BACKLASH.md`.)
+**Who he really is.** Cal was once **Ash Line Eleven**, a 1★ Demon Soldier on the **Demon Continent**, serving the **Demon Lord King** (6★). He was a nobody: identical armor, no wings, no name, only a line designation. He began asking a question no demon asks: *"Why am I only supposed to obey?"* He studied the Hero Party that invaded every month in the **Goddess Trial**, watched the **Goddess Saint** use *Sacrifice* to die and be reborn, and memorized her prayer. Then he knelt before the Demon Lord King, whispered the stolen prayer disguised as a vow, said *"For the Demon King,"* and gave away the only star he had. Nothing visible happened. The King sent him back to the line at **0★**, and he was cut down at the gate by the very Knight he had once spared. He lay still. Then **time stopped**, a perfect black circle opened in the air, and **two calm figures in black suits and masks** stepped out, spoke in a language no one has ever heard, and carried him away. **He was smiling.** On a dark astral path, a long tunnel of dark aura leading to the Demon Continent, their disguises fell away: **archdemons**, a butler and a maid, horns and wings. 🔒 They are **Ghorran and Vaelith**, the King's own Commanders, reborn minutes earlier when the King, having defeated the Hero Party and confused for the first time by the star that passed through his palm, **sacrificed his aura** to them. Now 5★. Emptied, the King lay down in his coffin for a **thousand-year sleep**, and his archdemons, who worship him as a god, went searching through time and other worlds for a way to restore him. They found Cal by accident. Only Cal knows who they are (§28). He woke up in a human body in the ashes of a burning village in Liraen: **Larkspur**, fifteen years before the game. (Full detail: §26 and `docs/BACKLASH.md`.)
 
 **What he did in Liraen.** In the ashes he found an infant the system could not rate at all: **Rook**. He carried the baby to Thornwick without speaking a word (he didn't know the language yet). He learned the language, customs, and magic, was feared, hunted by the Crimson Bell, and courted by Aldric Valcourt as a weapon. Dagrun Holt took him in when no one else would. He forged a grimoire (his doors need none; it's a prop), rose to vice captain, and waited for Rook to climb the Tower. At the Knight Exam, it was Cal who told Dagrun: *"Take the one-pager."*
 
@@ -975,7 +977,7 @@ Cut 017 hands control straight back. Cal rolls his shoulders, opens a **golden d
 | **Rook** | *"If you were alive this whole time… why didn't you come back?"* | The question the Backlash Arc answers |
 
 #### Why the reveal doesn't explain everything
-The fight reveals **WHO** (Layer 3). **Backlash**, told by Cal himself mid-fight, shows **WHAT he was** (Layers 5–7), but as a **curated narrator**: everything shown is true, and not everything true is shown (three visible memory splices). Arc 6's Field Notes cover **WHY he stayed away** (Layers 8–9). **Arc 7** answers **WHAT he's been doing**: the manipulation (Layer 10) and what he wants from the Palimpsest.
+The fight reveals **WHO** (Layer 3). **Backlash**, told by Cal himself mid-fight, shows **WHAT he was** (Layers 5–7), but as a **curated narrator**: everything shown is true, and not everything true is shown (four visible memory splices). Arc 6's Field Notes cover **WHY he stayed away** (Layers 8–9). **Arc 7** answers **WHAT he's been doing**: the manipulation (Layer 10) and what he wants from the Palimpsest.
 
 #### Permanent gameplay changes after the reveal
 | Requirement | Implementation |
@@ -1574,7 +1576,7 @@ The Goddess Trial runs on monthly cycles, resurrection, ratings, and designation
 
 ## 26. BACKLASH: "THE SOLDIER WHO REFUSED TO REMAIN A SOLDIER" 🔒
 
-> **Full production package: [`docs/BACKLASH.md`](BACKLASH.md)**, covering the story, 8 chapters, playable and cinematic sequences, combat encounters, both of Cal's movesets, Hero Party / Demon Army / Commander / King AI, the Sacrifice mechanic, Star Rating integration, reincarnation gameplay, transition/camera/dialogue/audio/VFX/animation systems, 10 five-column storyboards, saves, performance, architecture, code sketches, and the prototype plan. This section keeps only the world and character canon that the rest of the GDD depends on.
+> **Full production package: [`docs/BACKLASH.md`](BACKLASH.md)**, covering the story, 8 chapters, playable and cinematic sequences, combat encounters, both of Cal's movesets, Hero Party / Demon Army / Commander / King AI, the Sacrifice mechanic, Star Rating integration, reincarnation gameplay, transition/camera/dialogue/audio/VFX/animation systems, 14 five-column storyboards, saves, performance, architecture, code sketches, and the prototype plan. This section keeps only the world and character canon that the rest of the GDD depends on.
 
 ### 26.0 OBJECTIVE
 A **30–60 minute playable flashback** (Ep 49) placed *inside* the reveal fight. Present-day Cal opens a door into his own memory, and the player **becomes him**:
@@ -1676,8 +1678,8 @@ The Goddess designates the heroes by role, not name. **The heroes are numbered t
 
 ### 26.8 Director's notes (scope)
 1. **Second world = Liraen.** Skills are grimoire pages; levels are Levels + Knight Rank; guilds and adventurers are Lowmarket guilds and freeblades. No third world.
-2. **Told by Cal, not read from a document.** His narration makes the flashback personal. It also makes him a *curated* narrator whose omissions (three visible splices) pay off in Arc 7.
-3. **Cheap to build:** the Demon Soldier kit, Commanders, and King are built once and reused in the Siege and in Arc 7. The Demon Continent map is reused in Arc 7. About 124 new animation clips (`docs/BACKLASH.md` §20), mostly the Hero Party, who return in Arc 7.
+2. **Told by Cal, not read from a document.** His narration makes the flashback personal. It also makes him a *curated* narrator whose omissions (four visible splices) pay off in Arc 7.
+3. **Cheap to build:** the Demon Soldier kit, Commanders, and King are built once and reused in the Siege and in Arc 7. The Demon Continent map is reused in Arc 7. About 152 new animation clips (`docs/BACKLASH.md` §20), mostly the Hero Party, who return in Arc 7.
 4. **Hidden ratings never change combat math** (§25.3).
 5. **Naming:** "King A" is lore (the Goddess numbers her heroes). Ghorran, Vaelith, Corin, Maelis, and Teo are original names.
 6. **Originality:** Demon Soldier armor must not resemble any famous sci-fi trooper or existing anime demon army: heavy red-black plate, slit faceplates, pole-cleavers, no glossy white. All music is original; the march motif is our own four notes.
@@ -1686,7 +1688,7 @@ The Goddess designates the heroes by role, not name. **The heroes are numbered t
 
 ## 27. ARC 7: "UNWRITTEN" — THE COLLISION OF THREE PHILOSOPHIES 🔒
 
-> Boss details for the Demon Lord King: `docs/BACKLASH.md` §11. Maelis as a guest and *Sacrifice* rules: §12 of the same document.
+> The Demon Lord King's role in this game (asleep; no boss fight) and a fight sketch reserved for the sequel: `docs/BACKLASH.md` §11. Maelis as a guest and *Sacrifice* rules: §12 of the same document.
 
 | Philosophy | Who | Belief |
 |---|---|---|
@@ -1717,7 +1719,7 @@ All three endings share the same final battle and epilogue structure; only the c
 ## 28. THE VOID FIGURES: THE CLERGY DUO 🔒
 
 ### 28.0 OBJECTIVE
-A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figures in black stop time and carry the "dead" Cal away, smiling. Then (CIN-05C) a dark astral path shows them as **archdemons**, horns and wings revealed. Through Cal's dying eyes the player has half-seen where they came from; nobody says it. **Only Cal knows who they are** (and the King, who made them). Nobody, player included, learns *why* they took him in this game unless a later arc is designed to tell it.
+A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figures in black stop time and carry the "dead" Cal away, smiling. Then (CIN-05C) a long tunnel of dark aura through an astral realm, leading to the Demon Continent, shows them as **archdemons**, horns and wings revealed. Through Cal's dying eyes the player has half-seen where they came from; nobody says it. **Only Cal knows who they are** (and the King, who made them). Nobody, player included, learns *why* they took him in this game unless a later arc is designed to tell it.
 
 ### 28.1 Identity canon (DIRECTOR'S EYES ONLY)
 **The order of events at the end of Backlash:**
@@ -1727,7 +1729,7 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 4. **Within minutes**, he performs the **Aura Sacrifice**: he tears his aura out of himself and pours it into his two trusted Commanders. **Ghorran and Vaelith are reborn as intelligent archdemons**, a butler and a maid, **5★**.
 5. Emptied, the King lies down in a black **coffin** behind his throne and enters a **1000-year slumber**.
 6. The archdemons, who now treat their King as a **god** and would do anything to have him back, use their new abilities to travel **through time and other worlds**, searching for the power to restore him and **destroying worlds and planets** as they go. (Their black suits come from one of those worlds.)
-7. On that road, they arrive **by accident** at the moment of Cal's "death": the black circle, the stopped time. **They don't know who he is.** They walk past him. But he is **the only thing in their frozen time that can move** (a 0★ being is no longer held by it), and he **answers them in their own language**, which he taught himself from the cavern glyphs in Ch 3. They are **excited**: luck, for them, too. They take him down the Astral Path, past the wreckage of other worlds. Cal is grinning.
+7. On that road, they arrive **by accident** at the moment of Cal's "death": the black circle, the stopped time. **They don't know who he is.** They walk past him. But he is **the only thing in their frozen time that can move** (a 0★ being is no longer held by it), and he **answers them in their own language**, which he taught himself from the cavern glyphs in Ch 3. They are **excited**: luck, for them, too. They take him down the **Astral Path**: a long tunnel of dark aura through an astral realm, past the wreckage of other worlds, **home to the Demon Continent**, and through time as well as space. Cal is grinning.
 
 | | **The butler** | **The maid** (musician) |
 |---|---|---|
@@ -1738,7 +1740,7 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 | **True outfit** (CIN-05C) | Immaculate black **butler's suit**: waistcoat, tie, gloves, black watch-chain | Black **maid's dress cut with a suit jacket and tie**, gloves, a slim black **instrument case** on her back |
 | **Archdemon form** (CIN-05C) | Horns from the brow; the Commander's vast wings, from slits in the coat; mask stays on | The same |
 | **As shown** | Unhurried, precise; does the lifting; opens the path | Watchful; **turns back to look at Cal**; hums the army's march as a lullaby |
-| **Abilities shown** | **Time travel** and stopping time locally; travelling between worlds; the black circle; the Astral Path; changing form; concealing horns and wings. All of it is **the King's aura** | |
+| **Abilities shown** | **Time travel** and stopping time locally; travelling between worlds; the black circle; the Astral Path (a tunnel of dark aura they open without a word); changing form; concealing horns and wings. All of it is **the King's aura** | |
 | **Goal** | **Restore their sleeping King**, whom they treat as a god, by any means: across time, across worlds, destroying whatever stands in the way | |
 | **Secret plan** | **The Rite of Waking**: sacrifice **themselves and Cal**, the source of power they found, to wake the King. **Never told to Cal.** Their excitement at finding him shows only as calm body language behind unchanging masks | |
 | **Status** | **Exclusive, rare NPCs.** Never fought in this game, by Cal or anyone. A future superboss or reveal arc can use them | |
@@ -1760,7 +1762,7 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 | The King lies down in a black coffin; the lid closes | CIN-05B (cut 011a) |
 | After time resumes: the sealed coffin, the empty throne, the empty places beside it | CIN-05B (cut 050) |
 | A **language no one has heard**, never subtitled | CIN-05B, CIN-05C |
-| *(Cal's Path)* On a **dark astral path** past the **wreckage of other worlds**: **butler and maid** outfits, **horns**, **the Commanders' wings**; their excitement; the maid hums the march; Cal whistles it back; **★★★★★** through Cal's eyes; a doorway at the edge of the Continent | CIN-05C |
+| *(Cal's Path)* On a **dark astral path** past the **wreckage of other worlds**: **butler and maid** outfits, **horns**, **the Commanders' wings**; their excitement; the maid hums the march; Cal whistles it back; **★★★★★** through Cal's eyes. The path is a **long tunnel of dark aura** leading to the **Demon Continent**, which shows **no battle fires**; a tall doorway at its end | CIN-05C |
 
 ### 28.3 Design rules
 1. **Calm is the horror.** They never run, pose, shout, threaten, or fight on screen. They walk like people arriving at a meeting, even while transforming.
@@ -1792,7 +1794,7 @@ The **who** and the **how** are decided. These stay undecided until a later arc 
 - What Cal believed he was getting from them all those years, since they never told him his part.
 - Which worlds they have destroyed, and whether Liraen is on their list.
 - How their time travel works, and whether they have already visited Liraen's past (the Sea of Marrow, drunk dry a century ago? Larkspur?).
-- **What lies beyond the doorway** at the edge of the Continent, and how Cal went from there to waking human in Larkspur.
+- **When** the tunnel reaches the Demon Continent (it shows no battle fires), what happened at its end, and how Cal went from there to waking human in Larkspur.
 - Their relationship to the **Goddess**, the **Scribe**, and the possibility that the Demon Continent is a training ground (§25.5).
 - Whether "the dead who fall wrong" means every 0★ being.
 
