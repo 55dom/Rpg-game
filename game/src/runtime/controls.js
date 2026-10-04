@@ -33,6 +33,7 @@ export class Controls {
       if (["Space", "Tab", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) e.preventDefault();
       if (e.repeat) return;
       this.device = "keyboard";
+      this.keyboardUsed = true;
       this.keys.add(e.code);
       if (KEYS[e.code]) this.presses.push(KEYS[e.code]);
       if (e.code === "KeyQ") this.commands.push("lock");
@@ -45,6 +46,8 @@ export class Controls {
       if (e.code === "KeyB") this.commands.push("boss");
       if (e.code === "KeyP") this.commands.push("pages");
       if (e.code === "Enter") this.commands.push("confirm");
+      if (e.code === "ArrowUp" || e.code === "KeyW") this.commands.push("navUp");     // menus and dialogue choices
+      if (e.code === "ArrowDown" || e.code === "KeyS") this.commands.push("navDown");
       if (e.code === "KeyG") this.commands.push("frameData");
       if (e.code === "Escape") this.commands.push("pause");
     });
@@ -176,7 +179,8 @@ export class Controls {
           if (i === 13) this.presses.push(Intent.Spell4); // D-pad down
           if (i === 14) this.commands.push("assist:bas");   // D-pad left
           if (i === 15) this.commands.push("assist:juno");  // D-pad right
-          if (i === 12) this.commands.push("stance");       // D-pad up
+          if (i === 12) this.commands.push("stance", "navUp"); // D-pad up (navUp in menus)
+          if (i === 13) this.commands.push("navDown");
         }
         this.padPrev[i] = down;
         if ((i === 4 || i === 6) && down) block = true;

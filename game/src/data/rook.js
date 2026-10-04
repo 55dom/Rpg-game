@@ -183,12 +183,15 @@ export const ROOK_ABILITIES = (() => {
 export const defaultLoadout = (A = ROOK_ABILITIES) => ({ Spell1: A.GaleCutter, Spell2: A.VacuumPull, Spell3: A.TempestEdge, Spell4: A.WindWall });
 
 /** Rook's combo graph. Order matters inside each list: first match wins. */
-export function buildRookGraph(contextProvider, A = ROOK_ABILITIES, loadout = defaultLoadout(A)) {
+export function buildRookGraph(contextProvider, A = ROOK_ABILITIES, loadout = defaultLoadout(A), { ultimate = true } = {}) {
   const S = loadout;
   const g = new ComboGraph(contextProvider);
+  // Story episodes can lock pages (Rook starts with one) and the ultimate: empty slots get no routes.
+  const entry = (intent, ability, ctx) => { if (ability) g.addEntry(intent, ability, ctx); };
+  const global = (intent, ability, ctx) => { if (ability) g.addGlobal(intent, ability, ctx); };
   // Finisher outranks every combo route once the target's posture is broken.
   g.addPriority(Intent.Heavy, A.LanternBreak, C.Grounded | C.TargetStaggered);
-  g.addPriority(Intent.Ultimate, A.Skyrender, C.Grounded | C.SurgeFull);
+  if (ultimate) g.addPriority(Intent.Ultimate, A.Skyrender, C.Grounded | C.SurgeFull);
   g.addEntry(Intent.Light, A.Counter, C.AfterParry)
     .addEntry(Intent.Light, A.DashStrike, C.Grounded | C.AfterDash)
     .addEntry(Intent.Light, A.L1, C.Grounded)
@@ -199,23 +202,17 @@ export function buildRookGraph(contextProvider, A = ROOK_ABILITIES, loadout = de
     .addEntry(Intent.Jump, A.AirJump, C.Airborne | C.AirJumpReady)
     .addEntry(Intent.Dodge, A.Dodge, C.Grounded)
     .addEntry(Intent.Dodge, A.AirDash, C.Airborne | C.AirDashReady)
-    .addEntry(Intent.Block, A.Guard, C.Grounded)
-    .addEntry(Intent.Spell1, S.Spell1)
-    .addEntry(Intent.Spell2, S.Spell2)
-    .addEntry(Intent.Spell3, S.Spell3, C.Grounded)
-    .addEntry(Intent.Spell4, S.Spell4);
+    .addEntry(Intent.Block, A.Guard, C.Grounded);
+  entry(Intent.Spell1, S.Spell1); entry(Intent.Spell2, S.Spell2); entry(Intent.Spell3, S.Spell3, C.Grounded); entry(Intent.Spell4, S.Spell4);
   g.addEdge(A.L1, Intent.Light, A.L2).addEdge(A.L2, Intent.Light, A.L3).addEdge(A.L3, Intent.Light, A.L4)
     .addEdge(A.L2, Intent.Heavy, A.Launcher)
     .addEdge(A.AirL1, Intent.Light, A.AirL2).addEdge(A.AirL2, Intent.Light, A.AirL3)
     .addEdge(A.AirL1, Intent.Heavy, A.AirSlam).addEdge(A.AirL2, Intent.Heavy, A.AirSlam).addEdge(A.AirL3, Intent.Heavy, A.AirSlam);
   g.addGlobal(Intent.Light, A.Counter, C.AfterParry)
     .addGlobal(Intent.Dodge, A.Dodge, C.Grounded)
-    .addGlobal(Intent.Dodge, A.AirDash, C.Airborne | C.AirDashReady)
-    .addGlobal(Intent.Spell1, S.Spell1)
-    .addGlobal(Intent.Spell2, S.Spell2)
-    .addGlobal(Intent.Spell3, S.Spell3, C.Grounded)
-    .addGlobal(Intent.Spell4, S.Spell4)
-    .addGlobal(Intent.Jump, A.Jump, C.Grounded)
+    .addGlobal(Intent.Dodge, A.AirDash, C.Airborne | C.AirDashReady);
+  global(Intent.Spell1, S.Spell1); global(Intent.Spell2, S.Spell2); global(Intent.Spell3, S.Spell3, C.Grounded); global(Intent.Spell4, S.Spell4);
+  g.addGlobal(Intent.Jump, A.Jump, C.Grounded)
     .addGlobal(Intent.Jump, A.AirJump, C.Airborne | C.AirJumpReady)
     .addGlobal(Intent.Light, A.DashStrike, C.Grounded | C.AfterDash)
     .addGlobal(Intent.Light, A.AirL1, C.Airborne)

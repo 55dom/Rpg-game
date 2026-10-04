@@ -1356,7 +1356,7 @@ With Unity, native speed came from IL2CPP turning C# into C++. On the web:
 | Input | Own `Controls` layer: keyboard, mouse, Gamepad API, Pointer Events | One intent stream for every device ✅ *built* |
 | Camera | Own camera director (follow, lock-on, shake, punch-in) | Replaces Cinemachine; states as data later |
 | Cinematics | JSON timelines played by the same event system as abilities | Replaces Unity Timeline |
-| Dialogue | **ink** (inkjs) or Yarn (yarn-bound): decided in Phase 3 | Both are free, writer-friendly, and run in the browser |
+| Dialogue | **Decided (Phase 3):** a **Yarn-style plain-text script** with our own small parser (`core/script.js`) | Writers get Yarn's familiar syntax (nodes, options, `<<if>>`, `<<set>>`, `<<jump>>`); the game gets zero dependencies, a tiny download, and parse errors with line numbers |
 | Audio | Web Audio API: synthesized placeholders now ✅ *built*; recorded SFX and adaptive music layers later | Free; no middleware |
 | Art pipeline | Blender → glTF 2.0 (Draco meshes, KTX2 textures) | The web's native 3D format |
 | Data | Plain JS/JSON modules (abilities, enemies, combo graphs) | Designer-editable; validated on load ✅ *built* |
@@ -1547,6 +1547,16 @@ Estimates assume **1–2 people, part-time-ish**. Every phase ends with a **go/n
 - **Known gaps carried forward:** Hask's P2 log barricade (it needs level art); real character models and animation (the current blocky rigs are placeholders, §20); voice.
 
 **Honest scope note:** a three-arc release (Episodes 1–28) is already a substantial game. Consider shipping **Arcs 1–3 as "Season 1"**. It ends with the Sable Knight at Aurek's grave, a perfect anime season cliffhanger that points players toward the wrong answer. Arcs 4–7 become Season 2, with the reveal as its centerpiece.
+
+
+### 23.2 Phase 3 plan (Story Vertical Slice)
+| Step | Content | Status |
+|---|---|---|
+| 1 | **Story engine and Episode 1 (graybox).**<br>• **Engine:** the **FlagStore** with a safe condition language, **Yarn-style dialogue scripts** (options, Temper tags `#bold` / `#earnest` / `#wry`, `<<if>>`, `<<set>>`, `<<jump>>`, host commands), and **name and pronoun tokens** (`{name}`, `{they}`, `{is}`, `walk{s}`…).<br>• **Saves:** versioned saves with migrations, an autosave at every beat, and Continue from the title screen.<br>• **Episode flow:** the **EpisodeDirector** (cold open, title card, scene, fight, "WHAT HAPPENS NEXT?" preview).<br>• **Episode 1, The Tower of Choosing**, playable start to finish: name and pronouns, the Larkspur cold open, Severin, Brother Moss, the one-page grimoire, the Choir attack as the first combat tutorial (one page, no ultimate, no squad yet), and the "…It's you" hook.<br>• **Scenes:** auto-framed close-ups and over-the-shoulder reverse shots. *Staged in the yard for now; Step 2 builds the Tower* | ✅ Done |
+| 2 | **Cutscene director and the Tower of Choosing:** JSON timeline cutscenes (actor moves, gestures, camera presets from §19.5), a 3D Larkspur cold open, the Tower set, idle and talk poses | Next |
+| 3 | **Episode 2, The Knight Exam:** trials and **Boss 1, Severin** (Star Needles, star-line hazards, the Polaris weak point). Winning or losing both continue (`EXAM_DUEL_WON`). Dagrun: *"I'll take the one-pager."* | — |
+| 4 | **Episode 3, The Lighthouse with No Sea:** a walkable HQ hub, talking to the Lanterns, Cal's dodge-tutorial sparring, the squad dinner, and the Arc 1 seed lines (§15.5) | — |
+| 5 | **Episode 4 story wrap** (the Mirren choice around the existing combat run), episode select, manual save slots, polish, and the **gate review**: *"Does it feel like an anime episode?"* | — |
 
 ---
 
@@ -1879,4 +1889,4 @@ The foundation questions from v0.1 are still open:
 3. **Cast & story:** Brannoc's real death, Aurek Valcourt as the red herring, the Palimpsest protagonist. Anything to change?
 4. **Scope calls:** 4 player affinities at launch, AI companions first (tag-swap for Rook, Severin, and Cal later), zones rather than a seamless open world, "Season 1" = Arcs 1–3.
 
-**Phase 1:** complete (§22). **Phase 2:** complete (§23.1): Skyrender, reactions, the squad, the Fens roster, Hask the Bogwarden, page evolution, cel-shading v2, and the Episode 4 combat run. It waits on your gate review ("does it feel anime?"). **Next: Phase 3**, the story vertical slice (Episodes 1–3, dialogue, flags, saves, cutscenes). Story systems (flags, Theatre mode) come in Phase 3. **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.
+**Phase 1:** complete (§22). **Phase 2:** complete (§23.1): Skyrender, reactions, the squad, the Fens roster, Hask the Bogwarden, page evolution, cel-shading v2, and the Episode 4 combat run. It waits on your gate review ("does it feel anime?"). **Phase 3 progress** (§23.2): Step 1 is done (the story engine and Episode 1). **Next: Step 2**, the cutscene director and the Tower of Choosing set. **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.

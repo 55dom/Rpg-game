@@ -16,6 +16,9 @@ import { Controls } from "./runtime/controls.js";
 import { FollowCamera } from "./runtime/camera.js";
 import { Hud } from "./runtime/hud.js";
 import { buildArena } from "./runtime/arena.js";
+import { StoryPlayer } from "./runtime/story.js";
+import { SaveStore, cleanName } from "./core/save.js";
+import { EPISODE_1, EP1_SCRIPT } from "./data/story/ep1.js";
 
 const TRAIL_COLORS = { default: "#ffd98a", GaleCutter: PALETTE.gale, VacuumPull: PALETTE.gale, TempestEdge: "#a8f5dc", Counter: "#dff6ff", LanternBreak: "#ffcc55", enemy: "#ff5a4a" };
 const SPELLS = [
@@ -302,14 +305,16 @@ export function boot(doc = document) {
           sfx.play("slam"); camera.shake(0.45);
           break;
         }
-        case "wave": if (!world.run) hud.banner(`WAVE ${ev.wave}`); sfx.play("wave"); break;
+        case "wave": if (!world.run && state.mode !== "story") hud.banner(`WAVE ${ev.wave}`); sfx.play("wave"); break;
         case "waveClear":
+          if (state.mode === "story") { story.onWorldEvent(ev); hud.toast("CLEAR", "clear"); break; }
           if (world.run) break; // the run director handles clears
           hud.toast("YARD CLEAR", "clear");
           later(2.4, () => world.spawnWave());
           break;
         case "playerDown":
-          hud.toast("ROOK FALLS", "danger");
+          hud.toast(`${(state.mode === "story" ? story.player.name : "Rook").toUpperCase()} FALLS`, "danger");
+          if (state.mode === "story") { story.onWorldEvent(ev); break; }
           if (!world.run) later(2.6, restart);
           break;
         case "runStart": hud.banner(ev.episode.subtitle); break;
@@ -435,20 +440,25 @@ export function boot(doc = document) {
   menu("flashes", () => { settings.flashes = !settings.flashes; applySettings(); });
   menu("sound", () => { settings.sound = !settings.sound; applySettings(); });
   menu("assist", () => { settings.assist = !settings.assist; applySettings(); hud.toast(settings.assist ? "ASSIST ON" : "ASSIST OFF"); });
-  menu("reset", () => { if (state.mode === "run") replay("run"); else restart(); });
+  menu("reset", () => { if (state.mode === "story") backToTitle(); else if (state.mode === "run") replay("run"); else restart(); }); // story: back to the title (progress is autosaved)
   root.querySelector("[data-help-close]")?.addEventListener("click", () => toggleHelp(false));
   applySettings();
 
   /** A fresh world for a new run or sandbox session (views rebuilt, settings kept). */
-  const newWorld = () => {
+  const newWorld = (opts = {}) => {
     for (const f of [...views.keys()]) removeView(f);
     walls.clear(); arena.setBog(false, true);
-    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, companions: true });
+    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, companions: true, ...opts });
+    if (opts.tokens == null) world.tokens.capacity = mobile ? 1 : 2;
     world.pageDefs = PAGES;
+    root.classList.toggle("no-ult", !world.ultimate);
+    root.classList.toggle("solo", !world.companions.length);
+    root.dataset.locked = [...Object.entries(world.loadout).filter(([, a]) => !a).map(([k]) => k), ...(world.pageGrowth ? [] : ["pages"])].join(" ");
     handle.world = world;
     addView(world.player);
     for (const c of world.companions) addView(c);
     world.drainEvents();
+    return world;
   };
   const start = (mode = "run") => {
     if (state.started) return;
@@ -456,12 +466,79 @@ export function boot(doc = document) {
     sfx.unlock();
     root.querySelector("[data-start]").classList.add("gone");
     state.mode = mode;
+    root.classList.toggle("story-mode", mode === "story");
+    if (mode === "story") return; // the story player drives the world
+    if (world.ultimate === false || !world.companions.length) newWorld();
     if (mode === "run") world.startRun(EPISODE_4); else world.spawnWave();
     onEvents(world.drainEvents());
   };
   const startScreen = root.querySelector("[data-start]");
   startScreen.querySelector("[data-start-run]")?.addEventListener("click", (e) => { e.stopPropagation(); start("run"); });
   startScreen.querySelector("[data-start-yard]")?.addEventListener("click", (e) => { e.stopPropagation(); start("yard"); });
+
+  // ---- Story mode (Phase 3) ----
+  const saves = SaveStore.browser();
+  const story = new StoryPlayer({
+    root, scene, camera, hud, sfx, vfx, controls, saves,
+    getWorld: () => world,
+    makeWorld: (opts) => newWorld(opts),
+    onEvents: (evs) => onEvents(evs),
+  }, [{ episode: EPISODE_1, script: EP1_SCRIPT }]);
+  const playerName = root.querySelector(".player-card .name");
+  const showName = (n) => { if (playerName?.firstChild) playerName.firstChild.textContent = `${n.toUpperCase()} `; };
+  const backToTitle = () => {
+    story.stop();
+    state.started = false; state.mode = null; state.modal = false;
+    root.classList.remove("story-mode", "in-scene");
+    newWorld();
+    showName("Rook");
+    refreshContinue();
+    startScreen.classList.remove("gone");
+  };
+  const playStory = async (episodeId, beat) => {
+    start("story");
+    showName(story.player.name);
+    await story.play(episodeId, beat);
+    const exit = story.pendingExit; story.pendingExit = null;
+    if (!state.started || state.mode !== "story") return; // left another way
+    if (exit?.kind === "episode" && story.episodeById(exit.id)) { story.stop(); state.started = false; playStory(exit.id, 0); return; }
+    backToTitle();
+    if (exit?.kind === "run") start("run");
+  };
+  const createModal = root.querySelector("[data-create]");
+  const nameInput = createModal.querySelector("[data-pc-name]");
+  let pronouns = "they";
+  for (const b of createModal.querySelectorAll("[data-p]")) b.addEventListener("click", () => {
+    pronouns = b.dataset.p; sfx.play("ui");
+    for (const o of createModal.querySelectorAll("[data-p]")) o.setAttribute("aria-pressed", String(o === b));
+  });
+  const openCreate = () => { sfx.unlock(); createModal.hidden = false; state.modal = true; setTimeout(() => nameInput.focus(), 50); };
+  const begin = () => {
+    createModal.hidden = true; state.modal = false;
+    story.flags.load({});
+    story.player = { name: cleanName(nameInput.value), pronouns };
+    playStory("ep1", 0);
+  };
+  createModal.querySelector("[data-pc-begin]").addEventListener("click", begin);
+  createModal.querySelector("[data-pc-back]").addEventListener("click", () => { createModal.hidden = true; state.modal = false; });
+  nameInput.addEventListener("keydown", (e) => { e.stopPropagation(); if (e.key === "Enter") begin(); });
+  const continueBtn = startScreen.querySelector("[data-continue]");
+  const refreshContinue = () => {
+    const last = saves.read("auto");
+    const ep = last && story.episodeById(last.episode);
+    continueBtn.hidden = !ep || last.beat >= ep.beats.length;
+    if (!continueBtn.hidden) continueBtn.textContent = `CONTINUE · EP ${ep.number}`;
+  };
+  const doContinue = () => {
+    const last = saves.read("auto");
+    if (!last) return;
+    story.player = { name: last.player.name, pronouns: last.player.pronouns };
+    story.flags.load(last.flags);
+    playStory(last.episode, last.beat);
+  };
+  continueBtn.addEventListener("click", (e) => { e.stopPropagation(); doContinue(); });
+  startScreen.querySelector("[data-start-story]")?.addEventListener("click", (e) => { e.stopPropagation(); openCreate(); });
+  refreshContinue();
   const replay = (mode) => { results.hidden = true; state.modal = false; newWorld(); state.started = false; start(mode); };
   results.querySelector("[data-again]")?.addEventListener("click", () => replay("run"));
   results.querySelector("[data-yard]")?.addEventListener("click", () => replay("yard"));
@@ -492,9 +569,24 @@ export function boot(doc = document) {
     state.time += dt;
 
     controls.poll(dt);
-    let running = state.started && !state.paused && !state.help && !state.frozen && !state.modal;
+    let running = state.started && !state.paused && !state.help && !state.frozen && !state.modal && !story.blocking;
     for (const cmd of controls.drainCommands()) {
-      if (!state.started) { if (cmd === "confirm") start("run"); continue; }
+      if (!state.started) {
+        if (cmd === "confirm") { if (!createModal.hidden) begin(); else (continueBtn.hidden ? openCreate() : doContinue()); }
+        continue;
+      }
+      if (story.blocking) { // scenes and cards: menu-style input
+        if (cmd === "confirm") story.confirm();
+        if (cmd === "navUp") story.nav(-1);
+        if (cmd === "navDown") story.nav(1);
+        if (cmd === "assist:bas") story.choose(0);
+        if (cmd === "assist:juno") story.choose(1);
+        if (cmd === "stance") story.choose(2);
+        if (cmd === "help") toggleHelp();
+        if (cmd === "pause") { if (state.help) toggleHelp(false); else state.paused = !state.paused; root.classList.toggle("paused", state.paused); }
+        continue;
+      }
+      if (state.mode === "story" && (cmd === "boss" || cmd === "reset")) continue; // sandbox shortcuts are off in the story
       if (cmd === "pages") { if (pageModal.hidden) openPages(); else { pageModal.hidden = true; state.modal = false; } }
       if (cmd === "lock") { const t = world.toggleLock(); if (!t) camera.yaw = world.player.yaw; sfx.play("ui"); }
       if (cmd === "unlock" && world.lockTarget) { world.lockTarget = null; sfx.play("ui"); }
@@ -517,9 +609,10 @@ export function boot(doc = document) {
       if (cmd === "pause") { if (state.help) toggleHelp(false); else state.paused = !state.paused; root.classList.toggle("paused", state.paused); }
     }
     const presses = controls.drainPresses();
-    if (!state.started && presses.length) start("run"); // any attack button on the title screen starts the episode
+    if (!state.started && presses.length && createModal.hidden) (continueBtn.hidden ? openCreate() : doContinue()); // any attack button on the title screen
+    if (story.blocking) { if (presses.includes(1) || presses.includes(3)) story.confirm(); presses.length = 0; } // Slash or Jump advances dialogue
     if (!pageModal.hidden) for (const p of presses) { if (p === 1) choosePage("A"); if (p === 2) choosePage("B"); } // Light / Heavy pick a branch
-    running = state.started && !state.paused && !state.help && !state.frozen && !state.modal; // after commands: pause/help/modals may have changed
+    running = state.started && !state.paused && !state.help && !state.frozen && !state.modal && !story.blocking; // after commands: pause/help/modals may have changed
     if (running) for (const p of presses) world.press(p);
 
     const look = controls.takeLook();
@@ -573,6 +666,7 @@ export function boot(doc = document) {
     arena.update(dt, state.time);
     walls.update(state.time);
     hud.update(dt, world, controls.device);
+    story.update(dt, state.paused || state.help || state.frozen);
 
     if (impactLeft > 0) { impactLeft -= dt; if (impactLeft <= 0) canvas.style.filter = ""; }
     quality.update(dt);
@@ -587,7 +681,7 @@ export function boot(doc = document) {
 
   // Test hook: freeze the live clock so automated checks can step the sim frame-exactly.
   const freezeLogic = (on) => { state.frozen = on; };
-  const handle = { engine, scene, world, camera, start, restart, freezeLogic, openPages, choosePage, data: { acolyte: ACOLYTE_ABILITIES } };
+  const handle = { engine, scene, world, camera, start, restart, freezeLogic, openPages, choosePage, story, saves, playStory, backToTitle, data: { acolyte: ACOLYTE_ABILITIES } };
   return handle;
 }
 

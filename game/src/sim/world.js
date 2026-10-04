@@ -213,7 +213,11 @@ export class Fighter {
 }
 
 export class World {
-  /** @param {{tokens?:number, seed?:number, assist?:boolean, companions?:boolean}} [o] */
+  /**
+   * @param {{tokens?:number, seed?:number, assist?:boolean, companions?:boolean|string[],
+   *   loadout?:object, ultimate?:boolean}} [o] loadout: slot → ability (null locks a slot);
+   *   ultimate:false locks Skyrender (no Surge gain). Story episodes use both.
+   */
   constructor(o = {}) {
     this.frame = 0;
     this.fighters = [];
@@ -227,17 +231,19 @@ export class World {
     this.wave = 0;
     this.comboCount = 0;
     this.comboTimer = 0;
-    this.loadout = defaultLoadout();
+    this.loadout = { ...defaultLoadout(), ...(o.loadout ?? {}) };
+    this.ultimate = o.ultimate ?? true;
+    this.pageGrowth = o.pages ?? true; // pages earn XP and evolve
     this.pages = Object.fromEntries(Object.keys(PAGES).map((slot) => [slot, { xp: 0, ready: false, branch: null }]));
     this.zones = [];
     this.player = this.add(new Fighter(this, {
       id: "rook", kind: "player", team: Team.Player, stats: ROOK_STATS, hitboxes: { ...ROOK_HITBOXES, ...PAGE_HITBOXES },
-      graph: buildRookGraph(() => this.player.context(), ROOK_ABILITIES, this.loadout), x: 0, z: -4,
+      graph: buildRookGraph(() => this.player.context(), ROOK_ABILITIES, this.loadout, { ultimate: this.ultimate }), x: 0, z: -4,
     }));
     this.assist = !!o.assist;
     this.companions = [];
     this.projectiles = [];
-    if (o.companions) for (const kind of Object.keys(COMPANIONS)) this.addCompanion(kind);
+    if (o.companions) for (const kind of Array.isArray(o.companions) ? o.companions : Object.keys(COMPANIONS)) this.addCompanion(kind);
   }
 
   addCompanion(kind) {
@@ -402,7 +408,7 @@ export class World {
   /** Swap the spell on a button and rebuild Rook's combo graph. */
   applyLoadout() {
     const p = this.player;
-    const g = buildRookGraph(() => p.context(), ROOK_ABILITIES, this.loadout);
+    const g = buildRookGraph(() => p.context(), ROOK_ABILITIES, this.loadout, { ultimate: this.ultimate });
     g.runner = p.runner;
     p.controller.resolver = g;
   }
@@ -421,8 +427,9 @@ export class World {
 
   /** A spell hit grants its page experience (until it evolves). */
   _pageXp(ability) {
+    if (!this.pageGrowth) return;
     for (const [slot, ab] of Object.entries(this.loadout)) {
-      if (ab.id !== ability.id) continue;
+      if (ab?.id !== ability.id) continue;
       const page = this.pages[slot];
       if (page.branch || page.ready) return;
       page.xp++;
@@ -678,7 +685,7 @@ export class World {
         let o = 0;
         if (f.counterFrames > 0) o |= mask(Intent.Light);
         if (f.grounded && this.brokenTarget(f)) o |= mask(Intent.Heavy);
-        if (f.grounded && f.surge?.isFull) o |= mask(Intent.Ultimate); // the ultimate cuts through anything
+        if (f.grounded && f.surge?.isFull && this.ultimate) o |= mask(Intent.Ultimate); // the ultimate cuts through anything
         f.controller.overrideMask = o;
         if (f.mana) f.mana.add(f.stats.manaRegenPerSecond * SECONDS_PER_TICK);
       }
@@ -862,7 +869,7 @@ export class World {
 
   _surge(amount) {
     const s = this.player.surge;
-    if (!s || amount <= 0) return;
+    if (!s || amount <= 0 || !this.ultimate) return;
     const was = s.isFull;
     s.add(amount);
     if (!was && s.isFull) this.emit({ type: "surgeFull" });

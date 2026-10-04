@@ -111,7 +111,7 @@ export const TOON_SCENE = { lightDir: [0.45, 1, -0.35], fogColor: "#141826", fog
 const toonMaterials = [];
 
 /** Cel-shading v2 material for characters. `gloss`: anime hair highlights. */
-export function toon2(scene, name, hex, { gloss = false, rim = 0.45 } = {}) {
+export function toon2(scene, name, hex, { gloss = false, rim = 0.45, softShadow = 0 } = {}) {
   const BB = B();
   if (!BB.Effect.ShadersStore.toon2VertexShader) {
     BB.Effect.ShadersStore.toon2VertexShader = TOON_VS;
@@ -124,7 +124,7 @@ export function toon2(scene, name, hex, { gloss = false, rim = 0.45 } = {}) {
   });
   const T = TOON_SCENE;
   m.setColor3("baseColor", color3(hex));
-  m.setColor3("shadowColor", shadowOf(hex));
+  m.setColor3("shadowColor", softShadow ? BB.Color3.Lerp(shadowOf(hex), color3(hex), softShadow) : shadowOf(hex)); // faces: a lighter shadow
   m.setVector3("lightDir", new BB.Vector3(...T.lightDir));
   m.setColor3("rimColor", new BB.Color3(0.72, 0.84, 1.0));
   m.setColor3("glossColor", glossOf(hex));

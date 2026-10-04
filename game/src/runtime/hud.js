@@ -145,6 +145,8 @@ export class Hud {
     this.spells.forEach((sp, i) => {
       const el = this.spellEls[i];
       const ab = world.loadout[sp.slot], page = world.pages[sp.slot], def = world.pageDefs[sp.slot];
+      this.set(`sph${i}`, el, "hidden", !ab); // a locked page has no chip
+      if (!ab) return;
       const name = page.branch ? def.branches.find((b) => b.key === page.branch).name : sp.short;
       const cls = `spell${p.mana.current >= ab.manaCost ? "" : " low"}${page.ready ? " ready" : ""}${page.branch ? " evolved" : ""}`;
       this.set(`sp${i}`, el, "class", cls);

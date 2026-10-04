@@ -1,4 +1,4 @@
-<title>Unwritten Combat Sandbox</title>
+<title>Unwritten</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,6 +18,7 @@
 :root[data-theme="dark"] { --ink: #0f1117; --panel: #171a23; --text: #ece6d6; }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; background: var(--ink); color: var(--text); overflow: hidden; }
 body { font-family: var(--font-body); -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 .app { position: fixed; inset: 0; overflow: hidden; background: var(--ink); }
@@ -226,13 +227,13 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .is-touch .combo b { font-size: 44px; }
 
 /* Start and help */
-.start { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 40%, rgba(31, 35, 48, 0.75), rgba(15, 17, 23, 0.96)); cursor: pointer; transition: opacity 400ms; padding: 16px; }
+.start { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 40%, rgba(31, 35, 48, 0.75), rgba(15, 17, 23, 0.96)); cursor: pointer; transition: opacity 400ms; padding: 16px; }
 .start.gone { opacity: 0; pointer-events: none; }
 .start-card { text-align: center; max-width: 560px; }
 .start h1 { margin: 0; font: 400 clamp(42px, 11vw, 88px)/1 var(--font-display); letter-spacing: 0.2em; color: var(--text); text-shadow: 0 0 40px rgba(230, 181, 78, 0.35); }
 .start .sub { font: 400 clamp(14px, 3.4vw, 18px)/1.4 var(--font-display); color: var(--lantern); letter-spacing: 0.2em; margin: 10px 0 26px; }
 .start p { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 6px 0; }
-.start .go, .modal .go { display: inline-block; margin-top: 22px; font: 600 13px/1 var(--font-mono); letter-spacing: 0.3em; color: var(--ink); background: var(--lantern); padding: 12px 18px; border-radius: 999px; animation: pulse 0.9s ease-in-out infinite alternate; }
+.start .go, .modal .go, .preview .go { display: inline-block; margin-top: 22px; font: 600 13px/1 var(--font-mono); letter-spacing: 0.3em; color: var(--ink); background: var(--lantern); padding: 12px 18px; border-radius: 999px; animation: pulse 0.9s ease-in-out infinite alternate; }
 .help { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(10, 11, 16, 0.82); padding: 16px; z-index: 5; }
 .help[hidden] { display: none; }
 .help-card { max-width: 760px; width: 100%; max-height: calc(100% - 16px); overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; }
@@ -257,6 +258,90 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
   .cutin { top: 22%; }
   .cutin b { font-size: 20px; }
 }
+
+/* ---- Story mode (Phase 3) ---- */
+.story { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
+.letterbox { position: absolute; left: 0; right: 0; height: 0; background: #05060a; transition: height 380ms ease; }
+.letterbox.top { top: 0; } .letterbox.bottom { bottom: 0; }
+.in-scene .letterbox { height: 7vh; }
+.in-scene .hud-top, .in-scene .combo, .in-scene .touch, .in-scene .fd, .in-scene .prompt, .in-scene .target-card, .in-scene .bossbar { opacity: 0; pointer-events: none !important; }
+.in-scene .touch * { pointer-events: none !important; }
+.no-ult .bar.surge, .no-ult .b-ult { display: none; }
+.solo .party, .solo .b-bas, .solo .b-juno, .solo .b-stance { display: none; }
+.spell[hidden] { display: none; }
+[data-locked~="Spell2"] .b-pull, [data-locked~="Spell3"] .b-edge, [data-locked~="Spell4"] .b-wall, [data-locked~="pages"] .b-page { display: none; }
+.dialog { position: absolute; left: 50%; bottom: calc(7vh + 14px); transform: translateX(-50%); width: min(860px, calc(100vw - 32px));
+  background: linear-gradient(180deg, rgba(20, 22, 32, 0.94), rgba(12, 13, 19, 0.94)); border: 1px solid #3a3f55; border-left: 3px solid var(--lantern);
+  border-radius: 12px; padding: 22px 22px 18px; pointer-events: auto; cursor: pointer; min-height: 112px; }
+.dialog[hidden] { display: none; }
+.plate { position: absolute; top: -14px; left: 16px; font: 400 14px/1 var(--font-display); letter-spacing: 0.16em; color: var(--ink);
+  background: var(--lantern); padding: 7px 12px 6px; border-radius: 6px; }
+.plate:empty { display: none; }
+.say { margin: 0; font: 400 clamp(15px, 2.1vw, 18px)/1.65 var(--font-body); color: var(--text); min-height: 2.6em; }
+.say.narration { font-style: italic; color: #c9cede; }
+.more { position: absolute; right: 16px; bottom: 10px; color: var(--lantern); font-size: 12px; animation: bob 0.7s ease-in-out infinite alternate; }
+.more[hidden] { display: none; }
+@keyframes bob { from { transform: translateY(0); } to { transform: translateY(3px); } }
+.choices { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.choices:empty { display: none; }
+.choices button { width: 100%; text-align: left; font: 400 15px/1.4 var(--font-body); color: var(--text); background: #1d2131; border: 1px solid #343a50;
+  border-radius: 8px; padding: 10px 12px 10px 38px; cursor: pointer; position: relative; }
+.choices button::before { content: attr(data-n); position: absolute; left: 12px; top: 10px; font: 600 12px/1.6 var(--font-mono); color: var(--muted); }
+.choices button.sel, .choices button:hover { border-color: var(--lantern); background: #282b3c; }
+.choices button.sel::before { color: var(--lantern); }
+.choices button:disabled { opacity: 0.4; cursor: default; }
+.skip { position: absolute; right: 14px; top: -14px; font: 600 11px/1 var(--font-mono); letter-spacing: 0.14em; color: var(--muted); background: #141722;
+  border: 1px solid #343a50; border-radius: 999px; padding: 6px 10px; cursor: pointer; pointer-events: auto; }
+.hint-pill { position: absolute; left: 50%; top: 18%; transform: translate(-50%, -6px); opacity: 0; transition: opacity 260ms, transform 260ms;
+  font: 400 14px/1.4 var(--font-body); background: rgba(15, 17, 23, 0.9); border: 1px solid var(--gale); color: var(--text); padding: 9px 16px; border-radius: 999px;
+  max-width: calc(100vw - 32px); text-align: center; }
+.hint-pill.show { opacity: 1; transform: translate(-50%, 0); }
+.hint-pill b { color: var(--gale); font-family: var(--font-mono); }
+.coldopen { position: absolute; inset: 0; background: #040306; display: grid; place-items: center; pointer-events: auto; cursor: pointer; overflow: hidden; }
+.coldopen[hidden] { display: none; }
+.coldopen .fire { position: absolute; inset: 40% -10% -10%; opacity: 0; transition: opacity 1.6s;
+  background: radial-gradient(ellipse 60% 70% at 30% 100%, rgba(255, 120, 40, 0.75), transparent 70%), radial-gradient(ellipse 50% 60% at 75% 100%, rgba(255, 70, 30, 0.6), transparent 70%),
+  radial-gradient(ellipse 80% 50% at 50% 100%, rgba(255, 190, 90, 0.5), transparent 70%); filter: blur(6px); animation: flicker 0.18s steps(2) infinite; }
+.coldopen.fire .fire { opacity: 1; }
+@keyframes flicker { 0% { transform: translateY(0) scaleY(1); } 100% { transform: translateY(-4px) scaleY(1.03); } }
+.coldopen .silhouette { position: absolute; left: 50%; bottom: 14%; width: 46px; height: 150px; margin-left: -23px; opacity: 0; transition: opacity 2s, transform 6s linear;
+  background: #020203; border-radius: 22px 22px 6px 6px; box-shadow: 0 0 0 1px rgba(255, 140, 60, 0.25); }
+.coldopen .silhouette::before { content: ""; position: absolute; left: 6px; top: -30px; width: 34px; height: 34px; border-radius: 50%; background: #020203; }
+.coldopen .silhouette::after { content: ""; position: absolute; left: -6px; top: 46px; width: 34px; height: 26px; border-radius: 14px; background: #020203; }
+.coldopen.figure .silhouette { opacity: 1; transform: translateY(-10px) scale(1.12); }
+.coldopen p { position: relative; max-width: 640px; padding: 0 24px; text-align: center; font: 400 clamp(16px, 2.6vw, 22px)/1.7 var(--font-display); color: #efe3cf;
+  letter-spacing: 0.04em; text-shadow: 0 2px 12px #000; transition: opacity 500ms; }
+.coldopen p.caps { letter-spacing: 0.3em; color: var(--lantern); }
+.titlecard { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; background: #0a0b10; pointer-events: auto; cursor: pointer; overflow: hidden; }
+.titlecard[hidden] { display: none; }
+.titlecard b::after { content: ""; display: block; height: 6px; width: 72%; margin: 16px auto 0; background: var(--lantern); transform: skewX(-24deg) scaleX(0);
+  transform-origin: left; animation: swipe 650ms 650ms cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes swipe { to { transform: skewX(-24deg) scaleX(1); } }
+.titlecard span, .titlecard b, .titlecard i { position: relative; display: block; opacity: 0; animation: rise 500ms forwards; }
+.titlecard span { font: 600 13px/1 var(--font-mono); letter-spacing: 0.5em; color: var(--lantern); animation-delay: 300ms; }
+.titlecard b { font: 400 clamp(30px, 7vw, 68px)/1.15 var(--font-display); letter-spacing: 0.08em; margin: 18px 16px; color: #fff; text-shadow: 0 4px 0 #0a0b10, 0 0 30px rgba(0,0,0,0.8); animation-delay: 520ms; }
+.titlecard i { font: 400 15px/1 var(--font-display); font-style: normal; letter-spacing: 0.2em; color: var(--lantern); animation-delay: 800ms; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.preview { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; padding: 24px; background: radial-gradient(ellipse at 50% 40%, #1b1f2e, #08090d); pointer-events: auto; }
+.preview[hidden] { display: none; }
+.preview h2 { margin: 0 0 22px; font: 400 clamp(26px, 6vw, 52px)/1.1 var(--font-display); letter-spacing: 0.12em; color: var(--lantern); transform: rotate(-3deg); }
+.preview p { margin: 6px auto; max-width: 560px; font: 400 17px/1.6 var(--font-body); color: var(--text); opacity: 0; transition: opacity 600ms; }
+.preview p.on { opacity: 1; }
+.preview b { display: block; margin-top: 20px; font: 400 20px/1.3 var(--font-display); letter-spacing: 0.1em; color: #fff; opacity: 0; transition: opacity 600ms; }
+.preview b.on { opacity: 1; }
+.create-card label { display: block; text-align: left; font: 600 11px/1 var(--font-mono); letter-spacing: 0.2em; color: var(--muted); margin: 16px 0 8px; }
+.create-card input { width: 100%; font: 400 18px/1 var(--font-body); color: var(--text); background: #0f1117; border: 1px solid var(--line); border-radius: 8px; padding: 12px; user-select: text; -webkit-user-select: text; }
+.create-card input:focus { outline: 2px solid var(--lantern); outline-offset: 1px; }
+.pron { display: flex; gap: 8px; } .pron button { flex: 1; font: 400 15px/1 var(--font-body); color: var(--text); background: #1d2131; border: 1px solid #343a50; border-radius: 8px; padding: 12px 6px; cursor: pointer; }
+.pron button[aria-pressed="true"] { border-color: var(--lantern); background: #2a2a2a; color: var(--lantern); }
+.create-card .note { font-size: 12px; color: var(--muted); text-align: left; margin: 10px 0 0; line-height: 1.5; }
+@media (max-width: 600px) {
+  .dialog { bottom: calc(7vh + 8px); padding: 20px 14px 14px; }
+  .choices button { font-size: 14px; padding: 12px 10px 12px 32px; }
+  .hint-pill { top: 22%; font-size: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) { .titlecard b::after, .titlecard span, .titlecard b, .titlecard i { animation-duration: 1ms; } .coldopen .fire { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .toast.show, .wave.show { animation-duration: 1.4s; } .prompt.finisher, .start .go { animation: none; } }
 </style>
 
@@ -411,17 +496,55 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
     </div>
   </div>
 
+
+  <div class="story" data-story>
+    <div class="letterbox top"></div><div class="letterbox bottom"></div>
+    <div class="hint-pill" data-hint></div>
+    <div class="dialog" data-dialog hidden>
+      <div class="plate" data-plate></div>
+      <button class="skip" data-skip title="Fast-forward to the next choice">SKIP ▸▸</button>
+      <p class="say" data-say></p>
+      <ol class="choices" data-choices></ol>
+      <span class="more" data-more>▼</span>
+    </div>
+    <div class="coldopen" data-coldopen hidden><div class="fire"></div><div class="silhouette"></div><p data-co-text></p></div>
+    <div class="titlecard" data-titlecard hidden><span data-tc-ep>EPISODE 1</span><b data-tc-title>THE TOWER OF CHOOSING</b><i data-tc-arc></i></div>
+    <div class="preview" data-preview hidden>
+      <h2>WHAT HAPPENS NEXT?</h2>
+      <div data-pv-lines></div>
+      <b data-pv-next></b>
+      <div class="start-buttons" data-pv-buttons></div>
+    </div>
+  </div>
+  <div class="modal" data-create hidden>
+    <div class="modal-card create-card">
+      <h2>WHO CLIMBS THE TOWER?</h2>
+      <label for="pc-name">NAME</label>
+      <input id="pc-name" data-pc-name maxlength="16" value="Rook" autocomplete="off" spellcheck="false">
+      <label>PRONOUNS</label>
+      <div class="pron" data-pc-pron>
+        <button data-p="he" aria-pressed="false">he / him</button>
+        <button data-p="she" aria-pressed="false">she / her</button>
+        <button data-p="they" aria-pressed="true">they / them</button>
+      </div>
+      <p class="note">Everyone in the story will use these. Nobody says your name out loud: they'll call you "kid", "rookie", or "Lantern".</p>
+      <div class="start-buttons"><button class="go" data-pc-begin>BEGIN EPISODE 1</button><button class="go alt" data-pc-back>BACK</button></div>
+    </div>
+  </div>
   <div class="start" data-start>
     <div class="start-card">
       <h1>UNWRITTEN</h1>
       <div class="sub">KNIGHTS OF THE LAST LANTERN</div>
-      <p><b>Episode 4 · The Village That Wasn't There.</b> Lead Bas and Juno through six fights in the Greywater Fens, then face Hask the Bogwarden. Around 12 minutes.</p>
+      <p><b>Story:</b> begin at Episode 1, the Tower of Choosing, where you're handed a grimoire with one page. Your progress saves itself.</p>
+      <p><b>Episode 4 combat run:</b> lead Bas and Juno through the Greywater Fens to Hask the Bogwarden (about 12 minutes).</p>
       <p>Keyboard and mouse, gamepad, or touch. Press <b>H</b> or <b>?</b> for controls.</p>
       <div class="start-buttons">
-        <button class="go" data-start-run>PLAY EPISODE 4</button>
+        <button class="go" data-continue hidden>CONTINUE</button>
+        <button class="go" data-start-story>NEW STORY</button>
+        <button class="go alt" data-start-run>EPISODE 4 RUN</button>
         <button class="go alt" data-start-yard>TRAINING YARD</button>
       </div>
-      <p class="hint">Enter, or any attack button, starts the episode.</p>
+      <p class="hint" data-start-hint>Enter, or any attack button, starts the story.</p>
     </div>
   </div>
 </div>

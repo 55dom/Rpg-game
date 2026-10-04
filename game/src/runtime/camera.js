@@ -38,6 +38,17 @@ export class FollowCamera {
 
   get inShot() { return !!this.shot; }
 
+  /**
+   * Scripted framing for story scenes: hold the camera at `pos` looking at `look`.
+   * cut=true jumps there; otherwise it eases. release() hands back to gameplay with a blend.
+   */
+  frame(pos, look, { fov = this.baseFov * 0.8, cut = false, ease = 3 } = {}) {
+    const first = !this.scripted;
+    this.scripted = { pos: { ...pos }, look: { ...look }, fov, ease, cut: cut || first };
+  }
+  release() { if (this.scripted) { this.scripted = null; this.returnBlend = 1; } }
+  get isScripted() { return !!this.scripted; }
+
   _shotTarget(s, p, yaw) {
     const f = { x: Math.sin(yaw), z: Math.cos(yaw) };
     let ang;
@@ -63,6 +74,21 @@ export class FollowCamera {
   }
 
   update(dt, playerPos, lockPos, look, playerYaw = 0) {
+    if (this.scripted && !this.shot) {
+      const s = this.scripted;
+      const k = s.cut ? 1 : 1 - Math.exp(-s.ease * dt);
+      s.cut = false;
+      for (const a of ["x", "y", "z"]) { this.shotPos[a] = lerp(this.shotPos[a], s.pos[a], k); this.shotLook[a] = lerp(this.shotLook[a], s.look[a], k); }
+      const sh = this.trauma * this.trauma * 0.3;
+      this.t += dt;
+      this.cam.position.set(this.shotPos.x + Math.sin(this.t * 71) * sh, this.shotPos.y + Math.sin(this.t * 83) * sh, this.shotPos.z);
+      this.cam.setTarget(this.shotLook);
+      this.cam.fov = lerp(this.cam.fov, s.fov, k);
+      this.trauma = Math.max(0, this.trauma - dt * 2.2);
+      this.yaw = playerYaw;
+      this.focus.set(playerPos.x, playerPos.y * 0.6 + 1.3, playerPos.z);
+      return;
+    }
     if (this.shot) {
       const s = this.shot;
       s.t += dt;

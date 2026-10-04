@@ -132,5 +132,41 @@ The build now refuses to write a page whose script doesn't parse (`build.mjs`).
 
 The start screen has two buttons: **Play Episode 4** (the run) and the training yard (sandbox). **P** opens the pages; on a gamepad it's the View button.
 
+## Phase 3, Step 1: the story engine
+| Feature | Where |
+|---|---|
+| Flags and the condition language | `core/flags.js` |
+| Dialogue scripts: parser, runner, pronoun tokens | `core/script.js` |
+| Saves (versions, migrations, slots) | `core/save.js` |
+| Episode beats (cold open, title, scene, fight, preview) | `sim/episode.js` |
+| Cast (speaker names and colors) | `data/story/cast.js` |
+| Episode 1 script and beats | `data/story/ep1.js` |
+| Dialogue box, stage actors, camera shots, story flow | `runtime/story.js` |
+
+### Writing dialogue
+Scripts are plain text inside `data/story/epN.js`. A node looks like this:
+
+```
+title: Ep1_Steps
+---
+Severin: Thornwick mud on your boots.        speaker: line
+A crowd murmurs.                             narration (no speaker)
+FIFTEEN YEARS LATER                          all caps narration = a big caption
+-> "Say that again." #bold                   an option (indent its replies under it)
+    Severin: Gladly.
+-> Walk away. <<if $MET_MOSS>> #wry          an option only shown when the condition holds
+<<set $SEVERIN_RILED to 1>>
+<<if $EXAM_DUEL_WON>> … <<else>> … <<endif>>
+<<shot on Severin>>  <<shot two Severin Rook>>  <<shot wide>>
+<<fx book Rook>>  <<sfx hymn>>  <<wait 1>>  <<jump Ep1_Ceremony>>
+===
+```
+
+- **Player name and pronouns:** `{name}`, `{they}` / `{them}` / `{their}` / `{theirs}` / `{themself}`. Capitalize for sentence starts (`{They}`).
+- **Verb agreement:** `{is}`, `{was}`, `{has}`, and `walk{s}` (they walk / she walks).
+- **Temper tags:** `#bold`, `#earnest`, and `#wry` on an option raise that Temper flag when it's picked.
+- **Speakers:** every speaker must exist in `data/story/cast.js`. The tests check this.
+- **Spoilers:** keep comments in story data spoiler-free. Players can read the page source (GDD §15.11).
+
 ## Publishing the artifact
 `npm run build` also writes `dist/fragment.html` (the page without its outer `<html>` shell). That file is what gets published to the Claude artifact link.

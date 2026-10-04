@@ -42,6 +42,13 @@ export const LOOKS = {
     head: "lump", weapon: "claw", shoulders: 1.55, accent: "#2f3324", eyes: "#d8ff6a", trail: "#a6c96a" },
   hask: { poses: HASK_POSES, scale: 2.0, skirt: 1.7, coat: "#3d4934", trim: "#5c4a2e", hairColor: "#2c3524", skin: "#3d4934",
     head: "lump", weapon: "claw", shoulders: 1.7, accent: "#262b1d", eyes: "#ffb347", trail: "#c9a24a", mound: true },
+  // Story cast (Phase 3). Poses borrow Rook's rest stance until they get their own moves.
+  severin: { poses: ROOK_POSES, scale: 1.02, skirt: 0.9, coat: "#ece8f4", trim: "#d4ad4f", hairColor: "#e6d6a2", skin: "#f2d7c2",
+    head: "face", hair: "swept", scarf: false, weapon: "needle", accent: "#d4ad4f", cape: "#2c3a6e", trail: "#fff1b8" },
+  moss: { poses: ACOLYTE_POSES, scale: 0.9, skirt: 1.1, coat: "#6b5236", trim: "#8f7c58", hairColor: "#cfcbc2", skin: "#e8c8a8",
+    head: "face", hair: "crop", weapon: "broom", accent: "#b89a5a", stoop: 0.22, trail: "#e8d6a0" },
+  herald: { poses: ACOLYTE_POSES, scale: 1.05, skirt: 1.15, coat: "#3b2f62", trim: "#d4ad4f", hairColor: "#3a281e", skin: "#d9a98a",
+    head: "face", hair: "crop", weapon: "none", sash: true, trail: "#d4ad4f" },
   juno: { poses: JUNO_POSES, scale: 0.93, skirt: 0.9, coat: "#2b3a5c", trim: "#c8414f", hairColor: "#8a3a22", skin: "#f3d5bf",
     head: "face", hair: "sidetail", scarf: true, weapon: "needle", accent: "#c8414f", trail: "#ff6f86" },
 };
@@ -69,7 +76,7 @@ export class Rig {
     const coat = M("coat", L.coat);
     const trim = M("trim", L.trim);
     const dark = toon(scene, `${id}-dark`, L.hairColor, { gloss: L.head === "face" }); // hair gets the anime gloss
-    const skin = M("skin", L.skin);
+    const skin = toon(scene, `${id}-skin`, L.skin, { softShadow: 0.62 });
     const steel = M("steel", PALETTE.steel);
     const accent = L.accent ? M("accent", L.accent) : trim;
 
@@ -112,6 +119,9 @@ export class Rig {
           c.rotation.set(rx, 0, rz);
           c.material = dark;
         }
+      } else if (L.hair === "swept") { // a noble's swept fringe falling over one eye
+        const sweep = add(MB.CreateSphere("sweep", { diameter: 0.3, segments: 8 }, scene), this.head, -0.07, 0.13, 0.12, 0.015);
+        sweep.scaling.set(1.15, 0.45, 0.75); sweep.rotation.set(0.35, 0.2, 0.4); sweep.material = dark;
       } else if (L.hair === "crop") {
         cap.scaling.set(1.02, 0.86, 1); // close-cropped and flat on top
         cap.position.y = 0.04;
@@ -165,6 +175,12 @@ export class Rig {
       this.scarfTail = tail;
     }
 
+    if (L.cape) { // a short noble's cape off one shoulder
+      const cape = add(MB.CreateCylinder("cape", { height: 1.0, diameterTop: 0.5, diameterBottom: 0.75, tessellation: 10, arc: 0.5 }, scene), this.body, 0, 0.3, -0.06, 0.02);
+      cape.rotation.set(0.12, Math.PI / 2, 0); cape.material = M("cape", L.cape); // a half-cylinder draped over the back
+      this.cape = cape;
+    }
+
     // Weapon arm: shoulder pivot, arm along +Z, weapon beyond the hand.
     this.shoulder = new BB.TransformNode(`${id}-shoulder`, scene);
     this.shoulder.parent = this.body;
@@ -195,6 +211,14 @@ export class Rig {
         head.rotation.x = Math.PI / 2; head.material = steel;
       }
       tipZ = 0.64 + len * 0.8 + 0.3; hiltZ = 0.64 + len * 0.3;
+    } else if (L.weapon === "none") {
+      tipZ = 0.75; hiltZ = 0.6;
+    } else if (L.weapon === "broom") { // Brother Moss's broom: a plain handle and a straw head
+      const shaft = add(MB.CreateCylinder("broom", { height: 1.5, diameter: 0.045, tessellation: 6 }, scene), this.shoulder, 0, 0, 0.95, 0.015);
+      shaft.rotation.x = Math.PI / 2; shaft.material = M("broomShaft", "#7a5a38");
+      const straw = add(MB.CreateCylinder("straw", { height: 0.4, diameterTop: 0.08, diameterBottom: 0.3, tessellation: 8 }, scene), this.shoulder, 0, 0, 1.85, 0.015);
+      straw.rotation.x = Math.PI / 2; straw.material = M("straw", "#d9b866");
+      tipZ = 2; hiltZ = 0.6;
     } else if (L.weapon === "fist") {
       const gaunt = add(MB.CreateBox("gauntlet", { width: 0.3, height: 0.28, depth: 0.34 }, scene), this.shoulder, 0, 0, 0.66, 0.025);
       gaunt.material = accent;
@@ -400,7 +424,8 @@ export class Rig {
     this.mudRing.setEnabled(fighter.alive && fighter.tags.has("WEIGHTED"));
     this.root.rotation.y = lerpAngleSafe(fighter.prevYaw, fighter.yaw, t);
 
-    const { rot, lean, active, spin } = this.armPose(fighter, t);
+    let { rot, lean, active, spin } = this.armPose(fighter, t);
+    if (fighter.relaxed && !fighter.current) rot = RELAXED; // story scenes: weapon lowered
     this.shoulder.rotation.set(rot[0], rot[1], rot[2]);
     this.body.rotation.y = spin;
     if (this.skirt) this.skirt.rotation.y = spin;
@@ -419,7 +444,8 @@ export class Rig {
       bodyLean = -Math.min(1.45, this.deathT * 3.5);
       this.visibility = 1 - clamp01((fighter.deadFrames - 50) / 50);
     }
-    this.body.rotation.x = bodyLean;
+    this.body.rotation.x = bodyLean + (this.look.stoop ?? 0);
+    if (this.cape) this.cape.rotation.x = 0.12 + run * 0.6 + Math.sin(this.time * 7) * 0.04;
     this.body.position.y = this.bodyY + bob - (c.postureBroken ? 0.18 : 0);
     if (this.beastTail) this.beastTail.rotation.x = -2.1 + Math.sin(this.time * 10) * 0.25;
     if (this.legs) for (const hip of this.legs) hip.rotation.x = Math.sin(this.time * 16 + hip.phase) * 0.7 * run;
@@ -505,5 +531,6 @@ export class Rig {
   }
 }
 
+const RELAXED = [1.25, 0.15, 0.1];
 const mix = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k)];
 const lerpAngleSafe = (a, b, t) => a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * t;
