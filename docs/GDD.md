@@ -1,6 +1,8 @@
 # UNWRITTEN — Knights of the Last Lantern
 ### Game Design Document · Foundation Draft v1.2
 
+> **v1.3 changes:** The Clergy Duo's true look is set from owner reference art (§28, `docs/art/clergy-duo/`): black suits, white shirts, black ties, and white masks with painted, unchanging faces. The butler has long blue hair in a low ponytail and a cracked-grin mask with a red dot nose. The musician wears a long black skirt slit high at the side and a closed-eye smiling mask.
+
 > **v1.2 changes:** **Engine changed to Babylon.js (web).** The game runs in any modern browser on PC and phones, free to build and free to host, and is playable straight from a link (§20). The tested combat core was ported from C# to JavaScript with the same rules and tests. Phase 1 Step 3 is done: hit effects, impact frames, parry → counter, perfect dodge → Afterimage, posture break → Lantern Break, synthesized sound, touch controls (`docs/DEV.md`).
 
 > **v1.1 changes:** **Engine decided: Unity 6 LTS.** Platforms: **Windows PC** (lead) + **mobile (Android & iOS)**. Release builds compile to native C++ through **IL2CPP** (§20.2). New §20.3 (mobile design) and mobile performance budgets in §21.7. Phase 1 has started: see `docs/SETUP.md`.
@@ -1756,7 +1758,9 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 | **Now** | Archdemon, **5★**, intelligent for the first time | Archdemon, **5★**, intelligent for the first time |
 | **Collectively** | **The Clergy Duo** | |
 | **Concealed form** (CIN-05B) | Plain black suit, black shirt, tie, gloves, featureless black mask | The same |
-| **True outfit** (CIN-05C) | Immaculate black **butler's suit**: waistcoat, tie, gloves, black watch-chain | Black **maid's dress cut with a suit jacket and tie**, gloves, a slim black **instrument case** on her back |
+| **True outfit** (CIN-05C) | Black suit, **white shirt**, black tie, black shoes. **Long dark-blue hair**, a low ponytail to the knees. Walks with a hand in his pocket | The same black suit jacket, **white shirt** and black tie, with a **long black skirt slit high at the side**; a slim black **instrument case** on her back |
+| **Mask** (true form; never removed) | **White, cracked black lines over the eyes, a jagged painted grin, a red dot at the nose** | **Smooth white, closed crescent eyes, a wide serene smile** |
+| **Reference art** | `docs/art/clergy-duo/ref-01-suit-and-cracked-grin-mask.jpg` | Mask: `docs/art/clergy-duo/ref-02-smiling-mask.jpg`; suit top: ref-01 |
 | **Archdemon form** (CIN-05C) | Horns from the brow; the Commander's vast wings, from slits in the coat; mask stays on | The same |
 | **As shown** | Unhurried, precise; does the lifting; opens the path | Watchful; **turns back to look at Cal**; hums the army's march as a lullaby |
 | **Abilities shown** | **Time travel** and stopping time locally; travelling between worlds; the black circle; the Astral Path; changing form; concealing horns and wings. All of it is **the King's aura** | |
@@ -1781,7 +1785,7 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 | The King lies down in a black coffin; the lid closes | CIN-05B (cut 011a) |
 | After time resumes: the sealed coffin, the empty throne, the empty places beside it | CIN-05B (cut 050) |
 | A **language no one has heard**, never subtitled | CIN-05B, CIN-05C |
-| *(Cal's Path)* On a **dark astral path** past the **wreckage of other worlds**: **butler and maid** outfits, **horns**, **the Commanders' wings**; their excitement; the maid hums the march; Cal whistles it back; **★★★★★** through Cal's eyes; a doorway at the edge of the Continent | CIN-05C |
+| *(Cal's Path)* On a **dark astral path** past the **wreckage of other worlds**: their true **suits and white painted masks**, **horns**, **the Commanders' wings**; their excitement; the maid hums the march; Cal whistles it back; **★★★★★** through Cal's eyes; a doorway at the edge of the Continent | CIN-05C |
 
 ### 28.3 Design rules
 1. **Calm is the horror.** They never run, pose, shout, threaten, or fight on screen. They walk like people arriving at a meeting, even while transforming.
@@ -1802,7 +1806,7 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 | V2 | **The mural + a symbol** | Backlash Ch 3, the caverns | The filled black circle scratched beside a dead soldier's tallies; the mural of a King giving his aura to two Wings; a **memory splice** right after Cal studies it | Ancient history; a scratch |
 | V3 | **Records of disappearances** | Arc 6, Silent Quill archive (side quest) | Centuries of vanishings: witnesses report *"the world held its breath"* and *"two people dressed for a funeral, one of them humming."* One entry: a shepherd near Larkspur, fifteen years ago, *"lost a moment of time."* | Folk superstition, filed under *Unexplained* |
 | V4 | **Someone mentions "black figures"** | Arc 6, a stranded Demon Soldier in Liraen | *"The Wings left the King. Now the black ones come for those who fall wrong."* He won't say more | Battlefield superstition |
-| V5 | **Cal recognizes the clothing** | Arc 7, Juno's sketchbook | A stranger once commissioned two odd garments from Juno: a black butler's suit and a black maid's dress *with a tie*. Cal goes quiet for a full beat. *"Don't make those for anyone."* | Juno: *"…Fashion critic now?"* |
+| V5 | **Cal recognizes the clothing** | Arc 7, Juno's sketchbook | A stranger once commissioned two odd outfits from Juno: two black suits with ties, one cut with a **long skirt slit to the thigh**, and in the margin, two white masks, one **grinning**, one **smiling with its eyes closed**. Cal goes quiet for a full beat. *"Don't make those for anyone."* | Juno: *"…Fashion critic now?"* |
 | V6 | **Quiet about portals** | Arc 7 banter skit | Tamsin: *"Why don't you just portal us to the throne room?"* Cal: *"Doors, Tamsin. I make doors."* Not a joke, for once | He's touchy about his magic |
 | V7 | **Direct question** | Arc 7, after the alliance | Rook: *"The two in black. Who were they?"* Cal's smile falters, the only time in Arc 7. *"…Family. Sort of. Not yet."* | — |
 | V8 | **The sleeping King recognizes the language** | Arc 7, at the coffin | Cal mutters the three syllables he whispered as he "died." From inside the sealed coffin, **one word answers** in the same tongue. The archdemons go perfectly still. Cal, for once, says nothing | — |
