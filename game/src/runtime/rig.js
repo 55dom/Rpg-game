@@ -1,7 +1,7 @@
 // Procedural characters built from primitives, posed from ability frame data.
 // No skeletal art yet: silhouettes are designed to read at a glance (Phase 3 swaps in real models).
 
-import { B, PALETTE, toon, glow, inkOutline, refreshWorld, lerp, clamp01, easeOut, easeInOut } from "./look.js";
+import { B, PALETTE, toon2 as toon, glow, inkOutline, lineOf, refreshWorld, lerp, clamp01, easeOut, easeInOut } from "./look.js";
 import { ROOK_POSES } from "../data/rook.js";
 import { ACOLYTE_POSES } from "../data/acolyte.js";
 import { BAS_POSES, JUNO_POSES } from "../data/companions.js";
@@ -68,7 +68,7 @@ export class Rig {
 
     const coat = M("coat", L.coat);
     const trim = M("trim", L.trim);
-    const dark = M("dark", L.hairColor);
+    const dark = toon(scene, `${id}-dark`, L.hairColor, { gloss: L.head === "face" }); // hair gets the anime gloss
     const skin = M("skin", L.skin);
     const steel = M("steel", PALETTE.steel);
     const accent = L.accent ? M("accent", L.accent) : trim;
@@ -95,6 +95,11 @@ export class Rig {
         const eye = add(MB.CreateSphere("eye", { diameter: 0.09, segments: 6 }, scene), this.head, x, 0.03, 0.218, 0);
         eye.scaling.set(0.8, 1.4, 0.85); // must clear the face's ink-outline shell (+0.03) to show
         eye.material = eyeMat;
+        // Layered eye highlights (one big, one small), the anime glint.
+        const hl = add(MB.CreateSphere("eyeHi", { diameter: 0.032, segments: 4 }, scene), this.head, x + 0.018, 0.06, 0.255, 0);
+        hl.material = this.eyeHi ??= glow(scene, `${id}-eyeHi`, "#ffffff");
+        const hl2 = add(MB.CreateSphere("eyeHi2", { diameter: 0.016, segments: 4 }, scene), this.head, x - 0.014, 0.01, 0.255, 0);
+        hl2.material = this.eyeHi;
       }
       // Hair: a full sphere set back and up. The face sphere pokes out of its front, eyes included.
       const cap = add(MB.CreateSphere("hairCap", { diameter: 0.5, segments: 12 }, scene), this.head, 0, 0.06, -0.07, 0.02);
@@ -332,6 +337,9 @@ export class Rig {
       this.mound = m;
     }
     this.sink = 0;
+
+    // Tinted outlines: each part's line is its own color, darkened toward blue (not flat black).
+    for (const m of this.meshes) if (m.renderOutline && m.material?.toonHex) m.outlineColor = lineOf(m.material.toonHex);
 
     this.flash = 0;
     this.time = Math.random() * 10;

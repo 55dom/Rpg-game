@@ -121,5 +121,16 @@ Sandbox: press **B** to go straight to the boss. It's also wave 7 in `WAVES`.
 
 The build now refuses to write a page whose script doesn't parse (`build.mjs`).
 
+## Phase 2, Step 5: pages, cel-shading v2, the combat run
+| Feature | Where |
+|---|---|
+| Page branches and evolution data | `data/pages.js` |
+| Wind Wall, loadout swap, page XP, `evolvePage` | `data/rook.js`, `sim/world.js` |
+| Episode 4 run (encounters, lines, rests, retries, rank) | `data/run.js`, `sim/run.js` |
+| Toon shader v2 (shadows, rim, hair gloss, tinted lines, grade) | `runtime/look.js` (`toon2`) |
+| Pages modal, results screen, vignette | `template.html`, `main.js` |
+
+The start screen has two buttons: **Play Episode 4** (the run) and the training yard (sandbox). **P** opens the pages; on a gamepad it's the View button.
+
 ## Publishing the artifact
 `npm run build` also writes `dist/fragment.html` (the page without its outer `<html>` shell). That file is what gets published to the Claude artifact link.

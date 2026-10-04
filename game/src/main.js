@@ -8,7 +8,7 @@ import { ACOLYTE_ABILITIES } from "./data/acolyte.js";
 import { ROOK_ABILITIES } from "./data/rook.js";
 import { PAGES } from "./data/pages.js";
 import { EPISODE_4 } from "./data/run.js";
-import { B, PALETTE, glow, clamp01 } from "./runtime/look.js";
+import { B, PALETTE, glow, clamp01, toonFallbackIfBroken } from "./runtime/look.js";
 import { Rig, LOOKS } from "./runtime/rig.js";
 import { Vfx, Trail } from "./runtime/vfx.js";
 import { Sfx } from "./runtime/audio.js";
@@ -50,6 +50,8 @@ export function boot(doc = document) {
   camera.reduceMotion = reduced;
   const gl = new BB.GlowLayer("glow", scene, { mainTextureRatio: mobile ? 0.35 : 0.5, blurKernelSize: mobile ? 24 : 40 });
   gl.intensity = 0.75;
+  // Color grade (GDD §19.6.1) lives in the toon shader (saturation, cool shadows) plus a CSS vignette:
+  // a full-screen post-process fought the glow layer and washed the picture out.
 
   const hud = new Hud(root, SPELLS);
   const overlay = root.querySelector("[data-overlay]");
@@ -574,6 +576,7 @@ export function boot(doc = document) {
 
     if (impactLeft > 0) { impactLeft -= dt; if (impactLeft <= 0) canvas.style.filter = ""; }
     quality.update(dt);
+    if (!state.toonChecked && state.time > 1.5) { state.toonChecked = true; if (toonFallbackIfBroken(scene)) console.warn("toon shader failed; using classic cel shading"); }
     scene.render();
   });
   addEventListener("resize", () => engine.resize());
