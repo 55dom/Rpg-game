@@ -132,6 +132,8 @@ export function boot(doc = document) {
             if (e.key === "tempest") {
               for (const [h, s] of [[0.6, 4.6], [1.1, 5.2], [1.6, 4.2]]) vfx.ring({ x: f.pos.x, y: f.pos.y + h, z: f.pos.z }, s, PALETTE.gale, 0.45);
             }
+            if (e.key === "sing") vfx.ring({ x: f.pos.x, y: f.pos.y + 2.2, z: f.pos.z }, 1.6, "#c9a4ff", 0.4);
+            if (e.key === "mudwave") { vfx.ring({ x: f.pos.x, y: 0.08, z: f.pos.z }, 8, "#8a7a4a", 0.5); vfx.sparksAt({ x: f.pos.x, y: 0.3, z: f.pos.z }, 18, "gold", 10, 5); camera.shake(0.5); }
             if (e.key === "glint") { vfx.flash(head(f), 1.4, PALETTE.danger, 0.35); sfx.play("glint"); }
             if (e.key === "charge" && rig) { vfx.flash(rig.bladeWorld().tip, 2.2, PALETTE.lantern, 0.3); vfx.ring({ x: f.pos.x, y: 0.05, z: f.pos.z }, 4, PALETTE.lantern, 0.3); }
             if (e.key === "ultCharge") {
@@ -169,7 +171,7 @@ export function boot(doc = document) {
           viewFor(d)?.hitFlash(heavy ? 0.1 : 0.06);
           camera.shake(isPlayer(d) ? 0.35 : heavy ? 0.3 : 0.12);
           sfx.play(heavy ? "hitHeavy" : "hit", isPlayer(d) ? 1.1 : 1);
-          if (isPlayer(d)) hud.hurt(); else hud.setFocus(d);
+          if (isPlayer(d)) hud.hurt(); else if (d.team === Team.Enemy) hud.setFocus(d);
           if (finisher) {
             sfx.play("finisher"); impact(5, true); camera.kick(1);
             vfx.ring({ x: d.pos.x, y: 0.05, z: d.pos.z }, 9, PALETTE.lantern, 0.6);
@@ -232,6 +234,14 @@ export function boot(doc = document) {
         }
         case "allyDown": hud.toast(`${ev.fighter.stats.name.toUpperCase()} IS DOWN`, "danger"); break;
         case "allyRevive": hud.toast(`${ev.fighter.stats.name.toUpperCase()} IS BACK`, "clear"); break;
+        case "projectile": sfx.play("glint", 0.6); break;
+        case "deflect": vfx.flash(ev.at, 1.8, "#e9d8ff", 0.12); vfx.sparksAt(ev.at, 10, "white", 9, 2); vfx.number(ev.at, "DEFLECT", "text"); sfx.play("block"); break;
+        case "ward": {
+          sfx.play("heal");
+          for (const t of ev.targets) vfx.ring({ x: t.pos.x, y: 1.1, z: t.pos.z }, 2.2, "#b98cff", 0.5);
+          hud.pushLog(`Cantor: Hymn wards ${ev.targets.length}`);
+          break;
+        }
         case "stance": hud.toast(`STANCE: ${ev.stance.toUpperCase()}`, "afterimage"); break;
         case "perfectDodge": sfx.play("perfectDodge"); vfx.number(chest(world.player), "PERFECT", "text"); break;
         case "afterimage":
@@ -259,7 +269,7 @@ export function boot(doc = document) {
         case "wave": hud.banner(`WAVE ${ev.wave}`); sfx.play("wave"); break;
         case "waveClear":
           hud.toast("YARD CLEAR", "clear");
-          later(2.4, () => world.spawnWave(world.wave >= 3 ? 4 : 3));
+          later(2.4, () => world.spawnWave());
           break;
         case "playerDown":
           hud.toast("ROOK FALLS", "danger");
@@ -272,7 +282,8 @@ export function boot(doc = document) {
 
   function restart() {
     world.resetPlayer();
-    world.spawnWave(3);
+    world.wave = 0;
+    world.spawnWave();
     onEvents(world.drainEvents());
   }
 
@@ -309,7 +320,7 @@ export function boot(doc = document) {
     state.started = true;
     sfx.unlock();
     root.querySelector("[data-start]").classList.add("gone");
-    world.spawnWave(3);
+    world.spawnWave();
     onEvents(world.drainEvents());
   };
   controls.onFirstInput = start;
@@ -410,6 +421,7 @@ export function boot(doc = document) {
     if (camera.inShot && !(p.current?.surgeCost > 0)) { camera.cue("ult-return"); root.classList.remove("ult-desat"); } // safety: never strand the camera
     camera.update(dt, pr, lock?.pos ?? null, look, pyaw);
     root.classList.toggle("surge-full", !!p.surge?.isFull);
+    vfx.syncProjectiles(world.projectiles, dt);
     vfx.update(dt, camera.cam, engine);
     arena.update(dt, state.time);
     hud.update(dt, world, controls.device);

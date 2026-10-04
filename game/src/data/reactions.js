@@ -19,4 +19,7 @@ export const REACTIONS = defineReactions([
   // Heavy blow on an anchored target: the pillar shatters, spraying stone.
   { id: "Shatterstone", name: "Shatterstone", when: "ANCHORED", with: "heavy", consume: true,
     effect: { damage: 20, posture: 20, radius: 3, launch: 6, hitstop: 8 } },
+  // Wind scatters a Cantor's hymn: the ward breaks and the singer's flock reels.
+  { id: "Dispel", name: "Dispel", when: "WARDED", with: "gust", consume: true,
+    effect: { posture: 20, stagger: 30, hitstop: 5 } },
 ]);

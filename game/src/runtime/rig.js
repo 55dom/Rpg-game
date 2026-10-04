@@ -5,6 +5,7 @@ import { B, PALETTE, toon, glow, inkOutline, refreshWorld, lerp, clamp01, easeOu
 import { ROOK_POSES } from "../data/rook.js";
 import { ACOLYTE_POSES } from "../data/acolyte.js";
 import { BAS_POSES, JUNO_POSES } from "../data/companions.js";
+import { ENEMIES } from "../data/enemies.js";
 import { EventType } from "../core/abilities.js";
 
 /** Attacks animate over their active frames; a move counts as an attack if it hits (directly or via hitboxes). */
@@ -31,6 +32,13 @@ export const LOOKS = {
     skin: PALETTE.mask, head: "hood", sash: true, weapon: "blade", trail: "#ff5a4a" },
   bas: { poses: BAS_POSES, scale: 1.18, skirt: 1.05, coat: "#2b3a5c", trim: PALETTE.rookTrim, hairColor: "#1b1716", skin: "#6b4632",
     head: "face", hair: "crop", scarf: true, weapon: "fist", accent: "#8c909b", shoulders: 1.25, trail: "#e8b46a" },
+  hound: { poses: ENEMIES.hound.poses, scale: 1, form: "beast", fur: "#5b4b39", belly: "#8a7458", eyes: "#ffd25a", trail: "#ffb35a" },
+  cantor: { poses: ENEMIES.cantor.poses, scale: 1.05, skirt: 1.2, coat: "#d6cde6", trim: "#8a5fc0", hairColor: "#3d3050", skin: PALETTE.mask,
+    head: "hood", sash: true, weapon: "staff", halo: true, trail: "#b98cff" },
+  bulwark: { poses: ENEMIES.bulwark.poses, scale: 1.12, skirt: 1.2, coat: "#a3a9b5", trim: "#6b4f8a", hairColor: "#2f2a3a", skin: PALETTE.mask,
+    head: "hood", sash: true, weapon: "spear", shield: true, shoulders: 1.2, trail: "#c9b8ff" },
+  beast: { poses: ENEMIES.beast.poses, scale: 1.5, skirt: 1.5, coat: "#4e5a37", trim: "#6f5a3a", hairColor: "#3a4129", skin: "#4e5a37",
+    head: "lump", weapon: "claw", shoulders: 1.55, accent: "#2f3324", eyes: "#d8ff6a", trail: "#a6c96a" },
   juno: { poses: JUNO_POSES, scale: 0.93, skirt: 0.9, coat: "#2b3a5c", trim: "#c8414f", hairColor: "#8a3a22", skin: "#f3d5bf",
     head: "face", hair: "sidetail", scarf: true, weapon: "needle", accent: "#c8414f", trail: "#ff6f86" },
 };
@@ -48,10 +56,12 @@ export class Rig {
     this.root.scaling.setAll(L.scale);
     this.body = new BB.TransformNode(`${id}-body`, scene);
     this.body.parent = this.root;
-    this.body.position.y = 0.9;
+    this.bodyY = L.form === "beast" ? 0.62 : 0.9;
+    this.body.position.y = this.bodyY;
     this.meshes = [];
     const add = (m, parent, x, y, z, o) => { this.meshes.push(part(m, parent, x, y, z, o)); return m; };
     const M = (n, hex) => toon(scene, `${id}-${n}`, hex);
+    if (L.form === "beast") { this._buildBeast(scene, id, L, add, M); this._buildCommon(scene, id); return; }
 
     const coat = M("coat", L.coat);
     const trim = M("trim", L.trim);
@@ -108,6 +118,18 @@ export class Rig {
         bang.rotation.set(0.5, 0, -0.12);
         bang.material = dark;
       }
+    } else if (L.head === "lump") { // a mossy brute: no face, just a hunched lump and two glowing eyes
+      const lump = add(MB.CreateSphere("head", { diameter: 0.6, segments: 10 }, scene), this.head, 0, -0.08, 0.06);
+      lump.scaling.set(1.15, 0.85, 1); lump.material = dark;
+      const eyeMat = glow(scene, `${id}-eyes`, L.eyes);
+      for (const x of [-0.12, 0.12]) {
+        const eye = add(MB.CreateSphere("eye", { diameter: 0.09, segments: 6 }, scene), this.head, x, -0.02, 0.33, 0);
+        eye.material = eyeMat;
+      }
+      for (const [x, z] of [[-0.18, -0.1], [0.2, -0.05], [0, -0.22]]) { // moss tufts
+        const t = add(MB.CreateCylinder("moss", { height: 0.3, diameterTop: 0, diameterBottom: 0.18, tessellation: 5 }, scene), this.head, x, 0.18, z, 0.015);
+        t.rotation.x = -0.4; t.material = M("moss", "#6f8a3a");
+      }
     } else {
       const hood = add(MB.CreateCylinder("hood", { height: 0.7, diameterTop: 0, diameterBottom: 0.62, tessellation: 10 }, scene), this.head, 0, 0.12, -0.04);
       hood.material = dark;
@@ -145,7 +167,27 @@ export class Rig {
     const hand = add(MB.CreateSphere("hand", { diameter: 0.17, segments: 6 }, scene), this.shoulder, 0, 0, 0.64, 0.02);
     hand.material = L.head === "face" ? skin : dark;
     let tipZ = SWORD_TIP, hiltZ = SWORD_HILT + 0.15;
-    if (L.weapon === "fist") {
+    if (L.weapon === "claw") {
+      const claw = add(MB.CreateBox("claw", { width: 0.42, height: 0.32, depth: 0.42 }, scene), this.shoulder, 0, 0, 0.7, 0.025);
+      claw.material = accent;
+      for (const x of [-0.13, 0, 0.13]) {
+        const talon = add(MB.CreateCylinder("talon", { height: 0.42, diameterTop: 0, diameterBottom: 0.09, tessellation: 5 }, scene), this.shoulder, x, -0.04, 1.05, 0.015);
+        talon.rotation.x = Math.PI / 2; talon.material = M("talon", "#e7e1cf");
+      }
+      tipZ = 1.25; hiltZ = 0.7;
+    } else if (L.weapon === "staff" || L.weapon === "spear") {
+      const len = L.weapon === "staff" ? 1.7 : 2.1;
+      const shaft = add(MB.CreateCylinder("shaft", { height: len, diameter: 0.05, tessellation: 6 }, scene), this.shoulder, 0, 0, 0.64 + len * 0.3, 0.015);
+      shaft.rotation.x = Math.PI / 2; shaft.material = M("shaft", "#3b2f2a");
+      if (L.weapon === "staff") {
+        const orb = add(MB.CreateSphere("orb", { diameter: 0.2, segments: 8 }, scene), this.shoulder, 0, 0, 0.64 + len * 0.8, 0);
+        orb.material = glow(scene, `${id}-orb`, "#c9a4ff");
+      } else {
+        const head = add(MB.CreateCylinder("spearhead", { height: 0.36, diameterTop: 0, diameterBottom: 0.12, tessellation: 4 }, scene), this.shoulder, 0, 0, 0.64 + len * 0.8 + 0.18, 0.015);
+        head.rotation.x = Math.PI / 2; head.material = steel;
+      }
+      tipZ = 0.64 + len * 0.8 + 0.3; hiltZ = 0.64 + len * 0.3;
+    } else if (L.weapon === "fist") {
       const gaunt = add(MB.CreateBox("gauntlet", { width: 0.3, height: 0.28, depth: 0.34 }, scene), this.shoulder, 0, 0, 0.66, 0.025);
       gaunt.material = accent;
       tipZ = 0.95; hiltZ = 0.55;
@@ -166,7 +208,19 @@ export class Rig {
     offArm.rotation.set(0.35, 0, 0.25);
     offArm.material = coat;
     this.offArm = offArm;
-    if (L.weapon === "fist") { // a second gauntlet on the off hand
+    if (L.shield) { // a tower shield held on the off arm, always toward the front
+      const sh = add(MB.CreateBox("shield", { width: 0.85, height: 1.35, depth: 0.1 }, scene), this.body, -0.18, 0.35, 0.45, 0.03);
+      sh.material = accent;
+      const boss = add(MB.CreateCylinder("boss", { height: 0.06, diameter: 0.3, tessellation: 10 }, scene), sh, 0, 0.1, 0.07, 0.015);
+      boss.rotation.x = Math.PI / 2; boss.material = M("boss", PALETTE.rookTrim);
+      this.shieldMesh = sh;
+    }
+    if (L.halo) { // the Choir's singing halo
+      const halo = MB.CreateTorus(`${id}-halo`, { diameter: 0.6, thickness: 0.03, tessellation: 24 }, scene);
+      halo.material = glow(scene, `${id}-haloMat`, "#c9a4ff"); halo.parent = this.head; halo.position.y = 0.55; halo.isPickable = false;
+      this.halo = halo;
+    }
+    if (L.weapon === "fist" || L.weapon === "claw") { // a second gauntlet on the off hand
       const g2 = add(MB.CreateBox("gauntlet2", { width: 0.28, height: 0.26, depth: 0.3 }, scene), offArm, 0, -0.34, 0, 0.025);
       g2.material = accent;
     }
@@ -184,6 +238,48 @@ export class Rig {
       this.grimoireGlow = 0;
     }
 
+    this._buildCommon(scene, id);
+  }
+
+  /** A four-legged body (Fen Hound). The "shoulder" is the neck, so poses swing the head; the jaw is the weapon tip. */
+  _buildBeast(scene, id, L, add, M) {
+    const BB = B(), MB = BB.MeshBuilder;
+    const fur = M("fur", L.fur), belly = M("belly", L.belly);
+    const torso = add(MB.CreateCapsule("torso", { height: 1.3, radius: 0.26, tessellation: 10 }, scene), this.body, 0, 0, 0);
+    torso.rotation.x = Math.PI / 2; torso.material = fur;
+    const chest = add(MB.CreateSphere("chest", { diameter: 0.55, segments: 8 }, scene), this.body, 0, 0.02, 0.35, 0.02);
+    chest.material = belly;
+    this.legs = [[0.17, 0.45], [-0.17, 0.45], [0.17, -0.45], [-0.17, -0.45]].map(([x, z], i) => {
+      const hip = new BB.TransformNode(`${id}-hip${i}`, scene); hip.parent = this.root; hip.position.set(x, 0.55, z);
+      const leg = add(MB.CreateCapsule("leg", { height: 0.6, radius: 0.07, tessellation: 6 }, scene), hip, 0, -0.27, 0, 0.02);
+      leg.material = fur;
+      hip.phase = i === 0 || i === 3 ? 0 : Math.PI;
+      return hip;
+    });
+    const tail = add(MB.CreateCylinder("tail", { height: 0.6, diameterTop: 0.02, diameterBottom: 0.12, tessellation: 6 }, scene), this.body, 0, 0.12, -0.75, 0.02);
+    tail.rotation.x = -2.1; tail.material = fur;
+    this.beastTail = tail;
+    // Neck pivot with head and jaw.
+    this.shoulder = new BB.TransformNode(`${id}-neck`, scene);
+    this.shoulder.parent = this.body; this.shoulder.position.set(0, 0.14, 0.55);
+    this.head = this.shoulder;
+    const head = add(MB.CreateSphere("head", { diameter: 0.38, segments: 8 }, scene), this.shoulder, 0, 0.08, 0.2);
+    head.material = fur;
+    const snout = add(MB.CreateBox("snout", { width: 0.18, height: 0.15, depth: 0.3 }, scene), this.shoulder, 0, 0.02, 0.45, 0.02);
+    snout.material = belly;
+    for (const x of [-0.11, 0.11]) {
+      const ear = add(MB.CreateCylinder("ear", { height: 0.2, diameterTop: 0, diameterBottom: 0.1, tessellation: 4 }, scene), this.shoulder, x, 0.28, 0.12, 0.015);
+      ear.material = fur;
+      const eye = add(MB.CreateSphere("eye", { diameter: 0.06, segments: 5 }, scene), this.shoulder, x * 0.8, 0.13, 0.36, 0);
+      eye.material = glow(scene, `${id}-eye`, L.eyes);
+    }
+    this.tipNode = new BB.TransformNode(`${id}-tip`, scene); this.tipNode.parent = this.shoulder; this.tipNode.position.z = 0.65;
+    this.hiltNode = new BB.TransformNode(`${id}-hilt`, scene); this.hiltNode.parent = this.shoulder; this.hiltNode.position.z = 0.3;
+  }
+
+  /** Indicators and shadow shared by every form. */
+  _buildCommon(scene, id) {
+    const BB = B(), MB = BB.MeshBuilder;
     // Soft blob shadow: cheap, and makes jumps readable.
     const shadow = MB.CreateDisc(`${id}-shadow`, { radius: 0.55, tessellation: 20 }, scene);
     shadow.rotation.x = Math.PI / 2;
@@ -199,6 +295,11 @@ export class Rig {
     mark.parent = this.root; mark.position.y = 2.45; mark.rotation.x = Math.PI / 2.4; mark.isPickable = false;
     mark.setEnabled(false);
     this.markRing = mark;
+    // WARDED (Cantor hymn): a violet ring of light around the body.
+    const ward = MB.CreateTorus(`${id}-ward`, { diameter: 1.5, thickness: 0.05, tessellation: 6 }, scene);
+    ward.material = glow(scene, `${id}-wardMat`, "#b98cff"); ward.parent = this.root; ward.position.y = 1.1; ward.isPickable = false;
+    ward.setEnabled(false);
+    this.wardRing = ward;
     // BOUND: two red thread loops around the body. ANCHORED: a stone ring at the feet. SHIELDED: an amber dome.
     const threadMat = glow(scene, `${id}-threadMat`, "#ff4d6d");
     this.boundRings = [1.0, 1.45].map((y, i) => {
@@ -282,7 +383,11 @@ export class Rig {
       this.visibility = 1 - clamp01((fighter.deadFrames - 50) / 50);
     }
     this.body.rotation.x = bodyLean;
-    this.body.position.y = 0.9 + bob - (c.postureBroken ? 0.18 : 0);
+    this.body.position.y = this.bodyY + bob - (c.postureBroken ? 0.18 : 0);
+    if (this.beastTail) this.beastTail.rotation.x = -2.1 + Math.sin(this.time * 10) * 0.25;
+    if (this.legs) for (const hip of this.legs) hip.rotation.x = Math.sin(this.time * 16 + hip.phase) * 0.7 * run;
+    if (this.halo) { this.halo.rotation.y += dt * 2; }
+    if (this.wardRing) { const w = fighter.alive && fighter.tags.has("WARDED"); this.wardRing.setEnabled(w); if (w) this.wardRing.rotation.y -= dt * 2.5; }
     if (this.skirt) this.skirt.rotation.x = bodyLean * 0.25;
     if (this.scarfTail) this.scarfTail.rotation.x = 0.35 + run * 0.7 + Math.sin(this.time * 9) * 0.08 * (0.3 + run);
     if (this.offArm) this.offArm.rotation.x = c.blocking || fighter.current?.id === "Guard" ? -0.9 : 0.35 + Math.sin(this.time * 13) * 0.25 * run;
@@ -318,7 +423,7 @@ export class Rig {
     if (marked) { this.markRing.rotation.y += dt * 4; this.markRing.scaling.setAll(1 + Math.sin(this.time * 8) * 0.08); }
 
     this.shadow.position.set(x, 0.03, z);
-    const s = Math.max(0.35, 1 - y * 0.12);
+    const s = Math.max(0.35, 1 - y * 0.12) * (this.look.scale ?? 1) * (this.look.form === "beast" ? 1.2 : 1);
     this.shadow.scaling.set(s, s, s);
     this.shadow.visibility = this.visibility;
   }

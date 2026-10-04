@@ -8,6 +8,7 @@ import { isHitSet } from "./combat.js";
 export const EventType = Object.freeze({
   PlayAnimation: 0, SpawnHitbox: 1, ApplyTag: 2, CameraCue: 3, PlaySound: 4,
   SpawnVfx: 5, Move: 6, Invulnerable: 7, Custom: 8,
+  Projectile: 9, // key = hitbox id (size + optional hit), value = speed in units/second
 });
 
 /** @enum {string} */

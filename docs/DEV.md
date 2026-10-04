@@ -97,5 +97,17 @@ Keys added: **V** (gamepad LB+RB, touch ULT) for Skyrender when the Surge bar is
 
 Keys: **1** call Bas, **2** call Juno, **3** cycle stance (gamepad D-pad ◀ ▶ ▲; touch BAS, JUNO, STNC).
 
+## Phase 2, Step 3: the Fens roster
+| Feature | Where |
+|---|---|
+| Enemy types, traits (`heavy`, `armoredAttacks`, `frontalGuard`, `ranged`), waves | `data/enemies.js` |
+| Spawning any type | `spawnEnemy(kind, x, z)` / `spawnWave()` in `sim/world.js` |
+| Projectiles (fire, fly, deflect, parry, time stop) | `fireProjectile`, `_projectiles` in `sim/world.js`; `EventType.Projectile` |
+| Ward and Dispel | `ward` in `sim/world.js`; Dispel row in `data/reactions.js` |
+| Juggle decay | `juggleHits` and `Tuning.juggleDecay` in `sim/world.js` |
+| Looks (four-legged hound, staff, spear, shield, claws) | `LOOKS` and `_buildBeast` in `runtime/rig.js` |
+
+To add an enemy: a new entry in `ENEMIES` (stats, hitboxes, moves, AI options, traits) and a `LOOKS` entry. Add it to `WAVES` to see it in the sandbox.
+
 ## Publishing the artifact
 `npm run build` also writes `dist/fragment.html` (the page without its outer `<html>` shell). That file is what gets published to the Claude artifact link.

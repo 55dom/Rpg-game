@@ -31,7 +31,7 @@ export class Hud {
     this.el = {
       surge: $(root, "[data-surge]"),
       hp: $(root, "[data-hp]"), hpLag: $(root, "[data-hp-lag]"), posture: $(root, "[data-posture]"), mana: $(root, "[data-mana]"),
-      target: $(root, "[data-target]"), thp: $(root, "[data-thp]"), tposture: $(root, "[data-tposture]"), tbroken: $(root, "[data-tbroken]"),
+      target: $(root, "[data-target]"), tname: $(root, "[data-tname]"), thp: $(root, "[data-thp]"), tposture: $(root, "[data-tposture]"), tbroken: $(root, "[data-tbroken]"),
       combo: $(root, "[data-combo]"), comboN: $(root, "[data-combo-n]"),
       toast: $(root, "[data-toast]"), prompt: $(root, "[data-prompt]"), wave: $(root, "[data-wave]"),
       fd: $(root, "[data-fd]"), fdName: $(root, "[data-fd-name]"), fdPhase: $(root, "[data-fd-phase]"), fdFrame: $(root, "[data-fd-frame]"),
@@ -144,6 +144,7 @@ export class Hud {
     this.set("tHidden", e.target, "hidden", !focus);
     if (focus) {
       const fc = focus.combatant;
+      this.set("tname", e.tname, "text", (focus.stats.name ?? "Enemy").toUpperCase() + (focus.stats.elite ? " ★" : ""));
       this.set("thp", e.thp, "width", pct(fc.health.normalized));
       this.set("tpost", e.tposture, "width", pct(fc.posture.normalized));
       this.set("tbroken", e.tbroken, "hidden", !fc.postureBroken);

@@ -145,6 +145,16 @@ export class Vfx {
       return { mesh: m, life: 0, max: 1, height: 4 };
     }, 3);
 
+    // Cantor sound bolts: a violet orb with a spinning ring, synced to the sim's projectiles each frame.
+    this.boltPool = Array.from({ length: 10 }, (_, i) => {
+      const orb = MB.CreateSphere(`bolt-${i}`, { diameter: 0.45, segments: 8 }, scene);
+      orb.material = glow(scene, `bolt-mat-${i}`, "#c9a4ff");
+      const ring = MB.CreateTorus(`bolt-ring-${i}`, { diameter: 0.8, thickness: 0.04, tessellation: 20 }, scene);
+      ring.material = orb.material; ring.parent = orb;
+      orb.isPickable = ring.isPickable = false; orb.setEnabled(false);
+      return { orb, ring, id: 0 };
+    });
+
     // Ghost material for Afterimage.
     this.ghostMat = glow(scene, "ghost", "#7fe6ff", 0.32, true);
     this.ghosts = [];
@@ -218,6 +228,21 @@ export class Vfx {
     t.mesh.setEnabled(true);
     t.from.set(from.x, from.y, from.z); t.to.set(to.x, to.y, to.z);
     t.life = t.max = life; t.follow = follow;
+  }
+
+  /** Show one orb per live projectile (no allocation; pool of 10). */
+  syncProjectiles(projectiles, dt) {
+    let i = 0;
+    for (const p of projectiles) {
+      if (i >= this.boltPool.length) break;
+      const b = this.boltPool[i++];
+      b.orb.setEnabled(true);
+      b.orb.position.set(p.pos.x, p.pos.y, p.pos.z);
+      b.ring.rotation.x += dt * 9; b.ring.rotation.y += dt * 5;
+      const s = 1 + Math.sin(performance.now() / 60) * 0.12;
+      b.orb.scaling.set(s, s, s);
+    }
+    for (; i < this.boltPool.length; i++) this.boltPool[i].orb.setEnabled(false);
   }
 
   pillar(at, height = 4.5, life = 1.4) {

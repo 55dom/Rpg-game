@@ -8,12 +8,12 @@ import { Combatant, Team, HitOutcome, Rules, resolveHit } from "../core/combat.j
 import { AbilityRunner, AbilityController, EventType, MoveContext, StartResult } from "../core/abilities.js";
 import { AttackTokenPool, EnemyBrain, MoveIntent, CompanionBrain, AllyMove, STANCES } from "../core/ai.js";
 import { COMPANIONS } from "../data/companions.js";
+import { ENEMIES, WAVES } from "../data/enemies.js";
 import { seededRandom, SECONDS_PER_TICK } from "../core/timing.js";
 import { boxHitsCapsule, hitboxCenter } from "./overlap.js";
 import { TagSet, matchReactions } from "../core/tags.js";
 import { REACTIONS } from "../data/reactions.js";
 import { ROOK_STATS, ROOK_ABILITIES, ROOK_HITBOXES, buildRookGraph } from "../data/rook.js";
-import { ACOLYTE_STATS, ACOLYTE_HITBOXES, acolyteOptions } from "../data/acolyte.js";
 
 export const Tuning = Object.freeze({
   gravity: 32, juggleGravity: 18, airAttackGravity: 9,
@@ -26,6 +26,8 @@ export const Tuning = Object.freeze({
   nearMissGrace: 1.2, // while i-frames are up, a near miss counts as dodged (it can never deal damage)
   playerTargetBias: 2, // enemies prefer Rook over a companion this much closer
   shieldFactor: 0.5, companionSurgeShare: 0.5, assistRange: 12,
+  wardFactor: 0.7, wardRadius: 8, guardArc: 0.35, heavyKnockback: 0.25,
+  juggleDecay: 0.12, juggleDecayMax: 2.5, // each air hit adds 12% gravity (GDD §9.3), up to 2.5x
 });
 
 const AIR = new Set(["AirL1", "AirL2", "AirL3"]);
@@ -82,6 +84,8 @@ export class Fighter {
     this.slot = o.slot ?? null;
     this.assistReadyFrame = 0;
     this.faceMove = false;
+    this.traits = o.traits ?? {};
+    this.juggleHits = 0;
   }
 
   get alive() { return !this.combatant.isDead; }
@@ -155,6 +159,7 @@ export class Fighter {
         break;
       }
       case EventType.Invulnerable: this.combatant.startInvulnerability(e.value); break;
+      case EventType.Projectile: this.world.fireProjectile(this, a, e.key, e.value); break;
       case EventType.Custom:
         if (e.key === "jump") { this.vel.y = e.value; this.grounded = false; }
         else if (e.key === "airJump") { this.vel.y = e.value; this.airJumps = 0; }
@@ -165,6 +170,7 @@ export class Fighter {
         else if (e.key === "parry") this.combatant.startParry(e.value + (this === this.world.player && this.world.assist ? Tuning.assistFrames : 0));
         else if (e.key === "shield") { const p = this.world.player; if (p.alive) { p.tags.add("SHIELDED", e.value); this.world.emit({ type: "shield", fighter: this, target: p }); } }
         else if (e.key === "heal") this.world.heal(this, e.value);
+        else if (e.key === "ward") this.world.ward(this, e.value);
         break;
       default:
         this.world.emit({ type: "abilityEvent", fighter: this, ability: a, event: e });
@@ -212,6 +218,7 @@ export class World {
     }));
     this.assist = !!o.assist;
     this.companions = [];
+    this.projectiles = [];
     if (o.companions) for (const kind of Object.keys(COMPANIONS)) this.addCompanion(kind);
   }
 
@@ -284,11 +291,13 @@ export class World {
   get liveEnemies() { return this.fighters.filter((f) => f.team === Team.Enemy && f.alive); }
   get afterimageActive() { return this.slowFrames > 0; }
 
-  spawnAcolyte(x, z, n = 0) {
-    const id = `acolyte-${this.wave}-${n}`;
-    const brain = new EnemyBrain(id, this.tokens, acolyteOptions(), this.rng);
+  spawnEnemy(kind, x, z, n = 0) {
+    const def = ENEMIES[kind];
+    if (!def) throw new Error(`unknown enemy ${kind}`);
+    const id = `${kind}-${this.wave}-${n}`;
+    const brain = new EnemyBrain(id, this.tokens, def.options(), this.rng);
     const f = new Fighter(this, {
-      id, kind: "acolyte", team: Team.Enemy, stats: ACOLYTE_STATS, hitboxes: ACOLYTE_HITBOXES,
+      id, kind, team: Team.Enemy, stats: def.stats, hitboxes: def.hitboxes, traits: def.traits,
       brain, x, z, circleSign: n % 2 ? 1 : -1,
     });
     f.yaw = angleTo(f.pos, this.player.pos);
@@ -296,15 +305,49 @@ export class World {
     return this.add(f);
   }
 
-  spawnWave(count = 3) {
+  spawnAcolyte(x, z, n = 0) { return this.spawnEnemy("acolyte", x, z, n); }
+
+  /** spawnWave(3) = three acolytes; spawnWave(["hound", ...]) = those kinds; spawnWave() = the next wave in WAVES. */
+  spawnWave(spec) {
     this.wave++;
     for (const f of this.enemies) this.emit({ type: "despawn", fighter: f });
     this.fighters = this.fighters.filter((f) => f.team !== Team.Enemy);
-    for (let i = 0; i < count; i++) {
-      const a = (i / count) * Math.PI * 2 + 0.6;
-      this.spawnAcolyte(Math.sin(a) * 8, Math.cos(a) * 8 + 2, i);
+    this.projectiles.length = 0;
+    const kinds = Array.isArray(spec) ? spec : typeof spec === "number" ? Array(spec).fill("acolyte") : WAVES[(this.wave - 1) % WAVES.length];
+    kinds.forEach((kind, i) => {
+      const a = (i / kinds.length) * Math.PI * 2 + 0.6;
+      const r = ENEMIES[kind].traits.ranged ? 11 : 8;
+      this.spawnEnemy(kind, Math.sin(a) * r, Math.cos(a) * r + 2, i);
+    });
+    this.emit({ type: "wave", wave: this.wave, kinds });
+  }
+
+  /** Launch a projectile from `owner` toward its target (or straight ahead). */
+  fireProjectile(owner, ability, key, speed) {
+    const def = owner.hitboxDefs[key];
+    const f = owner.forward;
+    const pos = { x: owner.pos.x + f.x * 0.9, y: owner.pos.y + 1.3, z: owner.pos.z + f.z * 0.9 };
+    let dir = { x: f.x, y: 0, z: f.z };
+    const t = owner.target;
+    if (t?.alive) {
+      const dx = t.pos.x - pos.x, dy = t.pos.y + 1.1 - pos.y, dz = t.pos.z - pos.z, d = Math.hypot(dx, dy, dz) || 1;
+      dir = { x: dx / d, y: dy / d, z: dz / d };
     }
-    this.emit({ type: "wave", wave: this.wave });
+    const p = { owner, team: owner.team, def, spec: def.hit ?? ability.hit, ability, pos, dir, speed,
+      life: Math.round(((def.range ?? 14) / speed) * 60), hitSet: new Set(), id: ++this._projectileIds || (this._projectileIds = 1) };
+    this.projectiles.push(p);
+    this.emit({ type: "projectile", projectile: p });
+  }
+
+  /** Cantor's Hymn: ward every ally of the singer nearby. */
+  ward(singer, frames) {
+    const warded = [];
+    for (const f of this.fighters) {
+      if (f.team !== singer.team || !f.alive || flatDistance(f.pos, singer.pos) > Tuning.wardRadius) continue;
+      f.tags.add("WARDED", frames);
+      warded.push(f);
+    }
+    this.emit({ type: "ward", fighter: singer, targets: warded });
   }
 
   resetPlayer() {
@@ -391,6 +434,7 @@ export class World {
     this._brains(frame, live);
     this._abilities(frame, live);
     this._hitboxes(live);
+    this._projectiles();
     for (const f of this.fighters) if (live(f)) { f.combatant.tick(); f.tags.tick(); }
     for (const f of this.fighters) if (live(f)) this._move(f);
     this._late(live);
@@ -498,6 +542,7 @@ export class World {
         if (f.mana) f.mana.add(f.stats.manaRegenPerSecond * SECONDS_PER_TICK);
       }
       f.controller.tick(frame);
+      c.superArmor = (f.traits.armoredAttacks && f.runner.isRunning) || f.tags.has("WARDED");
       if (f.kind === "player") {
         c.blocking = f.holdBlock && !f.runner.isRunning && f.grounded && c.canAct;
       }
@@ -520,37 +565,94 @@ export class World {
           this._resolve(att, def, hb);
         }
       }
+      // Sword vs bolt: Rook's team can cut enemy projectiles out of the air.
+      if (att.team === Team.Player && this.projectiles.length) {
+        for (const hb of att.hitboxes) {
+          for (const p of this.projectiles) {
+            if (p.team === att.team || p.dead) continue;
+            if (boxHitsCapsule(hb.def, att.pos, att.yaw, { x: p.pos.x, y: p.pos.y - 0.35, z: p.pos.z }, 0.35, 0.7)) {
+              p.dead = true;
+              this.emit({ type: "deflect", projectile: p, by: att, at: { ...p.pos } });
+            }
+          }
+        }
+      }
       let keep = 0; // compact in place: no new array per frame
       for (const hb of att.hitboxes) if (--hb.frames > 0) att.hitboxes[keep++] = hb;
       att.hitboxes.length = keep;
     }
   }
 
+  _projectiles() {
+    const ps = this.projectiles;
+    if (!ps.length) return;
+    const dt = SECONDS_PER_TICK;
+    for (const p of ps) {
+      if (p.dead) continue;
+      const scale = p.team === Team.Enemy ? (this.stopFrames > 0 ? 0 : this.slowFrames > 0 ? Tuning.afterimageScale : 1) : 1;
+      if (scale === 0) continue; // frozen by a time stop
+      p.pos.x += p.dir.x * p.speed * dt * scale; p.pos.y += p.dir.y * p.speed * dt * scale; p.pos.z += p.dir.z * p.speed * dt * scale;
+      p.life -= scale;
+      if (p.life <= 0 || p.pos.y < 0 || Math.hypot(p.pos.x, p.pos.z) > Tuning.arenaRadius + 2) { p.dead = true; continue; }
+      for (const def of this.fighters) {
+        if (def.team === p.team || !def.alive || p.hitSet.has(def)) continue;
+        const grace = def.combatant.invulnerableFrames > 0 ? Tuning.nearMissGrace * 0.5 : 0;
+        const r = p.def.size[0] / 2 + def.stats.radius + grace;
+        const dx = def.pos.x - p.pos.x, dz = def.pos.z - p.pos.z;
+        const below = def.pos.y - p.pos.y, above = p.pos.y - (def.pos.y + def.stats.height);
+        const dy = below > 0 ? below : above > 0 ? above : 0;
+        if (dx * dx + dz * dz + dy * dy > r * r) continue;
+        p.hitSet.add(def);
+        const outcome = this._resolve(p.owner, def, { def: p.def, spec: p.spec, ability: p.ability, hitSet: p.hitSet, origin: p.pos, projectile: true });
+        if (outcome !== HitOutcome.Dodged && outcome !== HitOutcome.PerfectDodge) { p.dead = true; break; }
+      }
+    }
+    if (ps.some((p) => p.dead)) {
+      for (const p of ps) if (p.dead) this.emit({ type: "projectileEnd", projectile: p });
+      this.projectiles = ps.filter((p) => !p.dead);
+    }
+  }
+
   _resolve(att, def, hb) {
-    // Bastion Wall: a shielded defender takes half damage.
-    const spec = def.tags.has("SHIELDED") && hb.spec.damage > 0 ? { ...hb.spec, damage: hb.spec.damage * Tuning.shieldFactor } : hb.spec;
-    const r = resolveHit(att.combatant, def.combatant, spec);
-    const c = hitboxCenter(hb.def, att.pos, att.yaw);
+    // Bastion Wall halves damage; a Cantor's ward takes 30% off.
+    let spec = hb.spec;
+    if (spec.damage > 0 && (def.tags.has("SHIELDED") || def.tags.has("WARDED"))) {
+      spec = { ...spec, damage: spec.damage * (def.tags.has("SHIELDED") ? Tuning.shieldFactor : Tuning.wardFactor) };
+    }
+    const from = hb.origin ?? att.pos;
+    // Tower shields: blocks everything blockable from the front, unless bound by thread or mid-attack.
+    if (def.traits.frontalGuard) {
+      const d0 = flatDistance(from, def.pos) || 1, fw = def.forward;
+      const facing = ((from.x - def.pos.x) * fw.x + (from.z - def.pos.z) * fw.z) / d0;
+      def.combatant.blocking = facing > Tuning.guardArc && !def.runner.isRunning && def.combatant.canAct && !def.tags.has("BOUND");
+    }
+    const r = resolveHit(hb.projectile ? null : att.combatant, def.combatant, spec);
+    if (def.traits.frontalGuard) def.combatant.blocking = false;
+    const c = hb.origin ?? hitboxCenter(hb.def, att.pos, att.yaw);
     const at = { x: (c.x + def.pos.x) / 2, y: def.pos.y + 1.2, z: (c.z + def.pos.z) / 2 };
-    const d = flatDistance(att.pos, def.pos) || 1;
-    const away = { x: (def.pos.x - att.pos.x) / d, z: (def.pos.z - att.pos.z) / d };
+    const d = flatDistance(from, def.pos) || 1;
+    const away = { x: (def.pos.x - from.x) / d, z: (def.pos.z - from.z) / d };
+    const heavyBody = def.traits.heavy && !def.combatant.postureBroken; // can't be launched or dragged until broken
     const base = { attacker: att, defender: def, ability: hb.ability, spec, result: r, at };
 
     switch (r.outcome) {
       case HitOutcome.Hit: {
-        att.hitstop = Math.max(att.hitstop, r.attackerHitstop);
+        if (!hb.projectile) { att.hitstop = Math.max(att.hitstop, r.attackerHitstop); att.runner.notifyHit(0); }
         def.hitstop = Math.max(def.hitstop, r.defenderHitstop);
-        att.runner.notifyHit(0);
-        if (def.combatant.isStaggered) { def.runner.interrupt(); def.dash.frames = 0; }
-        def.knock.x += away.x * spec.knockback * Tuning.knockbackSpeed;
-        def.knock.z += away.z * spec.knockback * Tuning.knockbackSpeed;
-        if (spec.launch > 0 && att.grounded) { def.vel.y = spec.launch; def.grounded = false; }
+        if (def.combatant.isStaggered && !def.combatant.superArmor) { def.runner.interrupt(); def.dash.frames = 0; }
+        const kb = spec.knockback * Tuning.knockbackSpeed * (heavyBody ? Tuning.heavyKnockback : 1);
+        def.knock.x += away.x * kb;
+        def.knock.z += away.z * kb;
+        const wasAirborne = !def.grounded;
+        if (heavyBody) { /* rooted to the ground */ }
+        else if (spec.launch > 0 && (att.grounded || hb.projectile)) { def.vel.y = spec.launch; def.grounded = false; }
         else if (att.slamming) { def.vel.y = -22; def.grounded = false; } // the slam spikes them down with Rook
-        else if (!att.grounded) { // air hits keep the target at the attacker's height
+        else if (!att.grounded && !hb.projectile) { // air hits keep the target at the attacker's height
           def.grounded = false;
           def.vel.y = Math.max(-6, Math.min(10, (att.pos.y + 0.15 - def.pos.y) * 6 + 1.8));
         } else if (!def.grounded) def.vel.y = Math.max(def.vel.y, 3);
-        if (!att.grounded && !att.slamming) att.vel.y = 1.5;
+        if (wasAirborne && !def.grounded) def.juggleHits++; // juggle decay: each air hit makes them fall faster
+        if (!att.grounded && !att.slamming && !hb.projectile) att.vel.y = 1.5;
         if (att.team === Team.Player) {
           this.comboCount++; this.comboTimer = 120; // the combo counter belongs to the whole team
           if (att === this.player && att.mana && hb.ability.manaCost === 0) att.mana.add(Tuning.meleeManaGain); // melee feeds magic
@@ -560,7 +662,7 @@ export class World {
         if (spec !== hb.spec) this.emit({ type: "shieldBlock", defender: def, at });
         if (def === this.player) this._surge(def.stats.surgeGain.taken * r.healthDamage);
         if (def.alive) this._react(att, def, hb, at);
-        if (spec.pull > 0) this._pull(att, def, spec.pull);
+        if (spec.pull > 0 && !heavyBody) this._pull(att, def, spec.pull);
         if (def === this.player) { this.comboCount = 0; def.buffer.clear(); }
         this.emit({ type: "hit", ...base });
         if (r.defenderPostureBroken) this.emit({ type: "postureBreak", ...base });
@@ -573,19 +675,20 @@ export class World {
         break;
       }
       case HitOutcome.Blocked:
-        att.hitstop = Math.max(att.hitstop, r.attackerHitstop);
+        if (!hb.projectile) { att.hitstop = Math.max(att.hitstop, r.attackerHitstop); att.runner.notifyHit(0); }
         def.hitstop = Math.max(def.hitstop, r.defenderHitstop);
-        att.runner.notifyHit(0);
         def.knock.x += away.x * 0.8 * Tuning.knockbackSpeed; def.knock.z += away.z * 0.8 * Tuning.knockbackSpeed;
         if (r.defenderPostureBroken) def.runner.interrupt();
         this.emit({ type: "block", ...base });
         if (r.defenderPostureBroken) this.emit({ type: "guardBreak", ...base });
         break;
       case HitOutcome.Parried:
-        att.hitstop = Math.max(att.hitstop, r.attackerHitstop);
         def.hitstop = Math.max(def.hitstop, r.defenderHitstop);
-        att.runner.interrupt(); att.combatant.stagger(26);
-        att.knock.x -= away.x * 1.2 * Tuning.knockbackSpeed; att.knock.z -= away.z * 1.2 * Tuning.knockbackSpeed;
+        if (!hb.projectile) { // parrying a bolt just swats it away
+          att.hitstop = Math.max(att.hitstop, r.attackerHitstop);
+          att.runner.interrupt(); att.combatant.stagger(26);
+          att.knock.x -= away.x * 1.2 * Tuning.knockbackSpeed; att.knock.z -= away.z * 1.2 * Tuning.knockbackSpeed;
+        }
         if (def === this.player) { def.counterFrames = def.stats.counterWindowFrames; this._surge(def.stats.surgeGain.parry); }
         this.emit({ type: "parry", ...base });
         if (r.attackerPostureBroken) this.emit({ type: "postureBreak", ...base, defender: att });
@@ -604,6 +707,7 @@ export class World {
         break;
       default: break;
     }
+    return r.outcome;
   }
 
   _surge(amount) {
@@ -634,7 +738,7 @@ export class World {
         if (fx.damage) c.takeDamage(fx.damage);
         const broke = fx.posture ? c.takePostureDamage(fx.posture) : false;
         if (fx.stagger) { c.stagger(fx.stagger); t.runner.interrupt(); }
-        if (fx.launch) { t.vel.y = fx.launch; t.grounded = false; }
+        if (fx.launch && !(t.traits.heavy && !c.postureBroken)) { t.vel.y = fx.launch; t.grounded = false; }
         if (fx.hitstop) t.hitstop = Math.max(t.hitstop, fx.hitstop);
         if (broke) this.emit({ type: "postureBreak", attacker: att, defender: t, ability: hb.ability, spec, at: { x: t.pos.x, y: t.pos.y + 1.2, z: t.pos.z } });
         if (c.isDead) {
@@ -694,13 +798,14 @@ export class World {
     if (!f.grounded) {
       const juggled = f.combatant.isStaggered && f.team === Team.Enemy;
       const airAttack = f.runner.isRunning && HANG.has(f.current.id);
-      let g = f.slamming ? 0 : airAttack ? Tuning.airAttackGravity : juggled ? Tuning.juggleGravity : Tuning.gravity;
+      const decay = Math.min(Tuning.juggleDecayMax, 1 + Tuning.juggleDecay * f.juggleHits);
+      let g = f.slamming ? 0 : airAttack ? Tuning.airAttackGravity : juggled ? Tuning.juggleGravity * decay : Tuning.gravity;
       if (f.hoverFrames > 0) { f.hoverFrames--; f.vel.y = 0; g = 0; } // air dash flies flat
       f.vel.y -= g * dt;
       f.pos.y += f.vel.y * dt;
       if (f.pos.y <= 0) {
         f.pos.y = 0; f.vel.y = 0; f.grounded = true;
-        f.airJumps = 1; f.airDashes = 1; f.hoverFrames = 0;
+        f.airJumps = 1; f.airDashes = 1; f.hoverFrames = 0; f.juggleHits = 0;
         const slam = f.slamming; f.slamming = false;
         if (f.runner.isRunning && AIR.has(f.current.id)) f.runner.interrupt();
         this.emit({ type: slam ? "slamLand" : "land", fighter: f });
