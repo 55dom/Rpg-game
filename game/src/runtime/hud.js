@@ -38,7 +38,9 @@ export class Hud {
       fdTrack: $(root, "[data-fd-track]"), fdCursor: $(root, "[data-fd-cursor]"), fdCancels: $(root, "[data-fd-cancels]"),
       fdCtx: $(root, "[data-fd-ctx]"), fdBuf: $(root, "[data-fd-buf]"), fdLog: $(root, "[data-fd-log]"),
       hurt: $(root, "[data-hurt]"),
+      party: $(root, "[data-party]"), cutin: $(root, "[data-cutin]"),
     };
+    this.partyEls = new Map();
     this.cache = new Map();
     this.hpLag = 1;
     this.toastTimer = 0;
@@ -72,6 +74,40 @@ export class Hud {
     const w = this.el.wave;
     w.textContent = text;
     w.classList.remove("show"); void w.offsetWidth; w.classList.add("show");
+  }
+
+  /** Anime-style cut-in banner when a companion's Assist fires. */
+  cutIn(name, move, kind) {
+    const c = this.el.cutin;
+    if (!c) return;
+    c.className = `cutin ${kind}`;
+    c.innerHTML = `<b>${name.toUpperCase()}</b><span>${move.toUpperCase()}</span>`;
+    void c.offsetWidth;
+    c.classList.add("show");
+  }
+
+  updateParty(world, device) {
+    const host = this.el.party;
+    if (!host) return;
+    const keys = { keyboard: ["1", "2"], gamepad: ["◀", "▶"], touch: ["", ""] }[device] ?? ["1", "2"];
+    world.companions.forEach((c, i) => {
+      let el = this.partyEls.get(c);
+      if (!el) {
+        el = document.createElement("div");
+        el.className = `ally ${c.kind}`;
+        el.innerHTML = `<div class="ally-name"><kbd></kbd>${c.stats.name.toUpperCase()}<small></small></div><div class="bar hp ally-hp"><i></i></div><div class="bar ally-cd"><i></i></div>`;
+        host.appendChild(el);
+        this.partyEls.set(c, el);
+      }
+      const hp = el.querySelector(".ally-hp i"), cd = el.querySelector(".ally-cd i");
+      this.set(`ahp${i}`, hp, "width", pct(c.combatant.health.normalized));
+      const left = Math.max(0, c.assistReadyFrame - world.frame);
+      const ready = left === 0 && c.alive;
+      this.set(`acd${i}`, cd, "width", pct(1 - left / c.stats.assistCooldownFrames));
+      this.set(`acls${i}`, el, "class", `ally ${c.kind}${ready ? " ready" : ""}${c.alive ? "" : " down"}`);
+      this.set(`akey${i}`, el.querySelector("kbd"), "text", keys[i] ?? "");
+      this.set(`ast${i}`, el.querySelector("small"), "text", c.alive ? c.brain.stance.toUpperCase() : "DOWN");
+    });
   }
 
   hurt() {
@@ -127,6 +163,7 @@ export class Hud {
 
     if (this.toastTimer > 0) { this.toastTimer -= dt; if (this.toastTimer <= 0) e.toast.classList.remove("show"); }
 
+    if (world.companions?.length) this.updateParty(world, device);
     if (!e.fd.hidden) this.updateFrameData(world);
   }
 

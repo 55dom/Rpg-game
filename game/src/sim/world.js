@@ -6,7 +6,8 @@ import { Intent, InputBuffer, mask } from "../core/input.js";
 import { ResourcePool } from "../core/stats.js";
 import { Combatant, Team, HitOutcome, Rules, resolveHit } from "../core/combat.js";
 import { AbilityRunner, AbilityController, EventType, MoveContext, StartResult } from "../core/abilities.js";
-import { AttackTokenPool, EnemyBrain, MoveIntent } from "../core/ai.js";
+import { AttackTokenPool, EnemyBrain, MoveIntent, CompanionBrain, AllyMove, STANCES } from "../core/ai.js";
+import { COMPANIONS } from "../data/companions.js";
 import { seededRandom, SECONDS_PER_TICK } from "../core/timing.js";
 import { boxHitsCapsule, hitboxCenter } from "./overlap.js";
 import { TagSet, matchReactions } from "../core/tags.js";
@@ -23,6 +24,8 @@ export const Tuning = Object.freeze({
   softLockRange: 6.5, finisherRange: 3.8,
   corpseFrames: 100,
   nearMissGrace: 1.2, // while i-frames are up, a near miss counts as dodged (it can never deal damage)
+  playerTargetBias: 2, // enemies prefer Rook over a companion this much closer
+  shieldFactor: 0.5, companionSurgeShare: 0.5, assistRange: 12,
 });
 
 const AIR = new Set(["AirL1", "AirL2", "AirL3"]);
@@ -75,6 +78,10 @@ export class Fighter {
     this.deadFrames = 0;
     this.circleSign = o.circleSign ?? 1;
     this.target = null;
+    this.companion = !!o.companion;
+    this.slot = o.slot ?? null;
+    this.assistReadyFrame = 0;
+    this.faceMove = false;
   }
 
   get alive() { return !this.combatant.isDead; }
@@ -156,6 +163,8 @@ export class Fighter {
         else if (e.key === "timeStop") this.world.stopFrames = Math.max(this.world.stopFrames, e.value);
         else if (e.key === "slam") { this.vel.y = -e.value; this.slamming = true; }
         else if (e.key === "parry") this.combatant.startParry(e.value + (this === this.world.player && this.world.assist ? Tuning.assistFrames : 0));
+        else if (e.key === "shield") { const p = this.world.player; if (p.alive) { p.tags.add("SHIELDED", e.value); this.world.emit({ type: "shield", fighter: this, target: p }); } }
+        else if (e.key === "heal") this.world.heal(this, e.value);
         break;
       default:
         this.world.emit({ type: "abilityEvent", fighter: this, ability: a, event: e });
@@ -183,7 +192,7 @@ export class Fighter {
 }
 
 export class World {
-  /** @param {{tokens?:number, seed?:number, assist?:boolean}} [o] */
+  /** @param {{tokens?:number, seed?:number, assist?:boolean, companions?:boolean}} [o] */
   constructor(o = {}) {
     this.frame = 0;
     this.fighters = [];
@@ -202,6 +211,63 @@ export class World {
       graph: buildRookGraph(() => this.player.context()), x: 0, z: -4,
     }));
     this.assist = !!o.assist;
+    this.companions = [];
+    if (o.companions) for (const kind of Object.keys(COMPANIONS)) this.addCompanion(kind);
+  }
+
+  addCompanion(kind) {
+    const c = COMPANIONS[kind];
+    const p = this.player;
+    const f = new Fighter(this, {
+      id: kind, kind, team: Team.Player, stats: c.stats, hitboxes: c.hitboxes, companion: true, slot: c.slot,
+      brain: new CompanionBrain(kind, c.options(), c.supports(), this.rng), x: p.pos.x + c.slot[0], z: p.pos.z + c.slot[1],
+    });
+    f.assistAbility = c.assist;
+    this.companions.push(f);
+    this.emit({ type: "spawn", fighter: f });
+    return this.add(f);
+  }
+
+  get stance() { return this.companions[0]?.brain.stance ?? STANCES[0]; }
+  setStance(stance) { for (const c of this.companions) c.brain.stance = stance; this.emit({ type: "stance", stance }); }
+  cycleStance() { this.setStance(STANCES[(STANCES.indexOf(this.stance) + 1) % STANCES.length]); return this.stance; }
+
+  /** Heal the most hurt ally near the healer (Rook first on ties). */
+  heal(healer, amount) {
+    let best = null, bestRatio = 1;
+    for (const f of this.fighters) {
+      if (f.team !== healer.team || !f.alive || flatDistance(f.pos, healer.pos) > 10) continue;
+      const r = f.combatant.health.normalized - (f === this.player ? 0.001 : 0);
+      if (r < bestRatio) { bestRatio = r; best = f; }
+    }
+    if (!best) return;
+    best.combatant.health.add(amount);
+    this.emit({ type: "heal", fighter: healer, target: best, amount });
+  }
+
+  /** The player calls a companion's signature move (GDD §10 Assist Call). */
+  callAssist(kind) {
+    const c = this.companions.find((f) => f.kind === kind);
+    if (!c || !c.alive || !this.player.alive) return { ok: false, reason: "down" };
+    if (this.frame < c.assistReadyFrame) return { ok: false, reason: "cooldown" };
+    const t = (this.lockTarget?.alive && this.lockTarget) || this.player.pickTarget(Tuning.assistRange) || this.nearestEnemy(Tuning.assistRange);
+    if (!t) return { ok: false, reason: "noTarget" };
+    // Blink beside the target on the side away from Rook, facing it.
+    const p = this.player.pos;
+    const d = flatDistance(p, t.pos) || 1;
+    const ox = (t.pos.x - p.x) / d, oz = (t.pos.z - p.z) / d;
+    const side = c.kind === "bas" ? 1 : -1;
+    c.pos.x = t.pos.x + (ox * 0.6 - oz * side) * 1.3; c.pos.z = t.pos.z + (oz * 0.6 + ox * side) * 1.3; c.pos.y = 0;
+    c.prev.x = c.pos.x; c.prev.y = 0; c.prev.z = c.pos.z;
+    c.vel.x = c.vel.y = c.vel.z = 0; c.grounded = true; c.hitstop = 0;
+    c.yaw = angleTo(c.pos, t.pos); c.prevYaw = c.yaw;
+    c.target = t;
+    c.runner.interrupt();
+    c.combatant.staggerFrames = 0;
+    c.controller.startDirect(c.assistAbility, this.frame);
+    c.assistReadyFrame = this.frame + c.stats.assistCooldownFrames;
+    this.emit({ type: "assist", fighter: c, ability: c.assistAbility, target: t });
+    return { ok: true, target: t };
   }
 
   /** Touch assist: wider parry and perfect-dodge windows. Never changes damage. */
@@ -247,6 +313,11 @@ export class World {
     p.pos = v3(0, 0, -4); p.prev = v3(0, 0, -4); p.vel = v3(); p.knock = v3(); p.grounded = true; p.yaw = 0;
     p.counterFrames = 0; p.hitstop = 0; this.lockTarget = null; this.slowFrames = 0; this.stopFrames = 0;
     p.surge?.set(0); p.tags.clear();
+    for (const c of this.companions) {
+      c.combatant.reset(); c.runner.interrupt(); c.tags.clear(); c.deadFrames = 0; c.hitstop = 0;
+      c.pos = v3(p.pos.x + c.slot[0], 0, p.pos.z + c.slot[1]); c.prev = { ...c.pos }; c.vel = v3(); c.knock = v3(); c.grounded = true;
+      c.assistReadyFrame = 0; c.yaw = 0;
+    }
   }
 
   /** The posture-broken enemy a finisher would hit, if any. */
@@ -325,15 +396,46 @@ export class World {
     this._late(live);
   }
 
+  /** Enemies go for the nearest member of Rook's team, preferring Rook, and stick with a choice. */
+  _enemyTarget(e) {
+    let best = null, bestScore = Infinity;
+    for (const f of this.fighters) {
+      if (f.team === e.team || !f.alive || f.team === Team.Neutral) continue;
+      let score = flatDistance(e.pos, f.pos);
+      if (f === this.player) score -= Tuning.playerTargetBias;
+      if (f === e.target) score -= 1; // stickiness
+      if (score < bestScore) { bestScore = score; best = f; }
+    }
+    return best;
+  }
+
+  /** Who a companion should be fighting, by stance. */
+  _companionTarget(c) {
+    const p = this.player, stance = c.brain.stance;
+    if (stance === "Press" && this.lockTarget?.alive) return this.lockTarget;
+    let best = null, bestScore = Infinity;
+    for (const e of this.fighters) {
+      if (e.team !== Team.Enemy || !e.alive) continue;
+      const fromLeader = flatDistance(p.pos, e.pos);
+      let score = stance === "Press" ? flatDistance(c.pos, e.pos) : fromLeader;
+      if (stance === "Guard" && e.target === p && e.runner.isRunning) score -= 6; // intercept attacks on Rook
+      if (score < bestScore) { bestScore = score; best = e; }
+    }
+    return best;
+  }
+
   _brains(frame, live) {
-    const p = this.player;
     for (const e of this.fighters) {
       if (!e.brain || !live(e)) continue;
-      const d = flatDistance(e.pos, p.pos);
+      if (e.companion) { this._companionBrain(e, frame); continue; }
+      const p = this._enemyTarget(e);
+      e.target = p;
+      const d = p ? flatDistance(e.pos, p.pos) : Infinity;
       const out = e.brain.think({
-        frame, hasTarget: p.alive, distance: d, isStaggered: e.combatant.isStaggered,
+        frame, hasTarget: !!p, distance: d, isStaggered: e.combatant.isStaggered,
         isDead: !e.alive, abilityRunning: e.runner.isRunning,
       });
+      if (!p) { e.moveInput.x = 0; e.moveInput.z = 0; continue; }
       const tx = (p.pos.x - e.pos.x) / (d || 1), tz = (p.pos.z - e.pos.z) / (d || 1);
       const mi = e.moveInput;
       switch (out.move) {
@@ -354,6 +456,34 @@ export class World {
     }
   }
 
+  _companionBrain(c, frame) {
+    const p = this.player;
+    const t = this._companionTarget(c);
+    c.target = t;
+    const leaderDistance = flatDistance(c.pos, p.pos);
+    const threatened = this.fighters.some((e) => e.team === Team.Enemy && e.alive && e.target === p && e.runner.isRunning && flatDistance(e.pos, p.pos) < 4.5);
+    const out = c.brain.think({
+      frame, isDead: !c.alive, isStaggered: c.combatant.isStaggered, abilityRunning: c.runner.isRunning,
+      leaderDistance, leaderHealth: p.alive ? p.combatant.health.normalized : 1, leaderThreatened: threatened,
+      target: t ? { distance: flatDistance(c.pos, t.pos), distanceToLeader: flatDistance(p.pos, t.pos) } : null,
+    });
+    const mi = c.moveInput;
+    mi.x = 0; mi.z = 0; c.faceMove = false;
+    if (out.move === AllyMove.Follow && c.slot) {
+      const s = Math.sin(p.yaw), co = Math.cos(p.yaw); // slot is (right, forward) in Rook's frame
+      const gx = p.pos.x + co * c.slot[0] + s * c.slot[1], gz = p.pos.z - s * c.slot[0] + co * c.slot[1];
+      const dx = gx - c.pos.x, dz = gz - c.pos.z, d = Math.hypot(dx, dz);
+      if (d > 0.6) { const k = Math.min(1, d / 2); mi.x = (dx / d) * k; mi.z = (dz / d) * k; c.faceMove = true; }
+    } else if (t && (out.move === AllyMove.Approach || out.move === AllyMove.Retreat)) {
+      const d = flatDistance(c.pos, t.pos) || 1, sgn = out.move === AllyMove.Approach ? 1 : -0.6;
+      mi.x = ((t.pos.x - c.pos.x) / d) * sgn; mi.z = ((t.pos.z - c.pos.z) / d) * sgn;
+    }
+    if (out.attack) {
+      if (t && !out.support) c.yaw = angleTo(c.pos, t.pos);
+      c.controller.startDirect(out.attack, frame);
+    }
+  }
+
   _abilities(frame, live) {
     for (const f of this.fighters) {
       if (!live(f)) continue;
@@ -371,9 +501,9 @@ export class World {
       if (f.kind === "player") {
         c.blocking = f.holdBlock && !f.runner.isRunning && f.grounded && c.canAct;
       }
-      // Enemies track the player through their wind-up, then commit.
-      if (f.brain && f.runner.isRunning && f.runner.frame < f.current.startup - 4) {
-        f.yaw = turn(f.yaw, angleTo(f.pos, this.player.pos), f.stats.turnRate);
+      // AI fighters track their target through the wind-up, then commit.
+      if (f.brain && f.target?.alive && f.runner.isRunning && f.runner.frame < f.current.startup - 4) {
+        f.yaw = turn(f.yaw, angleTo(f.pos, f.target.pos), f.stats.turnRate);
       }
     }
   }
@@ -397,7 +527,8 @@ export class World {
   }
 
   _resolve(att, def, hb) {
-    const spec = hb.spec;
+    // Bastion Wall: a shielded defender takes half damage.
+    const spec = def.tags.has("SHIELDED") && hb.spec.damage > 0 ? { ...hb.spec, damage: hb.spec.damage * Tuning.shieldFactor } : hb.spec;
     const r = resolveHit(att.combatant, def.combatant, spec);
     const c = hitboxCenter(hb.def, att.pos, att.yaw);
     const at = { x: (c.x + def.pos.x) / 2, y: def.pos.y + 1.2, z: (c.z + def.pos.z) / 2 };
@@ -420,11 +551,13 @@ export class World {
           def.vel.y = Math.max(-6, Math.min(10, (att.pos.y + 0.15 - def.pos.y) * 6 + 1.8));
         } else if (!def.grounded) def.vel.y = Math.max(def.vel.y, 3);
         if (!att.grounded && !att.slamming) att.vel.y = 1.5;
-        if (att === this.player) {
-          this.comboCount++; this.comboTimer = 120;
-          if (att.mana && hb.ability.manaCost === 0) att.mana.add(Tuning.meleeManaGain); // melee feeds magic
-          if (!hb.ability.surgeCost) this._surge(att.stats.surgeGain.dealt * r.healthDamage);
+        if (att.team === Team.Player) {
+          this.comboCount++; this.comboTimer = 120; // the combo counter belongs to the whole team
+          if (att === this.player && att.mana && hb.ability.manaCost === 0) att.mana.add(Tuning.meleeManaGain); // melee feeds magic
+          const share = att === this.player ? 1 : Tuning.companionSurgeShare;
+          if (!hb.ability.surgeCost) this._surge(this.player.stats.surgeGain.dealt * r.healthDamage * share);
         }
+        if (spec !== hb.spec) this.emit({ type: "shieldBlock", defender: def, at });
         if (def === this.player) this._surge(def.stats.surgeGain.taken * r.healthDamage);
         if (def.alive) this._react(att, def, hb, at);
         if (spec.pull > 0) this._pull(att, def, spec.pull);
@@ -436,6 +569,7 @@ export class World {
           if (this.lockTarget === def) this.lockTarget = this.nearestEnemy(20, def); // the lock moves on
         }
         if (r.killed && def === this.player) this.emit({ type: "playerDown" });
+        if (r.killed && def.companion) this.emit({ type: "allyDown", fighter: def });
         break;
       }
       case HitOutcome.Blocked:
@@ -505,11 +639,12 @@ export class World {
         if (broke) this.emit({ type: "postureBreak", attacker: att, defender: t, ability: hb.ability, spec, at: { x: t.pos.x, y: t.pos.y + 1.2, z: t.pos.z } });
         if (c.isDead) {
           this.emit({ type: "kill", attacker: att, defender: t, ability: hb.ability, spec, at });
+          if (t.companion) this.emit({ type: "allyDown", fighter: t });
           if (this.lockTarget === t) this.lockTarget = this.nearestEnemy(20, t);
         }
       }
       if (fx.hitstop) att.hitstop = Math.max(att.hitstop, fx.hitstop);
-      if (att === this.player) this._surge(att.stats.surgeGain.reaction);
+      if (att.team === Team.Player) this._surge(this.player.stats.surgeGain.reaction);
       this.emit({ type: "reaction", reaction: row, attacker: att, defender: def, targets, at });
     }
     if (def.alive) for (const [tag, frames] of spec.applyTags) def.tags.add(tag, frames);
@@ -534,7 +669,7 @@ export class World {
   _move(f) {
     const dt = SECONDS_PER_TICK;
     const busy = f.runner.isRunning;
-    const canSteer = f.combatant.canAct && f.alive && (!busy || !f.grounded);
+    const canSteer = f.combatant.canAct && f.alive && (!busy || !f.grounded) && !f.tags.has("BOUND"); // threads hold you in place
     if (f.dash.frames > 0) {
       f.vel.x = f.dash.x; f.vel.z = f.dash.z; f.dash.frames--;
     } else if (canSteer) {
@@ -544,7 +679,10 @@ export class World {
       f.vel.z += (f.moveInput.z * speed - f.vel.z) * k;
       const mag = Math.hypot(f.moveInput.x, f.moveInput.z);
       if (f.kind === "player" && mag > 0.15 && !busy) f.yaw = turn(f.yaw, Math.atan2(f.moveInput.x, f.moveInput.z), f.stats.turnRate);
-      if (f.brain && f.alive) f.yaw = turn(f.yaw, angleTo(f.pos, this.player.pos), f.stats.turnRate);
+      if (f.brain && f.alive) {
+        if (f.faceMove && mag > 0.15) f.yaw = turn(f.yaw, Math.atan2(f.moveInput.x, f.moveInput.z), f.stats.turnRate);
+        else if (f.target?.alive) f.yaw = turn(f.yaw, angleTo(f.pos, f.target.pos), f.stats.turnRate);
+      }
     } else if (f.grounded) {
       f.vel.x *= 0.6; f.vel.z *= 0.6;
     }
@@ -594,6 +732,11 @@ export class World {
       if (f.afterDashFrames > 0) f.afterDashFrames--;
       if (f.counterFrames > 0) f.counterFrames--;
       if (!f.alive) f.deadFrames++;
+      // Downed companions get back up (no permanent losses mid-fight).
+      if (f.companion && !f.alive && f.deadFrames >= f.stats.reviveFrames) {
+        f.combatant.reset(); f.combatant.health.set(f.combatant.health.max * 0.5); f.deadFrames = 0; f.tags.clear();
+        this.emit({ type: "allyRevive", fighter: f });
+      }
     }
     if (this.comboTimer > 0 && --this.comboTimer === 0) this.comboCount = 0;
 

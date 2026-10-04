@@ -7,7 +7,7 @@ import { World } from "./sim/world.js";
 import { ACOLYTE_ABILITIES } from "./data/acolyte.js";
 import { ROOK_ABILITIES } from "./data/rook.js";
 import { B, PALETTE, glow, clamp01 } from "./runtime/look.js";
-import { Rig } from "./runtime/rig.js";
+import { Rig, LOOKS } from "./runtime/rig.js";
 import { Vfx, Trail } from "./runtime/vfx.js";
 import { Sfx } from "./runtime/audio.js";
 import { Controls } from "./runtime/controls.js";
@@ -58,7 +58,7 @@ export function boot(doc = document) {
   const controls = new Controls(canvas, root.querySelector("[data-touch]"));
   if (coarse) controls.device = "touch";
 
-  const world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: coarse });
+  const world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: coarse, companions: true });
   const clock = new FrameClock();
   const views = new Map();
   const trails = new Map();
@@ -68,13 +68,15 @@ export function boot(doc = document) {
     if (views.has(f)) return;
     const rig = new Rig(scene, f.kind, f.id);
     views.set(f, rig);
-    trails.set(f, new Trail(scene, `${f.id}-trail`, f.team === Team.Player ? TRAIL_COLORS.default : TRAIL_COLORS.enemy));
+    trails.set(f, new Trail(scene, `${f.id}-trail`, LOOKS[f.kind]?.trail ?? (f.team === Team.Player ? TRAIL_COLORS.default : TRAIL_COLORS.enemy)));
   };
   const removeView = (f) => {
     views.get(f)?.dispose(); views.delete(f);
     trails.get(f)?.mesh.dispose(); trails.delete(f);
   };
   addView(world.player);
+  for (const c of world.companions) addView(c);
+  world.drainEvents(); // companion spawn events are already handled
 
   // Lock-on marker.
   const reticle = BB.MeshBuilder.CreateTorus("reticle", { diameter: 1.5, thickness: 0.05, tessellation: 40 }, scene);
@@ -176,8 +178,12 @@ export function boot(doc = document) {
             state.cinematic = 0.55; state.cinematicScale = result.killed ? 0.2 : 0.35;
           }
           if (ability.tags.includes("counter")) { impact(2); hud.toast("COUNTER", "counter"); }
+          if (ability.tags.includes("thread")) {
+            const rig = viewFor(a);
+            if (rig) vfx.thread(rig.bladeWorld().tip, chest(d), ability.id === "SnareLine" ? 0.6 : 0.3);
+          }
           if (ability.id === "Skyrender" && spec.hitstop >= 18 && !state.ultToast) { state.ultToast = true; hud.toast("SKYRENDER", "finisher"); later(1.5, () => { state.ultToast = false; }); }
-          if (settings.frameData) hud.pushLog(`${a.kind === "player" ? "Rook" : "Acolyte"} ${ability.id} → ${result.healthDamage | 0}`);
+          if (settings.frameData) hud.pushLog(`${a.kind === "player" ? "Rook" : a.stats.name ?? "Acolyte"} ${ability.id} → ${result.healthDamage | 0}`);
           break;
         }
         case "block":
@@ -201,11 +207,32 @@ export function boot(doc = document) {
           }
           vfx.ring({ x: d.pos.x, y: d.pos.y + 0.1, z: d.pos.z }, (rx.effect.radius || 1.5) * 2.4, PALETTE.lantern, 0.45);
           sfx.play("detonate"); camera.shake(0.45); camera.kick(0.4); impact(2);
-          hud.toast(rx.id.toUpperCase(), "finisher");
-          if (settings.frameData) hud.pushLog(`Reaction ${rx.id} on ${targets.length}`);
+          hud.toast(rx.name.toUpperCase(), "finisher");
+          if (settings.frameData) hud.pushLog(`Reaction ${rx.name} on ${targets.length}`);
+          if (rx.id.startsWith("Shatter")) { vfx.sparksAt(chest(d), 20, "gold", 12, 6); sfx.play("stone"); }
           break;
         }
         case "surgeFull": sfx.play("surgeFull"); hud.toast("SURGE FULL", "afterimage"); break;
+        case "assist": {
+          const { fighter: f, ability: a, target: t } = ev;
+          const c = chest(f);
+          vfx.flash(c, 2.2, LOOKS[f.kind].trail, 0.18); vfx.sparksAt(c, 8, "white", 6, 1);
+          sfx.play("assist");
+          hud.cutIn(f.stats.name, a.id.replace(/([a-z])([A-Z])/g, "$1 $2"), f.kind);
+          if (a.id === "PillarUppercut") { vfx.pillar(t.pos); sfx.play("stone"); camera.shake(0.35); }
+          break;
+        }
+        case "shield": sfx.play("shield"); vfx.ring({ x: ev.target.pos.x, y: 0.06, z: ev.target.pos.z }, 4, "#e8b46a", 0.4); hud.pushLog("Bas: Bastion Wall"); break;
+        case "shieldBlock": vfx.flash(ev.at, 1.4, "#e8b46a", 0.1); break;
+        case "heal": {
+          const c = chest(ev.target);
+          vfx.number(c, `+${ev.amount}`, "heal text"); vfx.sparksAt(c, 8, "mint", 4, 3); sfx.play("heal");
+          vfx.thread(chest(ev.fighter), c, 0.5);
+          break;
+        }
+        case "allyDown": hud.toast(`${ev.fighter.stats.name.toUpperCase()} IS DOWN`, "danger"); break;
+        case "allyRevive": hud.toast(`${ev.fighter.stats.name.toUpperCase()} IS BACK`, "clear"); break;
+        case "stance": hud.toast(`STANCE: ${ev.stance.toUpperCase()}`, "afterimage"); break;
         case "perfectDodge": sfx.play("perfectDodge"); vfx.number(chest(world.player), "PERFECT", "text"); break;
         case "afterimage":
           sfx.play("afterimage"); hud.toast("AFTERIMAGE", "afterimage");
@@ -314,9 +341,16 @@ export function boot(doc = document) {
     state.time += dt;
 
     controls.poll(dt);
+    let running = state.started && !state.paused && !state.help && !state.frozen;
     for (const cmd of controls.drainCommands()) {
       if (cmd === "lock") { const t = world.toggleLock(); if (!t) camera.yaw = world.player.yaw; sfx.play("ui"); }
       if (cmd === "unlock" && world.lockTarget) { world.lockTarget = null; sfx.play("ui"); }
+      if (cmd.startsWith("assist:") && running) {
+        const r = world.callAssist(cmd.slice(7));
+        if (!r.ok) { sfx.play("ui"); hud.pushLog(`Assist ${cmd.slice(7)}: ${r.reason}`); }
+        onEvents(world.drainEvents());
+      }
+      if (cmd === "stance" && running) { world.cycleStance(); onEvents(world.drainEvents()); }
       if (cmd === "lockTap") { if (world.lockTarget && world.liveEnemies.length > 1) world.switchLock(1); else world.toggleLock(); sfx.play("ui"); }
       if (cmd === "switchRight" || cmd === "switchLeft" || ((cmd === "flickRight" || cmd === "flickLeft") && world.lockTarget)) {
         world.switchLock(cmd.endsWith("Left") ? -1 : 1); sfx.play("ui");
@@ -327,7 +361,7 @@ export function boot(doc = document) {
       if (cmd === "pause") { if (state.help) toggleHelp(false); else state.paused = !state.paused; root.classList.toggle("paused", state.paused); }
     }
     const presses = controls.drainPresses();
-    const running = state.started && !state.paused && !state.help && !state.frozen;
+    running = state.started && !state.paused && !state.help && !state.frozen; // after commands: pause/help may have changed
     if (running) for (const p of presses) world.press(p);
 
     const look = controls.takeLook();

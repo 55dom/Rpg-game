@@ -1,7 +1,7 @@
 // Hit effects. Everything is pooled: no allocations during a fight except Afterimage ghosts
 // (at most one burst per 3 s cooldown).
 
-import { B, PALETTE, color3, glow, clamp01, lerp } from "./look.js";
+import { B, PALETTE, color3, glow, toon as toonMat, clamp01, lerp } from "./look.js";
 
 /** A ribbon that follows a blade: newest edge bright, older edges fade (additive). */
 export class Trail {
@@ -129,6 +129,22 @@ export class Vfx {
       return { mesh: m, life: 0, max: 0.3, vel: new BB.Vector3() };
     }, 3);
 
+    // Juno's threads: thin glowing lines stretched between two points.
+    this.threads = new Pool((i) => {
+      const m = MB.CreateBox(`thread-${i}`, { width: 0.03, height: 0.03, depth: 1 }, scene);
+      m.material = glow(scene, `thread-mat-${i}`, "#ff4d6d");
+      m.isPickable = false; m.setEnabled(false);
+      return { mesh: m, life: 0, max: 1, from: new BB.Vector3(), to: new BB.Vector3(), follow: null };
+    }, 4);
+    // Bas's pillars: stone columns that erupt from the ground, hold, then sink.
+    this.pillars = new Pool((i) => {
+      const m = MB.CreateCylinder(`pillar-${i}`, { height: 1, diameterTop: 0.9, diameterBottom: 1.3, tessellation: 7 }, scene);
+      m.material = toonMat(scene, `pillar-mat-${i}`, "#8c909b");
+      m.renderOutline = true; m.outlineWidth = 0.04; m.outlineColor = color3("#0f1117");
+      m.isPickable = false; m.setEnabled(false);
+      return { mesh: m, life: 0, max: 1, height: 4 };
+    }, 3);
+
     // Ghost material for Afterimage.
     this.ghostMat = glow(scene, "ghost", "#7fe6ff", 0.32, true);
     this.ghosts = [];
@@ -196,6 +212,23 @@ export class Vfx {
     n.el.className = `dmg show ${kind}`;
   }
 
+  /** A thread from `from` to `to` (both {x,y,z}); `follow` = optional {from(), to()} to track moving ends. */
+  thread(from, to, life = 0.35, follow = null) {
+    const t = this.threads.take();
+    t.mesh.setEnabled(true);
+    t.from.set(from.x, from.y, from.z); t.to.set(to.x, to.y, to.z);
+    t.life = t.max = life; t.follow = follow;
+  }
+
+  pillar(at, height = 4.5, life = 1.4) {
+    const p = this.pillars.take();
+    p.mesh.setEnabled(true);
+    p.mesh.position.set(at.x, 0, at.z);
+    p.height = height; p.life = p.max = life;
+    this.sparksAt({ x: at.x, y: 0.3, z: at.z }, 10, "gold", 7, 6);
+    this.ring({ x: at.x, y: 0.06, z: at.z }, 3.5, "#c9b28a", 0.35);
+  }
+
   afterimage(rig) {
     const parts = rig.snapshot(this.ghostMat);
     this.ghosts.push({ parts, life: 0.55, max: 0.55 });
@@ -240,6 +273,27 @@ export class Vfx {
       if (c.life <= 0) { c.mesh.setEnabled(false); continue; }
       c.vel.scaleAndAddToRef(dt, c.mesh.position);
       c.mesh.visibility = clamp01(c.life / c.max * 2);
+    }
+    for (const t of this.threads.items) {
+      if (t.life <= 0) continue;
+      t.life -= dt;
+      if (t.life <= 0) { t.mesh.setEnabled(false); continue; }
+      if (t.follow) { const f = t.follow.from(), to = t.follow.to(); t.from.set(f.x, f.y, f.z); t.to.set(to.x, to.y, to.z); }
+      const len = B().Vector3.Distance(t.from, t.to);
+      t.mesh.position.set((t.from.x + t.to.x) / 2, (t.from.y + t.to.y) / 2, (t.from.z + t.to.z) / 2);
+      t.mesh.lookAt(t.to);
+      t.mesh.scaling.set(1, 1, Math.max(0.01, len));
+      t.mesh.visibility = Math.min(1, t.life / t.max * 3);
+    }
+    for (const p of this.pillars.items) {
+      if (p.life <= 0) continue;
+      p.life -= dt;
+      if (p.life <= 0) { p.mesh.setEnabled(false); continue; }
+      const k = 1 - p.life / p.max;
+      const rise = k < 0.12 ? k / 0.12 : k > 0.75 ? 1 - (k - 0.75) / 0.25 : 1; // erupt, hold, sink
+      const h = Math.max(0.05, p.height * rise);
+      p.mesh.scaling.set(1, h, 1);
+      p.mesh.position.y = h / 2;
     }
     for (let i = this.ghosts.length - 1; i >= 0; i--) {
       const g = this.ghosts[i];

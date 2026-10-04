@@ -75,11 +75,11 @@ export const ROOK_ABILITIES = (() => {
   add({ id: "L3", startup: 8, active: 3, recovery: 16,
     hit: hitSpec({ damage: 14, posture: 14, hitstop: 4, hitstun: 18, knockback: 1.5 }),
     events: [swing(6), step(6, 0.7), blade(8, 3)], cancels: [{ from: 11, to: 26, into: followUps }] });
-  add({ id: "L4", startup: 10, active: 4, recovery: 22,
+  add({ id: "L4", startup: 10, active: 4, recovery: 22, tags: ["heavy"],
     hit: hitSpec({ damage: 24, posture: 30, hitstop: 10, hitstun: 30, knockback: 6, applyTags: [["MARKED", 240]] }),
     events: [swing(7, "swingHeavy"), { frame: 10, type: E.Move, value: 1.2 }, blade(10, 4), { frame: 10, type: E.CameraCue, key: "punch" }],
     cancels: [{ from: 20, to: 35, into: m("Dodge|AnySpell") }] });
-  add({ id: "Launcher", startup: 9, active: 3, recovery: 18,
+  add({ id: "Launcher", startup: 9, active: 3, recovery: 18, tags: ["heavy"],
     hit: hitSpec({ damage: 14, posture: 15, hitstop: 6, hitstun: 24, launch: 11, applyTags: [["MARKED", 240]] }),
     events: [swing(7, "swingHeavy"), step(6, 0.5), blade(9, 3)],
     cancels: [{ from: 12, to: 29, into: m("Jump"), requiresHit: true }, { from: 12, to: 29, into: m("Dodge") }] });
@@ -102,7 +102,7 @@ export const ROOK_ABILITIES = (() => {
   add({ id: "AirL3", startup: 6, active: 3, recovery: 14,
     hit: hitSpec({ damage: 12, posture: 10, hitstop: 4, hitstun: 18, launch: 3 }),
     events: [swing(4), blade(6, 3)], cancels: [{ from: 9, to: 22, into: m("Heavy|Dodge|AnySpell") }] });
-  add({ id: "AirSlam", startup: 8, active: 8, recovery: 18,
+  add({ id: "AirSlam", startup: 8, active: 8, recovery: 18, tags: ["heavy"],
     hit: hitSpec({ damage: 20, posture: 25, hitstop: 8, hitstun: 30, knockback: 3 }),
     events: [swing(6, "swingHeavy"), { frame: 8, type: E.Custom, key: "slam", value: 30 },
       { frame: 8, type: E.SpawnHitbox, key: "Slam", value: 8 }, { frame: 12, type: E.CameraCue, key: "punch" }] });
@@ -144,7 +144,7 @@ export const ROOK_ABILITIES = (() => {
     events: [{ frame: 0, type: E.Invulnerable, value: 8 }, { frame: 0, type: E.Move, key: "toTarget", value: 6 }, swing(2, "swingHeavy"),
       { frame: 4, type: E.SpawnHitbox, key: "Wide", value: 4 }, { frame: 4, type: E.CameraCue, key: "punch" }],
     cancels: [{ from: 8, to: 23, into: followUps }] });
-  add({ id: "LanternBreak", startup: 14, active: 4, recovery: 30, tags: ["finisher"],
+  add({ id: "LanternBreak", startup: 14, active: 4, recovery: 30, tags: ["finisher", "heavy"],
     hit: hitSpec({ damage: 70, posture: 0, hitstop: 18, hitstun: 40, knockback: 9, launch: 7 }),
     events: [{ frame: 0, type: E.Invulnerable, value: 20 }, { frame: 0, type: E.SpawnVfx, key: "charge" }, swing(0, "charge"),
       { frame: 10, type: E.Move, key: "toTarget", value: 3 }, { frame: 14, type: E.SpawnHitbox, key: "Wide", value: 4 },

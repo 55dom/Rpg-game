@@ -86,5 +86,16 @@ To add a reaction, add a row to `data/reactions.js`: `when` (tag on the target),
 
 Keys added: **V** (gamepad LB+RB, touch ULT) for Skyrender when the Surge bar is full.
 
+## Phase 2, Step 2: the squad
+| Feature | Where |
+|---|---|
+| Companion AI (stances, follow, support moves) | `CompanionBrain` in `core/ai.js` |
+| Bas and Juno: stats, moves, assists, supports | `data/companions.js` (`COMPANIONS` roster) |
+| Assist calls, healing, shields, team targeting, revives | `callAssist`, `heal`, `_companionBrain`, `_enemyTarget` in `sim/world.js` |
+| Squad reactions | `data/reactions.js` (Taut Line, Slingshot, Shatterstone) |
+| Character looks (proportions, hair, weapons) | `LOOKS` in `runtime/rig.js` |
+
+Keys: **1** call Bas, **2** call Juno, **3** cycle stance (gamepad D-pad ◀ ▶ ▲; touch BAS, JUNO, STNC).
+
 ## Publishing the artifact
 `npm run build` also writes `dist/fragment.html` (the page without its outer `<html>` shell). That file is what gets published to the Claude artifact link.

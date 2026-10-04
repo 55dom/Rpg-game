@@ -130,3 +130,80 @@ export class EnemyBrain {
     return list[list.length - 1];
   }
 }
+
+/** @enum {string} */
+export const Stance = Object.freeze({ Press: "Press", Guard: "Guard", Support: "Support" });
+export const STANCES = Object.freeze([Stance.Press, Stance.Guard, Stance.Support]);
+
+/** @enum {string} */
+export const AllyMove = Object.freeze({ Hold: "Hold", Follow: "Follow", Approach: "Approach", Retreat: "Retreat" });
+
+/** How far from the leader each stance will engage, and how close it stays. */
+const STANCE_RULES = Object.freeze({
+  [Stance.Press]: { engage: 14, follow: 3.5, attackRate: 1, healBelow: 0.35, shieldWhenThreatened: false },
+  [Stance.Guard]: { engage: 5.5, follow: 2.5, attackRate: 1, healBelow: 0.5, shieldWhenThreatened: true },
+  [Stance.Support]: { engage: 9, follow: 5, attackRate: 0.5, healBelow: 0.75, shieldWhenThreatened: true },
+});
+
+/**
+ * An AI party member (GDD §10). Stances change how far it roams from the leader, how often it
+ * attacks, and when it spends its support moves. Signature Assists are called by the player, not here.
+ */
+export class CompanionBrain {
+  /**
+   * @param {string} id @param {AttackOption[]} options
+   * @param {{ability:object, kind:"heal"|"shield", cooldownFrames:number}[]} supports
+   * @param {() => number} rng
+   */
+  constructor(id, options, supports = [], rng = Math.random) {
+    if (!options.length) throw new Error("companion needs at least one attack");
+    this.id = id;
+    this.options = options;
+    this.supports = supports.map((s) => ({ ...s, readyFrame: 0 }));
+    this.rng = rng;
+    this.stance = Stance.Press;
+    this.recoverFrames = 18;
+    this.recoverLeft = 0;
+    this.wasRunning = false;
+  }
+
+  get rules() { return STANCE_RULES[this.stance]; }
+
+  /**
+   * @param {{frame:number, isDead:boolean, isStaggered:boolean, abilityRunning:boolean,
+   *   leaderDistance:number, leaderHealth:number, leaderThreatened:boolean,
+   *   target: null | {distance:number, distanceToLeader:number}}} p
+   * @returns {{move:string, attack:object|null, support:string|null}}
+   */
+  think(p) {
+    const out = (move, attack = null, support = null) => ({ move, attack, support });
+    if (p.isDead || p.isStaggered) { this.recoverLeft = 0; return out(AllyMove.Hold); }
+    if (p.abilityRunning) { this.wasRunning = true; return out(AllyMove.Hold); }
+    if (this.wasRunning) { this.wasRunning = false; this.recoverLeft = Math.round(this.recoverFrames / this.rules.attackRate); }
+    if (this.recoverLeft > 0) { this.recoverLeft--; return out(p.leaderDistance > this.rules.follow * 2 ? AllyMove.Follow : AllyMove.Hold); }
+
+    // Support first: the leader's safety beats damage.
+    const r = this.rules;
+    for (const s of this.supports) {
+      if (p.frame < s.readyFrame || p.leaderDistance > 9) continue;
+      const want = (s.kind === "heal" && p.leaderHealth < r.healBelow) || (s.kind === "shield" && r.shieldWhenThreatened && p.leaderThreatened);
+      if (want) { s.readyFrame = p.frame + s.cooldownFrames; return out(AllyMove.Hold, s.ability, s.kind); }
+    }
+
+    const t = p.target;
+    if (!t || t.distanceToLeader > r.engage) {
+      return out(p.leaderDistance > r.follow ? AllyMove.Follow : AllyMove.Hold);
+    }
+    const ready = this.options.filter((o) => o.isReady(p.frame) && o.inRange(t.distance));
+    if (ready.length) {
+      const total = ready.reduce((s, o) => s + o.weight, 0);
+      let x = this.rng() * total, pick = ready[ready.length - 1];
+      for (const o of ready) { if ((x -= o.weight) < 0) { pick = o; break; } }
+      pick.readyFrame = p.frame + Math.round(pick.cooldownFrames / r.attackRate);
+      return out(AllyMove.Hold, pick.ability);
+    }
+    if (this.options.some((o) => o.inRange(t.distance))) return out(AllyMove.Hold);
+    if (this.options.every((o) => t.distance < o.minRange)) return out(AllyMove.Retreat);
+    return out(AllyMove.Approach);
+  }
+}

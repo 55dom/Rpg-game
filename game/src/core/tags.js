@@ -24,7 +24,7 @@ export class TagSet {
 
 /**
  * Validate a reaction table.
- * Row: { id, when: tag already on the target, with: incoming tag or condition,
+ * Row: { id, name?: display name, when: tag already on the target, with: incoming tag or condition,
  *        consume?: remove `when` after firing, effect: { damage?, posture?, hitstop?, radius?, launch?, stagger? } }
  */
 export function defineReactions(rows) {
@@ -37,7 +37,7 @@ export function defineReactions(rows) {
     for (const k of ["damage", "posture", "hitstop", "radius", "launch", "stagger"]) {
       if ((e[k] ?? 0) < 0) throw new RangeError(`${r.id}: ${k} can't be negative`);
     }
-    return Object.freeze({ consume: true, ...r, effect: Object.freeze({ ...e }) });
+    return Object.freeze({ consume: true, name: r.id, ...r, effect: Object.freeze({ ...e }) });
   }));
 }
 

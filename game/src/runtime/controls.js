@@ -39,6 +39,9 @@ export class Controls {
       if (e.code === "Tab") this.commands.push(e.shiftKey ? "switchLeft" : "switchRight");
       if (e.code === "KeyH" || e.code === "Slash") this.commands.push("help");
       if (e.code === "Backspace") this.commands.push("reset");
+      if (e.code === "Digit1") this.commands.push("assist:bas");
+      if (e.code === "Digit2") this.commands.push("assist:juno");
+      if (e.code === "Digit3") this.commands.push("stance");
       if (e.code === "KeyG") this.commands.push("frameData");
       if (e.code === "Escape") this.commands.push("pause");
     });
@@ -112,6 +115,7 @@ export class Controls {
       btn.addEventListener("pointerdown", (e) => {
         e.preventDefault(); this._first(); this.device = "touch";
         btn.classList.add("down");
+        if (name.startsWith("cmd:")) { this.commands.push(name.slice(4)); return; }
         if (name === "Lock") {
           // Tap: lock, or switch to the next target. Hold: release the lock.
           btn._hold = setTimeout(() => { btn._hold = null; this.commands.push("unlock"); }, 450);
@@ -166,6 +170,9 @@ export class Controls {
           if (i === PAD_LOCK) this.commands.push("lock");
           if (i === PAD_HELP) this.commands.push("help");
           if (i === PAD_RESET) this.commands.push("reset");
+          if (i === 14) this.commands.push("assist:bas");   // D-pad left
+          if (i === 15) this.commands.push("assist:juno");  // D-pad right
+          if (i === 12) this.commands.push("stance");       // D-pad up
         }
         this.padPrev[i] = down;
         if ((i === 4 || i === 6) && down) block = true;
