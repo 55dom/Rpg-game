@@ -8,7 +8,10 @@ export class Trail {
   constructor(scene, name, hex, segments = 14) {
     const BB = B();
     this.n = segments;
-    this.tips = []; this.hilts = [];
+    // Preallocated ring of samples: no allocation per frame.
+    this.tips = Array.from({ length: segments }, () => new BB.Vector3());
+    this.hilts = Array.from({ length: segments }, () => new BB.Vector3());
+    this.head = 0; this.count = 0;
     this.color = color3(hex);
     const mesh = new BB.Mesh(name, scene);
     const pos = new Float32Array(this.n * 2 * 3);
@@ -36,21 +39,24 @@ export class Trail {
 
   /** Feed the blade each render frame. `on` widens the ribbon; off lets it collapse. */
   push(hilt, tip, on, dt) {
-    if (this.tips.length && B().Vector3.Distance(this.tips[0], tip) > 3) { this.tips.length = 0; this.hilts.length = 0; } // teleported
+    if (this.count && B().Vector3.DistanceSquared(this.tips[this.head], tip) > 9) this.count = 0; // teleported
     this.energy = on ? 1 : Math.max(0, this.energy - dt * 7);
     const base = this.energy > 0 ? hilt : tip;
-    this.tips.unshift(tip.clone()); this.hilts.unshift(base.clone());
-    if (this.tips.length > this.n) { this.tips.pop(); this.hilts.pop(); }
-    const k = this.tips.length;
+    this.head = (this.head + this.n - 1) % this.n;
+    this.tips[this.head].copyFrom(tip); this.hilts[this.head].copyFrom(base);
+    this.count = Math.min(this.n, this.count + 1);
+    const k = this.count;
     for (let i = 0; i < this.n; i++) {
-      const t = this.tips[Math.min(i, k - 1)], h = this.hilts[Math.min(i, k - 1)];
+      const slot = (this.head + Math.min(i, k - 1)) % this.n;
+      const t = this.tips[slot], h = this.hilts[slot];
       const fade = Math.pow(1 - i / this.n, 1.6) * this.energy;
       // Taper: older samples pull the inner edge out toward the tip.
       const w = 1 - i / this.n;
       const hx = lerp(t.x, h.x, w), hy = lerp(t.y, h.y, w), hz = lerp(t.z, h.z, w);
-      this.pos.set([t.x, t.y, t.z, hx, hy, hz], i * 6);
-      const c = this.color;
-      this.col.set([c.r * fade, c.g * fade, c.b * fade, fade, c.r * fade * 0.3, c.g * fade * 0.3, c.b * fade * 0.3, fade * 0.3], i * 8);
+      const c = this.color, o = i * 8, pp = i * 6, col = this.col, pos = this.pos;
+      pos[pp] = t.x; pos[pp + 1] = t.y; pos[pp + 2] = t.z; pos[pp + 3] = hx; pos[pp + 4] = hy; pos[pp + 5] = hz;
+      col[o] = c.r * fade; col[o + 1] = c.g * fade; col[o + 2] = c.b * fade; col[o + 3] = fade;
+      col[o + 4] = c.r * fade * 0.3; col[o + 5] = c.g * fade * 0.3; col[o + 6] = c.b * fade * 0.3; col[o + 7] = fade * 0.3;
     }
     this.mesh.updateVerticesData(B().VertexBuffer.PositionKind, this.pos);
     this.mesh.updateVerticesData(B().VertexBuffer.ColorKind, this.col);
@@ -111,8 +117,8 @@ export class Vfx {
       const r = MB.CreateTorus(`ring-${i}`, { diameter: 1, thickness: 0.06, tessellation: 40 }, scene);
       r.material = glow(scene, `ring-mat-${i}`, "#ffffff", 1, true);
       r.isPickable = false; r.setEnabled(false);
-      return { mesh: r, life: 0, max: 1, size: 1 };
-    }, 6);
+      return { mesh: r, life: 0, max: 1, size: 1, implode: false };
+    }, 8);
 
     // Gale Cutter crescent.
     this.crescents = new Pool((i) => {
@@ -136,6 +142,9 @@ export class Vfx {
     }, 16);
 
     this.tmp = new BB.Vector3();
+    this.sparkPools = Object.values(this.sparks);
+    this.projected = new BB.Vector3();
+    this.viewport = new BB.Viewport(0, 0, 1, 1);
   }
 
   sparksAt(at, count, key = "gold", speed = 9, up = 2) {
@@ -155,17 +164,17 @@ export class Vfx {
     const f = this.flashes.take();
     f.mesh.setEnabled(true);
     f.mesh.position.set(at.x, at.y, at.z);
-    f.mat.emissiveColor = color3(hex);
+    f.mat.emissiveColor.copyFrom(color3(hex));
     f.size = size; f.life = f.max = life; f.spin = Math.random() * Math.PI;
   }
 
-  /** A flat shockwave ring expanding from `at`. */
-  ring(at, size = 3, hex = "#ffffff", life = 0.35) {
+  /** A flat shockwave ring expanding from `at` (or collapsing into it, for a vortex). */
+  ring(at, size = 3, hex = "#ffffff", life = 0.35, implode = false) {
     const r = this.rings.take();
     r.mesh.setEnabled(true);
     r.mesh.position.set(at.x, at.y, at.z);
-    r.mesh.material.emissiveColor = color3(hex);
-    r.size = size; r.life = r.max = life;
+    r.mesh.material.emissiveColor.copyFrom(color3(hex));
+    r.size = size; r.life = r.max = life; r.implode = implode;
   }
 
   crescent(pos, yaw) {
@@ -193,13 +202,13 @@ export class Vfx {
   }
 
   update(dt, camera, engine) {
-    for (const pool of Object.values(this.sparks)) {
+    for (const pool of this.sparkPools) {
       for (const s of pool.items) {
         if (s.life <= 0) continue;
         s.life -= dt;
         if (s.life <= 0) { s.mesh.setEnabled(false); continue; }
         s.vel.y -= 14 * dt;
-        s.mesh.position.addInPlace(s.vel.scale(dt));
+        s.vel.scaleAndAddToRef(dt, s.mesh.position);
         this.tmp.copyFrom(s.mesh.position).addInPlace(s.vel);
         s.mesh.lookAt(this.tmp);
         const k = s.life / s.max;
@@ -221,7 +230,7 @@ export class Vfx {
       r.life -= dt;
       if (r.life <= 0) { r.mesh.setEnabled(false); continue; }
       const k = 1 - r.life / r.max;
-      const s = r.size * (0.2 + 0.8 * Math.sqrt(k));
+      const s = r.implode ? r.size * (1 - 0.9 * k * k) : r.size * (0.2 + 0.8 * Math.sqrt(k));
       r.mesh.scaling.set(s, 1, s);
       r.mesh.visibility = 1 - k;
     }
@@ -229,7 +238,7 @@ export class Vfx {
       if (c.life <= 0) continue;
       c.life -= dt;
       if (c.life <= 0) { c.mesh.setEnabled(false); continue; }
-      c.mesh.position.addInPlace(c.vel.scale(dt));
+      c.vel.scaleAndAddToRef(dt, c.mesh.position);
       c.mesh.visibility = clamp01(c.life / c.max * 2);
     }
     for (let i = this.ghosts.length - 1; i >= 0; i--) {
@@ -244,14 +253,14 @@ export class Vfx {
     const BB = B();
     const w = engine.getRenderWidth(), h = engine.getRenderHeight();
     const cw = this.overlay.clientWidth || w, ch = this.overlay.clientHeight || h;
-    const vp = camera.viewport.toGlobal(w, h);
+    const vp = camera.viewport.toGlobalToRef(w, h, this.viewport);
     const tm = this.scene.getTransformMatrix();
     for (const n of this.numbers.items) {
       if (n.life <= 0) continue;
       n.life -= dt;
       if (n.life <= 0) { n.el.className = "dmg"; n.el.style.opacity = "0"; continue; }
       n.pos.y += n.vy * dt; n.vy *= 0.92;
-      const p = BB.Vector3.Project(n.pos, BB.Matrix.IdentityReadOnly, tm, vp);
+      const p = BB.Vector3.ProjectToRef(n.pos, BB.Matrix.IdentityReadOnly, tm, vp, this.projected);
       if (p.z < 0 || p.z > 1) { n.el.style.opacity = "0"; continue; }
       n.el.style.transform = `translate(${(p.x / w) * cw}px, ${(p.y / h) * ch}px) translate(-50%, -50%)`;
       n.el.style.opacity = String(clamp01(n.life / n.max * 2.5));

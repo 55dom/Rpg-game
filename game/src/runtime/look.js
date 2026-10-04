@@ -9,19 +9,25 @@ export const PALETTE = Object.freeze({
   acolyteRobe: "#d9d2c3", acolyteHood: "#3d3050", acolyteSash: "#7a4f9a", mask: "#f4f1ea",
 });
 
-export const color3 = (hex) => B().Color3.FromHexString(hex);
+const colorCache = new Map();
+/** Shared, read-only Color3 per hex string (clone before mutating). */
+export const color3 = (hex) => {
+  let c = colorCache.get(hex);
+  if (!c) { c = B().Color3.FromHexString(hex); colorCache.set(hex, c); }
+  return c;
+};
 
 /** Cel-shaded material (falls back to standard if the toon add-on failed to load). */
 export function toon(scene, name, hex) {
   const BB = B();
   if (BB.CellMaterial) {
     const m = new BB.CellMaterial(name, scene);
-    m.diffuseColor = color3(hex);
+    m.diffuseColor = color3(hex).clone();
     m.computeHighLevel = true;
     return m;
   }
   const m = new BB.StandardMaterial(name, scene);
-  m.diffuseColor = color3(hex);
+  m.diffuseColor = color3(hex).clone();
   m.specularColor = BB.Color3.Black();
   return m;
 }
@@ -31,7 +37,7 @@ export function glow(scene, name, hex, alpha = 1, additive = false) {
   const BB = B();
   const m = new BB.StandardMaterial(name, scene);
   m.disableLighting = true;
-  m.emissiveColor = color3(hex);
+  m.emissiveColor = color3(hex).clone();
   m.diffuseColor = BB.Color3.Black();
   m.specularColor = BB.Color3.Black();
   m.backFaceCulling = false;

@@ -17,7 +17,7 @@ export const HitOutcome = Object.freeze({
  * @param {object} o
  * @param {number} [o.damage] @param {number} [o.posture] @param {number} [o.hitstop]
  * @param {number} [o.hitstun] @param {boolean} [o.unblockable] @param {number} [o.launch]
- * @param {number} [o.knockback]
+ * @param {number} [o.knockback] @param {number} [o.pull] drag the target up to this far toward the attacker
  */
 export function hitSpec(o = {}) {
   const spec = Object.freeze({
@@ -28,8 +28,9 @@ export function hitSpec(o = {}) {
     unblockable: !!o.unblockable,
     launch: o.launch ?? 0,
     knockback: o.knockback ?? 0,
+    pull: o.pull ?? 0,
   });
-  for (const k of ["damage", "posture", "hitstop", "hitstun", "launch", "knockback"]) {
+  for (const k of ["damage", "posture", "hitstop", "hitstun", "launch", "knockback", "pull"]) {
     if (spec[k] < 0) throw new RangeError(`hit ${k} can't be negative`);
   }
   return spec;
@@ -58,6 +59,8 @@ export class Combatant {
     this.invulnerableFrames = 0;
     this.invulnerableElapsed = 0;
     this.parryFrames = 0;
+    /** How early in a dodge's i-frames a dodged hit counts as perfect (touch assist widens it). */
+    this.perfectDodgeFrames = Rules.PerfectDodgeFrames;
     this.blocking = false;
     this.superArmor = false;
     this.staggerFrames = 0;
@@ -142,7 +145,7 @@ export function resolveHit(attacker, defender, spec) {
   if (attacker && attacker.team === defender.team && attacker.team !== Team.Neutral) return result(HitOutcome.Ignored);
 
   if (defender.invulnerableFrames > 0) {
-    const perfect = defender.invulnerableElapsed < Rules.PerfectDodgeFrames;
+    const perfect = defender.invulnerableElapsed < defender.perfectDodgeFrames;
     return result(perfect ? HitOutcome.PerfectDodge : HitOutcome.Dodged);
   }
 

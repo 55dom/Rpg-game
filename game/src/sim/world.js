@@ -4,7 +4,7 @@
 
 import { Intent, InputBuffer, mask } from "../core/input.js";
 import { ResourcePool } from "../core/stats.js";
-import { Combatant, Team, HitOutcome, resolveHit } from "../core/combat.js";
+import { Combatant, Team, HitOutcome, Rules, resolveHit } from "../core/combat.js";
 import { AbilityRunner, AbilityController, EventType, MoveContext, StartResult } from "../core/abilities.js";
 import { AttackTokenPool, EnemyBrain, MoveIntent } from "../core/ai.js";
 import { seededRandom, SECONDS_PER_TICK } from "../core/timing.js";
@@ -17,12 +17,15 @@ export const Tuning = Object.freeze({
   arenaRadius: 17,
   knockbackSpeed: 4, knockbackDecay: 0.82,
   afterimageScale: 0.35, afterimageFrames: 36,
+  meleeManaGain: 3, assistFrames: 3,
   softLockRange: 6.5, finisherRange: 3.8,
   corpseFrames: 100,
   nearMissGrace: 1.2, // while i-frames are up, a near miss counts as dodged (it can never deal damage)
 });
 
 const AIR = new Set(["AirL1", "AirL2", "AirL3"]);
+const HANG = new Set(["AirL1", "AirL2", "AirL3", "VacuumPull"]); // started in the air, these hold Rook up
+const MOBILITY = new Set(["Dodge", "Jump", "Guard", "AirJump", "AirDash"]);
 const v3 = (x = 0, y = 0, z = 0) => ({ x, y, z });
 const angleTo = (from, to) => Math.atan2(to.x - from.x, to.z - from.z);
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
@@ -61,6 +64,7 @@ export class Fighter {
     this.frozen = false;
     this.timeScale = 1; this.timeAcc = 0; this.ticking = true;
     this.slamming = false;
+    this.airJumps = 1; this.airDashes = 1; this.hoverFrames = 0;
     this.holdBlock = false;
     this.afterDashFrames = 0;
     this.counterFrames = 0;
@@ -98,16 +102,16 @@ export class Fighter {
     this.dash.frames = 0;
     this.slamming = false;
     if (this.kind === "player") {
-      if (a.id === "Dodge" || a.id === "Jump" || a.id === "Guard") {
+      if (MOBILITY.has(a.id)) {
         const i = this.moveInput;
-        if (a.id === "Dodge" && Math.hypot(i.x, i.z) > 0.2) this.yaw = Math.atan2(i.x, i.z);
+        if ((a.id === "Dodge" || a.id === "AirDash") && Math.hypot(i.x, i.z) > 0.2) this.yaw = Math.atan2(i.x, i.z);
       } else {
         const t = a.tags.includes("finisher") ? this.world.brokenTarget(this) : this.pickTarget();
         if (t) this.yaw = angleTo(this.pos, t.pos);
         else if (Math.hypot(this.moveInput.x, this.moveInput.z) > 0.2) this.yaw = Math.atan2(this.moveInput.x, this.moveInput.z);
       }
       if (a.tags.includes("counter")) this.counterFrames = 0;
-      if (AIR.has(a.id)) this.vel.y = 1.5; // air strings hang Rook in place
+      if (HANG.has(a.id) && !this.grounded) this.vel.y = Math.max(1.5, Math.min(this.vel.y, 4)); // hang, keeping a little rise
       this.combatant.blocking = false;
     }
     this.world.emit({ type: "started", fighter: this, ability: a });
@@ -121,9 +125,15 @@ export class Fighter {
       case EventType.Move: {
         const frames = Math.max(1, a.active);
         let distance = e.value;
-        if (e.key === "toTarget") { // lunge: close the gap up to `value`, stop at striking distance
+        if (e.key === "toTarget") { // lunge: home in on a target ahead, stop at striking distance
           const t = a.tags.includes("finisher") ? this.world.brokenTarget(this) : this.pickTarget(e.value + 2);
-          distance = t ? Math.max(0, Math.min(e.value, flatDistance(this.pos, t.pos) - 1.3)) : e.value * 0.4;
+          if (t) {
+            const toT = angleTo(this.pos, t.pos);
+            if (Math.cos(wrap(toT - this.yaw)) > 0.7) {
+              this.yaw = toT;
+              distance = Math.max(0, Math.min(e.value, flatDistance(this.pos, t.pos) - 1.3));
+            }
+          }
         }
         const speed = distance / (frames * SECONDS_PER_TICK);
         let { x, z } = this.forward;
@@ -134,8 +144,10 @@ export class Fighter {
       case EventType.Invulnerable: this.combatant.startInvulnerability(e.value); break;
       case EventType.Custom:
         if (e.key === "jump") { this.vel.y = e.value; this.grounded = false; }
+        else if (e.key === "airJump") { this.vel.y = e.value; this.airJumps = 0; }
+        else if (e.key === "airDash") { this.vel.y = 0; this.hoverFrames = e.value; this.airDashes = 0; }
         else if (e.key === "slam") { this.vel.y = -e.value; this.slamming = true; }
-        else if (e.key === "parry") this.combatant.startParry(e.value);
+        else if (e.key === "parry") this.combatant.startParry(e.value + (this === this.world.player && this.world.assist ? Tuning.assistFrames : 0));
         break;
       default:
         this.world.emit({ type: "abilityEvent", fighter: this, ability: a, event: e });
@@ -155,12 +167,14 @@ export class Fighter {
     if (this.afterDashFrames > 0 || (cur?.id === "Dodge" && this.runner.frame >= 12)) c |= MoveContext.AfterDash;
     if (this.counterFrames > 0) c |= MoveContext.AfterParry;
     if (this.world.brokenTarget(this)) c |= MoveContext.TargetStaggered;
+    if (!this.grounded && this.airJumps > 0) c |= MoveContext.AirJumpReady;
+    if (!this.grounded && this.airDashes > 0) c |= MoveContext.AirDashReady;
     return c;
   }
 }
 
 export class World {
-  /** @param {{tokens?:number, seed?:number}} [o] */
+  /** @param {{tokens?:number, seed?:number, assist?:boolean}} [o] */
   constructor(o = {}) {
     this.frame = 0;
     this.fighters = [];
@@ -177,6 +191,14 @@ export class World {
       id: "rook", kind: "player", team: Team.Player, stats: ROOK_STATS, hitboxes: ROOK_HITBOXES,
       graph: buildRookGraph(() => this.player.context()), x: 0, z: -4,
     }));
+    this.assist = !!o.assist;
+  }
+
+  /** Touch assist: wider parry and perfect-dodge windows. Never changes damage. */
+  get assist() { return this._assist; }
+  set assist(on) {
+    this._assist = on;
+    this.player.combatant.perfectDodgeFrames = Rules.PerfectDodgeFrames + (on ? Tuning.assistFrames : 0);
   }
 
   add(f) { this.fighters.push(f); return f; }
@@ -230,13 +252,35 @@ export class World {
 
   press(intent) { if (this.player.alive) this.player.buffer.push(intent, this.frame + 1); }
 
-  toggleLock() {
-    if (this.lockTarget) { this.lockTarget = null; return null; }
+  nearestEnemy(range = 20, except = null) {
     const p = this.player;
-    let best = null, bestD = 20;
-    for (const e of this.liveEnemies) { const d = flatDistance(p.pos, e.pos); if (d < bestD) { best = e; bestD = d; } }
-    this.lockTarget = best;
+    let best = null, bestD = range;
+    for (const e of this.liveEnemies) {
+      if (e === except) continue;
+      const d = flatDistance(p.pos, e.pos);
+      if (d < bestD) { best = e; bestD = d; }
+    }
     return best;
+  }
+
+  toggleLock() {
+    this.lockTarget = this.lockTarget ? null : this.nearestEnemy();
+    return this.lockTarget;
+  }
+
+  /** Move the lock to the next enemy to the right (+1) or left (-1), wrapping around. */
+  switchLock(dir = 1) {
+    const cur = this.lockTarget;
+    if (!cur?.alive) return this.toggleLock();
+    const p = this.player.pos, base = angleTo(p, cur.pos);
+    let best = null, bestA = Infinity;
+    for (const e of this.liveEnemies) {
+      if (e === cur || flatDistance(p, e.pos) > 20) continue;
+      const a = (((angleTo(p, e.pos) - base) * dir) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+      if (a < bestA) { bestA = a; best = e; }
+    }
+    if (best) this.lockTarget = best;
+    return this.lockTarget;
   }
 
   /** One 60 Hz logic frame, in fixed phases. */
@@ -250,7 +294,7 @@ export class World {
       f.timeScale = f.team === Team.Enemy ? enemyScale : 1;
       f.timeAcc += f.timeScale;
       f.ticking = f.timeAcc >= 1 - 1e-9;
-      if (f.ticking) { f.timeAcc -= 1; f.prev = { ...f.pos }; f.prevYaw = f.yaw; }
+      if (f.ticking) { f.timeAcc -= 1; f.prev.x = f.pos.x; f.prev.y = f.pos.y; f.prev.z = f.pos.z; f.prevYaw = f.yaw; }
       f.frozen = false;
     }
 
@@ -278,17 +322,18 @@ export class World {
         frame, hasTarget: p.alive, distance: d, isStaggered: e.combatant.isStaggered,
         isDead: !e.alive, abilityRunning: e.runner.isRunning,
       });
-      const toP = { x: (p.pos.x - e.pos.x) / (d || 1), z: (p.pos.z - e.pos.z) / (d || 1) };
+      const tx = (p.pos.x - e.pos.x) / (d || 1), tz = (p.pos.z - e.pos.z) / (d || 1);
+      const mi = e.moveInput;
       switch (out.move) {
-        case MoveIntent.Approach: e.moveInput = toP; break;
-        case MoveIntent.Retreat: e.moveInput = { x: -toP.x * 0.6, z: -toP.z * 0.6 }; break;
+        case MoveIntent.Approach: mi.x = tx; mi.z = tz; break;
+        case MoveIntent.Retreat: mi.x = -tx * 0.6; mi.z = -tz * 0.6; break;
         case MoveIntent.Circle: {
           const keep = d > 4 ? 0.4 : d < 2.6 ? -0.4 : 0;
           const s = (e.stats.circleSpeed / e.stats.runSpeed) * e.circleSign;
-          e.moveInput = { x: -toP.z * s + toP.x * keep, z: toP.x * s + toP.z * keep };
+          mi.x = -tz * s + tx * keep; mi.z = tx * s + tz * keep;
           break;
         }
-        default: e.moveInput = { x: 0, z: 0 };
+        default: mi.x = 0; mi.z = 0;
       }
       if (out.attack) {
         e.yaw = angleTo(e.pos, p.pos);
@@ -332,8 +377,9 @@ export class World {
           this._resolve(att, def, hb);
         }
       }
-      for (const hb of att.hitboxes) hb.frames--;
-      att.hitboxes = att.hitboxes.filter((h) => h.frames > 0);
+      let keep = 0; // compact in place: no new array per frame
+      for (const hb of att.hitboxes) if (--hb.frames > 0) att.hitboxes[keep++] = hb;
+      att.hitboxes.length = keep;
     }
   }
 
@@ -354,14 +400,25 @@ export class World {
         if (def.combatant.isStaggered) { def.runner.interrupt(); def.dash.frames = 0; }
         def.knock.x += away.x * spec.knockback * Tuning.knockbackSpeed;
         def.knock.z += away.z * spec.knockback * Tuning.knockbackSpeed;
-        if (spec.launch > 0) { def.vel.y = spec.launch; def.grounded = false; }
-        else if (!def.grounded) def.vel.y = Math.max(def.vel.y, 3);
-        if (!att.grounded) att.vel.y = 1.5;
-        if (att === this.player) { this.comboCount++; this.comboTimer = 120; }
+        if (spec.launch > 0 && att.grounded) { def.vel.y = spec.launch; def.grounded = false; }
+        else if (att.slamming) { def.vel.y = -22; def.grounded = false; } // the slam spikes them down with Rook
+        else if (!att.grounded) { // air hits keep the target at the attacker's height
+          def.grounded = false;
+          def.vel.y = Math.max(-6, Math.min(10, (att.pos.y + 0.15 - def.pos.y) * 6 + 1.8));
+        } else if (!def.grounded) def.vel.y = Math.max(def.vel.y, 3);
+        if (!att.grounded && !att.slamming) att.vel.y = 1.5;
+        if (att === this.player) {
+          this.comboCount++; this.comboTimer = 120;
+          if (att.mana && hb.ability.manaCost === 0) att.mana.add(Tuning.meleeManaGain); // melee feeds magic
+        }
+        if (spec.pull > 0) this._pull(att, def, spec.pull);
         if (def === this.player) { this.comboCount = 0; def.buffer.clear(); }
         this.emit({ type: "hit", ...base });
         if (r.defenderPostureBroken) this.emit({ type: "postureBreak", ...base });
-        if (r.killed) { this.emit({ type: "kill", ...base }); if (this.lockTarget === def) this.lockTarget = null; }
+        if (r.killed) {
+          this.emit({ type: "kill", ...base });
+          if (this.lockTarget === def) this.lockTarget = this.nearestEnemy(20, def); // the lock moves on
+        }
         if (r.killed && def === this.player) this.emit({ type: "playerDown" });
         break;
       }
@@ -398,6 +455,22 @@ export class World {
     }
   }
 
+  /** Drag a target to just in front of the attacker, at the attacker's height. */
+  _pull(att, def, maxDistance) {
+    const fwd = att.forward;
+    const tx = att.pos.x + fwd.x * 1.4, tz = att.pos.z + fwd.z * 1.4;
+    const dx = tx - def.pos.x, dz = tz - def.pos.z, d = Math.hypot(dx, dz);
+    if (d > 0.01) {
+      const move = Math.min(d, maxDistance);
+      const speed = (move * (1 - Tuning.knockbackDecay)) / SECONDS_PER_TICK; // knock decays geometrically
+      def.knock.x = (dx / d) * speed; def.knock.z = (dz / d) * speed;
+    }
+    if (!att.grounded || !def.grounded) {
+      def.grounded = false;
+      def.vel.y = Math.max(-6, Math.min(12, (att.pos.y - def.pos.y) * 5 + 2));
+    }
+  }
+
   _move(f) {
     const dt = SECONDS_PER_TICK;
     const busy = f.runner.isRunning;
@@ -422,12 +495,14 @@ export class World {
 
     if (!f.grounded) {
       const juggled = f.combatant.isStaggered && f.team === Team.Enemy;
-      const airAttack = f.runner.isRunning && AIR.has(f.current.id);
-      const g = f.slamming ? 0 : airAttack ? Tuning.airAttackGravity : juggled ? Tuning.juggleGravity : Tuning.gravity;
+      const airAttack = f.runner.isRunning && HANG.has(f.current.id);
+      let g = f.slamming ? 0 : airAttack ? Tuning.airAttackGravity : juggled ? Tuning.juggleGravity : Tuning.gravity;
+      if (f.hoverFrames > 0) { f.hoverFrames--; f.vel.y = 0; g = 0; } // air dash flies flat
       f.vel.y -= g * dt;
       f.pos.y += f.vel.y * dt;
       if (f.pos.y <= 0) {
         f.pos.y = 0; f.vel.y = 0; f.grounded = true;
+        f.airJumps = 1; f.airDashes = 1; f.hoverFrames = 0;
         const slam = f.slamming; f.slamming = false;
         if (f.runner.isRunning && AIR.has(f.current.id)) f.runner.interrupt();
         this.emit({ type: slam ? "slamLand" : "land", fighter: f });
@@ -437,10 +512,12 @@ export class World {
 
   _late(live) {
     // Keep bodies apart and inside the arena.
-    const fs = this.fighters.filter((f) => f.alive);
+    const fs = this.fighters;
     for (let i = 0; i < fs.length; i++) {
+      if (!fs[i].alive) continue;
       for (let j = i + 1; j < fs.length; j++) {
         const a = fs[i], b = fs[j];
+        if (!b.alive) continue;
         if (Math.abs(a.pos.y - b.pos.y) > 1.2) continue;
         const min = a.stats.radius + b.stats.radius;
         const dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z;
@@ -461,8 +538,9 @@ export class World {
     if (this.comboTimer > 0 && --this.comboTimer === 0) this.comboCount = 0;
 
     // Bodies fade, then the wave can end.
+    if (!this.fighters.some((f) => f.team === Team.Enemy && f.deadFrames > Tuning.corpseFrames)) return;
     const gone = this.fighters.filter((f) => f.team === Team.Enemy && f.deadFrames > Tuning.corpseFrames);
-    if (gone.length) {
+    {
       for (const f of gone) this.emit({ type: "despawn", fighter: f });
       this.fighters = this.fighters.filter((f) => !gone.includes(f));
       if (!this.enemies.length) this.emit({ type: "waveClear", wave: this.wave });

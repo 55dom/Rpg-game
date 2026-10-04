@@ -5,6 +5,7 @@ import { EventType } from "./core/abilities.js";
 import { Team } from "./core/combat.js";
 import { World } from "./sim/world.js";
 import { ACOLYTE_ABILITIES } from "./data/acolyte.js";
+import { ROOK_ABILITIES } from "./data/rook.js";
 import { B, PALETTE, glow, clamp01 } from "./runtime/look.js";
 import { Rig } from "./runtime/rig.js";
 import { Vfx, Trail } from "./runtime/vfx.js";
@@ -14,7 +15,12 @@ import { FollowCamera } from "./runtime/camera.js";
 import { Hud } from "./runtime/hud.js";
 import { buildArena } from "./runtime/arena.js";
 
-const TRAIL_COLORS = { default: "#ffd98a", GaleCutter: PALETTE.gale, Counter: "#dff6ff", LanternBreak: "#ffcc55", enemy: "#ff5a4a" };
+const TRAIL_COLORS = { default: "#ffd98a", GaleCutter: PALETTE.gale, VacuumPull: PALETTE.gale, TempestEdge: "#a8f5dc", Counter: "#dff6ff", LanternBreak: "#ffcc55", enemy: "#ff5a4a" };
+const SPELLS = [
+  { intent: "Spell1", name: "Gale", ability: ROOK_ABILITIES.GaleCutter },
+  { intent: "Spell2", name: "Pull", ability: ROOK_ABILITIES.VacuumPull },
+  { intent: "Spell3", name: "Tempest", ability: ROOK_ABILITIES.TempestEdge },
+];
 
 export function boot(doc = document) {
   const root = doc.querySelector("[data-app]");
@@ -44,14 +50,15 @@ export function boot(doc = document) {
   const gl = new BB.GlowLayer("glow", scene, { mainTextureRatio: mobile ? 0.35 : 0.5, blurKernelSize: mobile ? 24 : 40 });
   gl.intensity = 0.75;
 
-  const hud = new Hud(root);
+  const hud = new Hud(root, SPELLS);
   const overlay = root.querySelector("[data-overlay]");
   const vfx = new Vfx(scene, camera.cam, overlay);
   vfx.reduceFlashes = reduced;
   const sfx = new Sfx();
   const controls = new Controls(canvas, root.querySelector("[data-touch]"));
+  if (coarse) controls.device = "touch";
 
-  const world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1 });
+  const world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: coarse });
   const clock = new FrameClock();
   const views = new Map();
   const trails = new Map();
@@ -76,7 +83,7 @@ export function boot(doc = document) {
   const pin = BB.MeshBuilder.CreatePolyhedron("pin", { type: 1, size: 0.12 }, scene);
   pin.material = reticle.material; pin.isPickable = false;
 
-  const settings = { frameData: !mobile, flashes: !reduced, sound: true };
+  const settings = { frameData: !mobile, flashes: !reduced, sound: true, assist: coarse };
   const state = { frozen: false, started: false, paused: false, help: false, cinematic: 0, cinematicScale: 1, ghostTimer: 0, pending: [], time: 0 };
   const later = (seconds, fn) => state.pending.push({ t: seconds, fn });
 
@@ -101,6 +108,11 @@ export function boot(doc = document) {
           const f = ev.fighter, rig = viewFor(f), tr = trails.get(f);
           if (tr && isPlayer(f)) tr.setColor(TRAIL_COLORS[ev.ability.id] ?? TRAIL_COLORS.default);
           if (rig?.grimoire && (ev.ability.id === "LanternBreak" || ev.ability.id === "Counter")) rig.grimoireGlow = 1;
+          if (ev.ability.id === "AirJump") vfx.ring({ x: f.pos.x, y: f.pos.y + 0.05, z: f.pos.z }, 2.2, PALETTE.gale, 0.3);
+          if (ev.ability.id === "AirDash") {
+            vfx.flash({ x: f.pos.x, y: f.pos.y + 1, z: f.pos.z }, 1.6, "#bff4ff", 0.12);
+            vfx.sparksAt({ x: f.pos.x, y: f.pos.y + 1, z: f.pos.z }, 6, "white", 6, 0);
+          }
           break;
         }
         case "abilityEvent": {
@@ -110,6 +122,14 @@ export function boot(doc = document) {
           else if (e.type === EventType.SpawnVfx) {
             if (e.key === "gale") vfx.crescent(f.pos, f.yaw);
             if ((e.key === "gale" || e.key === "grimoire") && rig?.grimoire) rig.grimoireGlow = 1;
+            if (e.key === "vortex") {
+              const c = { x: f.pos.x + Math.sin(f.yaw) * 3.2, y: f.pos.y + 1, z: f.pos.z + Math.cos(f.yaw) * 3.2 };
+              vfx.ring(c, 6, PALETTE.gale, 0.3, true); vfx.ring({ ...c, y: c.y - 0.6 }, 4.5, "#bff4ff", 0.25, true);
+              vfx.sparksAt(c, 10, "mint", 7, 0);
+            }
+            if (e.key === "tempest") {
+              for (const [h, s] of [[0.6, 4.6], [1.1, 5.2], [1.6, 4.2]]) vfx.ring({ x: f.pos.x, y: f.pos.y + h, z: f.pos.z }, s, PALETTE.gale, 0.45);
+            }
             if (e.key === "glint") { vfx.flash(head(f), 1.4, PALETTE.danger, 0.35); sfx.play("glint"); }
             if (e.key === "charge" && rig) { vfx.flash(rig.bladeWorld().tip, 2.2, PALETTE.lantern, 0.3); vfx.ring({ x: f.pos.x, y: 0.05, z: f.pos.z }, 4, PALETTE.lantern, 0.3); }
           } else if (e.type === EventType.CameraCue) {
@@ -122,7 +142,8 @@ export function boot(doc = document) {
           const { attacker: a, defender: d, spec, result, at, ability } = ev;
           const heavy = spec.hitstop >= 8;
           const finisher = ability.tags.includes("finisher");
-          vfx.sparksAt(at, heavy ? 14 : 7, a.team === Team.Player ? (ability.id === "GaleCutter" ? "mint" : "gold") : "red", heavy ? 12 : 9);
+          const windy = ability.id === "GaleCutter" || ability.id === "VacuumPull" || ability.id === "TempestEdge";
+          vfx.sparksAt(at, heavy ? 14 : 7, a.team === Team.Player ? (windy ? "mint" : "gold") : "red", heavy ? 12 : 9);
           vfx.flash(at, heavy ? 2.4 : 1.4, a.team === Team.Player ? "#fff2cf" : "#ffb0a0", heavy ? 0.16 : 0.1);
           vfx.number(at, result.healthDamage, `${isPlayer(d) ? "hurt" : ""} ${heavy ? "big" : ""}`);
           viewFor(d)?.hitFlash(heavy ? 0.1 : 0.06);
@@ -201,14 +222,18 @@ export function boot(doc = document) {
     root.querySelector('[data-menu="frameData"]')?.setAttribute("aria-pressed", String(settings.frameData));
     root.querySelector('[data-menu="flashes"]')?.setAttribute("aria-pressed", String(settings.flashes));
     root.querySelector('[data-menu="sound"]')?.setAttribute("aria-pressed", String(settings.sound));
+    root.querySelector('[data-menu="assist"]')?.setAttribute("aria-pressed", String(settings.assist));
     vfx.reduceFlashes = !settings.flashes;
     sfx.setEnabled(settings.sound);
+    world.assist = settings.assist;
+    controls.smartCombo = settings.assist;
   };
   const toggleHelp = (on = !state.help) => { state.help = on; root.querySelector("[data-help]").hidden = !on; };
   menu("help", () => toggleHelp());
   menu("frameData", () => { settings.frameData = !settings.frameData; applySettings(); });
   menu("flashes", () => { settings.flashes = !settings.flashes; applySettings(); });
   menu("sound", () => { settings.sound = !settings.sound; applySettings(); });
+  menu("assist", () => { settings.assist = !settings.assist; applySettings(); hud.toast(settings.assist ? "ASSIST ON" : "ASSIST OFF"); });
   menu("reset", restart);
   root.querySelector("[data-help-close]")?.addEventListener("click", () => toggleHelp(false));
   applySettings();
@@ -224,6 +249,24 @@ export function boot(doc = document) {
   controls.onFirstInput = start;
   root.querySelector("[data-start]").addEventListener("pointerdown", () => { controls.onFirstInput = null; start(); });
 
+  // Adaptive resolution: drop render resolution when frames run long, restore it when there's headroom.
+  const maxRatio = Math.min(devicePixelRatio || 1, mobile ? 1.5 : 2);
+  const quality = {
+    ratio: maxRatio, avg: 1 / 60, timer: 0, fps: 60,
+    update(dt) {
+      this.avg += (dt - this.avg) * 0.05;
+      this.fps = 1 / this.avg;
+      this.timer += dt;
+      if (this.timer < 2) return;
+      this.timer = 0;
+      let next = this.ratio;
+      if (this.fps < 48) next = Math.max(0.6, this.ratio - 0.15);
+      else if (this.fps > 58 && this.ratio < maxRatio) next = Math.min(maxRatio, this.ratio + 0.1);
+      if (next !== this.ratio) { this.ratio = next; engine.setHardwareScalingLevel(1 / next); }
+    },
+  };
+  hud.quality = quality;
+
   let last = performance.now();
   engine.runRenderLoop(() => {
     const now = performance.now();
@@ -234,6 +277,11 @@ export function boot(doc = document) {
     controls.poll(dt);
     for (const cmd of controls.drainCommands()) {
       if (cmd === "lock") { const t = world.toggleLock(); if (!t) camera.yaw = world.player.yaw; sfx.play("ui"); }
+      if (cmd === "unlock" && world.lockTarget) { world.lockTarget = null; sfx.play("ui"); }
+      if (cmd === "lockTap") { if (world.lockTarget && world.liveEnemies.length > 1) world.switchLock(1); else world.toggleLock(); sfx.play("ui"); }
+      if (cmd === "switchRight" || cmd === "switchLeft" || ((cmd === "flickRight" || cmd === "flickLeft") && world.lockTarget)) {
+        world.switchLock(cmd.endsWith("Left") ? -1 : 1); sfx.play("ui");
+      }
       if (cmd === "help") toggleHelp();
       if (cmd === "reset") restart();
       if (cmd === "frameData") { settings.frameData = !settings.frameData; applySettings(); }
@@ -246,7 +294,7 @@ export function boot(doc = document) {
     const look = controls.takeLook();
     const { fx, fz, rx, rz } = camera.basis;
     const m = controls.move;
-    world.player.moveInput = { x: rx * m.x + fx * m.y, z: rz * m.x + fz * m.y };
+    world.player.moveInput.x = rx * m.x + fx * m.y; world.player.moveInput.z = rz * m.x + fz * m.y;
     world.player.holdBlock = controls.blockHeld;
 
     for (let i = state.pending.length - 1; i >= 0; i--) {
@@ -291,9 +339,14 @@ export function boot(doc = document) {
     hud.update(dt, world, controls.device);
 
     if (impactLeft > 0) { impactLeft -= dt; if (impactLeft <= 0) canvas.style.filter = ""; }
+    quality.update(dt);
     scene.render();
   });
   addEventListener("resize", () => engine.resize());
+  // Leaving the tab pauses the fight (and stops the clock from catching up afterwards).
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && state.started && !state.paused) { state.paused = true; root.classList.add("paused"); }
+  });
 
   // Test hook: freeze the live clock so automated checks can step the sim frame-exactly.
   const freezeLogic = (on) => { state.frozen = on; };

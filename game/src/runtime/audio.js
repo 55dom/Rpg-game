@@ -97,6 +97,10 @@ export class Sfx {
         this._noise(t, 0.6, { type: "lowpass", f0: 5000, f1: 200, gain: 0.5 });
         for (const [f, g] of [[523, 0.12], [784, 0.1], [1046, 0.08]]) this._tone(t + 0.04, 1.2, { f0: f, gain: g });
         break;
+      case "vacuum":
+        this._noise(t, 0.45, { f0: 3500, f1: 400, q: 4, gain: 0.22, attack: 0.3 });
+        this._tone(t, 0.45, { type: "sawtooth", f0: 900, f1: 120, gain: 0.05, attack: 0.25 });
+        break;
       case "gale": this._noise(t, 0.35, { f0: 600, f1: 3500, q: 3, gain: 0.25, attack: 0.04 }); break;
       case "glint": this._tone(t, 0.12, { f0: 2400, gain: 0.12 }); this._tone(t + 0.1, 0.18, { f0: 3200, gain: 0.1 }); break;
       case "slam": this._tone(t, 0.4, { f0: 110, f1: 30, gain: 0.6 }); this._noise(t, 0.3, { type: "lowpass", f0: 1500, f1: 200, gain: 0.4 }); break;

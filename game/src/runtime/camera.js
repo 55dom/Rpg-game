@@ -15,6 +15,7 @@ export class FollowCamera {
     this.distance = mobile ? 9.2 : 8.2;
     this.shoulder = 1.1; // over-the-shoulder: Rook sits left of center so targets stay visible
     this.focus = new BB.Vector3(0, 1.3, -4);
+    this.tmp = new BB.Vector3();
     this.trauma = 0;
     this.punch = 0;
     this.reduceMotion = false;
@@ -31,7 +32,6 @@ export class FollowCamera {
   }
 
   update(dt, playerPos, lockPos, look) {
-    const BB = B();
     this.t += dt;
     this.yaw += look.x;
     this.pitch = Math.max(0.08, Math.min(0.95, this.pitch + look.y));
@@ -52,7 +52,7 @@ export class FollowCamera {
     this.focus.z = lerp(this.focus.z, fz, k);
 
     const cp = Math.cos(this.pitch);
-    const pos = new BB.Vector3(
+    const pos = this.tmp.set(
       this.focus.x - Math.sin(this.yaw) * dist * cp,
       this.focus.y + Math.sin(this.pitch) * dist,
       this.focus.z - Math.cos(this.yaw) * dist * cp,

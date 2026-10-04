@@ -10,12 +10,23 @@ const $ = (root, sel) => root.querySelector(sel);
 const LABELS = {
   keyboard: { Light: "J", Heavy: "K", Dodge: "Shift", Block: "F", Jump: "Space", Spell1: "E", Lock: "Q" },
   gamepad: { Light: "X", Heavy: "Y", Dodge: "B", Block: "LB", Jump: "A", Spell1: "RB", Lock: "R3" },
-  touch: { Light: "Slash", Heavy: "Heavy", Dodge: "Dodge", Block: "Guard", Jump: "Jump", Spell1: "Gale", Lock: "Lock" },
+  touch: { Light: "Slash", Heavy: "Heavy", Dodge: "Dodge", Block: "Guard", Jump: "Jump", Spell1: "Gale", Spell2: "Pull", Spell3: "Edge", Lock: "Lock" },
 };
+LABELS.keyboard.Spell2 = "R"; LABELS.keyboard.Spell3 = "T";
+LABELS.gamepad.Spell2 = "RT"; LABELS.gamepad.Spell3 = "LT";
 
 export class Hud {
-  constructor(root) {
+  constructor(root, spells = []) {
     this.root = root;
+    this.spells = spells;
+    const row = $(root, "[data-spells]");
+    this.spellEls = spells.map((sp) => {
+      const el = document.createElement("span");
+      el.className = "spell";
+      el.innerHTML = `<kbd></kbd>${sp.name}<small>${sp.ability.manaCost}</small>`;
+      row?.appendChild(el);
+      return el;
+    });
     this.el = {
       hp: $(root, "[data-hp]"), hpLag: $(root, "[data-hp-lag]"), posture: $(root, "[data-posture]"), mana: $(root, "[data-mana]"),
       target: $(root, "[data-target]"), thp: $(root, "[data-thp]"), tposture: $(root, "[data-tposture]"), tbroken: $(root, "[data-tbroken]"),
@@ -83,6 +94,11 @@ export class Hud {
     this.set("hpLag", e.hpLag, "width", pct(this.hpLag));
     this.set("posture", e.posture, "width", pct(c.posture.normalized));
     this.set("mana", e.mana, "width", pct(p.mana.normalized));
+    this.spells.forEach((sp, i) => {
+      const el = this.spellEls[i];
+      this.set(`sp${i}`, el, "class", p.mana.current >= sp.ability.manaCost ? "spell" : "spell low");
+      this.set(`spk${i}`, el.firstChild, "text", this.label(device, sp.intent));
+    });
 
     const focus = world.lockTarget?.alive ? world.lockTarget : this.focusTimer > 0 && this.focus?.alive ? this.focus : null;
     this.focusTimer -= dt;
@@ -140,7 +156,10 @@ export class Hud {
     const ctx = p.context();
     const chips = [];
     if (ctx & MoveContext.Grounded) chips.push("GROUND");
-    if (ctx & MoveContext.Airborne) chips.push("AIR");
+    if (ctx & MoveContext.Airborne) {
+      const left = [ctx & MoveContext.AirJumpReady ? "jump" : "", ctx & MoveContext.AirDashReady ? "dash" : ""].filter(Boolean);
+      chips.push(left.length ? `AIR (${left.join("+")})` : "AIR");
+    }
     if (ctx & MoveContext.AfterDash) chips.push("AFTER DASH");
     if (ctx & MoveContext.AfterParry) chips.push(`COUNTER ${p.counterFrames}`);
     if (ctx & MoveContext.TargetStaggered) chips.push("TARGET BROKEN");
@@ -148,7 +167,8 @@ export class Hud {
     if (world.afterimageActive) chips.push(`AFTERIMAGE ${world.slowFrames}`);
     this.set("fdCtx", e.fdCtx, "text", chips.join(" · "));
     const buf = p.buffer.live(world.frame).map((i) => IntentName[i]).join(" ");
-    this.set("fdBuf", e.fdBuf, "text", buf ? `buffer: ${buf}` : "buffer: —");
+    const fps = this.quality ? ` · ${Math.round(this.quality.fps)} fps · res ${this.quality.ratio.toFixed(2)}x` : "";
+    this.set("fdBuf", e.fdBuf, "text", (buf ? `buffer: ${buf}` : "buffer: —") + fps);
   }
 }
 

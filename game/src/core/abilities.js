@@ -21,6 +21,7 @@ export const StartResult = Object.freeze({
 /** Context flags the combo graph reads. */
 export const MoveContext = Object.freeze({
   None: 0, Grounded: 1, Airborne: 2, AfterDash: 4, AfterParry: 8, TargetStaggered: 16,
+  AirJumpReady: 32, AirDashReady: 64,
 });
 
 /**

@@ -141,9 +141,15 @@ export class Rig {
     const rest = this.poses.rest;
     const a = fighter.current;
     const p = a && this.poses[a.id];
-    if (!p) return { rot: rest, lean: 0, active: false };
+    if (!p) return { rot: rest, lean: 0, active: false, spin: 0 };
     const f = fighter.runner.frame + (fighter.frozen ? 0 : t);
     const s = a.startup, act = a.active;
+    // Optional full turns: over the active frames for attacks, over the whole move otherwise.
+    let spin = 0;
+    if (p.spin) {
+      const k = a.hasHit ? clamp01((f - s) / Math.max(1, act)) : clamp01(f / a.total);
+      spin = easeOut(k) * p.spin * Math.PI * 2;
+    }
     let rot, lean = 0, active = false;
     if (f < s) {
       const k = easeInOut(clamp01(f / Math.max(1, s)));
@@ -156,7 +162,7 @@ export class Rig {
       const back = easeInOut(clamp01((k - 0.35) / 0.65)); // hold the follow-through a beat
       rot = mix(p.to, rest, back); lean = (p.lean ?? 0) * (1 - back); active = k < 0.25 && a.hasHit;
     }
-    return { rot, lean, active };
+    return { rot, lean, active: active || (p.spin > 0 && a.hasHit && f >= s && f < s + act), spin };
   }
 
   /** Apply one render frame. */
@@ -171,8 +177,10 @@ export class Rig {
     this.root.position.set(x + jitter, y, z);
     this.root.rotation.y = lerpAngleSafe(fighter.prevYaw, fighter.yaw, t);
 
-    const { rot, lean, active } = this.armPose(fighter, t);
+    const { rot, lean, active, spin } = this.armPose(fighter, t);
     this.shoulder.rotation.set(rot[0], rot[1], rot[2]);
+    this.body.rotation.y = spin;
+    if (this.skirt) this.skirt.rotation.y = spin;
     this.swinging = active;
 
     const speed = Math.hypot(fighter.vel.x, fighter.vel.z);
@@ -227,7 +235,7 @@ export class Rig {
   bladeWorld() {
     refreshWorld(this.tipNode);
     this.hiltNode.computeWorldMatrix(true);
-    return { tip: this.tipNode.getAbsolutePosition().clone(), hilt: this.hiltNode.getAbsolutePosition().clone() };
+    return { tip: this.tipNode.getAbsolutePosition(), hilt: this.hiltNode.getAbsolutePosition() }; // live vectors: copy, don't keep
   }
 
   /** A frozen translucent copy of the current pose (Afterimage ghosts). */

@@ -18,6 +18,8 @@ export const ROOK_HITBOXES = Object.freeze({
   Wide: { center: [0, 1, 1.2], size: [3.2, 1.9, 2.6] },
   Cutter: { center: [0, 1, 2.6], size: [1.2, 1.4, 5.0] },
   Slam: { center: [0, 0.5, 0.8], size: [3.0, 1.4, 3.0] },
+  Vortex: { center: [0, 1, 3.2], size: [5.0, 3.0, 5.4] },
+  Ring: { center: [0, 1, 0], size: [4.4, 2.0, 4.4] },
 });
 
 const m = parseMask;
@@ -39,6 +41,10 @@ export const ROOK_POSES = Object.freeze({
   DashStrike: { from: [0.2, 1.4, 0], to: [0.3, -1.6, 0], lean: 0.4 },
   Dodge: { from: [0.8, 0.9, 0], to: [0.8, 0.9, 0], lean: 0.5 },
   Jump: { from: [0.4, 0.7, 0], to: [0.4, 0.7, 0], lean: -0.1 },
+  AirJump: { from: [0.3, 0.8, 0], to: [0.3, 0.8, 0], lean: -0.3, spin: -1 },
+  AirDash: { from: [0.9, 1.0, 0], to: [0.9, 1.0, 0], lean: 0.7 },
+  TempestEdge: { from: [0.1, 1.7, 0], to: [0.3, 1.7, 0], lean: 0.2, spin: 3 },
+  VacuumPull: { from: [-0.4, 0.2, 0], to: [0.2, -0.6, 0.6], lean: -0.15, grimoire: true },
   GaleCutter: { from: [-1.5, -0.7, 0], to: [1.0, 0.5, 0], grimoire: true },
   Guard: { from: [-0.3, -0.95, 0.9], to: [-0.3, -0.95, 0.9], lean: -0.1 },
   Counter: { from: [0.2, 1.9, 0], to: [0.3, -1.9, 0], lean: 0.45 },
@@ -70,6 +76,14 @@ export const ROOK_ABILITIES = (() => {
   add({ id: "Jump", startup: 0, active: 4, recovery: 2,
     events: [{ frame: 0, type: E.Custom, key: "jump", value: 10 }, swing(0, "jump")],
     cancels: [{ from: 2, to: 5, into: m("Light|Heavy|Dodge|AnySpell|Jump") }] });
+  // Step 4: one air jump and one air dash per airtime (refreshed on landing).
+  add({ id: "AirJump", startup: 0, active: 4, recovery: 4,
+    events: [{ frame: 0, type: E.Custom, key: "airJump", value: 9 }, swing(0, "jump")],
+    cancels: [{ from: 3, to: 7, into: m("Light|Heavy|Dodge|AnySpell") }] });
+  add({ id: "AirDash", startup: 0, active: 9, recovery: 10,
+    events: [{ frame: 0, type: E.Custom, key: "airDash", value: 19 }, { frame: 0, type: E.Move, key: "toTarget", value: 4.5 },
+      { frame: 0, type: E.Invulnerable, value: 6 }, swing(0, "dodge")],
+    cancels: [{ from: 6, to: 18, into: m("Light|Heavy|Jump|AnySpell") }] });
 
   const airHit = hitSpec({ damage: 10, posture: 8, hitstop: 3, hitstun: 16, launch: 3 });
   const airCancels = [{ from: 8, to: 19, into: followUps }];
@@ -94,6 +108,22 @@ export const ROOK_ABILITIES = (() => {
     events: [{ frame: 0, type: E.SpawnVfx, key: "grimoire" }, swing(8, "gale"), { frame: 10, type: E.SpawnVfx, key: "gale" },
       { frame: 10, type: E.SpawnHitbox, key: "Cutter", value: 6 }],
     cancels: [{ from: 16, to: 33, into: m("Jump"), requiresHit: true }, { from: 16, to: 33, into: m("Dodge") }] });
+
+  // Step 4: second spell. Pulls everything in the vortex to Rook's blade (works in the air too).
+  add({ id: "VacuumPull", startup: 12, active: 6, recovery: 16, manaCost: 20,
+    hit: hitSpec({ damage: 6, posture: 12, hitstop: 5, hitstun: 34, pull: 6 }),
+    events: [{ frame: 0, type: E.SpawnVfx, key: "grimoire" }, swing(6, "vacuum"), { frame: 12, type: E.SpawnVfx, key: "vortex" },
+      { frame: 12, type: E.SpawnHitbox, key: "Vortex", value: 6 }],
+    cancels: [{ from: 18, to: 33, into: m("Light|Heavy|Jump|Dodge|Spell1|Spell3") }, { from: 14, to: 33, into: m("Light|Heavy"), requiresHit: true }] });
+
+  // Third spell, added as data only (Definition of Done #4): a wind-wrapped spin, three hits.
+  add({ id: "TempestEdge", startup: 8, active: 18, recovery: 16, manaCost: 25,
+    hit: hitSpec({ damage: 9, posture: 11, hitstop: 3, hitstun: 22, knockback: 0.3 }),
+    events: [{ frame: 0, type: E.SpawnVfx, key: "grimoire" }, { frame: 8, type: E.Move, value: 1.2 },
+      { frame: 8, type: E.SpawnVfx, key: "tempest" }, swing(6, "gale"), swing(12), swing(18),
+      { frame: 8, type: E.SpawnHitbox, key: "Ring", value: 4 }, { frame: 14, type: E.SpawnHitbox, key: "Ring", value: 4 },
+      { frame: 20, type: E.SpawnHitbox, key: "Ring", value: 4 }],
+    cancels: [{ from: 20, to: 41, into: m("Jump"), requiresHit: true }, { from: 26, to: 41, into: followUps }] });
 
   // Step 3: the defensive game and its rewards.
   add({ id: "Guard", startup: 0, active: 8, recovery: 12,
@@ -124,18 +154,26 @@ export function buildRookGraph(contextProvider, A = ROOK_ABILITIES) {
     .addEntry(Intent.Light, A.AirL1, C.Airborne)
     .addEntry(Intent.Heavy, A.AirSlam, C.Airborne)
     .addEntry(Intent.Heavy, A.Launcher, C.Grounded)
-    .addEntry(Intent.Jump, A.Jump)
-    .addEntry(Intent.Dodge, A.Dodge)
+    .addEntry(Intent.Jump, A.Jump, C.Grounded)
+    .addEntry(Intent.Jump, A.AirJump, C.Airborne | C.AirJumpReady)
+    .addEntry(Intent.Dodge, A.Dodge, C.Grounded)
+    .addEntry(Intent.Dodge, A.AirDash, C.Airborne | C.AirDashReady)
     .addEntry(Intent.Block, A.Guard, C.Grounded)
-    .addEntry(Intent.Spell1, A.GaleCutter);
+    .addEntry(Intent.Spell1, A.GaleCutter)
+    .addEntry(Intent.Spell2, A.VacuumPull)
+    .addEntry(Intent.Spell3, A.TempestEdge, C.Grounded);
   g.addEdge(A.L1, Intent.Light, A.L2).addEdge(A.L2, Intent.Light, A.L3).addEdge(A.L3, Intent.Light, A.L4)
     .addEdge(A.L2, Intent.Heavy, A.Launcher)
     .addEdge(A.AirL1, Intent.Light, A.AirL2).addEdge(A.AirL2, Intent.Light, A.AirL3)
     .addEdge(A.AirL1, Intent.Heavy, A.AirSlam).addEdge(A.AirL2, Intent.Heavy, A.AirSlam).addEdge(A.AirL3, Intent.Heavy, A.AirSlam);
   g.addGlobal(Intent.Light, A.Counter, C.AfterParry)
-    .addGlobal(Intent.Dodge, A.Dodge)
+    .addGlobal(Intent.Dodge, A.Dodge, C.Grounded)
+    .addGlobal(Intent.Dodge, A.AirDash, C.Airborne | C.AirDashReady)
     .addGlobal(Intent.Spell1, A.GaleCutter)
-    .addGlobal(Intent.Jump, A.Jump)
+    .addGlobal(Intent.Spell2, A.VacuumPull)
+    .addGlobal(Intent.Spell3, A.TempestEdge, C.Grounded)
+    .addGlobal(Intent.Jump, A.Jump, C.Grounded)
+    .addGlobal(Intent.Jump, A.AirJump, C.Airborne | C.AirJumpReady)
     .addGlobal(Intent.Light, A.DashStrike, C.Grounded | C.AfterDash)
     .addGlobal(Intent.Light, A.AirL1, C.Airborne)
     .addGlobal(Intent.Heavy, A.AirSlam, C.Airborne);
