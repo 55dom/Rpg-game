@@ -77,6 +77,42 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
 .bossbar .boss-hp s { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.7); z-index: 2; }
 .is-touch .bossbar { bottom: auto; top: 316px; width: calc(100vw - 32px); }
 .is-touch .bossbar .boss-name { font-size: 11px; }
+.spell b { font-weight: 400; }
+.spell { position: relative; padding-bottom: 5px; }
+.spell .xp { position: absolute; left: 3px; right: 3px; bottom: 1px; height: 2px; background: rgba(120,212,178,0.15); border-radius: 2px; overflow: hidden; }
+.spell .xp u { display: block; height: 100%; width: 0; background: var(--gale); text-decoration: none; }
+.spell.ready { border-color: #fff; box-shadow: 0 0 10px rgba(143,233,255,0.7); animation: pulse 0.6s ease-in-out infinite alternate; }
+.spell.evolved { color: #ffe08a; border-color: rgba(255,224,138,0.5); }
+.spell.evolved .xp u { background: #ffe08a; }
+.combo em { display: block; font: 400 34px/1 var(--font-display); color: #fff; font-style: normal; text-shadow: 0 0 18px rgba(255,224,138,0.9); }
+.line { position: absolute; left: 50%; bottom: 13%; transform: translateX(-50%); max-width: min(720px, calc(100vw - 32px)); text-align: center; pointer-events: none; opacity: 0;
+  font: 400 16px/1.4 var(--font-body); color: var(--text); text-shadow: 0 2px 0 #000, 0 0 10px #000; }
+.line b { display: block; font: 600 11px/1 var(--font-mono); letter-spacing: 0.3em; margin-bottom: 4px; }
+.line b.bas { color: #e8b46a; } .line b.juno { color: #ff8fa3; }
+.line.show { animation: line 4s ease-out forwards; }
+@keyframes line { 0% { opacity: 0; transform: translate(-50%, 6px); } 8%, 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
+.modal { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(10, 11, 16, 0.78); padding: 16px; z-index: 6; }
+.modal[hidden] { display: none; }
+.modal-card { width: min(640px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; text-align: center; }
+.modal-card h2 { font: 400 18px/1.2 var(--font-display); letter-spacing: 0.16em; margin: 0 0 16px; }
+.pcards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pcard { text-align: left; background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 14px; cursor: pointer; font: inherit; }
+.pcard:hover, .pcard:focus { border-color: var(--gale); outline: none; }
+.pcard kbd { float: right; font: 600 10px/1 var(--font-mono); border: 1px solid var(--line); border-radius: 4px; padding: 3px 5px; color: var(--muted); }
+.pcard b { display: block; font: 400 17px/1.2 var(--font-display); color: #ffe08a; margin-bottom: 6px; letter-spacing: 0.06em; }
+.pcard span { font-size: 13px; color: var(--muted); line-height: 1.5; }
+.rank { font: 400 96px/1 var(--font-display); margin: 4px 0 10px; }
+.rank.rS { color: #ffe08a; text-shadow: 0 0 30px rgba(255,224,138,0.8); } .rank.rA { color: #bff4ff; } .rank.rB { color: var(--gale); } .rank.rC { color: var(--muted); }
+.stats { display: grid; grid-template-columns: 1fr auto; gap: 6px 18px; text-align: left; max-width: 360px; margin: 0 auto 18px; font-size: 14px; }
+.stats dt { color: var(--muted); } .stats dd { margin: 0; font-family: var(--font-mono); }
+.start-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+button.go { border: 0; cursor: pointer; }
+button.go.alt { background: transparent; color: var(--text); border: 1px solid var(--line); animation: none; }
+.start .hint, .modal .hint { font-size: 12px; color: var(--muted); margin-top: 12px; }
+.pad .b-wall { right: 6px; bottom: 228px; width: 50px; height: 50px; font-size: 10px; border-color: var(--gale); }
+.pad .b-page { right: 66px; bottom: 210px; width: 46px; height: 46px; font-size: 9px; display: none; border-color: #fff; animation: pulse 0.6s ease-in-out infinite alternate; }
+.page-ready .pad .b-page { display: block; }
+@media (max-width: 640px) { .pcards { grid-template-columns: 1fr; } .rank { font-size: 72px; } .line { bottom: 40%; font-size: 13px; } }
 .party { display: grid; gap: 6px; margin-top: 8px; }
 .ally { opacity: 0.85; }
 .ally.ready { opacity: 1; }
@@ -101,8 +137,8 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
 .pad .b-bas { right: 186px; bottom: 196px; border-color: #e8b46a; }
 .pad .b-juno { right: 138px; bottom: 196px; border-color: #ff8fa3; }
 .pad .b-stance { right: 196px; bottom: 76px; }
-.spells { display: flex; gap: 6px; margin-top: 7px; font: 400 10px/1 var(--font-mono); color: var(--gale); }
-.spell { display: inline-flex; align-items: center; gap: 4px; padding: 3px 5px; border: 1px solid rgba(120, 212, 178, 0.35); border-radius: 4px; }
+.spells { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; font: 400 10px/1 var(--font-mono); color: var(--gale); }
+.spell { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; padding: 3px 5px; border: 1px solid rgba(120, 212, 178, 0.35); border-radius: 4px; }
 .spell kbd { font: 600 9px/1 var(--font-mono); color: var(--ink); background: var(--gale); border-radius: 3px; padding: 2px 3px; }
 .spell small { color: var(--muted); font-size: 9px; }
 .spell.low { opacity: 0.4; }
@@ -195,7 +231,7 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
 .start h1 { margin: 0; font: 400 clamp(42px, 11vw, 88px)/1 var(--font-display); letter-spacing: 0.2em; color: var(--text); text-shadow: 0 0 40px rgba(230, 181, 78, 0.35); }
 .start .sub { font: 400 clamp(14px, 3.4vw, 18px)/1.4 var(--font-display); color: var(--lantern); letter-spacing: 0.2em; margin: 10px 0 26px; }
 .start p { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 6px 0; }
-.start .go { display: inline-block; margin-top: 22px; font: 600 13px/1 var(--font-mono); letter-spacing: 0.3em; color: var(--ink); background: var(--lantern); padding: 12px 18px; border-radius: 999px; animation: pulse 0.9s ease-in-out infinite alternate; }
+.start .go, .modal .go { display: inline-block; margin-top: 22px; font: 600 13px/1 var(--font-mono); letter-spacing: 0.3em; color: var(--ink); background: var(--lantern); padding: 12px 18px; border-radius: 999px; animation: pulse 0.9s ease-in-out infinite alternate; }
 .help { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(10, 11, 16, 0.82); padding: 16px; z-index: 5; }
 .help[hidden] { display: none; }
 .help-card { max-width: 760px; width: 100%; max-height: calc(100% - 16px); overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; }
@@ -255,7 +291,8 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
     </nav>
   </header>
 
-  <div class="combo" data-combo><b data-combo-n>0</b><span>HITS</span></div>
+  <div class="combo" data-combo><b data-combo-n>0</b><span>HITS</span><em data-grade></em></div>
+  <div class="line" data-line></div>
   <div class="toast" data-toast></div>
   <div class="wave" data-wave></div>
   <div class="prompt" data-prompt></div>
@@ -294,6 +331,8 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
       <button class="b-bas" data-intent="cmd:assist:bas">BAS</button>
       <button class="b-juno" data-intent="cmd:assist:juno">JUNO</button>
       <button class="b-stance" data-intent="cmd:stance">STNC</button>
+      <button class="b-wall" data-intent="Spell4">WALL</button>
+      <button class="b-page" data-intent="cmd:pages">PAGE</button>
       <button class="b-lock" data-intent="Lock">LOCK</button>
     </div>
   </div>
@@ -313,6 +352,8 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
         <tr><td>Gale Cutter (15 mana)</td><td><kbd>E</kbd></td><td>RB / R1</td></tr>
         <tr><td>Vacuum Pull (20 mana)</td><td><kbd>R</kbd></td><td>RT / R2</td></tr>
         <tr><td>Tempest Edge (25 mana)</td><td><kbd>T</kbd></td><td>LT / L2</td></tr>
+        <tr><td>Wind Wall (20 mana)</td><td><kbd>Y</kbd></td><td>D-pad ▼</td></tr>
+        <tr><td>Evolve a ready page</td><td><kbd>P</kbd></td><td>View / Back</td></tr>
         <tr><td>Ultimate: Skyrender (full Surge)</td><td><kbd>V</kbd></td><td>LB + RB</td></tr>
         <tr><td>Call Bas · call Juno (Assist)</td><td><kbd>1</kbd> · <kbd>2</kbd></td><td>D-pad ◀ · ▶</td></tr>
         <tr><td>Sandbox: jump to the boss</td><td><kbd>B</kbd></td><td>—</td></tr>
@@ -334,6 +375,8 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
         <li><b>Signature chain:</b> Slash, Slash, Gale, Jump, Slash, Slash, Dodge, Slash, Heavy.</li>
         <li><b>Vacuum Pull</b> drags enemies to your blade, even up into the air. <b>Tempest Edge</b> spins three hits all around you.</li>
         <li><b>Mana</b> refills a little with every sword hit.</li>
+        <li><b>Wind Wall</b> stands in front of you for 3 seconds: it swallows bolts and shoves enemies back.</li>
+        <li><b>Page evolution:</b> every spell page learns from its hits (the thin bar under each spell). When one glows, press <b>P</b> and choose one of two evolutions, e.g. Gale Cutter → <b>Twin Cutter</b> or <b>Gale Lance</b>; Wind Wall → <b>Mirror Gale</b> (throws bolts back) or <b>Downdraft</b> (launches).</li>
         <li><b>Surge</b> (the bright bar) fills as you deal and take damage, parry, and dodge perfectly. When it's full, unleash <b>Skyrender</b>.</li>
         <li><b>Boss: Hask the Bogwarden.</b> When it dives, a mud mound hunts you and mud waves skim the ground: jump or dodge them, or you'll be <b>WEIGHTED</b> (slow, low jumps; Juno's Stitch cleans it off). Hit the mound with a <b>wind spell</b> to <b>UPROOT</b> it, launched and stunned. A red circle means it's about to erupt beneath you. At 65% it calls Fen Hounds; at 35% the bog drains, it stops diving, and its <b>exposed</b> underside takes 50% more damage.</li>
         <li><b>Know your enemy:</b> <b>Fen Hounds</b> rush in packs and lunge from range. <b>Cantors</b> sing violet bolts (slash them out of the air, parry, or dodge) and a <b>Hymn</b> that wards their allies: hit a warded foe with wind to <b>Dispel</b> it. <b>Bulwarks</b> block everything from the front: circle behind, guard-break them with heavies, or have Juno bind them. The <b>Bog Beast ★</b> can't be launched or interrupted until you break its posture, and its red-glint mud slam can't be blocked.</li>
@@ -347,13 +390,36 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
     </div>
   </div>
 
+  <div class="modal" data-pages hidden>
+    <div class="modal-card">
+      <h2 data-pages-title>CHOOSE AN EVOLUTION</h2>
+      <div class="pcards" data-pages-cards></div>
+      <p class="hint">Pick with J / K, A / B on the cards, or tap. P closes.</p>
+    </div>
+  </div>
+  <div class="modal" data-results hidden>
+    <div class="modal-card results-card">
+      <h2>THE BOGWARDEN FALLS</h2>
+      <div class="rank" data-rank>A</div>
+      <dl class="stats" data-stats></dl>
+      <div class="start-buttons">
+        <button class="go" data-again>PLAY AGAIN</button>
+        <button class="go alt" data-yard>TRAINING YARD</button>
+      </div>
+    </div>
+  </div>
+
   <div class="start" data-start>
     <div class="start-card">
       <h1>UNWRITTEN</h1>
       <div class="sub">KNIGHTS OF THE LAST LANTERN</div>
-      <p>Phase 2 · Step 4: clear six waves of the Greywater Fens, then face Hask the Bogwarden. (Sandbox: press B to go straight to the boss.)</p>
+      <p><b>Episode 4 · The Village That Wasn't There.</b> Lead Bas and Juno through six fights in the Greywater Fens, then face Hask the Bogwarden. Around 12 minutes.</p>
       <p>Keyboard and mouse, gamepad, or touch. Press <b>H</b> or <b>?</b> for controls.</p>
-      <span class="go">PRESS ANY KEY · CLICK · TAP</span>
+      <div class="start-buttons">
+        <button class="go" data-start-run>PLAY EPISODE 4</button>
+        <button class="go alt" data-start-yard>TRAINING YARD</button>
+      </div>
+      <p class="hint">Enter, or any attack button, starts the episode.</p>
     </div>
   </div>
 </div>

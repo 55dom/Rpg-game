@@ -6,7 +6,7 @@ import { Intent } from "../core/input.js";
 const KEYS = {
   KeyJ: Intent.Light, KeyK: Intent.Heavy, Space: Intent.Jump, ShiftLeft: Intent.Dodge, ShiftRight: Intent.Dodge,
   KeyL: Intent.Dodge, KeyF: Intent.Block, KeyE: Intent.Spell1, KeyR: Intent.Spell2, KeyT: Intent.Spell3,
-  KeyV: Intent.Ultimate,
+  KeyV: Intent.Ultimate, KeyY: Intent.Spell4,
 };
 // Standard gamepad mapping.
 const PAD = { 0: Intent.Jump, 1: Intent.Dodge, 2: Intent.Light, 3: Intent.Heavy, 4: Intent.Block, 5: Intent.Spell1, 7: Intent.Spell2, 6: Intent.Spell3 };
@@ -43,6 +43,8 @@ export class Controls {
       if (e.code === "Digit2") this.commands.push("assist:juno");
       if (e.code === "Digit3") this.commands.push("stance");
       if (e.code === "KeyB") this.commands.push("boss");
+      if (e.code === "KeyP") this.commands.push("pages");
+      if (e.code === "Enter") this.commands.push("confirm");
       if (e.code === "KeyG") this.commands.push("frameData");
       if (e.code === "Escape") this.commands.push("pause");
     });
@@ -170,7 +172,8 @@ export class Controls {
           else if (PAD[i] !== undefined) this.presses.push(PAD[i]);
           if (i === PAD_LOCK) this.commands.push("lock");
           if (i === PAD_HELP) this.commands.push("help");
-          if (i === PAD_RESET) this.commands.push("reset");
+          if (i === PAD_RESET) this.commands.push("pages"); // View / Back: page evolution
+          if (i === 13) this.presses.push(Intent.Spell4); // D-pad down
           if (i === 14) this.commands.push("assist:bas");   // D-pad left
           if (i === 15) this.commands.push("assist:juno");  // D-pad right
           if (i === 12) this.commands.push("stance");       // D-pad up

@@ -6,6 +6,8 @@ import { Team } from "./core/combat.js";
 import { World } from "./sim/world.js";
 import { ACOLYTE_ABILITIES } from "./data/acolyte.js";
 import { ROOK_ABILITIES } from "./data/rook.js";
+import { PAGES } from "./data/pages.js";
+import { EPISODE_4 } from "./data/run.js";
 import { B, PALETTE, glow, clamp01 } from "./runtime/look.js";
 import { Rig, LOOKS } from "./runtime/rig.js";
 import { Vfx, Trail } from "./runtime/vfx.js";
@@ -17,9 +19,8 @@ import { buildArena } from "./runtime/arena.js";
 
 const TRAIL_COLORS = { default: "#ffd98a", GaleCutter: PALETTE.gale, VacuumPull: PALETTE.gale, TempestEdge: "#a8f5dc", Counter: "#dff6ff", LanternBreak: "#ffcc55", enemy: "#ff5a4a" };
 const SPELLS = [
-  { intent: "Spell1", name: "Gale", ability: ROOK_ABILITIES.GaleCutter },
-  { intent: "Spell2", name: "Pull", ability: ROOK_ABILITIES.VacuumPull },
-  { intent: "Spell3", name: "Tempest", ability: ROOK_ABILITIES.TempestEdge },
+  { slot: "Spell1", short: "Gale" }, { slot: "Spell2", short: "Pull" },
+  { slot: "Spell3", short: "Tempest" }, { slot: "Spell4", short: "Wall" },
 ];
 
 export function boot(doc = document) {
@@ -58,7 +59,8 @@ export function boot(doc = document) {
   const controls = new Controls(canvas, root.querySelector("[data-touch]"));
   if (coarse) controls.device = "touch";
 
-  const world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: coarse, companions: true });
+  let world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: coarse, companions: true });
+  world.pageDefs = PAGES;
   const clock = new FrameClock();
   const views = new Map();
   const trails = new Map();
@@ -298,15 +300,44 @@ export function boot(doc = document) {
           sfx.play("slam"); camera.shake(0.45);
           break;
         }
-        case "wave": hud.banner(`WAVE ${ev.wave}`); sfx.play("wave"); break;
+        case "wave": if (!world.run) hud.banner(`WAVE ${ev.wave}`); sfx.play("wave"); break;
         case "waveClear":
+          if (world.run) break; // the run director handles clears
           hud.toast("YARD CLEAR", "clear");
           later(2.4, () => world.spawnWave());
           break;
         case "playerDown":
           hud.toast("ROOK FALLS", "danger");
-          later(2.6, restart);
+          if (!world.run) later(2.6, restart);
           break;
+        case "runStart": hud.banner(ev.episode.subtitle); break;
+        case "runStage": {
+          const enc = ev.encounter;
+          showBossCard(enc.title, ev.index === 0 ? `${EPISODE_4.title.toUpperCase()} · 1/${ev.total}` : `ENCOUNTER ${ev.index + 1} / ${ev.total}`);
+          arena.setBog(false);
+          break;
+        }
+        case "runLine": hud.say(ev.speaker, ev.text); break;
+        case "runCleared": hud.toast("CLEAR", "clear"); hud.banner("THE SQUAD CATCHES ITS BREATH · +35% HP"); sfx.play("wave"); break;
+        case "runRetry": hud.toast("ONE MORE TIME", "afterimage"); arena.setBog(false, true); walls.clear(); break;
+        case "runComplete": showResults(ev); break;
+        case "pageReady": {
+          const name = PAGES[ev.slot].name;
+          hud.toast("PAGE READY", "afterimage");
+          hud.banner(`${name.toUpperCase()} CAN EVOLVE · PRESS ${controls.device === "gamepad" ? "VIEW" : controls.device === "touch" ? "PAGE" : "P"}`);
+          sfx.play("surgeFull");
+          break;
+        }
+        case "pageEvolved": hud.toast(ev.branch.name.toUpperCase(), "finisher"); sfx.play("ultActivate"); break;
+        case "windWall": {
+          const z = ev.zone;
+          vfx.ring({ x: z.pos.x, y: 0.06, z: z.pos.z }, 4, PALETTE.gale, 0.4);
+          vfx.sparksAt({ x: z.pos.x, y: 1.2, z: z.pos.z }, 12, "mint", 7, 2);
+          walls.show(z);
+          break;
+        }
+        case "zoneEnd": walls.hide(ev.zone); break;
+        case "reflect": vfx.flash(ev.at, 2, "#bff4ff", 0.14); vfx.number(ev.at, "REFLECT", "text"); sfx.play("parry"); break;
         default: break;
       }
     }
@@ -334,6 +365,57 @@ export function boot(doc = document) {
     world.assist = settings.assist;
     controls.smartCombo = settings.assist;
   };
+  // Wind Wall visuals: a translucent sheet of wind per live zone.
+  const walls = (() => {
+    const pool = [0, 1].map((i) => {
+      const m = BB.MeshBuilder.CreatePlane(`wall-${i}`, { width: 5.2, height: 3.4, sideOrientation: BB.Mesh.DOUBLESIDE }, scene);
+      m.material = glow(scene, `wall-mat-${i}`, PALETTE.gale, 0.25, true); m.isPickable = false; m.setEnabled(false);
+      return { mesh: m, zone: null };
+    });
+    return {
+      show(z) { const s = pool.find((p) => !p.zone) ?? pool[0]; s.zone = z; s.mesh.setEnabled(true); s.mesh.position.set(z.pos.x, 1.7, z.pos.z); s.mesh.rotation.y = z.yaw; },
+      hide(z) { const s = pool.find((p) => p.zone === z); if (s) { s.zone = null; s.mesh.setEnabled(false); } },
+      update(t) { for (const s of pool) if (s.zone) { s.mesh.visibility = 0.55 + Math.sin(t * 14) * 0.2 * (s.zone.frames / s.zone.max); s.mesh.scaling.y = 0.9 + Math.sin(t * 9) * 0.06; } },
+      clear() { for (const s of pool) { s.zone = null; s.mesh.setEnabled(false); } },
+    };
+  })();
+
+  // Page evolution choice (pauses the fight).
+  const pageModal = root.querySelector("[data-pages]");
+  const openPages = () => {
+    const slot = Object.keys(world.pages).find((k) => world.pages[k].ready);
+    if (!slot) { hud.pushLog("No page is ready to evolve yet"); return; }
+    const def = PAGES[slot];
+    state.modal = true;
+    pageModal.hidden = false;
+    pageModal.querySelector("[data-pages-title]").textContent = `${def.name.toUpperCase()} · CHOOSE ITS EVOLUTION`;
+    const cards = pageModal.querySelector("[data-pages-cards]");
+    cards.innerHTML = def.branches.map((b) => `<button class="pcard" data-branch="${b.key}"><kbd>${b.key === "A" ? "J" : "K"}</kbd><b>${b.name}</b><span>${b.desc}</span></button>`).join("");
+    pageModal.dataset.slot = slot;
+    for (const btn of cards.querySelectorAll("[data-branch]")) btn.addEventListener("click", () => choosePage(btn.dataset.branch));
+  };
+  const choosePage = (key) => {
+    const slot = pageModal.dataset.slot;
+    if (!slot) return;
+    world.evolvePage(slot, key);
+    onEvents(world.drainEvents());
+    pageModal.hidden = true; pageModal.dataset.slot = ""; state.modal = false;
+  };
+
+  // Results screen at the end of the run.
+  const results = root.querySelector("[data-results]");
+  const showResults = (ev) => {
+    const s = ev.stats, m = Math.floor(s.frames / 3600), sec = Math.floor((s.frames / 60) % 60);
+    results.querySelector("[data-rank]").textContent = ev.rank;
+    results.querySelector("[data-rank]").className = `rank r${ev.rank}`;
+    results.querySelector("[data-stats]").innerHTML = [
+      ["Time", `${m}:${String(sec).padStart(2, "0")}`], ["Max combo", s.maxCombo], ["Damage dealt", Math.round(s.damageDealt)],
+      ["Damage taken", Math.round(s.damageTaken)], ["Reactions", s.reactions], ["Assists", s.assists],
+      ["Parries + perfect dodges", s.perfect], ["Defeated", s.kills], ["Retries", s.retries],
+    ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+    results.hidden = false; state.modal = true;
+  };
+
   // Ultimate name card (the "technique shout" beat).
   const ultCard = root.querySelector("[data-ultcard]");
   const showUltCard = () => { ultCard.classList.remove("show"); void ultCard.offsetWidth; ultCard.classList.add("show"); };
@@ -351,20 +433,36 @@ export function boot(doc = document) {
   menu("flashes", () => { settings.flashes = !settings.flashes; applySettings(); });
   menu("sound", () => { settings.sound = !settings.sound; applySettings(); });
   menu("assist", () => { settings.assist = !settings.assist; applySettings(); hud.toast(settings.assist ? "ASSIST ON" : "ASSIST OFF"); });
-  menu("reset", restart);
+  menu("reset", () => { if (state.mode === "run") replay("run"); else restart(); });
   root.querySelector("[data-help-close]")?.addEventListener("click", () => toggleHelp(false));
   applySettings();
 
-  const start = () => {
+  /** A fresh world for a new run or sandbox session (views rebuilt, settings kept). */
+  const newWorld = () => {
+    for (const f of [...views.keys()]) removeView(f);
+    walls.clear(); arena.setBog(false, true);
+    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, companions: true });
+    world.pageDefs = PAGES;
+    handle.world = world;
+    addView(world.player);
+    for (const c of world.companions) addView(c);
+    world.drainEvents();
+  };
+  const start = (mode = "run") => {
     if (state.started) return;
     state.started = true;
     sfx.unlock();
     root.querySelector("[data-start]").classList.add("gone");
-    world.spawnWave();
+    state.mode = mode;
+    if (mode === "run") world.startRun(EPISODE_4); else world.spawnWave();
     onEvents(world.drainEvents());
   };
-  controls.onFirstInput = start;
-  root.querySelector("[data-start]").addEventListener("pointerdown", () => { controls.onFirstInput = null; start(); });
+  const startScreen = root.querySelector("[data-start]");
+  startScreen.querySelector("[data-start-run]")?.addEventListener("click", (e) => { e.stopPropagation(); start("run"); });
+  startScreen.querySelector("[data-start-yard]")?.addEventListener("click", (e) => { e.stopPropagation(); start("yard"); });
+  const replay = (mode) => { results.hidden = true; state.modal = false; newWorld(); state.started = false; start(mode); };
+  results.querySelector("[data-again]")?.addEventListener("click", () => replay("run"));
+  results.querySelector("[data-yard]")?.addEventListener("click", () => replay("yard"));
 
   // Adaptive resolution: drop render resolution when frames run long, restore it when there's headroom.
   const maxRatio = Math.min(devicePixelRatio || 1, mobile ? 1.5 : 2);
@@ -392,8 +490,10 @@ export function boot(doc = document) {
     state.time += dt;
 
     controls.poll(dt);
-    let running = state.started && !state.paused && !state.help && !state.frozen;
+    let running = state.started && !state.paused && !state.help && !state.frozen && !state.modal;
     for (const cmd of controls.drainCommands()) {
+      if (!state.started) { if (cmd === "confirm") start("run"); continue; }
+      if (cmd === "pages") { if (pageModal.hidden) openPages(); else { pageModal.hidden = true; state.modal = false; } }
       if (cmd === "lock") { const t = world.toggleLock(); if (!t) camera.yaw = world.player.yaw; sfx.play("ui"); }
       if (cmd === "unlock" && world.lockTarget) { world.lockTarget = null; sfx.play("ui"); }
       if (cmd.startsWith("assist:") && running) {
@@ -415,7 +515,9 @@ export function boot(doc = document) {
       if (cmd === "pause") { if (state.help) toggleHelp(false); else state.paused = !state.paused; root.classList.toggle("paused", state.paused); }
     }
     const presses = controls.drainPresses();
-    running = state.started && !state.paused && !state.help && !state.frozen; // after commands: pause/help may have changed
+    if (!state.started && presses.length) start("run"); // any attack button on the title screen starts the episode
+    if (!pageModal.hidden) for (const p of presses) { if (p === 1) choosePage("A"); if (p === 2) choosePage("B"); } // Light / Heavy pick a branch
+    running = state.started && !state.paused && !state.help && !state.frozen && !state.modal; // after commands: pause/help/modals may have changed
     if (running) for (const p of presses) world.press(p);
 
     const look = controls.takeLook();
@@ -467,6 +569,7 @@ export function boot(doc = document) {
     vfx.syncProjectiles(world.projectiles, dt);
     vfx.update(dt, camera.cam, engine);
     arena.update(dt, state.time);
+    walls.update(state.time);
     hud.update(dt, world, controls.device);
 
     if (impactLeft > 0) { impactLeft -= dt; if (impactLeft <= 0) canvas.style.filter = ""; }
@@ -481,7 +584,8 @@ export function boot(doc = document) {
 
   // Test hook: freeze the live clock so automated checks can step the sim frame-exactly.
   const freezeLogic = (on) => { state.frozen = on; };
-  return { engine, scene, world, camera, start, restart, freezeLogic, data: { acolyte: ACOLYTE_ABILITIES } };
+  const handle = { engine, scene, world, camera, start, restart, freezeLogic, openPages, choosePage, data: { acolyte: ACOLYTE_ABILITIES } };
+  return handle;
 }
 
 if (typeof document !== "undefined" && !globalThis.__UNWRITTEN_NO_BOOT__) {

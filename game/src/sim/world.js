@@ -11,11 +11,14 @@ import { COMPANIONS } from "../data/companions.js";
 import { ENEMIES, WAVES } from "../data/enemies.js";
 import { HASK_STATS, HASK_HITBOXES, HASK_TUNING, haskOptions } from "../data/hask.js";
 import { HaskController } from "./boss.js";
+import { RunDirector } from "./run.js";
 import { seededRandom, SECONDS_PER_TICK } from "../core/timing.js";
 import { boxHitsCapsule, hitboxCenter } from "./overlap.js";
 import { TagSet, matchReactions } from "../core/tags.js";
 import { REACTIONS } from "../data/reactions.js";
-import { ROOK_STATS, ROOK_ABILITIES, ROOK_HITBOXES, buildRookGraph } from "../data/rook.js";
+import { ROOK_STATS, ROOK_ABILITIES, ROOK_HITBOXES, buildRookGraph, defaultLoadout } from "../data/rook.js";
+import { PAGES, PAGE_HITBOXES } from "../data/pages.js";
+import { hitSpec } from "../core/combat.js";
 
 export const Tuning = Object.freeze({
   gravity: 32, juggleGravity: 18, airAttackGravity: 9,
@@ -34,7 +37,11 @@ export const Tuning = Object.freeze({
 });
 
 const AIR = new Set(["AirL1", "AirL2", "AirL3"]);
-const HANG = new Set(["AirL1", "AirL2", "AirL3", "VacuumPull"]); // started in the air, these hold Rook up
+const HANG = new Set(["AirL1", "AirL2", "AirL3"]); // started in the air, these hold Rook up (plus anything tagged "hang")
+const hangs = (a) => HANG.has(a.id) || a.tags.includes("hang");
+const WALL = Object.freeze({ center: [0, 1.4, 0], size: [5.2, 3.4, 1.4] });
+const WALL_HIT = hitSpec({ damage: 4, posture: 10, hitstop: 3, hitstun: 16, knockback: 3 });
+const WALL_LAUNCH = hitSpec({ damage: 6, posture: 12, hitstop: 4, hitstun: 30, launch: 9 });
 const MOBILITY = new Set(["Dodge", "Jump", "Guard", "AirJump", "AirDash"]);
 const v3 = (x = 0, y = 0, z = 0) => ({ x, y, z });
 const angleTo = (from, to) => Math.atan2(to.x - from.x, to.z - from.z);
@@ -131,7 +138,7 @@ export class Fighter {
         else if (Math.hypot(this.moveInput.x, this.moveInput.z) > 0.2) this.yaw = Math.atan2(this.moveInput.x, this.moveInput.z);
       }
       if (a.tags.includes("counter")) this.counterFrames = 0;
-      if (HANG.has(a.id) && !this.grounded) this.vel.y = Math.max(1.5, Math.min(this.vel.y, 4)); // hang, keeping a little rise
+      if (hangs(a) && !this.grounded) this.vel.y = Math.max(1.5, Math.min(this.vel.y, 4)); // hang, keeping a little rise
       this.combatant.blocking = false;
     }
     if (a.surgeCost > 0 && this.surge) this.surge.trySpend(Math.min(a.surgeCost, this.surge.current));
@@ -178,6 +185,7 @@ export class Fighter {
         else if (e.key === "shield") { const p = this.world.player; if (p.alive) { p.tags.add("SHIELDED", e.value); this.world.emit({ type: "shield", fighter: this, target: p }); } }
         else if (e.key === "heal") this.world.heal(this, e.value);
         else if (e.key === "ward") this.world.ward(this, e.value);
+        else if (e.key.startsWith("windwall")) this.world.windWall(this, a, e.value, e.key === "windwallMirror" ? "mirror" : e.key === "windwallDown" ? "down" : "block");
         break;
       default:
         this.world.emit({ type: "abilityEvent", fighter: this, ability: a, event: e });
@@ -219,9 +227,12 @@ export class World {
     this.wave = 0;
     this.comboCount = 0;
     this.comboTimer = 0;
+    this.loadout = defaultLoadout();
+    this.pages = Object.fromEntries(Object.keys(PAGES).map((slot) => [slot, { xp: 0, ready: false, branch: null }]));
+    this.zones = [];
     this.player = this.add(new Fighter(this, {
-      id: "rook", kind: "player", team: Team.Player, stats: ROOK_STATS, hitboxes: ROOK_HITBOXES,
-      graph: buildRookGraph(() => this.player.context()), x: 0, z: -4,
+      id: "rook", kind: "player", team: Team.Player, stats: ROOK_STATS, hitboxes: { ...ROOK_HITBOXES, ...PAGE_HITBOXES },
+      graph: buildRookGraph(() => this.player.context(), ROOK_ABILITIES, this.loadout), x: 0, z: -4,
     }));
     this.assist = !!o.assist;
     this.companions = [];
@@ -293,7 +304,14 @@ export class World {
   }
 
   add(f) { this.fighters.push(f); return f; }
-  emit(e) { this.events.push(e); }
+  emit(e) { this.events.push(e); this.run?.onEvent(e); }
+
+  /** Start a scripted combat run (an episode's encounters) instead of the sandbox waves. */
+  startRun(episode) {
+    this.run = new RunDirector(this, episode);
+    this.run.start();
+    return this.run;
+  }
   drainEvents() { const e = this.events; this.events = []; return e; }
   get enemies() { return this.fighters.filter((f) => f.team === Team.Enemy); }
   get liveEnemies() { return this.fighters.filter((f) => f.team === Team.Enemy && f.alive); }
@@ -349,6 +367,7 @@ export class World {
     for (const f of this.enemies) this.emit({ type: "despawn", fighter: f });
     this.fighters = this.fighters.filter((f) => f.team !== Team.Enemy);
     this.projectiles.length = 0;
+    this.zones.length = 0;
     const kinds = Array.isArray(spec) ? spec : typeof spec === "number" ? Array(spec).fill("acolyte") : WAVES[(this.wave - 1) % WAVES.length];
     this.boss = null;
     kinds.forEach((kind, i) => {
@@ -378,6 +397,83 @@ export class World {
       life: Math.round(((def.range ?? 14) / speed) * 60), hitSet: new Set(), id: ++this._projectileIds || (this._projectileIds = 1) };
     this.projectiles.push(p);
     this.emit({ type: "projectile", projectile: p });
+  }
+
+  /** Swap the spell on a button and rebuild Rook's combo graph. */
+  applyLoadout() {
+    const p = this.player;
+    const g = buildRookGraph(() => p.context(), ROOK_ABILITIES, this.loadout);
+    g.runner = p.runner;
+    p.controller.resolver = g;
+  }
+
+  /** Choose a branch for a page that's ready to evolve. */
+  evolvePage(slot, key) {
+    const page = this.pages[slot], def = PAGES[slot];
+    const branch = def?.branches.find((b) => b.key === key);
+    if (!page || !branch || !page.ready || page.branch) return false;
+    page.branch = key; page.ready = false;
+    this.loadout = { ...this.loadout, [slot]: branch.ability };
+    this.applyLoadout();
+    this.emit({ type: "pageEvolved", slot, branch });
+    return true;
+  }
+
+  /** A spell hit grants its page experience (until it evolves). */
+  _pageXp(ability) {
+    for (const [slot, ab] of Object.entries(this.loadout)) {
+      if (ab.id !== ability.id) continue;
+      const page = this.pages[slot];
+      if (page.branch || page.ready) return;
+      page.xp++;
+      if (page.xp >= PAGES[slot].hitsToEvolve) { page.ready = true; this.emit({ type: "pageReady", slot, page: PAGES[slot] }); }
+      return;
+    }
+  }
+
+  /** Wind Wall: a standing wall of wind in front of the caster. */
+  windWall(owner, ability, frames, mode) {
+    const f = owner.forward;
+    const z = { owner, team: owner.team, ability, mode, frames, max: frames, yaw: owner.yaw,
+      pos: { x: owner.pos.x + f.x * 2.2, y: owner.pos.y, z: owner.pos.z + f.z * 2.2 }, hitSet: new Set() };
+    this.zones.push(z);
+    this.emit({ type: "windWall", zone: z });
+  }
+
+  _zones() {
+    if (!this.zones.length) return;
+    for (const z of this.zones) {
+      z.frames--;
+      const nx = Math.sin(z.yaw), nz = Math.cos(z.yaw);
+      for (const p of this.projectiles) {
+        if (p.dead || p.team === z.team) continue;
+        if (!boxHitsCapsule(WALL, z.pos, z.yaw, { x: p.pos.x, y: p.pos.y - 0.3, z: p.pos.z }, 0.3, 0.6)) continue;
+        if (z.mode === "mirror") { // throw it back at whoever sent it
+          p.team = z.team; p.owner = z.owner; p.hitSet = new Set();
+          const back = p.dir;
+          p.dir = { x: -back.x, y: -back.y * 0.3, z: -back.z }; p.speed *= 1.25; p.life = 90;
+          this.emit({ type: "reflect", projectile: p, at: { ...p.pos } });
+        } else {
+          p.dead = true;
+          this.emit({ type: "deflect", projectile: p, by: z.owner, at: { ...p.pos } });
+        }
+      }
+      for (const e of this.fighters) {
+        if (e.team === z.team || !e.alive || e.submerged) continue;
+        if (!boxHitsCapsule(WALL, z.pos, z.yaw, e.pos, e.stats.radius, e.stats.height)) continue;
+        // Shove out along the wall's facing.
+        const heavy = e.traits.heavy && !e.combatant.postureBroken;
+        e.knock.x += nx * (heavy ? 0.6 : 2.2); e.knock.z += nz * (heavy ? 0.6 : 2.2);
+        if (!z.hitSet.has(e)) {
+          z.hitSet.add(e);
+          this._resolve(z.owner, e, { def: WALL, spec: z.mode === "down" ? WALL_LAUNCH : WALL_HIT, ability: z.ability, hitSet: z.hitSet, origin: z.pos, projectile: true });
+        }
+      }
+    }
+    if (this.zones.some((z) => z.frames <= 0)) {
+      for (const z of this.zones) if (z.frames <= 0) this.emit({ type: "zoneEnd", zone: z });
+      this.zones = this.zones.filter((z) => z.frames > 0);
+    }
   }
 
   /** Cantor's Hymn: ward every ally of the singer nearby. */
@@ -472,11 +568,13 @@ export class World {
     }
     const live = (f) => f.ticking && !f.frozen;
 
+    this.run?.tick();
     this._brains(frame, live);
     for (const f of this.fighters) if (f.boss && live(f)) f.boss.tick();
     this._abilities(frame, live);
     this._hitboxes(live);
     this._projectiles();
+    this._zones();
     for (const f of this.fighters) if (live(f)) { f.combatant.tick(); f.tags.tick(); }
     for (const f of this.fighters) if (live(f)) this._move(f);
     this._late(live);
@@ -709,6 +807,7 @@ export class World {
           if (att === this.player && att.mana && hb.ability.manaCost === 0) att.mana.add(Tuning.meleeManaGain); // melee feeds magic
           const share = att === this.player ? 1 : Tuning.companionSurgeShare;
           if (!hb.ability.surgeCost) this._surge(this.player.stats.surgeGain.dealt * r.healthDamage * share);
+          if (att === this.player && hb.ability.manaCost > 0) this._pageXp(hb.ability);
         }
         if (spec !== hb.spec) this.emit({ type: "shieldBlock", defender: def, at });
         if (def === this.player) this._surge(def.stats.surgeGain.taken * r.healthDamage);
@@ -848,7 +947,7 @@ export class World {
 
     if (!f.grounded) {
       const juggled = f.combatant.isStaggered && f.team === Team.Enemy;
-      const airAttack = f.runner.isRunning && HANG.has(f.current.id);
+      const airAttack = f.runner.isRunning && hangs(f.current);
       const decay = Math.min(Tuning.juggleDecayMax, 1 + Tuning.juggleDecay * f.juggleHits);
       let g = f.slamming ? 0 : airAttack ? Tuning.airAttackGravity : juggled ? Tuning.juggleGravity * decay : Tuning.gravity;
       if (f.hoverFrames > 0) { f.hoverFrames--; f.vel.y = 0; g = 0; } // air dash flies flat

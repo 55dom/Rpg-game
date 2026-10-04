@@ -120,7 +120,7 @@ export const ROOK_ABILITIES = (() => {
     cancels: [{ from: 16, to: 33, into: m("Jump"), requiresHit: true }, { from: 16, to: 33, into: m("Dodge") }] });
 
   // Step 4: second spell. Pulls everything in the vortex to Rook's blade (works in the air too).
-  add({ id: "VacuumPull", startup: 12, active: 6, recovery: 16, manaCost: 20, tags: ["burst", "gust"],
+  add({ id: "VacuumPull", startup: 12, active: 6, recovery: 16, manaCost: 20, tags: ["burst", "gust", "hang"],
     hit: hitSpec({ damage: 6, posture: 12, hitstop: 5, hitstun: 34, pull: 6 }),
     events: [{ frame: 0, type: E.SpawnVfx, key: "grimoire" }, swing(6, "vacuum"), { frame: 12, type: E.SpawnVfx, key: "vortex" },
       { frame: 12, type: E.SpawnHitbox, key: "Vortex", value: 6 }],
@@ -134,6 +134,11 @@ export const ROOK_ABILITIES = (() => {
       { frame: 8, type: E.SpawnHitbox, key: "Ring", value: 4 }, { frame: 14, type: E.SpawnHitbox, key: "Ring", value: 4 },
       { frame: 20, type: E.SpawnHitbox, key: "Ring", value: 4 }],
     cancels: [{ from: 20, to: 41, into: m("Jump"), requiresHit: true }, { from: 26, to: 41, into: followUps }] });
+
+  // Fourth spell (Wind, defensive): a wall of wind ahead for 3 s. Swallows enemy projectiles and shoves foes back.
+  add({ id: "WindWall", startup: 8, active: 4, recovery: 14, manaCost: 20, tags: ["burst", "gust"],
+    events: [{ frame: 0, type: E.SpawnVfx, key: "grimoire" }, swing(6, "gale"), { frame: 8, type: E.Custom, key: "windwall", value: 180 }],
+    cancels: [{ from: 12, to: 25, into: followUps }] });
 
   // Step 3: the defensive game and its rewards.
   add({ id: "Guard", startup: 0, active: 8, recovery: 12,
@@ -174,8 +179,12 @@ export const ROOK_ABILITIES = (() => {
   return Object.freeze(a);
 })();
 
+/** Which ability each spell button casts (page evolution swaps these). */
+export const defaultLoadout = (A = ROOK_ABILITIES) => ({ Spell1: A.GaleCutter, Spell2: A.VacuumPull, Spell3: A.TempestEdge, Spell4: A.WindWall });
+
 /** Rook's combo graph. Order matters inside each list: first match wins. */
-export function buildRookGraph(contextProvider, A = ROOK_ABILITIES) {
+export function buildRookGraph(contextProvider, A = ROOK_ABILITIES, loadout = defaultLoadout(A)) {
+  const S = loadout;
   const g = new ComboGraph(contextProvider);
   // Finisher outranks every combo route once the target's posture is broken.
   g.addPriority(Intent.Heavy, A.LanternBreak, C.Grounded | C.TargetStaggered);
@@ -191,9 +200,10 @@ export function buildRookGraph(contextProvider, A = ROOK_ABILITIES) {
     .addEntry(Intent.Dodge, A.Dodge, C.Grounded)
     .addEntry(Intent.Dodge, A.AirDash, C.Airborne | C.AirDashReady)
     .addEntry(Intent.Block, A.Guard, C.Grounded)
-    .addEntry(Intent.Spell1, A.GaleCutter)
-    .addEntry(Intent.Spell2, A.VacuumPull)
-    .addEntry(Intent.Spell3, A.TempestEdge, C.Grounded);
+    .addEntry(Intent.Spell1, S.Spell1)
+    .addEntry(Intent.Spell2, S.Spell2)
+    .addEntry(Intent.Spell3, S.Spell3, C.Grounded)
+    .addEntry(Intent.Spell4, S.Spell4);
   g.addEdge(A.L1, Intent.Light, A.L2).addEdge(A.L2, Intent.Light, A.L3).addEdge(A.L3, Intent.Light, A.L4)
     .addEdge(A.L2, Intent.Heavy, A.Launcher)
     .addEdge(A.AirL1, Intent.Light, A.AirL2).addEdge(A.AirL2, Intent.Light, A.AirL3)
@@ -201,9 +211,10 @@ export function buildRookGraph(contextProvider, A = ROOK_ABILITIES) {
   g.addGlobal(Intent.Light, A.Counter, C.AfterParry)
     .addGlobal(Intent.Dodge, A.Dodge, C.Grounded)
     .addGlobal(Intent.Dodge, A.AirDash, C.Airborne | C.AirDashReady)
-    .addGlobal(Intent.Spell1, A.GaleCutter)
-    .addGlobal(Intent.Spell2, A.VacuumPull)
-    .addGlobal(Intent.Spell3, A.TempestEdge, C.Grounded)
+    .addGlobal(Intent.Spell1, S.Spell1)
+    .addGlobal(Intent.Spell2, S.Spell2)
+    .addGlobal(Intent.Spell3, S.Spell3, C.Grounded)
+    .addGlobal(Intent.Spell4, S.Spell4)
     .addGlobal(Intent.Jump, A.Jump, C.Grounded)
     .addGlobal(Intent.Jump, A.AirJump, C.Airborne | C.AirJumpReady)
     .addGlobal(Intent.Light, A.DashStrike, C.Grounded | C.AfterDash)

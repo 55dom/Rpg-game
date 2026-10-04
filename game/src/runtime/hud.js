@@ -12,22 +12,25 @@ const LABELS = {
   gamepad: { Light: "X", Heavy: "Y", Dodge: "B", Block: "LB", Jump: "A", Spell1: "RB", Lock: "R3" },
   touch: { Light: "Slash", Heavy: "Heavy", Dodge: "Dodge", Block: "Guard", Jump: "Jump", Spell1: "Gale", Spell2: "Pull", Spell3: "Edge", Lock: "Lock" },
 };
-LABELS.keyboard.Spell2 = "R"; LABELS.keyboard.Spell3 = "T"; LABELS.keyboard.Ultimate = "V";
-LABELS.gamepad.Spell2 = "RT"; LABELS.gamepad.Spell3 = "LT"; LABELS.gamepad.Ultimate = "LB+RB";
-LABELS.touch.Ultimate = "ULT";
+LABELS.keyboard.Spell2 = "R"; LABELS.keyboard.Spell3 = "T"; LABELS.keyboard.Spell4 = "Y"; LABELS.keyboard.Ultimate = "V";
+LABELS.gamepad.Spell2 = "RT"; LABELS.gamepad.Spell3 = "LT"; LABELS.gamepad.Spell4 = "▼"; LABELS.gamepad.Ultimate = "LB+RB";
+LABELS.touch.Ultimate = "ULT"; LABELS.touch.Spell4 = "Wall";
 
 export class Hud {
+  /** @param {{slot:string, short:string}[]} spells the spell buttons, in order */
   constructor(root, spells = []) {
     this.root = root;
     this.spells = spells;
     const row = $(root, "[data-spells]");
-    this.spellEls = spells.map((sp) => {
+    this.spellEls = spells.map(() => {
       const el = document.createElement("span");
       el.className = "spell";
-      el.innerHTML = `<kbd></kbd>${sp.name}<small>${sp.ability.manaCost}</small>`;
+      el.innerHTML = `<kbd></kbd><b></b><small></small><i class="xp"><u></u></i>`;
       row?.appendChild(el);
       return el;
     });
+    this.lines = [];
+    this.lineTimer = 0;
     this.el = {
       surge: $(root, "[data-surge]"),
       hp: $(root, "[data-hp]"), hpLag: $(root, "[data-hp-lag]"), posture: $(root, "[data-posture]"), mana: $(root, "[data-mana]"),
@@ -39,6 +42,7 @@ export class Hud {
       fdCtx: $(root, "[data-fd-ctx]"), fdBuf: $(root, "[data-fd-buf]"), fdLog: $(root, "[data-fd-log]"),
       hurt: $(root, "[data-hurt]"),
       party: $(root, "[data-party]"), cutin: $(root, "[data-cutin]"),
+      grade: $(root, "[data-grade]"), line: $(root, "[data-line]"),
       boss: $(root, "[data-boss]"), bossName: $(root, "[data-boss-name]"), bossHp: $(root, "[data-boss-hp]"), bossPosture: $(root, "[data-boss-posture]"),
       status: $(root, "[data-status]"),
     };
@@ -78,6 +82,8 @@ export class Hud {
     w.textContent = text;
     w.classList.remove("show"); void w.offsetWidth; w.classList.add("show");
   }
+
+  say(speaker, text) { this.lines.push([speaker, text]); }
 
   /** Anime-style cut-in banner when a companion's Assist fires. */
   cutIn(name, move, kind) {
@@ -138,9 +144,16 @@ export class Hud {
     this.set("surge", e.surge, "width", pct(p.surge.normalized));
     this.spells.forEach((sp, i) => {
       const el = this.spellEls[i];
-      this.set(`sp${i}`, el, "class", p.mana.current >= sp.ability.manaCost ? "spell" : "spell low");
-      this.set(`spk${i}`, el.firstChild, "text", this.label(device, sp.intent));
+      const ab = world.loadout[sp.slot], page = world.pages[sp.slot], def = world.pageDefs[sp.slot];
+      const name = page.branch ? def.branches.find((b) => b.key === page.branch).name : sp.short;
+      const cls = `spell${p.mana.current >= ab.manaCost ? "" : " low"}${page.ready ? " ready" : ""}${page.branch ? " evolved" : ""}`;
+      this.set(`sp${i}`, el, "class", cls);
+      this.set(`spk${i}`, el.firstChild, "text", this.label(device, sp.slot));
+      this.set(`spn${i}`, el.children[1], "text", name);
+      this.set(`spc${i}`, el.children[2], "text", String(ab.manaCost));
+      this.set(`spx${i}`, el.querySelector("u"), "width", pct(page.branch ? 1 : page.xp / def.hitsToEvolve));
     });
+    this.root.classList.toggle("page-ready", Object.values(world.pages).some((pg) => pg.ready));
 
     const focus = world.lockTarget?.alive ? world.lockTarget : this.focusTimer > 0 && this.focus?.alive ? this.focus : null;
     this.focusTimer -= dt;
@@ -156,6 +169,17 @@ export class Hud {
     const n = world.comboCount;
     this.set("comboShow", e.combo, "class", n >= 2 ? "combo show" : "combo");
     this.set("comboN", e.comboN, "text", String(n));
+    const grade = n >= 50 ? "S" : n >= 35 ? "A" : n >= 20 ? "B" : n >= 10 ? "C" : "";
+    this.set("grade", e.grade, "text", grade);
+
+    // Squad subtitle lines, one at a time.
+    if (this.lineTimer > 0) this.lineTimer -= dt;
+    if (this.lineTimer <= 0 && this.lines.length) {
+      const [speaker, text] = this.lines.shift();
+      e.line.innerHTML = `<b class="${speaker.toLowerCase()}">${speaker.toUpperCase()}</b>${text}`;
+      e.line.classList.remove("show"); void e.line.offsetWidth; e.line.classList.add("show");
+      this.lineTimer = 1.2 + text.length * 0.045;
+    }
 
     // Context prompts: tell the player the reward is available, in their device's words.
     let prompt = "", kind = "";
