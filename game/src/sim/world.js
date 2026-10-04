@@ -9,6 +9,8 @@ import { AbilityRunner, AbilityController, EventType, MoveContext, StartResult }
 import { AttackTokenPool, EnemyBrain, MoveIntent, CompanionBrain, AllyMove, STANCES } from "../core/ai.js";
 import { COMPANIONS } from "../data/companions.js";
 import { ENEMIES, WAVES } from "../data/enemies.js";
+import { HASK_STATS, HASK_HITBOXES, HASK_TUNING, haskOptions } from "../data/hask.js";
+import { HaskController } from "./boss.js";
 import { seededRandom, SECONDS_PER_TICK } from "../core/timing.js";
 import { boxHitsCapsule, hitboxCenter } from "./overlap.js";
 import { TagSet, matchReactions } from "../core/tags.js";
@@ -28,6 +30,7 @@ export const Tuning = Object.freeze({
   shieldFactor: 0.5, companionSurgeShare: 0.5, assistRange: 12,
   wardFactor: 0.7, wardRadius: 8, guardArc: 0.35, heavyKnockback: 0.25,
   juggleDecay: 0.12, juggleDecayMax: 2.5, // each air hit adds 12% gravity (GDD §9.3), up to 2.5x
+  weightedSpeed: 0.55, weightedJump: 0.7, // WEIGHTED (mud): slower, lower jumps
 });
 
 const AIR = new Set(["AirL1", "AirL2", "AirL3"]);
@@ -86,6 +89,8 @@ export class Fighter {
     this.faceMove = false;
     this.traits = o.traits ?? {};
     this.juggleHits = 0;
+    this.submerged = false;
+    this.boss = null;
   }
 
   get alive() { return !this.combatant.isDead; }
@@ -161,8 +166,10 @@ export class Fighter {
       case EventType.Invulnerable: this.combatant.startInvulnerability(e.value); break;
       case EventType.Projectile: this.world.fireProjectile(this, a, e.key, e.value); break;
       case EventType.Custom:
-        if (e.key === "jump") { this.vel.y = e.value; this.grounded = false; }
-        else if (e.key === "airJump") { this.vel.y = e.value; this.airJumps = 0; }
+        if (e.key === "jump") { this.vel.y = e.value * (this.tags.has("WEIGHTED") ? Tuning.weightedJump : 1); this.grounded = false; }
+        else if (e.key === "airJump") { this.vel.y = e.value * (this.tags.has("WEIGHTED") ? Tuning.weightedJump : 1); this.airJumps = 0; }
+        else if (e.key === "submerge") this.boss?.submerge();
+        else if (e.key === "summon") this.world.summon(this, "hound", e.value);
         else if (e.key === "airDash") { this.vel.y = 0; this.hoverFrames = e.value; this.airDashes = 0; }
         else if (e.key === "hover") { this.vel.y = 0; this.hoverFrames = e.value; }
         else if (e.key === "timeStop") this.world.stopFrames = Math.max(this.world.stopFrames, e.value);
@@ -249,6 +256,7 @@ export class World {
     }
     if (!best) return;
     best.combatant.health.add(amount);
+    best.tags.remove("WEIGHTED"); // stitching also cuts away the mud
     this.emit({ type: "heal", fighter: healer, target: best, amount });
   }
 
@@ -307,6 +315,34 @@ export class World {
 
   spawnAcolyte(x, z, n = 0) { return this.spawnEnemy("acolyte", x, z, n); }
 
+  /** Boss: an enemy with a scripted controller and its own attack token (it never waits in line). */
+  spawnBoss(kind, x = 0, z = 6) {
+    if (kind !== "hask") throw new Error(`unknown boss ${kind}`);
+    const brain = new EnemyBrain("hask", new AttackTokenPool(1), haskOptions(1), this.rng);
+    brain.aggroRange = 40;
+    const f = new Fighter(this, {
+      id: "hask", kind: "hask", team: Team.Enemy, stats: HASK_STATS, hitboxes: HASK_HITBOXES,
+      traits: { heavy: true, armoredAttacks: true }, brain, x, z,
+    });
+    f.yaw = angleTo(f.pos, this.player.pos);
+    f.boss = new HaskController(this, f);
+    this.boss = f;
+    this.emit({ type: "spawn", fighter: f });
+    this.emit({ type: "bossIntro", fighter: f });
+    return this.add(f);
+  }
+
+  /** Call `count` creatures of `kind` up beside `caller` (Hask's roar). */
+  summon(caller, kind, count) {
+    const out = [];
+    for (let i = 0; i < count; i++) {
+      const a = caller.yaw + (i % 2 ? 1 : -1) * (1.2 + i * 0.3);
+      const e = this.spawnEnemy(kind, caller.pos.x + Math.sin(a) * 3, caller.pos.z + Math.cos(a) * 3, 90 + i);
+      out.push(e);
+    }
+    this.emit({ type: "summon", fighter: caller, summoned: out });
+  }
+
   /** spawnWave(3) = three acolytes; spawnWave(["hound", ...]) = those kinds; spawnWave() = the next wave in WAVES. */
   spawnWave(spec) {
     this.wave++;
@@ -314,7 +350,9 @@ export class World {
     this.fighters = this.fighters.filter((f) => f.team !== Team.Enemy);
     this.projectiles.length = 0;
     const kinds = Array.isArray(spec) ? spec : typeof spec === "number" ? Array(spec).fill("acolyte") : WAVES[(this.wave - 1) % WAVES.length];
+    this.boss = null;
     kinds.forEach((kind, i) => {
+      if (kind === "hask") { this.spawnBoss("hask", 0, 7); return; }
       const a = (i / kinds.length) * Math.PI * 2 + 0.6;
       const r = ENEMIES[kind].traits.ranged ? 11 : 8;
       this.spawnEnemy(kind, Math.sin(a) * r, Math.cos(a) * r + 2, i);
@@ -322,14 +360,17 @@ export class World {
     this.emit({ type: "wave", wave: this.wave, kinds });
   }
 
-  /** Launch a projectile from `owner` toward its target (or straight ahead). */
-  fireProjectile(owner, ability, key, speed) {
+  /** Launch a projectile from `owner` toward its target (or along `dir`). Flat ones skim the ground. */
+  fireProjectile(owner, ability, key, speed, dirOverride = null) {
     const def = owner.hitboxDefs[key];
     const f = owner.forward;
-    const pos = { x: owner.pos.x + f.x * 0.9, y: owner.pos.y + 1.3, z: owner.pos.z + f.z * 0.9 };
-    let dir = { x: f.x, y: 0, z: f.z };
+    const pos = { x: owner.pos.x + f.x * 0.9, y: def.flat ? def.height ?? 0.4 : owner.pos.y + 1.3, z: owner.pos.z + f.z * 0.9 };
+    let dir = dirOverride ?? { x: f.x, y: 0, z: f.z };
     const t = owner.target;
-    if (t?.alive) {
+    if (def.flat && !dirOverride && t?.alive) {
+      const dx = t.pos.x - pos.x, dz = t.pos.z - pos.z, d = Math.hypot(dx, dz) || 1;
+      dir = { x: dx / d, y: 0, z: dz / d };
+    } else if (!def.flat && !dirOverride && t?.alive) {
       const dx = t.pos.x - pos.x, dy = t.pos.y + 1.1 - pos.y, dz = t.pos.z - pos.z, d = Math.hypot(dx, dy, dz) || 1;
       dir = { x: dx / d, y: dy / d, z: dz / d };
     }
@@ -432,6 +473,7 @@ export class World {
     const live = (f) => f.ticking && !f.frozen;
 
     this._brains(frame, live);
+    for (const f of this.fighters) if (f.boss && live(f)) f.boss.tick();
     this._abilities(frame, live);
     this._hitboxes(live);
     this._projectiles();
@@ -472,6 +514,7 @@ export class World {
     for (const e of this.fighters) {
       if (!e.brain || !live(e)) continue;
       if (e.companion) { this._companionBrain(e, frame); continue; }
+      if (e.boss && e.boss.state !== "surface") { e.moveInput.x = 0; e.moveInput.z = 0; continue; } // the controller has it
       const p = this._enemyTarget(e);
       e.target = p;
       const d = p ? flatDistance(e.pos, p.pos) : Infinity;
@@ -559,6 +602,11 @@ export class World {
       for (const hb of att.hitboxes) {
         for (const def of this.fighters) {
           if (def === att || def.team === att.team || !def.alive || hb.hitSet.has(def)) continue;
+          // Wind tears Hask out of the bog (mid-dive or from its mound); otherwise a submerged boss can't be touched.
+          if (def.boss && def.boss.state !== "surface" && def.boss.state !== "erupting") {
+            if (hb.ability.tags.includes("gust") && boxHitsCapsule(hb.def, att.pos, att.yaw, def.pos, def.stats.radius + 0.6, 2.5) && def.boss.uproot(att)) hb.hitSet.add(def);
+            if (def.submerged) continue;
+          }
           const grace = def.combatant.invulnerableFrames > 0 ? Tuning.nearMissGrace : 0;
           if (!boxHitsCapsule(hb.def, att.pos, att.yaw, def.pos, def.stats.radius + grace, def.stats.height)) continue;
           hb.hitSet.add(def);
@@ -595,7 +643,7 @@ export class World {
       p.life -= scale;
       if (p.life <= 0 || p.pos.y < 0 || Math.hypot(p.pos.x, p.pos.z) > Tuning.arenaRadius + 2) { p.dead = true; continue; }
       for (const def of this.fighters) {
-        if (def.team === p.team || !def.alive || p.hitSet.has(def)) continue;
+        if (def.team === p.team || !def.alive || p.hitSet.has(def) || def.submerged) continue;
         const grace = def.combatant.invulnerableFrames > 0 ? Tuning.nearMissGrace * 0.5 : 0;
         const r = p.def.size[0] / 2 + def.stats.radius + grace;
         const dx = def.pos.x - p.pos.x, dz = def.pos.z - p.pos.z;
@@ -618,6 +666,9 @@ export class World {
     let spec = hb.spec;
     if (spec.damage > 0 && (def.tags.has("SHIELDED") || def.tags.has("WARDED"))) {
       spec = { ...spec, damage: spec.damage * (def.tags.has("SHIELDED") ? Tuning.shieldFactor : Tuning.wardFactor) };
+    }
+    if (def.tags.has("EXPOSED")) { // Hask's soft underside, once the bog drains
+      spec = { ...spec, damage: spec.damage * HASK_TUNING.exposedFactor, posture: spec.posture * HASK_TUNING.exposedFactor };
     }
     const from = hb.origin ?? att.pos;
     // Tower shields: blocks everything blockable from the front, unless bound by thread or mid-attack.
@@ -777,7 +828,7 @@ export class World {
     if (f.dash.frames > 0) {
       f.vel.x = f.dash.x; f.vel.z = f.dash.z; f.dash.frames--;
     } else if (canSteer) {
-      const speed = f.stats.runSpeed * (f.combatant.blocking ? 0.4 : 1) * (f.grounded ? 1 : 0.6);
+      const speed = f.stats.runSpeed * (f.combatant.blocking ? 0.4 : 1) * (f.grounded ? 1 : 0.6) * (f.tags.has("WEIGHTED") ? Tuning.weightedSpeed : 1);
       const k = f.grounded ? 0.35 : 0.12;
       f.vel.x += (f.moveInput.x * speed - f.vel.x) * k;
       f.vel.z += (f.moveInput.z * speed - f.vel.z) * k;
@@ -817,10 +868,10 @@ export class World {
     // Keep bodies apart and inside the arena.
     const fs = this.fighters;
     for (let i = 0; i < fs.length; i++) {
-      if (!fs[i].alive) continue;
+      if (!fs[i].alive || fs[i].submerged) continue;
       for (let j = i + 1; j < fs.length; j++) {
         const a = fs[i], b = fs[j];
-        if (!b.alive) continue;
+        if (!b.alive || b.submerged) continue;
         if (Math.abs(a.pos.y - b.pos.y) > 1.2) continue;
         const min = a.stats.radius + b.stats.radius;
         const dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z;

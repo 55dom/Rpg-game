@@ -18,8 +18,13 @@ const out = await build({
 });
 const js = out.outputFiles[0].text.replace(/<\/script/gi, "<\\/script");
 const template = await readFile("template.html", "utf8");
-const fragment = template.replace("<!--BUNDLE-->", `<script>${js}</script>`);
+// A function replacement: the bundle may contain "$'" or "$&", which a replacement string would expand.
+const fragment = template.replace("<!--BUNDLE-->", () => `<script>${js}</script>`);
 const page = `<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n${fragment}\n</head>\n</html>\n`;
+
+// Safety net: refuse to write a page whose script doesn't parse.
+const inlined = fragment.match(/<script>([\s\S]*)<\/script>\s*$/);
+try { new Function(inlined[1]); } catch (err) { console.error("Bundle failed to parse:", err.message); process.exit(1); }
 
 await mkdir("dist", { recursive: true });
 await writeFile("dist/index.html", page);

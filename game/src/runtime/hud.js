@@ -39,6 +39,8 @@ export class Hud {
       fdCtx: $(root, "[data-fd-ctx]"), fdBuf: $(root, "[data-fd-buf]"), fdLog: $(root, "[data-fd-log]"),
       hurt: $(root, "[data-hurt]"),
       party: $(root, "[data-party]"), cutin: $(root, "[data-cutin]"),
+      boss: $(root, "[data-boss]"), bossName: $(root, "[data-boss-name]"), bossHp: $(root, "[data-boss-hp]"), bossPosture: $(root, "[data-boss-posture]"),
+      status: $(root, "[data-status]"),
     };
     this.partyEls = new Map();
     this.cache = new Map();
@@ -57,6 +59,7 @@ export class Hud {
     else if (prop === "text") el.textContent = value;
     else if (prop === "class") el.className = value;
     else if (prop === "hidden") el.hidden = value;
+    else if (prop === "html") el.innerHTML = value;
   }
 
   label(device, intent) { return (LABELS[device] ?? LABELS.keyboard)[intent]; }
@@ -165,6 +168,20 @@ export class Hud {
     if (this.toastTimer > 0) { this.toastTimer -= dt; if (this.toastTimer <= 0) e.toast.classList.remove("show"); }
 
     if (world.companions?.length) this.updateParty(world, device);
+
+    // Boss bar.
+    const b = world.boss?.alive ? world.boss : null;
+    this.set("bossOn", e.boss, "hidden", !b);
+    if (b) {
+      this.set("bossName", e.bossName, "text", b.stats.name.toUpperCase() + (b.boss ? `  ·  PHASE ${b.boss.phase}` : ""));
+      this.set("bossHp", e.bossHp, "width", pct(b.combatant.health.normalized));
+      this.set("bossPost", e.bossPosture, "width", pct(b.combatant.posture.normalized));
+    }
+    // Status chips on Rook.
+    const chips = [];
+    if (p.tags.has("WEIGHTED")) chips.push(`<span class="chip mud">WEIGHTED</span>`);
+    if (p.tags.has("SHIELDED")) chips.push(`<span class="chip shield">SHIELDED</span>`);
+    this.set("status", e.status, "html", chips.join(""));
     if (!e.fd.hidden) this.updateFrameData(world);
   }
 

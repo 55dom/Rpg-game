@@ -106,6 +106,12 @@ export class Sfx {
         this._noise(t, 0.35, { type: "lowpass", f0: 6000, f1: 300, gain: 0.45 });
         this._tone(t, 0.3, { type: "square", f0: 1400, f1: 700, gain: 0.06 });
         break;
+      case "bossIntro":
+        this._tone(t, 1.6, { f0: 55, f1: 41, gain: 0.5, attack: 0.3 });
+        this._noise(t, 1.2, { type: "lowpass", f0: 400, f1: 120, gain: 0.3, attack: 0.4 });
+        this._tone(t + 0.3, 1.2, { type: "sawtooth", f0: 110, f1: 82, gain: 0.06, attack: 0.3 });
+        break;
+      case "mud": this._noise(t, 0.45, { type: "lowpass", f0: 700, f1: 120, gain: 0.35, attack: 0.02 }); this._tone(t, 0.3, { f0: 80, f1: 50, gain: 0.25 }); break;
       case "assist": this._noise(t, 0.25, { f0: 400, f1: 2400, q: 1.5, gain: 0.18 }); this._tone(t, 0.3, { type: "triangle", f0: 660, f1: 990, gain: 0.08 }); break;
       case "heal": for (const [i, f] of [784, 988, 1175].entries()) this._tone(t + i * 0.07, 0.4, { f0: f, gain: 0.07 }); break;
       case "shield": this._tone(t, 0.5, { type: "triangle", f0: 180, f1: 140, gain: 0.2 }); this._noise(t, 0.3, { type: "lowpass", f0: 900, f1: 200, gain: 0.25 }); break;

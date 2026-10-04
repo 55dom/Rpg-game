@@ -109,5 +109,17 @@ Keys: **1** call Bas, **2** call Juno, **3** cycle stance (gamepad D-pad ◀ ▶
 
 To add an enemy: a new entry in `ENEMIES` (stats, hitboxes, moves, AI options, traits) and a `LOOKS` entry. Add it to `WAVES` to see it in the sandbox.
 
+## Phase 2, Step 4: Hask the Bogwarden
+| Feature | Where |
+|---|---|
+| Boss data (moves, phases, tuning) | `data/hask.js` |
+| Boss controller (dive, burrow, mud waves, warning, eruption, uproot, phases, summon) | `sim/boss.js` |
+| World hooks (`spawnBoss`, `summon`, submerged rules, WEIGHTED, EXPOSED) | `sim/world.js` |
+| Look, burrowing mound, mud waves, warning disc, bog layer | `runtime/rig.js`, `runtime/vfx.js`, `runtime/arena.js` |
+
+Sandbox: press **B** to go straight to the boss. It's also wave 7 in `WAVES`.
+
+The build now refuses to write a page whose script doesn't parse (`build.mjs`).
+
 ## Publishing the artifact
 `npm run build` also writes `dist/fragment.html` (the page without its outer `<html>` shell). That file is what gets published to the Claude artifact link.

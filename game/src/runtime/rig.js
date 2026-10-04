@@ -6,6 +6,7 @@ import { ROOK_POSES } from "../data/rook.js";
 import { ACOLYTE_POSES } from "../data/acolyte.js";
 import { BAS_POSES, JUNO_POSES } from "../data/companions.js";
 import { ENEMIES } from "../data/enemies.js";
+import { HASK_POSES } from "../data/hask.js";
 import { EventType } from "../core/abilities.js";
 
 /** Attacks animate over their active frames; a move counts as an attack if it hits (directly or via hitboxes). */
@@ -39,6 +40,8 @@ export const LOOKS = {
     head: "hood", sash: true, weapon: "spear", shield: true, shoulders: 1.2, trail: "#c9b8ff" },
   beast: { poses: ENEMIES.beast.poses, scale: 1.5, skirt: 1.5, coat: "#4e5a37", trim: "#6f5a3a", hairColor: "#3a4129", skin: "#4e5a37",
     head: "lump", weapon: "claw", shoulders: 1.55, accent: "#2f3324", eyes: "#d8ff6a", trail: "#a6c96a" },
+  hask: { poses: HASK_POSES, scale: 2.0, skirt: 1.7, coat: "#3d4934", trim: "#5c4a2e", hairColor: "#2c3524", skin: "#3d4934",
+    head: "lump", weapon: "claw", shoulders: 1.7, accent: "#262b1d", eyes: "#ffb347", trail: "#c9a24a", mound: true },
   juno: { poses: JUNO_POSES, scale: 0.93, skirt: 0.9, coat: "#2b3a5c", trim: "#c8414f", hairColor: "#8a3a22", skin: "#f3d5bf",
     head: "face", hair: "sidetail", scarf: true, weapon: "needle", accent: "#c8414f", trail: "#ff6f86" },
 };
@@ -316,6 +319,20 @@ export class Rig {
     dome.setEnabled(false);
     this.dome = dome;
 
+    // MUD (WEIGHTED): a brown ring of sludge around the knees.
+    const mud = MB.CreateTorus(`${id}-mud`, { diameter: 1.0, thickness: 0.16, tessellation: 10 }, scene);
+    mud.material = toon(scene, `${id}-mudMat`, "#5a4630"); mud.parent = this.root; mud.position.y = 0.35; mud.isPickable = false;
+    mud.setEnabled(false);
+    this.mudRing = mud;
+    // Bosses that burrow get a bubbling mud mound that shows where they are.
+    if (this.look.mound) {
+      const m = MB.CreateSphere(`${id}-mound`, { diameter: 3, segments: 12 }, scene);
+      m.material = toon(scene, `${id}-moundMat`, "#4a3d28"); m.renderOutline = true; m.outlineWidth = 0.04; m.outlineColor = BB.Color3.FromHexString("#0f1117");
+      m.isPickable = false; m.setEnabled(false);
+      this.mound = m;
+    }
+    this.sink = 0;
+
     this.flash = 0;
     this.time = Math.random() * 10;
     this.visibility = 1;
@@ -360,7 +377,19 @@ export class Rig {
     const z = lerp(fighter.prev.z, fighter.pos.z, t);
     let jitter = 0;
     if (fighter.frozen && fighter.combatant.isStaggered) jitter = (Math.random() - 0.5) * 0.12; // hitstop shake
-    this.root.position.set(x + jitter, y, z);
+    // Burrowing: sink out of sight, leaving a bubbling mound.
+    this.sink += ((fighter.submerged ? 1 : 0) - this.sink) * Math.min(1, dt * (fighter.submerged ? 3 : 8));
+    this.root.position.set(x + jitter, y - this.sink * 4.5, z);
+    if (this.mound) {
+      const on = this.sink > 0.15 && fighter.alive;
+      this.mound.setEnabled(on);
+      if (on) {
+        const b = 1 + Math.sin(this.time * 7) * 0.08;
+        this.mound.position.set(x, 0, z);
+        this.mound.scaling.set(b * this.sink, 0.35 * this.sink * (1 + Math.sin(this.time * 11) * 0.1), b * this.sink);
+      }
+    }
+    this.mudRing.setEnabled(fighter.alive && fighter.tags.has("WEIGHTED"));
     this.root.rotation.y = lerpAngleSafe(fighter.prevYaw, fighter.yaw, t);
 
     const { rot, lean, active, spin } = this.armPose(fighter, t);

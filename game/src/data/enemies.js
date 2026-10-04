@@ -106,4 +106,5 @@ export const WAVES = Object.freeze([
   ["bulwark", "cantor", "hound", "hound"],
   ["beast", "acolyte", "cantor"],
   ["beast", "bulwark", "hound", "hound", "cantor"],
+  ["hask"], // Boss 2: Hask the Bogwarden
 ]);

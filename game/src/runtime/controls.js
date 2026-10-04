@@ -42,6 +42,7 @@ export class Controls {
       if (e.code === "Digit1") this.commands.push("assist:bas");
       if (e.code === "Digit2") this.commands.push("assist:juno");
       if (e.code === "Digit3") this.commands.push("stance");
+      if (e.code === "KeyB") this.commands.push("boss");
       if (e.code === "KeyG") this.commands.push("frameData");
       if (e.code === "Escape") this.commands.push("pause");
     });

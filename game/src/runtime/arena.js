@@ -89,8 +89,21 @@ export function buildArena(scene, { mobile = false } = {}) {
     e.position.set((Math.random() - 0.5) * 34, Math.random() * 7, (Math.random() - 0.5) * 34);
     embers.push({ mesh: e, speed: 0.2 + Math.random() * 0.4, phase: Math.random() * 10 });
   }
+  // The bog: murky water over the yard during Hask's fight. It drains when the boss reaches phase 3.
+  const bog = MB.CreateDisc("bog", { radius: 16.5, tessellation: mobile ? 40 : 64 }, scene);
+  bog.rotation.x = Math.PI / 2; bog.position.y = 0.025;
+  const bogMat = new BB.StandardMaterial("bogMat", scene);
+  bogMat.diffuseColor = color3("#2f3a26"); bogMat.specularColor = color3("#9fb07a"); bogMat.specularPower = 24;
+  bogMat.emissiveColor = color3("#141a10"); bogMat.alpha = 0.82;
+  bog.material = bogMat; bog.isPickable = false; bog.setEnabled(false);
+  let bogLevel = 0, bogTarget = 0;
+
   return {
+    setBog(on, instant = false) { bogTarget = on ? 1 : 0; if (instant) bogLevel = bogTarget; },
     update(dt, time) {
+      bogLevel += (bogTarget - bogLevel) * Math.min(1, dt * (bogTarget ? 2 : 0.6));
+      bog.setEnabled(bogLevel > 0.01);
+      if (bogLevel > 0.01) { const s = 0.15 + 0.85 * bogLevel; bog.scaling.set(s, s, 1); bogMat.alpha = 0.82 * bogLevel; bog.rotation.z = time * 0.02; }
       for (const e of embers) {
         e.mesh.position.y += e.speed * dt;
         e.mesh.position.x += Math.sin(time * 0.7 + e.phase) * 0.15 * dt;

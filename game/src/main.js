@@ -105,7 +105,7 @@ export function boot(doc = document) {
       const isPlayer = (f) => f === world.player;
       switch (ev.type) {
         case "spawn": addView(ev.fighter); break;
-        case "despawn": removeView(ev.fighter); break;
+        case "despawn": removeView(ev.fighter); if (hud.focus === ev.fighter) hud.focus = null; break;
         case "started": {
           const f = ev.fighter, rig = viewFor(f), tr = trails.get(f);
           if (tr && isPlayer(f)) tr.setColor(TRAIL_COLORS[ev.ability.id] ?? TRAIL_COLORS.default);
@@ -234,7 +234,31 @@ export function boot(doc = document) {
         }
         case "allyDown": hud.toast(`${ev.fighter.stats.name.toUpperCase()} IS DOWN`, "danger"); break;
         case "allyRevive": hud.toast(`${ev.fighter.stats.name.toUpperCase()} IS BACK`, "clear"); break;
-        case "projectile": sfx.play("glint", 0.6); break;
+        case "projectile": sfx.play(ev.projectile.def.flat ? "mud" : "glint", 0.6); break;
+        case "bossIntro":
+          arena.setBog(true);
+          showBossCard(ev.fighter.stats.name, "BOSS 2 · THE GREYWATER FENS");
+          sfx.play("bossIntro"); camera.shake(0.4);
+          break;
+        case "submerge": {
+          const f = ev.fighter;
+          vfx.ring({ x: f.pos.x, y: 0.06, z: f.pos.z }, 7, "#8a7a4a", 0.5); vfx.sparksAt({ x: f.pos.x, y: 0.4, z: f.pos.z }, 16, "gold", 9, 6);
+          sfx.play("mud"); hud.pushLog("Hask submerges");
+          break;
+        }
+        case "eruptWarning": vfx.warning(ev.at, ev.frames / 60); sfx.play("glint"); break;
+        case "surface": sfx.play("slam"); camera.shake(0.5); break;
+        case "uprooted":
+          vfx.flash(ev.at, 4, "#bff4ff", 0.25); vfx.sparksAt(ev.at, 24, "mint", 14, 6); vfx.ring({ x: ev.at.x, y: 0.06, z: ev.at.z }, 8, PALETTE.gale, 0.5);
+          sfx.play("postureBreak"); impact(3, true); camera.kick(0.6);
+          hud.toast("UPROOTED", "afterimage");
+          break;
+        case "bossPhase":
+          if (ev.drained) { arena.setBog(false); hud.toast("THE BOG DRAINS", "clear"); hud.banner("PHASE 3 · EXPOSED"); }
+          else { hud.toast("HASK ENRAGES", "danger"); hud.banner(`PHASE ${ev.phase}`); }
+          sfx.play("bossIntro"); camera.shake(0.6);
+          break;
+        case "summon": for (const e of ev.summoned) vfx.ring({ x: e.pos.x, y: 0.06, z: e.pos.z }, 3, "#8a7a4a", 0.4); hud.pushLog(`Hask calls ${ev.summoned.length} hounds`); break;
         case "deflect": vfx.flash(ev.at, 1.8, "#e9d8ff", 0.12); vfx.sparksAt(ev.at, 10, "white", 9, 2); vfx.number(ev.at, "DEFLECT", "text"); sfx.play("block"); break;
         case "ward": {
           sfx.play("heal");
@@ -257,7 +281,15 @@ export function boot(doc = document) {
           hud.toast(isPlayer(d) ? "POSTURE BROKEN" : "POSTURE BREAK", isPlayer(d) ? "danger" : "break");
           break;
         }
-        case "kill": if (!ev.ability.tags.includes("finisher")) sfx.play("kill"); break;
+        case "kill":
+          if (!ev.ability?.tags.includes("finisher")) sfx.play("kill");
+          if (ev.defender.stats.boss) {
+            state.cinematic = 0.9; state.cinematicScale = 0.2; impact(5, true); camera.kick(1);
+            arena.setBog(false);
+            hud.toast("BOGWARDEN DEFEATED", "finisher");
+            later(1.6, () => hud.banner("RARE PAGE · VACUUM PULL"));
+          }
+          break;
         case "land": if (isPlayer(ev.fighter)) sfx.play("land"); break;
         case "slamLand": {
           const f = ev.fighter;
@@ -282,6 +314,7 @@ export function boot(doc = document) {
 
   function restart() {
     world.resetPlayer();
+    arena.setBog(false, true);
     world.wave = 0;
     world.spawnWave();
     onEvents(world.drainEvents());
@@ -304,6 +337,13 @@ export function boot(doc = document) {
   // Ultimate name card (the "technique shout" beat).
   const ultCard = root.querySelector("[data-ultcard]");
   const showUltCard = () => { ultCard.classList.remove("show"); void ultCard.offsetWidth; ultCard.classList.add("show"); };
+
+  // Boss title card (reuses the ultimate's card styling).
+  const showBossCard = (name, sub) => {
+    ultCard.innerHTML = `<b>${name.toUpperCase()}</b><span>${sub}</span>`;
+    ultCard.classList.remove("show"); void ultCard.offsetWidth; ultCard.classList.add("show");
+    later(1.4, () => { ultCard.innerHTML = "<b>SKYRENDER</b><span>WIND GRIMOIRE · LEGENDARY PAGE</span>"; });
+  };
 
   const toggleHelp = (on = !state.help) => { state.help = on; root.querySelector("[data-help]").hidden = !on; };
   menu("help", () => toggleHelp());
@@ -362,6 +402,9 @@ export function boot(doc = document) {
         onEvents(world.drainEvents());
       }
       if (cmd === "stance" && running) { world.cycleStance(); onEvents(world.drainEvents()); }
+      if (cmd === "boss" && running) { // sandbox shortcut: straight to the boss
+        world.resetPlayer(); arena.setBog(false, true); world.wave = 6; world.spawnWave(); onEvents(world.drainEvents());
+      }
       if (cmd === "lockTap") { if (world.lockTarget && world.liveEnemies.length > 1) world.switchLock(1); else world.toggleLock(); sfx.play("ui"); }
       if (cmd === "switchRight" || cmd === "switchLeft" || ((cmd === "flickRight" || cmd === "flickLeft") && world.lockTarget)) {
         world.switchLock(cmd.endsWith("Left") ? -1 : 1); sfx.play("ui");

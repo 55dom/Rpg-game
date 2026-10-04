@@ -66,6 +66,17 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
 .pad .b-ult { right: 196px; bottom: 140px; width: 58px; height: 58px; font-size: 11px; border-color: #fff; display: none;
   background: linear-gradient(135deg, rgba(143,233,255,0.85), rgba(255,224,138,0.85)); color: var(--ink); animation: pulse 0.6s ease-in-out infinite alternate; }
 .surge-full .pad .b-ult { display: block; }
+.status { display: flex; gap: 5px; margin-top: 5px; min-height: 0; }
+.chip { font: 600 9px/1 var(--font-mono); letter-spacing: 0.12em; padding: 3px 6px; border-radius: 3px; }
+.chip.mud { background: #5a4630; color: #f1dfbf; }
+.chip.shield { background: #e8b46a; color: var(--ink); }
+.bossbar { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(460px, calc(100vw - 32px)); pointer-events: none; text-align: center; }
+.bossbar[hidden] { display: none; }
+.boss-name { font: 400 16px/1 var(--font-display); letter-spacing: 0.18em; color: #f1dfbf; text-shadow: 0 2px 0 #000; margin-bottom: 6px; }
+.bossbar .boss-hp { height: 12px; }
+.bossbar .boss-hp s { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.7); z-index: 2; }
+.is-touch .bossbar { bottom: auto; top: 316px; width: calc(100vw - 32px); }
+.is-touch .bossbar .boss-name { font-size: 11px; }
 .party { display: grid; gap: 6px; margin-top: 8px; }
 .ally { opacity: 0.85; }
 .ally.ready { opacity: 1; }
@@ -134,7 +145,7 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
 @keyframes pulse { to { box-shadow: 0 0 22px rgba(230, 181, 78, 0.8); } }
 
 /* Frame data panel */
-.fd { position: absolute; left: 16px; bottom: 16px; width: min(420px, calc(100vw - 32px)); font: 400 11px/1.4 var(--font-mono); color: var(--muted); pointer-events: none; }
+.fd { position: absolute; left: 16px; bottom: 16px; width: min(380px, calc(100vw - 32px)); font: 400 11px/1.4 var(--font-mono); color: var(--muted); pointer-events: none; }
 .fd-head { display: flex; gap: 10px; align-items: baseline; margin-bottom: 6px; }
 .fd-head b { color: var(--text); font-weight: 600; font-size: 12px; }
 .fd-head span:last-child { margin-left: auto; }
@@ -224,6 +235,7 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
       <div class="bar hp"><i data-hp></i><b data-hp-lag></b></div>
       <div class="bar posture" title="Posture"><i data-posture></i></div>
       <div class="bar mana" title="Mana"><i data-mana></i></div>
+      <div class="status" data-status></div>
       <div class="bar surge" title="Surge: fills as you fight; full = Skyrender"><i data-surge></i></div>
       <div class="spells" data-spells></div>
       <div class="party" data-party></div>
@@ -248,6 +260,11 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
   <div class="wave" data-wave></div>
   <div class="prompt" data-prompt></div>
   <div class="cutin" data-cutin></div>
+  <div class="bossbar" data-boss hidden>
+    <div class="boss-name" data-boss-name>BOSS</div>
+    <div class="bar hp enemy boss-hp"><i data-boss-hp></i><s style="left:65%"></s><s style="left:35%"></s></div>
+    <div class="bar posture"><i data-boss-posture></i></div>
+  </div>
   <div class="ultcard" data-ultcard><b>SKYRENDER</b><span>WIND GRIMOIRE · LEGENDARY PAGE</span></div>
 
   <section class="fd" data-fd aria-label="Frame data">
@@ -298,6 +315,7 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
         <tr><td>Tempest Edge (25 mana)</td><td><kbd>T</kbd></td><td>LT / L2</td></tr>
         <tr><td>Ultimate: Skyrender (full Surge)</td><td><kbd>V</kbd></td><td>LB + RB</td></tr>
         <tr><td>Call Bas · call Juno (Assist)</td><td><kbd>1</kbd> · <kbd>2</kbd></td><td>D-pad ◀ · ▶</td></tr>
+        <tr><td>Sandbox: jump to the boss</td><td><kbd>B</kbd></td><td>—</td></tr>
         <tr><td>Party stance (Press / Guard / Support)</td><td><kbd>3</kbd></td><td>D-pad ▲</td></tr>
         <tr><td>Lock on · switch target</td><td><kbd>Q</kbd> · <kbd>Tab</kbd> (<kbd>Shift</kbd>+<kbd>Tab</kbd> left)</td><td>R3 · flick right stick</td></tr>
         <tr><td>Frame data · restart · pause</td><td><kbd>G</kbd> · <kbd>Backspace</kbd> · <kbd>Esc</kbd></td><td>— · Back · —</td></tr>
@@ -317,6 +335,7 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
         <li><b>Vacuum Pull</b> drags enemies to your blade, even up into the air. <b>Tempest Edge</b> spins three hits all around you.</li>
         <li><b>Mana</b> refills a little with every sword hit.</li>
         <li><b>Surge</b> (the bright bar) fills as you deal and take damage, parry, and dodge perfectly. When it's full, unleash <b>Skyrender</b>.</li>
+        <li><b>Boss: Hask the Bogwarden.</b> When it dives, a mud mound hunts you and mud waves skim the ground: jump or dodge them, or you'll be <b>WEIGHTED</b> (slow, low jumps; Juno's Stitch cleans it off). Hit the mound with a <b>wind spell</b> to <b>UPROOT</b> it, launched and stunned. A red circle means it's about to erupt beneath you. At 65% it calls Fen Hounds; at 35% the bog drains, it stops diving, and its <b>exposed</b> underside takes 50% more damage.</li>
         <li><b>Know your enemy:</b> <b>Fen Hounds</b> rush in packs and lunge from range. <b>Cantors</b> sing violet bolts (slash them out of the air, parry, or dodge) and a <b>Hymn</b> that wards their allies: hit a warded foe with wind to <b>Dispel</b> it. <b>Bulwarks</b> block everything from the front: circle behind, guard-break them with heavies, or have Juno bind them. The <b>Bog Beast ★</b> can't be launched or interrupted until you break its posture, and its red-glint mud slam can't be blocked.</li>
         <li><b>Your squad:</b> Bas (Stone) and Juno (Thread) fight beside you. Call their Assists: Bas erupts a <b>Pillar Uppercut</b> under your target (it even re-launches juggled foes), Juno binds it with a <b>Snare Line</b>.</li>
         <li><b>Stances:</b> Press (hunt enemies), Guard (stay close, intercept attacks on you, Bas shields you), Support (hang back, Juno heals you).</li>
@@ -332,7 +351,7 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
     <div class="start-card">
       <h1>UNWRITTEN</h1>
       <div class="sub">KNIGHTS OF THE LAST LANTERN</div>
-      <p>Phase 2 · Step 3: the Greywater Fens bite back. Hounds, Cantors, Bulwarks, and the Bog Beast.</p>
+      <p>Phase 2 · Step 4: clear six waves of the Greywater Fens, then face Hask the Bogwarden. (Sandbox: press B to go straight to the boss.)</p>
       <p>Keyboard and mouse, gamepad, or touch. Press <b>H</b> or <b>?</b> for controls.</p>
       <span class="go">PRESS ANY KEY · CLICK · TAP</span>
     </div>

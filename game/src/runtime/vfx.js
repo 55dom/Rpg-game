@@ -155,6 +155,22 @@ export class Vfx {
       return { orb, ring, id: 0 };
     });
 
+    // Hask's mud waves: low brown domes skimming the ground.
+    this.mudPool = Array.from({ length: 8 }, (_, i) => {
+      const m = MB.CreateSphere(`mudwave-${i}`, { diameter: 1.7, segments: 8 }, scene);
+      m.material = toonMat(scene, `mudwave-mat-${i}`, "#6a5236"); m.renderOutline = true; m.outlineWidth = 0.03; m.outlineColor = color3("#0f1117");
+      m.isPickable = false; m.setEnabled(false);
+      return m;
+    });
+    // Eruption warning: a pulsing red disc on the ground.
+    this.warnPool = new Pool((i) => {
+      const d = MB.CreateDisc(`warn-${i}`, { radius: 2.2, tessellation: 36 }, scene);
+      d.rotation.x = Math.PI / 2;
+      d.material = glow(scene, `warn-mat-${i}`, "#ff3b3b", 0.45, true);
+      d.isPickable = false; d.setEnabled(false);
+      return { mesh: d, life: 0, max: 1 };
+    }, 2);
+
     // Ghost material for Afterimage.
     this.ghostMat = glow(scene, "ghost", "#7fe6ff", 0.32, true);
     this.ghosts = [];
@@ -231,10 +247,25 @@ export class Vfx {
   }
 
   /** Show one orb per live projectile (no allocation; pool of 10). */
+  warning(at, seconds) {
+    const w = this.warnPool.take();
+    w.mesh.setEnabled(true);
+    w.mesh.position.set(at.x, 0.05, at.z);
+    w.life = w.max = seconds;
+  }
+
   syncProjectiles(projectiles, dt) {
-    let i = 0;
+    let i = 0, m = 0;
     for (const p of projectiles) {
-      if (i >= this.boltPool.length) break;
+      if (p.def.flat) {
+        if (m >= this.mudPool.length) continue;
+        const mesh = this.mudPool[m++];
+        mesh.setEnabled(true);
+        mesh.position.set(p.pos.x, 0.1, p.pos.z);
+        mesh.scaling.set(1, 0.45 + Math.sin(performance.now() / 70 + m) * 0.08, 1);
+        continue;
+      }
+      if (i >= this.boltPool.length) continue;
       const b = this.boltPool[i++];
       b.orb.setEnabled(true);
       b.orb.position.set(p.pos.x, p.pos.y, p.pos.z);
@@ -243,6 +274,7 @@ export class Vfx {
       b.orb.scaling.set(s, s, s);
     }
     for (; i < this.boltPool.length; i++) this.boltPool[i].orb.setEnabled(false);
+    for (; m < this.mudPool.length; m++) this.mudPool[m].setEnabled(false);
   }
 
   pillar(at, height = 4.5, life = 1.4) {
@@ -298,6 +330,15 @@ export class Vfx {
       if (c.life <= 0) { c.mesh.setEnabled(false); continue; }
       c.vel.scaleAndAddToRef(dt, c.mesh.position);
       c.mesh.visibility = clamp01(c.life / c.max * 2);
+    }
+    for (const w of this.warnPool.items) {
+      if (w.life <= 0) continue;
+      w.life -= dt;
+      if (w.life <= 0) { w.mesh.setEnabled(false); continue; }
+      const k = 1 - w.life / w.max;
+      w.mesh.visibility = 0.5 + 0.5 * Math.abs(Math.sin(k * Math.PI * 6));
+      const s = 0.6 + 0.4 * k;
+      w.mesh.scaling.set(s, s, 1);
     }
     for (const t of this.threads.items) {
       if (t.life <= 0) continue;
