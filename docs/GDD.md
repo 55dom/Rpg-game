@@ -1306,7 +1306,7 @@ With Unity, native speed came from IL2CPP turning C# into C++. On the web:
 |---|---|
 | **Logic** | Combat runs on a **fixed 60 Hz logic clock** independent of render frame rate, so a 30 fps phone plays *exactly* the same frame data as a 144 Hz PC ✅ *built* |
 | **Controls** | Floating virtual stick (left half), on-screen buttons (right): Slash, Heavy, Dodge, Jump, Guard, Gale, Lock; drag the upper right to orbit the camera. Touch, keyboard, and gamepad all produce the same intents, so **gameplay code is identical** ✅ *built*. Later: a **Magic button** that opens the 4-spell ring; Ultimate and Team Attack appear when charged |
-| **Touch assists** (later, on by default on touch) | Auto lock-on; +3f parry and perfect-dodge windows; **Smart Combo** (hold Slash to continue the string). Assists never change damage |
+| **Touch assists** (on by default on touch; **AST** button) | +3f parry and perfect-dodge windows; **Smart Combo** (hold Slash to continue the string) ✅ *built*. Assists never change damage |
 | **Fairness** | Only **1** enemy attacks at a time on mobile (2 on PC) through the attack-token pool ✅ *built* |
 | **UI** | Touch HUD layout, safe-area aware for notches ✅ *built*; the frame-data panel starts hidden |
 | **Rendering** | Mobile tier: render resolution capped at 1.5× pixel ratio, smaller glow buffer, fewer arena props and particles ✅ *built*; later dynamic resolution |
@@ -1459,8 +1459,20 @@ How to run, test, build, and publish: `docs/DEV.md`.
 | 1 | Input intents + buffer, fixed 60 Hz clock, resources, ability runner | ✅ Done (Unity), ported to JS |
 | 2 | Combo graph, hit/block/parry/dodge/posture rules, movement, hitboxes, Acolyte AI with attack tokens | ✅ Done (Unity), ported to JS |
 | **3** | **Feedback and rewards:** hit sparks, starburst flashes, blade trails, damage numbers, hitstop shake, camera shake and punch-in, impact frames; **parry → Counter**; **perfect dodge → Afterimage** (enemies at 0.35× for 0.6 s, 3 s cooldown, ghost trail); **posture break → Lantern Break** (priority route that cuts any recovery, cinematic slow-mo on the kill); synthesized SFX; touch controls; frame-data panel | ✅ **Done** (Babylon.js) |
-| 4 | Movement set: double jump, air dash, lock-on switching; second spell as a data-only test (Definition of Done #4) | Next |
-| 5 | Phone smoke test, performance pass, Definition of Done review | — |
+| 4 | **Movement and spells:** double jump and air dash (once per airtime), lock-on switching (and the lock moves on when a target dies), juggle height rules (air hits hold the target at Rook's height; the slam spikes it down), **Vacuum Pull** (pulls targets to Rook, even into the air), **Tempest Edge** (data only), melee hits refill mana | ✅ **Done** |
+| 5 | **Performance and mobile:** no allocations in the fight simulation, pooled render effects, adaptive resolution, FPS readout, auto-pause on tab switch, **touch assist** (+3 frame parry and perfect-dodge windows, hold Slash to keep comboing), spell slots in the HUD | ✅ **Done** (real-phone check is yours, below) |
+
+**Definition of Done review (end of Phase 1):**
+| # | Criterion | Result |
+|---|---|---|
+| 1 | The signature chain executes reliably with no dropped inputs | ✅ Automated test runs the exact chain (L, L, Gale Cutter, jump cancel, air L ×2, air dash, air L, slam): all 7 hits land, in Node and in a real browser |
+| 2 | Perfect dodge and parry learnable within 5 minutes | ⏳ Needs people playing it. Prompts, help screen, and the touch assist are in place to help |
+| 3 | 3 acolytes stay readable | ✅ Attack tokens: never more than 2 attackers (1 on mobile), tested |
+| 4 | A new spell needs only data + VFX | ✅ Tempest Edge was added with zero changes to the simulation or core (verified by diff). Vacuum Pull needed one new reusable hit property (`pull`) |
+| 5 | No per-frame allocations in combat hot paths | ✅ The fight simulation allocates nothing per frame (heap-profiled in Chrome). Rendering allocates a few KB per frame inside Babylon itself |
+| 6 | Runs on a mid-range phone at 30 fps or better with touch | ⏳ Built and tested at phone size in a browser; needs a check on a real phone |
+
+**Phase 1 gate:** "Is the combat fun with grey boxes?" That answer comes from playing it. Phase 2 starts once the owner says yes.
 
 **Definition of done:**
 1. The chain *L → L → Gale Cutter → jump-cancel → air L ×2 → air dash → air L → slam* executes reliably at 60 fps with no dropped inputs.
@@ -1816,4 +1828,4 @@ The foundation questions from v0.1 are still open:
 3. **Cast & story:** Brannoc's real death, Aurek Valcourt as the red herring, the Palimpsest protagonist. Anything to change?
 4. **Scope calls:** 4 player affinities at launch, AI companions first (tag-swap for Rook, Severin, and Cal later), zones rather than a seamless open world, "Season 1" = Arcs 1–3.
 
-**Phase 1 progress:** Steps 1–3 are done and playable in the browser (§22 progress table, `docs/DEV.md`). **Next: Step 4**: double jump, air dash, lock-on switching, and a second spell added as data only (the architecture test), then the phone smoke test. Story systems (flags, Theatre mode) come in Phase 3. **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.
+**Phase 1 progress:** all five steps are done and playable in the browser (§22 progress table and Definition of Done review). Two checks need a human: is it fun and learnable, and does it run well on your phone. **Next: Phase 2, the Combat Vertical Slice** (§23). Story systems (flags, Theatre mode) come in Phase 3. **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.

@@ -60,5 +60,17 @@ After any change, run `npm test`. The scripted fights in `test/sim.test.js` chec
 | Touch, gamepad, keyboard, mouse | `runtime/controls.js` |
 | Accessibility: impact flashes toggle (FX), reduced-motion support, sound toggle | menu in `template.html`, `applySettings` in `main.js` |
 
+## Step 4 and 5 features (Phase 1 complete)
+| Feature | Where |
+|---|---|
+| Double jump, air dash (once per airtime) | `AirJump`, `AirDash` in `data/rook.js`; `airJumps`, `airDashes`, `hoverFrames` in `sim/world.js` |
+| Juggle height rules | `_resolve` in `sim/world.js` |
+| Lock-on switching | `switchLock` in `sim/world.js`; Tab / right-stick flick / tap LOCK |
+| Vacuum Pull (`pull` hit property), Tempest Edge (data only) | `data/rook.js`; `_pull` in `sim/world.js` |
+| Touch assist, melee mana gain | `assist` and `Tuning` in `sim/world.js`; `smartCombo` in `runtime/controls.js` |
+| Adaptive resolution, FPS readout, auto-pause | `quality` in `main.js`; frame-data panel |
+
+Keys added: **R** Vacuum Pull, **T** Tempest Edge, **Tab** switch target. Restart moved to **Backspace**.
+
 ## Publishing the artifact
 `npm run build` also writes `dist/fragment.html` (the page without its outer `<html>` shell). That file is what gets published to the Claude artifact link.
