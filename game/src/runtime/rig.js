@@ -198,10 +198,12 @@ export class Rig {
     if (L.scarf) { // the Lantern Knights' gold scarf
       const scarf = add(MB.CreateTorus("scarf", { diameter: 0.5, thickness: 0.13, tessellation: 14 }, scene), this.body, 0, 0.82, 0, 0.02);
       scarf.material = M("scarf", PALETTE.rookTrim);
-      const tail = add(MB.CreateBox("scarfTail", { width: 0.16, height: 0.5, depth: 0.05 }, scene), this.body, 0.1, 0.62, -0.3, 0.02);
-      tail.rotation.x = 0.35;
+      // The tail hangs from the knot at the back of the neck (pivot there), outside the coat so it never cuts into it.
+      const knot = new BB.TransformNode(`${id}-scarfKnot`, scene);
+      knot.parent = this.body; knot.position.set(0.1, 0.84, -0.36);
+      const tail = add(MB.CreateBox("scarfTail", { width: 0.16, height: 0.5, depth: 0.05 }, scene), knot, 0, -0.25, -0.03, 0.02);
       tail.material = scarf.material;
-      this.scarfTail = tail;
+      this.scarfTail = knot;
     }
 
     if (L.cape) { // a short noble's cape off one shoulder
@@ -494,7 +496,7 @@ export class Rig {
     if (this.halo) { this.halo.rotation.y += dt * 2; }
     if (this.wardRing) { const w = fighter.alive && fighter.tags.has("WARDED"); this.wardRing.setEnabled(w); if (w) this.wardRing.rotation.y -= dt * 2.5; }
     if (this.skirt) this.skirt.rotation.x = bodyLean * 0.25;
-    if (this.scarfTail) this.scarfTail.rotation.x = 0.35 + run * 0.7 + Math.sin(this.time * 9) * 0.08 * (0.3 + run);
+    if (this.scarfTail) this.scarfTail.rotation.x = 0.12 + run * 0.45 + Math.sin(this.time * 9) * 0.08 * (0.3 + run);
     if (this.offArm) this.offArm.rotation.x = c.blocking || fighter.current?.id === "Guard" ? -0.9 : 0.35 + Math.sin(this.time * 13) * 0.25 * run;
     if (this.offArm && (this.look.carry || fighter.offPose)) { const o = fighter.offPose ?? [-1.15, 0, -0.35]; this.offArm.rotation.set(o[0], o[1], o[2]); }
     if (this.head !== this.shoulder) this.head.rotation.z = fighter.headTilt ?? 0;
