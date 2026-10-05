@@ -50,8 +50,13 @@ Keeper: When a knight dies, the wick turns to ash. That's how we know.
 
 title: W_Vendor
 ---
-Vendor: Lowmarket's finest! Charms, cloaks, trinkets for every knight!
-Vendor: My stall opens properly soon. The Guild's still arguing about my permit.
+Vendor: Lowmarket's finest! Blades, cloaks, charms for every knight!
+<<if $MET_VENDOR>>
+    Vendor: Back again? Have a look.
+<<else>>
+    Vendor: A Lantern, eh? Squad discount: none. Have a look anyway.
+    <<set $MET_VENDOR to 1>>
+<<endif>>
 ===
 
 title: W_Guard

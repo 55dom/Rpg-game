@@ -233,6 +233,11 @@ export class World {
   constructor(o = {}) {
     this.frame = 0;
     this.bounds = o.bounds ?? YARD; // where fighters may stand (zones swap this)
+    // Equipment (core/inventory.js mods): folded into Rook's stats here and into damage in _resolve.
+    this.mods = { attack: 0, defense: 0, health: 0, manaRegen: 0, posture: 0, surge: 0, speed: 0, ...(o.mods ?? {}) };
+    const m = this.mods;
+    this.playerStats = Object.freeze({ ...ROOK_STATS, maxHealth: ROOK_STATS.maxHealth + m.health,
+      manaRegenPerSecond: ROOK_STATS.manaRegenPerSecond + m.manaRegen, runSpeed: ROOK_STATS.runSpeed * (1 + m.speed) });
     this.fighters = [];
     this.events = [];
     this.tokens = new AttackTokenPool(o.tokens ?? 2);
@@ -250,7 +255,7 @@ export class World {
     this.pages = Object.fromEntries(Object.keys(PAGES).map((slot) => [slot, { xp: 0, ready: false, branch: null }]));
     this.zones = [];
     this.player = this.add(new Fighter(this, {
-      id: "rook", kind: "player", team: Team.Player, stats: ROOK_STATS, hitboxes: { ...ROOK_HITBOXES, ...PAGE_HITBOXES },
+      id: "rook", kind: "player", team: Team.Player, stats: this.playerStats, hitboxes: { ...ROOK_HITBOXES, ...PAGE_HITBOXES },
       graph: buildRookGraph(() => this.player.context(), ROOK_ABILITIES, this.loadout, { ultimate: this.ultimate }), x: 0, z: -4,
     }));
     this.assist = !!o.assist;
@@ -805,6 +810,8 @@ export class World {
     if (spec.damage > 0 && (def.tags.has("SHIELDED") || def.tags.has("WARDED"))) {
       spec = { ...spec, damage: spec.damage * (def.tags.has("SHIELDED") ? Tuning.shieldFactor : Tuning.wardFactor) };
     }
+    if (att === this.player && (this.mods.attack || this.mods.posture)) spec = { ...spec, damage: spec.damage * (1 + this.mods.attack), posture: spec.posture * (1 + this.mods.posture) };
+    if (def === this.player && this.mods.defense) spec = { ...spec, damage: spec.damage * (1 - this.mods.defense) };
     if (def.tags.has("EXPOSED")) { // Hask's soft underside, once the bog drains
       spec = { ...spec, damage: spec.damage * HASK_TUNING.exposedFactor, posture: spec.posture * HASK_TUNING.exposedFactor };
     }
@@ -903,6 +910,7 @@ export class World {
   _surge(amount) {
     const s = this.player.surge;
     if (!s || amount <= 0 || !this.ultimate) return;
+    amount *= 1 + this.mods.surge;
     const was = s.isFull;
     s.add(amount);
     if (!was && s.isFull) this.emit({ type: "surgeFull" });

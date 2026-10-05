@@ -60,7 +60,7 @@ export const ZONES = {
     spawn: { x: 0, z: -30, yaw: 0 },
     cast: [
       { id: "keeper", look: "keeper", x: 3, z: 24.6, yaw: Math.PI, node: "W_HallKeeper" },
-      { id: "vendor", look: "vendor", x: 21, z: -4.4, yaw: Math.PI / 2, node: "W_Vendor" },
+      { id: "vendor", look: "vendor", x: 21, z: -4.4, yaw: Math.PI / 2, node: "W_Vendor", shop: "lowmarket" },
       { id: "guard", look: "guard", x: 5.4, z: -30, yaw: -0.4, node: "W_Guard" },
       { id: "gossip", look: "gossip", x: -6, z: 4, yaw: 1.2, node: "W_Gossip" },
       { id: "kid", look: "kid", x: 4.6, z: 3.4, yaw: -2.2, node: "W_Kid" },

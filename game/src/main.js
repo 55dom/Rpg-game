@@ -26,6 +26,8 @@ import { EPISODE_3, EP3_SCRIPT } from "./data/story/ep3.js";
 import { EPISODE_4_STORY, EP4_SCRIPT } from "./data/story/ep4.js";
 import { WORLD_SCRIPT } from "./data/story/world.js";
 import { ZONES } from "./data/zones.js";
+import { Inventory } from "./core/inventory.js";
+import { ITEMS, SHOPS, SLOTS, BOUNTIES, slotKind } from "./data/items.js";
 
 const TRAIL_COLORS = { default: "#ffd98a", GaleCutter: PALETTE.gale, VacuumPull: PALETTE.gale, TempestEdge: "#a8f5dc", Counter: "#dff6ff", LanternBreak: "#ffcc55", enemy: "#ff5a4a" };
 const SPELLS = [
@@ -319,6 +321,11 @@ export function boot(doc = document) {
           break;
         }
         case "kill":
+          if (state.mode === "story" && ev.defender.team === Team.Enemy && BOUNTIES[ev.defender.kind]) {
+            const n = BOUNTIES[ev.defender.kind];
+            story.inventory.earn(n);
+            vfx.number({ x: ev.defender.pos.x, y: ev.defender.pos.y + 2.4, z: ev.defender.pos.z }, `+${n} MARKS`, "text marks");
+          }
           if (!ev.ability?.tags.includes("finisher")) sfx.play("kill");
           if (ev.defender.stats.boss) {
             state.cinematic = 0.9; state.cinematicScale = 0.2; impact(5, true); camera.kick(1);
@@ -515,7 +522,8 @@ export function boot(doc = document) {
     setPlayerVisible: (on) => views.get(world.player)?.setVisible(on),
     setSquadVisible: (on) => { for (const c of world.companions) views.get(c)?.setVisible(on); },
     getWorld: () => world,
-    makeWorld: (opts) => newWorld(opts),
+    makeWorld: (opts) => newWorld({ ...opts, mods: story.inventory.mods }),
+    openShop: (id) => openShop(id),
     onEvents: (evs) => onEvents(evs),
   }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }, { episode: EPISODE_3, script: EP3_SCRIPT }, { episode: EPISODE_4_STORY, script: EP4_SCRIPT }], [WORLD_SCRIPT]);
   const playerName = root.querySelector(".player-card .name");
@@ -552,6 +560,7 @@ export function boot(doc = document) {
   const begin = () => {
     createModal.hidden = true; state.modal = false;
     story.flags.load({});
+    story.inventory = new Inventory();
     story.player = { name: cleanName(nameInput.value), pronouns };
     playStory("ep1", 0);
   };
@@ -570,6 +579,7 @@ export function boot(doc = document) {
     const last = saves.latest()?.save;
     story.player = last ? { name: last.player.name, pronouns: last.player.pronouns } : { name: "Rook", pronouns: "they" };
     story.flags.load(last?.flags ?? {});
+    story.inventory = new Inventory(last?.inv);
     playWorld(last?.zone ?? "lighthouse", last?.zone ? last.arrival : null);
   });
   const mapModal = root.querySelector("[data-map]");
@@ -583,6 +593,63 @@ export function boot(doc = document) {
   };
   mapModal.querySelector("[data-map-close]").addEventListener("click", () => { mapModal.hidden = true; state.modal = false; });
   menu("map", openMap);
+
+  // Shop and bag (Phase 4): buy curated gear with Marks, equip a weapon, a cloak and two charms.
+  const shopModal = root.querySelector("[data-shop]");
+  const modsText = (m) => Object.entries(m).map(([k, v]) => ({
+    attack: `+${Math.round(v * 100)}% damage`, defense: `−${Math.round(v * 100)}% damage taken`, health: `+${v} health`, manaRegen: `+${v} mana/s`,
+    posture: `+${Math.round(v * 100)}% posture damage`, surge: `+${Math.round(v * 100)}% Surge`, speed: `+${Math.round(v * 100)}% speed` })[k]).join(" · ") || "No bonus";
+  let shopDone = null;
+  const renderShop = (shopId) => {
+    const inv = story.inventory;
+    shopModal.querySelector("[data-shop-title]").textContent = shopId ? SHOPS[shopId].name.toUpperCase() : "BAG & EQUIPMENT";
+    shopModal.querySelector("[data-marks]").textContent = `${inv.marks} MARKS`;
+    const stock = shopModal.querySelector("[data-stock]");
+    stock.hidden = !shopId;
+    shopModal.querySelector("[data-stock-h]").hidden = !shopId;
+    if (shopId) {
+      stock.innerHTML = SHOPS[shopId].stock.map((id) => { const it = ITEMS[id], own = inv.owned.has(id);
+        return `<button data-buy="${id}" ${own || inv.marks < it.price ? "disabled" : ""}><b>${own ? "OWNED" : `${it.price} M`}</b><span>${it.name} <em>${it.kind}</em><small>${modsText(it.mods)} — ${it.desc}</small></span></button>`; }).join("");
+      for (const b of stock.querySelectorAll("[data-buy]")) b.addEventListener("click", () => {
+        const r = inv.buy(b.dataset.buy);
+        if (r.ok) { sfx.play("surgeFull"); hud.toast("BOUGHT", "clear"); const it = ITEMS[b.dataset.buy];
+          const slot = it.kind === "charm" ? (inv.equipped.charm1 ? (inv.equipped.charm2 ? null : "charm2") : "charm1") : it.kind;
+          if (slot) inv.equip(slot, b.dataset.buy); // put new gear on right away when there's room
+          applyGear(); }
+        renderShop(shopId);
+      });
+    }
+    const slots = shopModal.querySelector("[data-slots-eq]");
+    slots.innerHTML = SLOTS.map((slot) => { const id = inv.equipped[slot], it = id && ITEMS[id];
+      return `<button data-eq="${slot}"><b>${slot.startsWith("charm") ? `CHARM ${slot.slice(-1)}` : slot.toUpperCase()}</b><span>${it ? it.name : "Empty"}<small>${it ? modsText(it.mods) : "Tap to choose"}</small></span></button>`; }).join("");
+    for (const b of slots.querySelectorAll("[data-eq]")) b.addEventListener("click", () => { // cycle through owned gear of that kind
+      const slot = b.dataset.eq, kind = slotKind(slot);
+      const choices = [...inv.owned].filter((id) => ITEMS[id].kind === kind);
+      if (kind === "charm") choices.push(null);
+      if (!choices.length) return;
+      const i = choices.indexOf(inv.equipped[slot]);
+      inv.equip(slot, choices[(i + 1) % choices.length]);
+      sfx.play("ui"); applyGear(); renderShop(shopId);
+    });
+    const total = inv.mods;
+    shopModal.querySelector("[data-total]").textContent = modsText(Object.fromEntries(Object.entries(total).filter(([, v]) => v)));
+  };
+  /** Gear changes apply to Rook immediately (outside fights the world can be rebuilt cheaply). */
+  const applyGear = () => {
+    const w = world, old = w.mods, m = story.inventory.mods, p = w.player;
+    const base = { maxHealth: p.stats.maxHealth - old.health, manaRegenPerSecond: p.stats.manaRegenPerSecond - old.manaRegen, runSpeed: p.stats.runSpeed / (1 + old.speed) };
+    Object.assign(w.mods, m);
+    p.stats = Object.freeze({ ...p.stats, maxHealth: base.maxHealth + m.health, manaRegenPerSecond: base.manaRegenPerSecond + m.manaRegen, runSpeed: base.runSpeed * (1 + m.speed) });
+    const hp = p.combatant.health;
+    hp.max = p.stats.maxHealth; hp.set(Math.min(hp.current, hp.max));
+  };
+  const openShop = (shopId = null) => new Promise((res) => {
+    shopDone = res;
+    renderShop(shopId);
+    shopModal.hidden = false; state.modal = true;
+  });
+  shopModal.querySelector("[data-shop-close]").addEventListener("click", () => { shopModal.hidden = true; state.modal = false; sfx.play("ui"); story.saveNow(); const r = shopDone; shopDone = null; r?.(); });
+  menu("bag", () => { if (state.mode === "story" && shopModal.hidden) openShop(null); });
   const continueBtn = startScreen.querySelector("[data-continue]");
   const refreshContinue = () => {
     const last = saves.read("auto");
@@ -596,6 +663,7 @@ export function boot(doc = document) {
     if (!last) return;
     story.player = { name: last.player.name, pronouns: last.player.pronouns };
     story.flags.load(last.flags);
+    story.inventory = new Inventory(last.inv);
     if (last.zone && ZONES[last.zone]) { playWorld(last.zone, last.arrival); return; }
     playStory(last.episode, last.beat);
   };
@@ -616,6 +684,7 @@ export function boot(doc = document) {
     closeSlots();
     story.player = { name: sv.player.name, pronouns: sv.player.pronouns };
     story.flags.load(sv.flags);
+    story.inventory = new Inventory(sv.inv);
     const ep = story.episodeById(sv.episode);
     if (state.started) { story.stop(); state.started = false; }
     playStory(sv.episode, sv.beat >= (ep?.beats.length ?? 0) ? 0 : sv.beat);
@@ -635,6 +704,7 @@ export function boot(doc = document) {
       closeSlots();
       story.player = last ? { name: last.player.name, pronouns: last.player.pronouns } : { name: "Rook", pronouns: "they" };
       story.flags.load(last?.flags ?? {});
+      story.inventory = new Inventory(last?.inv);
       playStory(b.dataset.ep, 0);
     });
     const list = slotsModal.querySelector("[data-slot-list]");
@@ -803,7 +873,7 @@ export function boot(doc = document) {
 
   // Test hook: freeze the live clock so automated checks can step the sim frame-exactly.
   const freezeLogic = (on) => { state.frozen = on; };
-  const handle = { engine, scene, world, camera, start, restart, freezeLogic, openPages, choosePage, story, saves, sets, playStory, backToTitle, openSlots, playWorld, openMap, data: { acolyte: ACOLYTE_ABILITIES } };
+  const handle = { engine, scene, world, camera, start, restart, freezeLogic, openPages, choosePage, story, saves, sets, playStory, backToTitle, openSlots, playWorld, openMap, openShop, data: { acolyte: ACOLYTE_ABILITIES } };
   return handle;
 }
 

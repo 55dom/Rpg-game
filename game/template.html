@@ -295,7 +295,13 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
   border: 1px solid #343a50; border-radius: 999px; padding: 6px 10px; cursor: pointer; pointer-events: auto; }
 .save-btn { display: none; }
 .story-mode .save-btn { display: inline-block; }
-.map-btn { display: none; }
+.map-btn, .bag-btn { display: none; }
+.story-mode .bag-btn { display: inline-block; }
+.shop-card { width: min(720px, 100%); }
+.shop-card .marks { font: 600 13px/1 var(--font-mono); letter-spacing: 0.2em; color: var(--lantern); margin: -6px 0 6px; }
+.shop-card em { font: 600 10px/1 var(--font-mono); letter-spacing: 0.16em; color: var(--muted); text-transform: uppercase; font-style: normal; margin-left: 6px; }
+.shop-card .total { font-size: 12px; color: var(--gale); text-align: left; margin: 8px 2px 0; }
+.dmg.marks { color: var(--lantern); font-size: 15px; }
 .roaming .map-btn { display: inline-block; }
 .roaming .save-btn { display: none; }
 .map-card .ep-list button span { font-size: 13px; color: var(--muted); }
@@ -411,6 +417,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <button data-menu="sound" title="Sound" aria-pressed="true">SND</button>
       <button data-menu="assist" title="Assist: wider parry and perfect-dodge windows, hold Slash to keep comboing" aria-pressed="false">AST</button>
       <button data-menu="map" class="map-btn" title="World map (P)">MAP</button>
+      <button data-menu="bag" class="bag-btn" title="Bag and equipment">BAG</button>
       <button data-menu="save" class="save-btn" title="Save your story">SAVE</button>
       <button data-menu="reset" title="Restart (R)">↺</button>
     </nav>
@@ -566,6 +573,18 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <h3 data-slots-sub>SAVES</h3>
       <div class="slot-list" data-slot-list></div>
       <div class="start-buttons"><button class="go alt" data-slots-close>BACK</button></div>
+    </div>
+  </div>
+  <div class="modal" data-shop hidden>
+    <div class="modal-card slots-card shop-card">
+      <h2 data-shop-title>SHOP</h2>
+      <div class="marks" data-marks>0 MARKS</div>
+      <h3 data-stock-h>FOR SALE</h3>
+      <div class="ep-list" data-stock></div>
+      <h3>EQUIPPED · TAP A SLOT TO SWAP</h3>
+      <div class="slot-list" data-slots-eq></div>
+      <p class="total" data-total></p>
+      <div class="start-buttons"><button class="go alt" data-shop-close>DONE</button></div>
     </div>
   </div>
   <div class="modal" data-map hidden>

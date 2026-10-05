@@ -11,6 +11,8 @@ import { CUTSCENES } from "../data/story/cutscenes.js";
 import { validateCutscene, sampleCamera, eventsBetween, sampleMove } from "../core/timeline.js";
 import { B, toon2, glow } from "./look.js";
 import { ZONES, arrivalPoint } from "../data/zones.js";
+import { Inventory } from "../core/inventory.js";
+import { EPISODE_REWARD } from "../data/items.js";
 import { inRect } from "../sim/bounds.js";
 
 /** Gesture poses for dialogue: weapon-arm and off-arm rotations, a bow, a head tilt. */
@@ -305,6 +307,7 @@ export class StoryPlayer {
     }
     this.flags = new FlagStore();
     this.player = { name: "Rook", pronouns: "they" };
+    this.inventory = new Inventory();
     for (const cs of Object.values(CUTSCENES)) validateCutscene(cs);
     for (const { episode } of episodes) for (const b of episode.beats) if (b.cutscene && !CUTSCENES[b.cutscene]) throw new Error(`${episode.id}/${b.id}: no cutscene ${b.cutscene}`);
     this.stage = new Stage(ctx.scene, ctx.getWorld);
@@ -379,6 +382,10 @@ export class StoryPlayer {
       if (!this.active) return;
       beat = this.director.complete(result);
     }
+    if (this.active && this.director.done && !this.flags.get(`${ep.id.toUpperCase()}_PAID`)) { // a little pay for finishing an episode
+      this.flags.set(`${ep.id.toUpperCase()}_PAID`, 1);
+      this.inventory.earn(EPISODE_REWARD);
+    }
     if (this.active) this.autosave();
   }
 
@@ -386,14 +393,14 @@ export class StoryPlayer {
   snapshot() {
     if (!this.director || !this.ep) return null;
     const { episode, beat } = this.director.done ? { episode: this.ep.id, beat: this.ep.beats.length } : this.director.resumePoint;
-    return { player: this.player, flags: this.flags.snapshot(), episode, beat };
+    return { player: this.player, flags: this.flags.snapshot(), inv: this.inventory.toJSON(), episode, beat };
   }
 
   autosave() {
     if (!this.director) return;
     this.ctx.saves.reach(this.ep.number + (this.director.done ? 1 : 0));
     const { episode, beat } = this.director.done ? { episode: this.ep.id, beat: this.ep.beats.length } : this.director.resumePoint;
-    this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), episode, beat });
+    this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), inv: this.inventory.toJSON(), episode, beat });
   }
 
   stop() {
@@ -702,6 +709,7 @@ export class StoryPlayer {
     const node = x.talked.has(c.id) && c.again ? c.again : c.node;
     await this.runNode(node);
     if (!this.exploring) return true;
+    if (c.shop) { this.view.hide(); await this.ctx.openShop?.(c.shop); }
     x.talked.add(c.id);
     this.skipping = false;
     this._enterScene(false);
@@ -722,11 +730,11 @@ export class StoryPlayer {
     let id = zoneId, arr = arrival;
     while (this.active) {
       const zone = ZONES[id];
-      this.zone = zone;
+      this.zone = zone; this.arrival = arr;
       const world = this.ctx.getWorld();
       world.bounds = zone.bounds;
       this.ctx.camera.bounds = zone.bounds;
-      this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), zone: id, arrival: arr, episode: null, beat: 0 });
+      this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), inv: this.inventory.toJSON(), zone: id, arrival: arr, episode: null, beat: 0 });
       this.ctx.onZone?.(zone);
       const at = arrivalPoint(zone, arr);
       this._fade(false, 0.5);
@@ -739,6 +747,12 @@ export class StoryPlayer {
       if (out.travel) { id = out.travel; arr = null; continue; }
       if (out.exit) { id = out.exit.to; arr = out.exit.spawn; }
     }
+  }
+
+  /** Save right now (after shopping, etc.): the current zone when roaming, else the episode's resume point. */
+  saveNow() {
+    if (this.roaming && this.zone) this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), inv: this.inventory.toJSON(), zone: this.zone.id, arrival: this.arrival ?? null, episode: null, beat: 0 });
+    else this.autosave();
   }
 
   /** Map travel: jump to another zone's main arrival point. */
