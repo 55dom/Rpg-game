@@ -135,6 +135,17 @@ export class Sfx {
         for (const [i, f] of [784, 988, 1175, 1568].entries()) this._tone(t + i * 0.15, 1.2, { type: "sine", f0: f, gain: 0.05, attack: 0.05 });
         this._noise(t, 1.2, { f0: 3000, f1: 6000, q: 2, gain: 0.04, attack: 0.3 });
         break;
+      case "whistle": // a simple four-note tune, whistled
+        for (const [i, f] of [659, 784, 880, 587].entries()) {
+          const t0 = t + i * 0.42;
+          this._tone(t0, 0.36, { type: "sine", f0: f * 0.97, f1: f, gain: 0.06, attack: 0.04 });
+          this._noise(t0, 0.3, { f0: f * 2, q: 12, gain: 0.012, attack: 0.04 });
+        }
+        break;
+      case "door": // a door frame of light opening
+        this._tone(t, 1.4, { type: "triangle", f0: 220, f1: 440, gain: 0.06, attack: 0.3 });
+        for (const [i, f] of [440, 554, 659].entries()) this._tone(t + 0.3 + i * 0.12, 1.2, { type: "sine", f0: f, gain: 0.04, attack: 0.1 });
+        break;
       case "surgeFull": for (const [i, f] of [523, 659, 784, 1046].entries()) this._tone(t + i * 0.06, 0.5, { type: "triangle", f0: f, gain: 0.08 }); break;
       case "vacuum":
         this._noise(t, 0.45, { f0: 3500, f1: 400, q: 4, gain: 0.22, attack: 0.3 });

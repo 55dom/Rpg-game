@@ -116,3 +116,40 @@ test("Episode 2: valid, every speaker cast, every staged actor on stage, both du
   assert.deepEqual(duel.wave, ["severin"]);
   assert.equal(duel.getUps, 3);
 });
+
+import { Intent } from "../src/core/input.js";
+test("sparring Cal sidesteps left, left, then steps back when attacked up close", () => {
+  const w = new World({ seed: 9, companions: false }); w.spawnWave(["cal"]); w.drainEvents();
+  const c = w.boss, p = w.player;
+  c.brain = null;
+  const seq = [];
+  for (let n = 0; n < 3; n++) {
+    c.boss.cooldown = 0;
+    p.pos = { x: c.pos.x, y: 0, z: c.pos.z - 2 }; p.yaw = 0; p.runner.interrupt();
+    const before = { ...c.pos };
+    w.press(Intent.Light);
+    for (let i = 0; i < 40; i++) { w.step(); const ev = w.drainEvents(); for (const e of ev) if (e.type === "started" && e.fighter === c) seq.push(e.ability.id); }
+    if (n < 2) assert.ok(c.pos.x !== before.x, "moved sideways");
+  }
+  assert.deepEqual(seq.slice(0, 3), ["SideStep", "SideStep", "BackStep"]);
+});
+
+import { EP3_SCRIPT, EPISODE_3 } from "../src/data/story/ep3.js";
+test("Episode 3: valid hub episode, NPC talk nodes exist, every path ends with the lantern lit", () => {
+  const nodes = { ...parseScript(EP3_SCRIPT, "ep3") };
+  validateEpisode(EPISODE_3, nodes);
+  const meet = EPISODE_3.beats.find((b) => b.type === "explore");
+  for (const c of meet.cast) { assert.ok(nodes[c.node], c.node); if (c.again) assert.ok(nodes[c.again], c.again); }
+  assert.ok(meet.cast.some((c) => c.id === meet.required[0]));
+  for (const b of EPISODE_3.beats) for (const c of b.cast ?? []) assert.ok(Object.values(CAST).some((k) => k.actor === c.id), `cast ${c.id}`);
+  for (const pick of [0, 1, 2]) {
+    const f = new FlagStore();
+    const all = [...EPISODE_3.beats.filter((x) => x.node).map((b) => b.node), ...meet.cast.map((c) => c.node)];
+    for (const n of all) {
+      const out = play(new DialogueRunner(nodes, f, { name: "Kit", pronouns: "she" }).start(n), pick);
+      for (const s of out) if (s.type === "line") { assert.ok(!s.speaker || CAST[s.speaker], s.speaker); assert.ok(!/\{[\w$]+\}/.test(s.text)); }
+    }
+    assert.equal(f.get("LANTERN_LIT"), 1);
+  }
+  assert.deepEqual(EPISODE_3.beats.find((b) => b.type === "fight").wave, ["cal"]);
+});

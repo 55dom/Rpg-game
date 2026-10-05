@@ -312,10 +312,12 @@ export class StoryPlayer {
     this.ui = {
       story: r.querySelector("[data-story]"), cold: r.querySelector("[data-coldopen]"), coldText: r.querySelector("[data-co-text]"),
       title: r.querySelector("[data-titlecard]"), preview: r.querySelector("[data-preview]"), hint: r.querySelector("[data-hint]"),
+      objective: r.querySelector("[data-objective]"), talk: r.querySelector("[data-talk]"),
       skip: r.querySelector("[data-skip]"), fade: r.querySelector("[data-fade]"), caption: r.querySelector("[data-caption]"),
     };
     this.ui.skip.addEventListener("click", (e) => { e.stopPropagation(); this.skipping = true; this.view.advance(); });
     for (const el of [this.ui.cold, this.ui.title]) el.addEventListener("click", () => this.confirm());
+    this.ui.talk.addEventListener("click", (e) => { e.stopPropagation(); this.interact(); });
     r.querySelector("[data-cutskip]")?.addEventListener("click", (e) => { e.stopPropagation(); this.confirm(); });
     this.timers = [];
     this.active = false;     // an episode is playing
@@ -346,6 +348,7 @@ export class StoryPlayer {
     }
     if (this.cut) this._cutStep(dt);
     if (this.fight) this._tutorial(dt);
+    if (this.exploring) this._exploreTick(dt);
   }
 
   /** Light / Enter / tap while a scene or card is up. */
@@ -391,6 +394,7 @@ export class StoryPlayer {
     this.ctx.sets?.use("yard");
     for (const el of [this.ui.cold, this.ui.title, this.ui.preview]) el.hidden = true;
     this._hint("");
+    this._endExplore();
     this.ctx.root.classList.remove("in-scene");
     this.ctx.camera.release();
   }
@@ -402,6 +406,7 @@ export class StoryPlayer {
       case BeatType.Title: return this.titleCard();
       case BeatType.Scene: return this.scene(beat);
       case BeatType.Fight: return this.runFight(beat);
+      case BeatType.Explore: return this.explore(beat);
       case BeatType.Preview: return this.preview(beat);
       default: return {};
     }
@@ -546,6 +551,7 @@ export class StoryPlayer {
       if (kind === "clear") c.classList.remove("figure");
       return;
     }
+    if (kind === "door") { await this.doorOfLight(CAST[who]?.actor ?? who); return; }
     if (kind === "book") await this.bookDescends(CAST[who]?.actor ?? who, who === "Severin" ? "tome" : "thin");
   }
 
@@ -578,6 +584,111 @@ export class StoryPlayer {
     this.heldBook = node;
     const dispose = () => { node.dispose(false, true); if (this.heldBook === node) this.heldBook = null; };
     this.tweens.push({ t: 0, dur: tome ? 6 : 3.5, fn: () => {}, done: dispose });
+  }
+
+  /** A golden door frame opens in the air in front of someone, then closes. */
+  async doorOfLight(id) {
+    const a = this.stage.get(id);
+    if (!a) return;
+    const BB = B(), MB = BB.MeshBuilder, scene = this.ctx.scene;
+    const node = new BB.TransformNode("story-door", scene);
+    const fx = Math.sin(a.yaw), fz = Math.cos(a.yaw);
+    node.position.set(a.pos.x + fx * 1.8, 0, a.pos.z + fz * 1.8); node.rotation.y = a.yaw;
+    const gold = glow(scene, "story-doorFrame", "#ffd36a"), inner = glow(scene, "story-doorLight", "#fff3d0", 0.35, true);
+    for (const [w, h, x, y] of [[0.14, 2.6, -0.75, 1.3], [0.14, 2.6, 0.75, 1.3], [1.64, 0.14, 0, 2.6], [1.64, 0.14, 0, 0.02]]) {
+      const m = MB.CreateBox("doorBar", { width: w, height: h, depth: 0.1 }, scene); m.parent = node; m.position.set(x, y, 0); m.material = gold; m.isPickable = false;
+    }
+    const pane = MB.CreatePlane("doorPane", { width: 1.4, height: 2.5, sideOrientation: BB.Mesh.DOUBLESIDE }, scene); pane.parent = node; pane.position.y = 1.3; pane.material = inner; pane.isPickable = false;
+    this.ctx.sfx.play("door");
+    this.ctx.vfx.ring({ x: node.position.x, y: 0.06, z: node.position.z }, 3, "#ffd36a", 0.6);
+    const dur = this.skipping ? 0.05 : 3.2;
+    await new Promise((res) => this.tweens.push({ t: 0, dur, fn: (k) => {
+      const open = Math.min(1, k * 5), close = Math.min(1, (1 - k) * 5);
+      node.scaling.set(Math.min(open, close), Math.min(open, close), 1);
+      inner.alpha = 0.35 * Math.min(open, close) + Math.sin(k * 30) * 0.03;
+    }, done: res }));
+    node.dispose(false, true);
+  }
+
+  // ---- Exploration (hubs): walk freely, talk to people ----
+  async explore(beat) {
+    this._enterScene(false);
+    this.ctx.sets?.use(beat.stage ?? "yard");
+    this.stage.setup(beat);
+    const p = this.ctx.getWorld().player;
+    p.relaxed = true;
+    this.ctx.root.classList.add("exploring");
+    this.ctx.camera.release();
+    this.exploring = { beat, talked: new Set(), near: null, busy: false };
+    this._objective();
+    await new Promise((res) => { this.exploring.resolve = res; });
+    this._endExplore();
+    return {};
+  }
+
+  _endExplore() {
+    this.exploring = null;
+    this.ctx.root.classList.remove("exploring");
+    if (this.ui.objective) this.ui.objective.hidden = true;
+    if (this.ui.talk) this.ui.talk.hidden = true;
+  }
+
+  _objective() {
+    const x = this.exploring, b = x.beat, npcs = b.cast.filter((c) => c.node);
+    const n = npcs.filter((c) => x.talked.has(c.id)).length;
+    this.ui.objective.innerHTML = fillText(b.objective ?? "", { ...this.player, flags: this.flags }).replace("{n}", n).replace("{total}", npcs.length).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+    this.ui.objective.hidden = !b.objective;
+  }
+
+  _exploreTick(dt) {
+    const x = this.exploring;
+    if (!x || x.busy) return;
+    if (x.cooldown > 0) x.cooldown -= dt;
+    const p = this.ctx.getWorld().player;
+    let near = null, best = 2.4;
+    for (const c of x.beat.cast) {
+      const a = this.stage.get(c.id);
+      if (!a) continue;
+      const d = Math.hypot(a.pos.x - p.pos.x, a.pos.z - p.pos.z);
+      if (d < 0.95 && d > 0.01) { const k = (0.95 - d) / d; p.pos.x += (p.pos.x - a.pos.x) * k; p.pos.z += (p.pos.z - a.pos.z) * k; } // don't walk through people
+      if (c.node && d < best) { best = d; near = c; }
+    }
+    if (near !== x.near) {
+      x.near = near;
+      const t = this.ui.talk;
+      t.hidden = !near;
+      if (near) {
+        const c = this.ctx.controls;
+        const device = c.device === "keyboard" && !c.keyboardUsed && this.ctx.root.classList.contains("is-touch") ? "touch" : c.device;
+        t.innerHTML = `<kbd>${this.ctx.hud.label(device, "Light")}</kbd>Talk to ${Object.values(CAST).find((k) => k.actor === near.id)?.name ?? near.id}`;
+      }
+    }
+    if (near) { const a = this.stage.get(near.id); if (!a.down) a.targetYaw = Math.atan2(p.pos.x - a.pos.x, p.pos.z - a.pos.z); }
+  }
+
+  /** Talk to whoever is close (exploration). */
+  async interact() {
+    const x = this.exploring;
+    if (!x || x.busy || !x.near || x.cooldown > 0) return false;
+    const c = x.near;
+    x.busy = true; this.ui.talk.hidden = true;
+    this._enterScene(true);
+    const p = this.ctx.getWorld().player;
+    p.vel.x = p.vel.z = 0; p.moveInput.x = p.moveInput.z = 0; p.runner.interrupt();
+    this.stage.face("player", c.id);
+    this.stage.face(c.id, "player");
+    this._shot("two", [c.id, "player"]);
+    const node = x.talked.has(c.id) && c.again ? c.again : c.node;
+    await this.runNode(node);
+    if (!this.exploring) return true;
+    x.talked.add(c.id);
+    this.skipping = false;
+    this._enterScene(false);
+    this.view.hide();
+    x.busy = false; x.near = null; x.cooldown = 0.6; // the key that closed the last line mustn't reopen it
+    this._objective();
+    if ((x.beat.required ?? []).every((id) => x.talked.has(id))) x.resolve();
+    return true;
   }
 
   // ---- Cutscenes (timeline playback) ----

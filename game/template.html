@@ -292,6 +292,16 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .choices button:disabled { opacity: 0.4; cursor: default; }
 .skip { position: absolute; right: 14px; top: -14px; font: 600 11px/1 var(--font-mono); letter-spacing: 0.14em; color: var(--muted); background: #141722;
   border: 1px solid #343a50; border-radius: 999px; padding: 6px 10px; cursor: pointer; pointer-events: auto; }
+.objective { position: absolute; left: 50%; top: max(14px, env(safe-area-inset-top)); transform: translateX(-50%); max-width: calc(100vw - 32px);
+  font: 400 13px/1.4 var(--font-body); color: var(--text); background: rgba(15, 17, 23, 0.82); border: 1px solid var(--line); border-left: 3px solid var(--lantern);
+  border-radius: 8px; padding: 8px 14px; text-align: center; }
+.objective b { color: var(--lantern); font-weight: 700; }
+.talk { position: absolute; left: 50%; bottom: 26%; transform: translateX(-50%); pointer-events: auto; cursor: pointer;
+  font: 600 14px/1 var(--font-body); color: var(--ink); background: var(--lantern); border: 0; border-radius: 999px; padding: 11px 18px; box-shadow: 0 4px 18px rgba(0,0,0,0.4); }
+.talk kbd { font: 700 12px/1 var(--font-mono); background: rgba(15,17,23,0.85); color: var(--lantern); border-radius: 4px; padding: 3px 6px; margin-right: 8px; }
+.exploring .hud-top .player-card, .exploring .combo, .exploring .fd, .exploring .prompt { opacity: 0; }
+.exploring .pad button:not(.b-light):not(.b-jump):not(.b-dodge) { visibility: hidden; }
+.in-scene .objective, .in-scene .talk { display: none; }
 .fade { position: absolute; inset: 0; background: #000; opacity: 0; transition: opacity 1s; }
 .fade.on { opacity: 1; }
 .caption { position: absolute; left: 50%; bottom: calc(7vh + 26px); transform: translateX(-50%); width: min(760px, calc(100vw - 32px)); margin: 0; text-align: center;
@@ -509,6 +519,8 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
   <div class="story" data-story>
     <div class="letterbox top"></div><div class="letterbox bottom"></div>
     <div class="hint-pill" data-hint></div>
+    <div class="objective" data-objective hidden></div>
+    <button class="talk" data-talk hidden></button>
     <div class="fade" data-fade></div>
     <p class="caption" data-caption></p>
     <button class="cut-skip" data-cutskip>SKIP ▸▸</button>

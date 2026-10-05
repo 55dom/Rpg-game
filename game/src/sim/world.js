@@ -10,7 +10,8 @@ import { AttackTokenPool, EnemyBrain, MoveIntent, CompanionBrain, AllyMove, STAN
 import { COMPANIONS } from "../data/companions.js";
 import { ENEMIES, WAVES } from "../data/enemies.js";
 import { HASK_STATS, HASK_HITBOXES, HASK_TUNING, haskOptions } from "../data/hask.js";
-import { HaskController, SeverinController } from "./boss.js";
+import { HaskController, SeverinController, SparController } from "./boss.js";
+import { CAL_STATS, CAL_HITBOXES, calOptions } from "../data/cal.js";
 import { SEVERIN_STATS, SEVERIN_HITBOXES, severinOptions } from "../data/severin.js";
 import { RunDirector } from "./run.js";
 import { seededRandom, SECONDS_PER_TICK } from "../core/timing.js";
@@ -39,6 +40,7 @@ export const Tuning = Object.freeze({
 
 const BOSSES = {
   hask: { stats: HASK_STATS, hitboxes: HASK_HITBOXES, options: haskOptions, traits: { heavy: true, armoredAttacks: true }, Controller: HaskController, z: 7 },
+  cal: { stats: CAL_STATS, hitboxes: CAL_HITBOXES, options: calOptions, traits: {}, Controller: SparController, z: 4 },
   severin: { stats: SEVERIN_STATS, hitboxes: SEVERIN_HITBOXES, options: severinOptions, traits: {}, Controller: SeverinController, z: 6 },
 };
 
@@ -173,6 +175,7 @@ export class Fighter {
         const speed = distance / (frames * SECONDS_PER_TICK);
         let { x, z } = this.forward;
         if (a.id === "Dodge" && Math.hypot(this.moveInput.x, this.moveInput.z) <= 0.2) { x = -x; z = -z; } // backstep
+        if (e.key === "left") { const fx = x; x = -z; z = fx; } // sidestep to the fighter's left
         this.dash.x = x * speed; this.dash.z = z * speed; this.dash.frames = frames;
         break;
       }

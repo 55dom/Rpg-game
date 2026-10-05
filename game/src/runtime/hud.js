@@ -204,7 +204,7 @@ export class Hud {
         e.bossHp.parentElement.querySelectorAll("s").forEach((x) => x.remove());
         for (const m of b.stats.phaseMarks ?? []) { const el = document.createElement("s"); el.style.left = `${m * 100}%`; e.bossHp.parentElement.appendChild(el); }
       }
-      this.set("bossName", e.bossName, "text", b.stats.name.toUpperCase() + (b.boss ? `  ·  PHASE ${b.boss.phase}` : ""));
+      this.set("bossName", e.bossName, "text", b.stats.name.toUpperCase() + (b.boss && b.stats.phaseMarks?.length ? `  ·  PHASE ${b.boss.phase}` : ""));
       this.set("bossHp", e.bossHp, "width", pct(b.combatant.health.normalized));
       this.set("bossPost", e.bossPosture, "width", pct(b.combatant.posture.normalized));
     }

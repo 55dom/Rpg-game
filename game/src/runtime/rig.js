@@ -8,6 +8,7 @@ import { BAS_POSES, JUNO_POSES } from "../data/companions.js";
 import { ENEMIES } from "../data/enemies.js";
 import { HASK_POSES } from "../data/hask.js";
 import { SEVERIN_POSES } from "../data/severin.js";
+import { CAL_POSES } from "../data/cal.js";
 import { EventType } from "../core/abilities.js";
 
 /** Attacks animate over their active frames; a move counts as an attack if it hits (directly or via hitboxes). */
@@ -46,7 +47,7 @@ export const LOOKS = {
   // Story cast (Phase 3). Poses borrow Rook's rest stance until they get their own moves.
   dagrun: { poses: ACOLYTE_POSES, scale: 1.3, skirt: 1.35, coat: "#3b404c", trim: "#e6b54e", hairColor: "#5a3d2b", skin: "#e2b894",
     head: "face", hair: "crop", beard: "#5a3d2b", scarf: true, weapon: "none", shoulders: 1.5, trail: "#e6b54e" },
-  cal: { poses: ROOK_POSES, scale: 1.04, skirt: 0.8, coat: "#d9d3c4", trim: "#e6b54e", hairColor: "#2f2a36", skin: "#efd2b8",
+  cal: { poses: CAL_POSES, scale: 1.04, skirt: 0.8, coat: "#d9d3c4", trim: "#e6b54e", hairColor: "#2f2a36", skin: "#efd2b8",
     head: "face", hair: "long", scarf: true, weapon: "sword", trail: "#ffd98a" },
   corvina: { poses: ACOLYTE_POSES, scale: 1.04, skirt: 1.05, coat: "#f2efe6", trim: "#d4ad4f", hairColor: "#c9d6e8", skin: "#f3dcc8",
     head: "face", hair: "long", weapon: "none", cape: "#d4ad4f", trail: "#e9f2ff" },
@@ -54,6 +55,10 @@ export const LOOKS = {
     head: "face", hair: "crop", beard: "#a8a8a8", weapon: "sword", shoulders: 1.35, trail: "#c9d2dc" },
   ysolde: { poses: ACOLYTE_POSES, scale: 1.0, skirt: 0.95, coat: "#2f6b5a", trim: "#9fe6c8", hairColor: "#c96a3a", skin: "#e8bf9c",
     head: "face", hair: "sidetail", accent: "#9fe6c8", weapon: "spear", trail: "#9fe6c8" },
+  lio: { poses: ACOLYTE_POSES, scale: 0.97, skirt: 1.15, coat: "#3f4f6e", trim: "#a9b8d8", hairColor: "#d8d0bc", skin: "#efd6c2",
+    head: "face", hair: "crop", weapon: "none", grimoire: true, trail: "#a9b8d8" },
+  tamsin: { poses: ACOLYTE_POSES, scale: 0.95, skirt: 0.95, coat: "#b8503a", trim: "#f0c26a", hairColor: "#e0b050", skin: "#f1d0b4",
+    head: "face", hair: "spiky", scarf: true, weapon: "none", lute: true, trail: "#f0c26a" },
   stranger: { poses: ACOLYTE_POSES, scale: 1.08, skirt: 0.78, coat: "#0d0c12", trim: "#0d0c12", hairColor: "#0d0c12", skin: "#0d0c12",
     head: "blank", hair: "crop", weapon: "none", carry: true, trail: "#000000" },
   severin: { poses: SEVERIN_POSES, scale: 1.02, skirt: 0.9, coat: "#ece8f4", trim: "#d4ad4f", hairColor: "#e6d6a2", skin: "#f2d7c2",
@@ -203,6 +208,12 @@ export class Rig {
       this.cape = cape;
     }
 
+    if (L.lute) { // Tamsin's lute, slung across the back
+      const body = add(MB.CreateSphere("lute", { diameter: 0.42, segments: 8 }, scene), this.body, 0.05, 0.25, -0.34, 0.02);
+      body.scaling.set(1, 1.2, 0.4); body.material = M("lute", "#8a5a32");
+      const neck = add(MB.CreateBox("luteNeck", { width: 0.07, height: 0.62, depth: 0.05 }, scene), this.body, 0.2, 0.68, -0.36, 0.015);
+      neck.rotation.z = -0.45; neck.material = M("luteNeck", "#5a3a22");
+    }
     if (L.carry) { // something small, wrapped, held against the chest
       const bundle = add(MB.CreateSphere("bundle", { diameter: 0.34, segments: 10 }, scene), this.body, 0.02, 0.5, 0.3, 0.02);
       bundle.scaling.set(1.3, 0.8, 0.85); bundle.rotation.z = 0.4; bundle.material = M("bundle", "#e9dfca");

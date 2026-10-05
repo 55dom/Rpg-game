@@ -3,7 +3,9 @@
 // calls the pack, and when the bog drains.
 
 import { EnemyBrain } from "../core/ai.js";
+import { EventType } from "../core/abilities.js";
 import { HASK_ABILITIES, HASK_PHASES, HASK_TUNING, haskOptions } from "../data/hask.js";
+import { CAL_ABILITIES, CAL_TUNING } from "../data/cal.js";
 import { SEVERIN_ABILITIES, SEVERIN_PHASES, SEVERIN_TUNING, severinOptions } from "../data/severin.js";
 
 const flat = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
@@ -263,5 +265,26 @@ export class SeverinController {
     f.brain.aggroRange = 40;
     if (SEVERIN_PHASES[p - 1].stars) { this.state = "toPolaris"; f.runner.interrupt(); }
     w.emit({ type: "bossPhase", fighter: f, phase: p });
+  }
+}
+
+// ---- Sparring partner (Episode 3) ------------------------------------------------------------
+export class SparController {
+  constructor(world, f) {
+    this.world = world; this.f = f;
+    this.phase = 1; this.state = "spar"; this.cooldown = 60; this.step = 0;
+  }
+  get brainActive() { return true; }
+  get untouchable() { return false; }
+  tick() {
+    const w = this.world, f = this.f, p = w.player, T = CAL_TUNING;
+    if (!f.alive) return;
+    if (this.cooldown > 0) { this.cooldown--; return; }
+    const attacking = p.runner.isRunning && p.current && (p.current.hasHit || p.current.events.some((e) => e.type === EventType.SpawnHitbox));
+    if (!attacking || flat(p.pos, f.pos) > T.evadeRange || f.runner.isRunning || !f.combatant.canAct || !f.grounded) return;
+    f.yaw = Math.atan2(p.pos.x - f.pos.x, p.pos.z - f.pos.z);
+    f.controller.startDirect(CAL_ABILITIES[T.pattern[this.step % T.pattern.length]], w.frame);
+    this.step++;
+    this.cooldown = T.evadeCooldown;
   }
 }

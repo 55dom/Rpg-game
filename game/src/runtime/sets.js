@@ -17,6 +17,9 @@ function softTexture(scene) {
   return tex;
 }
 
+const NIGHT = { clear: "#141a2e", fog: "#1e2640", fogDensity: 0.016, hemi: [0.45, "#a9b8ff", "#2a2040"], sun: [0.5, "#c8d4ff", [0.3, -1, 0.3]] };
+const NIGHT_TOON = { sky: [0.86, 0.88, 1.02], ground: [0.66, 0.66, 0.82], rim: [0.8, 0.9, 1.1] };
+
 export class Sets {
   constructor(scene, arena, { mobile = false } = {}) {
     this.scene = scene;
@@ -36,6 +39,7 @@ export class Sets {
     const set = this.get(name);
     set.show(true);
     this._env(set.env, set.toon);
+    if (set.night != null || name === "lighthouse") set.onNight = (k) => this._blendNight(set, k);
     return set;
   }
 
@@ -43,7 +47,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -53,6 +57,7 @@ export class Sets {
   }
 
   _env(e, toonEnv) {
+    this.envNow = { e, toonEnv };
     const BB = B(), sc = this.scene, L = this.lights;
     sc.clearColor = BB.Color4.FromHexString(e.clear + "ff");
     sc.fogColor = color3(e.fog).clone(); sc.fogDensity = e.fogDensity;
@@ -60,6 +65,17 @@ export class Sets {
     if (L.sun) { L.sun.intensity = e.sun[0]; L.sun.diffuse = color3(e.sun[1]).clone(); L.sun.direction = new BB.Vector3(...e.sun[2]); }
     if (L.warm) L.warm.intensity = e.warm ?? 0;
     setToonEnvironment(toonEnv);
+  }
+
+  /** Lighthouse dusk → night: blend sky, fog, lights, and the character lighting. */
+  _blendNight(set, k) {
+    const mix = (a, b) => { const A = color3(a), Bc = color3(b); return `#${[A.r + (Bc.r - A.r) * k, A.g + (Bc.g - A.g) * k, A.b + (Bc.b - A.b) * k].map((v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, "0")).join("")}`; };
+    const D = set.env, N = NIGHT;
+    const e = { clear: mix(D.clear, N.clear), fog: mix(D.fog, N.fog), fogDensity: D.fogDensity + (N.fogDensity - D.fogDensity) * k,
+      hemi: [D.hemi[0] + (N.hemi[0] - D.hemi[0]) * k, mix(D.hemi[1], N.hemi[1]), mix(D.hemi[2], N.hemi[2])],
+      sun: [D.sun[0] + (N.sun[0] - D.sun[0]) * k, mix(D.sun[1], N.sun[1]), D.sun[2]], warm: 0 };
+    const t = set.toon, nt = NIGHT_TOON, lerp3 = (a, b) => a.map((v, i) => v + (b[i] - v) * k);
+    this._env(e, { lightDir: t.lightDir, fogColor: e.fog, fogDensity: t.fogDensity, sky: lerp3(t.sky, nt.sky), ground: lerp3(t.ground, nt.ground), rim: lerp3(t.rim, nt.rim) });
   }
 
   /** Hask's bog: the yard has one built in; other sets may provide their own. */
@@ -353,4 +369,104 @@ function buildExamGrounds(scene, mobile) {
       for (const f of fans) { const y = Math.max(0, Math.sin(t * (cheer ? 9 : 2) + f.phase)) * amp; f.b.position.y = f.base - 0.2 + y; f.hd.position.y = f.base + 0.35 + y; }
     },
   };
+}
+
+// ---- The Lantern Lighthouse: HQ on the dry Sea of Marrow, at dusk (and later, night) ---------
+export const LIGHTHOUSE = { table: { x: 5, z: 6 }, ring: { x: 0, z: -4 }, lanterns: { x: 2.5, z: 12.4 }, door: { x: -4, z: 10.4 } };
+function buildLighthouse(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add;
+  const rng = mulberry(31);
+  const seabed = add(MB.CreateCylinder("lh-seabed", { diameter: 160, height: 0.6, tessellation: 48 }, scene)); seabed.position.y = -0.5; seabed.material = toon(scene, "lh-seabed", "#b8875a");
+  const crackMat = toon(scene, "lh-crack", "#7a5434");
+  for (let i = 0; i < (mobile ? 30 : 60); i++) {
+    const a = rng() * Math.PI * 2, r = 20 + rng() * 45;
+    const c = add(MB.CreateBox("lh-crack", { width: 0.12, height: 0.02, depth: 2 + rng() * 5 }, scene));
+    c.position.set(Math.sin(a) * r, -0.19, Math.cos(a) * r); c.rotation.y = rng() * Math.PI; c.material = crackMat;
+  }
+  // The plateau the squad lives on, paved and a little raised above the old seabed.
+  const plateau = add(MB.CreateCylinder("lh-plateau", { diameter: 38, height: 1.2, tessellation: 48 }, scene), 0.05); plateau.position.y = -0.6; plateau.material = toon(scene, "lh-plateau", "#8e8579");
+  const paving = toon(scene, "lh-paving", "#a29a8c");
+  for (let i = 0; i < 26; i++) { const a = rng() * Math.PI * 2, r = rng() * 15; const t = add(MB.CreateBox("lh-tile", { width: 1.4, height: 0.02, depth: 1.4 }, scene)); t.position.set(Math.sin(a) * r, 0.01, Math.cos(a) * r); t.rotation.y = rng(); t.material = paving; }
+  // The lighthouse: white with red bands, a glowing lantern room, a slow sweeping beam.
+  const L = { x: -9, z: 9 };
+  const tower = add(MB.CreateCylinder("lh-tower", { height: 16, diameterTop: 3.2, diameterBottom: 4.6, tessellation: 20 }, scene), 0.06); tower.position.set(L.x, 8, L.z); tower.material = toon(scene, "lh-white", "#efe8dc");
+  const red = toon(scene, "lh-red", "#b8473a");
+  for (const h of [3, 7.5, 12]) { const b = add(MB.CreateCylinder("lh-band", { height: 1.2, diameterTop: 4.6 - h * 0.09, diameterBottom: 4.6 - (h - 1.2) * 0.09, tessellation: 20 }, scene)); b.position.set(L.x, h, L.z); b.scaling.setAll(1.02); b.material = red; }
+  const gallery = add(MB.CreateCylinder("lh-gallery", { height: 0.4, diameter: 4.4, tessellation: 20 }, scene), 0.04); gallery.position.set(L.x, 16.2, L.z); gallery.material = toon(scene, "lh-dark", "#2a2a33");
+  const lampMat = glow(scene, "lh-lamp", "#ffd98a");
+  const lamp = add(MB.CreateCylinder("lh-lamp", { height: 2, diameter: 2.4, tessellation: 12 }, scene)); lamp.position.set(L.x, 17.4, L.z); lamp.material = lampMat;
+  const cap = add(MB.CreateCylinder("lh-cap", { height: 1.4, diameterTop: 0, diameterBottom: 3.2, tessellation: 12 }, scene), 0.04); cap.position.set(L.x, 19.1, L.z); cap.material = red;
+  const beam = K.noGlow(add(MB.CreateCylinder("lh-beam", { height: 40, diameterTop: 7, diameterBottom: 0.8, tessellation: 12 }, scene)));
+  beam.setPivotPoint(new BB.Vector3(0, -20, 0)); beam.position.set(L.x, 37.4, L.z); beam.rotation.z = Math.PI / 2 - 0.08;
+  const beamMat = glow(scene, "lh-beamMat", "#fff1c4", 0.12, true); beam.material = beamMat;
+  // The keeper's house the squad lives in, with its door.
+  const house = add(MB.CreateBox("lh-house", { width: 7, height: 4, depth: 5 }, scene), 0.05); house.position.set(-4, 2, 13); house.material = toon(scene, "lh-houseMat", "#d9c7a6");
+  const roof = add(MB.CreateCylinder("lh-roof", { height: 7.6, diameter: 5.6, tessellation: 3 }, scene), 0.05); roof.position.set(-4, 4.7, 13); roof.rotation.set(0, 0, Math.PI / 2); roof.scaling.set(1, 1, 0.75); roof.material = toon(scene, "lh-roofMat", "#5a6e8a");
+  const door = add(MB.CreateBox("lh-door", { width: 1.3, height: 2.3, depth: 0.15 }, scene), 0.03); door.position.set(-4, 1.15, 10.45); door.material = toon(scene, "lh-doorMat", "#6b4a32");
+  const winMat = glow(scene, "lh-window", "#ffcf7a");
+  for (const x of [-6.3, -1.7]) { const w = add(MB.CreatePlane("lh-win", { width: 1, height: 1 }, scene)); w.position.set(x, 2.4, 10.47); w.rotation.y = Math.PI; w.material = winMat; }
+  const step = add(MB.CreateBox("lh-step", { width: 2, height: 0.22, depth: 0.8 }, scene), 0.03); step.position.set(-4, 0.11, 9.9); step.material = paving;
+  // The squad lanterns: one for every Lantern Knight, on a rack by the door.
+  const rack = add(MB.CreateBox("lh-rack", { width: 5, height: 0.15, depth: 0.15 }, scene), 0.03); rack.position.set(LIGHTHOUSE.lanterns.x, 2.4, LIGHTHOUSE.lanterns.z); rack.material = toon(scene, "lh-wood", "#6b4a32");
+  for (const x of [-2.2, 2.2]) { const p = add(MB.CreateCylinder("lh-rackPost", { height: 2.4, diameter: 0.15, tessellation: 6 }, scene), 0.02); p.position.set(LIGHTHOUSE.lanterns.x + x, 1.2, LIGHTHOUSE.lanterns.z); p.material = rack.material; }
+  const flame = glow(scene, "lh-lanternFlame", "#ffcf6a"), frame = toon(scene, "lh-lanternFrame", "#2a2a33");
+  const lanterns = [];
+  for (let i = 0; i < 8; i++) {
+    const x = LIGHTHOUSE.lanterns.x - 1.9 + i * 0.55;
+    const l = add(MB.CreateBox("lh-lantern", { width: 0.32, height: 0.44, depth: 0.32 }, scene), 0.02); l.position.set(x, 1.95, LIGHTHOUSE.lanterns.z); l.material = frame;
+    const f = add(MB.CreateBox("lh-lflame", { width: 0.22, height: 0.32, depth: 0.22 }, scene)); f.position.copyFrom(l.position); f.material = flame;
+    lanterns.push(f);
+  }
+  const newLantern = lanterns[7]; newLantern.setEnabled(false); // the newest Lantern's, lit at dinner
+  // The long table for dinner, with benches and bowls.
+  const T = LIGHTHOUSE.table, wood = toon(scene, "lh-table", "#8a5a3a");
+  const top = add(MB.CreateBox("lh-tableTop", { width: 1.6, height: 0.12, depth: 5 }, scene), 0.03); top.position.set(T.x, 0.85, T.z); top.material = wood;
+  for (const [dx, dz] of [[-0.6, -2.2], [0.6, -2.2], [-0.6, 2.2], [0.6, 2.2]]) { const l = add(MB.CreateBox("lh-leg", { width: 0.12, height: 0.85, depth: 0.12 }, scene)); l.position.set(T.x + dx, 0.42, T.z + dz); l.material = wood; }
+  for (const dx of [-1.35, 1.35]) { const b = add(MB.CreateBox("lh-bench", { width: 0.5, height: 0.1, depth: 4.6 }, scene), 0.02); b.position.set(T.x + dx, 0.48, T.z); b.material = wood; }
+  const bowl = toon(scene, "lh-bowl", "#e8e0cf");
+  for (let i = 0; i < 6; i++) { const b = add(MB.CreateCylinder("lh-bowlM", { height: 0.12, diameterTop: 0.36, diameterBottom: 0.22, tessellation: 10 }, scene), 0.015); b.position.set(T.x + (i % 2 ? 0.45 : -0.45), 0.97, T.z - 1.8 + Math.floor(i / 2) * 1.8); b.material = bowl; }
+  const pot = add(MB.CreateCylinder("lh-pot", { height: 0.5, diameter: 0.7, tessellation: 12 }, scene), 0.03); pot.position.set(T.x + 2.4, 0.55, T.z + 3); pot.material = toon(scene, "lh-potMat", "#2a2a33");
+  const fire = add(MB.CreateCylinder("lh-cookfire", { height: 0.3, diameterTop: 0, diameterBottom: 0.6, tessellation: 6 }, scene)); fire.position.set(T.x + 2.4, 0.15, T.z + 3); fire.material = glow(scene, "lh-fireMat", "#ff9a3a");
+  // The training ring with straw dummies.
+  const R = LIGHTHOUSE.ring;
+  const ring = add(MB.CreateTorus("lh-ring", { diameter: 9, thickness: 0.12, tessellation: 48 }, scene)); ring.position.set(R.x, 0.02, R.z); ring.material = toon(scene, "lh-ringMat", "#e6b54e");
+  const straw = toon(scene, "lh-straw", "#d9b866");
+  for (const [dx, dz] of [[-6, -1], [-6.5, 1.5], [5.8, -2.5]]) {
+    const post = add(MB.CreateCylinder("lh-dpost", { height: 1.6, diameter: 0.14, tessellation: 6 }, scene)); post.position.set(R.x + dx, 0.8, R.z + dz); post.material = wood;
+    const body = add(MB.CreateCylinder("lh-dummy", { height: 0.9, diameter: 0.55, tessellation: 8 }, scene), 0.025); body.position.set(R.x + dx, 1.4, R.z + dz); body.material = straw;
+    const head = add(MB.CreateSphere("lh-dhead", { diameter: 0.4, segments: 6 }, scene), 0.02); head.position.set(R.x + dx, 2.05, R.z + dz); head.material = straw;
+  }
+  // Old boats stranded on the dry sea.
+  const hull = toon(scene, "lh-hull", "#5a4030");
+  for (const [x, z, r] of [[22, -14, 0.4], [-26, -6, 2.1], [30, 18, 1.2], [-14, -30, 0.9]]) {
+    const h = add(MB.CreateCylinder("lh-boat", { height: 7, diameter: 2.6, tessellation: 12, arc: 0.5 }, scene), 0.04);
+    h.position.set(x, 0.1, z); h.rotation.set(Math.PI / 2, r, 0.35); h.material = hull;
+  }
+  // Warm lights for the evening, string lanterns over the table.
+  const warm = new BB.PointLight("lh-warm", new BB.Vector3(T.x, 3, T.z), scene); warm.diffuse = color3("#ffb86a").clone(); warm.intensity = 0.4; warm.range = 14; K.lights.push(warm);
+  const bulbs = [];
+  for (let i = 0; i < 9; i++) { const b = add(MB.CreateSphere("lh-bulb", { diameter: 0.18, segments: 6 }, scene)); b.position.set(T.x - 2 + Math.sin(i * 0.7) * 0.3, 2.8 - Math.sin((i / 8) * Math.PI) * 0.5, T.z - 3 + i * 0.75); b.material = flame; bulbs.push(b); }
+  let night = 0, nightTarget = 0;
+  const DUSK = { clear: "#8a5f7c", fog: "#c08070", fogDensity: 0.012, hemi: [0.65, "#ffd2b0", "#4a3a5a"], sun: [0.85, "#ffb070", [0.6, -0.55, 0.6]], warm: 0 };
+  const DUSK_TOON = { lightDir: [-0.6, 0.6, -0.6], fogColor: "#c08070", fogDensity: 0.008, sky: [1.08, 0.98, 0.95], ground: [0.9, 0.78, 0.82], rim: [1.0, 0.8, 0.6] };
+  const env = { ...DUSK };
+  const self = {
+    env, toon: DUSK_TOON,
+    show(on) { K.show(on); if (on) { night = nightTarget = 0; newLantern.setEnabled(false); } },
+    cue(name) {
+      if (name === "night") nightTarget = 1;
+      if (name === "dusk") nightTarget = 0;
+      if (name === "lantern") newLantern.setEnabled(true);
+    },
+    update(dt, t) {
+      beam.rotation.y = t * 0.5;
+      const prev = night;
+      night += (nightTarget - night) * Math.min(1, dt * 0.8);
+      if (Math.abs(night - prev) > 1e-4) self.onNight?.(night);
+      beamMat.alpha = 0.06 + night * 0.12;
+      warm.intensity = 0.3 + night * 0.8 + Math.sin(t * 7) * 0.04;
+      for (const [i, f] of lanterns.entries()) f.scaling.y = 0.9 + Math.sin(t * 9 + i) * 0.08;
+    },
+  };
+  return self;
 }

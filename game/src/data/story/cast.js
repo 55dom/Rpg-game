@@ -13,6 +13,10 @@ export const CAST = Object.freeze({
   Corvina: { name: "Captain Corvina", color: "#e9f2ff", actor: "corvina" },
   Brannoc: { name: "Captain Brannoc", color: "#c9d2dc", actor: "brannoc" },
   Ysolde: { name: "Captain Ysolde", color: "#9fe6c8", actor: "ysolde" },
+  Juno: { name: "Juno", color: "#ff8fa0", actor: "juno" },
+  Bas: { name: "Bas", color: "#e8b46a", actor: "bas" },
+  Lio: { name: "Lio", color: "#a9b8d8", actor: "lio" },
+  Tamsin: { name: "Tamsin", color: "#f0c26a", actor: "tamsin" },
   Crowd: { name: "Candidates", color: "#aab4cc", actor: null },
 });
 

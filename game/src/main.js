@@ -22,6 +22,7 @@ import { Constellation } from "./runtime/constellation.js";
 import { SaveStore, cleanName } from "./core/save.js";
 import { EPISODE_1, EP1_SCRIPT } from "./data/story/ep1.js";
 import { EPISODE_2, EP2_SCRIPT } from "./data/story/ep2.js";
+import { EPISODE_3, EP3_SCRIPT } from "./data/story/ep3.js";
 
 const TRAIL_COLORS = { default: "#ffd98a", GaleCutter: PALETTE.gale, VacuumPull: PALETTE.gale, TempestEdge: "#a8f5dc", Counter: "#dff6ff", LanternBreak: "#ffcc55", enemy: "#ff5a4a" };
 const SPELLS = [
@@ -511,7 +512,7 @@ export function boot(doc = document) {
     getWorld: () => world,
     makeWorld: (opts) => newWorld(opts),
     onEvents: (evs) => onEvents(evs),
-  }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }]);
+  }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }, { episode: EPISODE_3, script: EP3_SCRIPT }]);
   const playerName = root.querySelector(".player-card .name");
   const showName = (n) => { if (playerName?.firstChild) playerName.firstChild.textContent = `${n.toUpperCase()} `; };
   const backToTitle = () => {
@@ -615,6 +616,7 @@ export function boot(doc = document) {
         continue;
       }
       if (state.mode === "story" && (cmd === "boss" || cmd === "reset")) continue; // sandbox shortcuts are off in the story
+      if (cmd === "confirm" && story.exploring?.near) { story.interact(); continue; }
       if (cmd === "pages") { if (pageModal.hidden) openPages(); else { pageModal.hidden = true; state.modal = false; } }
       if (cmd === "lock") { const t = world.toggleLock(); if (!t) camera.yaw = world.player.yaw; sfx.play("ui"); }
       if (cmd === "unlock" && world.lockTarget) { world.lockTarget = null; sfx.play("ui"); }
@@ -639,6 +641,7 @@ export function boot(doc = document) {
     const presses = controls.drainPresses();
     if (!state.started && presses.length && createModal.hidden) (continueBtn.hidden ? openCreate() : doContinue()); // any attack button on the title screen
     if (story.blocking) { if (presses.includes(1) || presses.includes(3)) story.confirm(); presses.length = 0; } // Slash or Jump advances dialogue
+    else if (story.exploring?.near && presses.includes(1)) { story.interact(); presses.length = 0; } // Slash talks to whoever is close
     if (!pageModal.hidden) for (const p of presses) { if (p === 1) choosePage("A"); if (p === 2) choosePage("B"); } // Light / Heavy pick a branch
     running = state.started && !state.paused && !state.help && !state.frozen && !state.modal && !story.blocking; // after commands: pause/help/modals may have changed
     if (running) for (const p of presses) world.press(p);
