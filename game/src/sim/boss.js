@@ -4,6 +4,7 @@
 
 import { EnemyBrain } from "../core/ai.js";
 import { HASK_ABILITIES, HASK_PHASES, HASK_TUNING, haskOptions } from "../data/hask.js";
+import { SEVERIN_ABILITIES, SEVERIN_PHASES, SEVERIN_TUNING, severinOptions } from "../data/severin.js";
 
 const flat = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 
@@ -21,6 +22,8 @@ export class HaskController {
   }
 
   get rules() { return HASK_PHASES[this.phase - 1]; }
+  get brainActive() { return this.state === "surface"; }
+  get untouchable() { return this.state !== "surface" && this.state !== "erupting"; }
 
   /** Called once per logic frame Hask ticks, after brains and before abilities. */
   tick() {
@@ -135,5 +138,130 @@ export class HaskController {
     }
     if (this.state === "surface") this.timer = this.rules.diveEvery || Infinity;
     w.emit({ type: "bossPhase", fighter: f, phase: p, drained: !!this.rules.drained });
+  }
+}
+
+// ---- Severin Valcourt (Episode 2) -----------------------------------------------------------
+
+/** Distance on the ground from p to the segment a→b. */
+const segDist = (a, b, p) => {
+  const dx = b.x - a.x, dz = b.z - a.z, L = dx * dx + dz * dz || 1;
+  const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / L));
+  return { d: Math.hypot(a.x + dx * t - p.x, a.z + dz * t - p.z), x: a.x + dx * t, z: a.z + dz * t };
+};
+
+export class SeverinController {
+  constructor(world, f) {
+    this.world = world;
+    this.f = f;
+    this.phase = 1;
+    this.state = "duel";          // duel → toPolaris → casting → anchored → (knocked off) → duel …
+    this.polaris = { x: f.pos.x, z: f.pos.z };
+    this.stars = []; this.lines = [];
+    this.timer = 0; this.pulse = 0; this.warn = 0; this.active = 0;
+    this.hitSet = new Set();
+  }
+
+  get brainActive() { return this.state === "duel" || this.state === "anchored"; }
+  get untouchable() { return false; }
+
+  tick() {
+    const w = this.world, f = this.f, T = SEVERIN_TUNING;
+    if (!f.alive) { if (this.stars.length) this._clearStars(false); return; }
+    const hp = f.combatant.health.normalized;
+    const next = SEVERIN_PHASES.find((p) => hp > p.above)?.phase ?? 2;
+    if (next > this.phase) this._enterPhase(next);
+
+    switch (this.state) {
+      case "duel":
+        if (this.phase >= 2 && --this.timer <= 0) this.state = "toPolaris";
+        break;
+      case "toPolaris": {
+        const d = flat(f.pos, this.polaris);
+        if (d > 0.6) {
+          f.moveInput.x = (this.polaris.x - f.pos.x) / d; f.moveInput.z = (this.polaris.z - f.pos.z) / d;
+        } else {
+          f.moveInput.x = f.moveInput.z = 0;
+          if (!f.runner.isRunning && f.combatant.canAct && f.grounded) {
+            f.yaw = Math.atan2(w.player.pos.x - f.pos.x, w.player.pos.z - f.pos.z);
+            f.controller.startDirect(SEVERIN_ABILITIES.PlaceStars, w.frame);
+            this.state = "casting";
+          }
+        }
+        break;
+      }
+      case "casting":
+        f.moveInput.x = f.moveInput.z = 0;
+        if (!f.runner.isRunning && !this.stars.length) this.state = "toPolaris"; // interrupted: try again
+        break;
+      case "anchored": {
+        f.moveInput.x = f.moveInput.z = 0; // he holds his point and fights from it
+        if (flat(f.pos, this.polaris) > T.offPolaris || !f.grounded || f.combatant.postureBroken) { this._dim(); break; }
+        if (this.warn > 0) {
+          if (--this.warn === 0) { this.active = T.activeFrames; this.hitSet = new Set(); w.emit({ type: "starStrike", fighter: f, lines: this.lines }); }
+        } else if (this.active > 0) {
+          this.active--;
+          this._strike();
+        } else if (--this.pulse <= 0) {
+          this.pulse = T.pulseEvery; this.warn = T.warnFrames;
+          w.emit({ type: "starWarn", fighter: f, lines: this.lines, frames: T.warnFrames });
+        }
+        break;
+      }
+      default: break;
+    }
+  }
+
+  /** The PlaceStars move lands: a ring of stars around Polaris, joined as a five-pointed constellation. */
+  placeStars() {
+    const T = SEVERIN_TUNING, P = this.polaris, w = this.world;
+    const spin = w.rng() * Math.PI * 2;
+    this.stars = Array.from({ length: T.starCount }, (_, i) => {
+      const a = spin + (i / T.starCount) * Math.PI * 2;
+      return { x: P.x + Math.sin(a) * T.starRadius, z: P.z + Math.cos(a) * T.starRadius };
+    });
+    const n = this.stars.length;
+    this.lines = this.stars.map((s, i) => ({ a: s, b: this.stars[(i + 2) % n] }));
+    this.state = "anchored";
+    this.pulse = 70; this.warn = 0; this.active = 0;
+    w.emit({ type: "starsPlaced", fighter: this.f, stars: this.stars, lines: this.lines, polaris: P });
+  }
+
+  _strike() {
+    const w = this.world, T = SEVERIN_TUNING;
+    for (const t of w.fighters) {
+      if (t.team === this.f.team || !t.alive || this.hitSet.has(t) || t.pos.y > T.lineHeight) continue;
+      for (const L of this.lines) {
+        const s = segDist(L.a, L.b, t.pos);
+        if (s.d > T.lineWidth + t.stats.radius) continue;
+        this.hitSet.add(t);
+        w._resolve(this.f, t, { def: null, spec: T.line, ability: SEVERIN_ABILITIES.PlaceStars, hitSet: this.hitSet, origin: { x: s.x, y: 0.5, z: s.z }, projectile: true });
+        break;
+      }
+    }
+  }
+
+  _dim() {
+    const f = this.f, w = this.world, T = SEVERIN_TUNING;
+    this._clearStars(true);
+    f.runner.interrupt();
+    const broke = f.combatant.takePostureDamage(T.dimPosture);
+    f.combatant.stagger(T.dimStagger);
+    this.state = "duel"; this.timer = T.relightAfter;
+    if (broke) w.emit({ type: "postureBreak", attacker: w.player, defender: f, ability: null, at: { x: f.pos.x, y: 1.4, z: f.pos.z } });
+  }
+
+  _clearStars(dimmed) {
+    this.stars = []; this.lines = []; this.warn = this.active = 0;
+    this.world.emit({ type: "starsDim", fighter: this.f, dimmed });
+  }
+
+  _enterPhase(p) {
+    const w = this.world, f = this.f;
+    this.phase = p;
+    f.brain = new EnemyBrain(f.id, f.brain.pool, severinOptions(p), w.rng);
+    f.brain.aggroRange = 40;
+    if (SEVERIN_PHASES[p - 1].stars) { this.state = "toPolaris"; f.runner.interrupt(); }
+    w.emit({ type: "bossPhase", fighter: f, phase: p });
   }
 }

@@ -158,7 +158,7 @@ export const EPISODE_1 = {
       tutorial: [
         { at: 0.5, text: "{Light}: chain up to four slashes." },
         { at: 6, text: "Two slashes, then {Heavy}, launches them into the air." },
-        { at: 12, text: "A red glint can't be blocked: {Dodge} through it. Tap {Block} as a hit lands to parry." },
+        { at: 12, text: "A red glint can't be blocked: press {Dodge} to dodge through it. Tap {Block} as a hit lands to parry." },
         { at: 19, text: "{Spell1}: Gale Cutter, your one page. Sword hits refill your mana." },
         { at: 26, text: "Guard broken? {Heavy} finishes them: Lantern Break." },
       ],
@@ -170,7 +170,7 @@ export const EPISODE_1 = {
         { id: "severin", look: "severin", x: 2.2, z: 0.8, yaw: -1.6 },
         { id: "moss", look: "moss", x: -5, z: 8, yaw: 2.6 },
       ] },
-    { id: "preview", type: "preview", next: "Episode 2 · The Knight Exam",
+    { id: "preview", type: "preview", next: "Episode 2 · The Knight Exam", nextEpisode: "ep2",
       lines: [
         "Next time on UNWRITTEN:",
         "Seven squads. One exam. And every captain in Liraen says no.",

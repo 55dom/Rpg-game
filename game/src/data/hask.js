@@ -13,6 +13,7 @@ const box = (frame, key, frames) => ({ frame, type: E.SpawnHitbox, key, value: f
 export const HASK_STATS = Object.freeze({
   name: "Hask the Bogwarden", maxHealth: 1500, maxPosture: 260, runSpeed: 3.0, circleSpeed: 1.2, turnRate: 0.06,
   radius: 1.1, height: 3.2, elite: true, boss: true,
+  bossTitle: "BOSS 2 · THE GREYWATER FENS", defeatText: "BOGWARDEN DEFEATED", drop: "RARE PAGE · VACUUM PULL", bog: true, phaseMarks: [0.65, 0.35],
 });
 
 export const HASK_HITBOXES = Object.freeze({

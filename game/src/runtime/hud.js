@@ -199,6 +199,11 @@ export class Hud {
     const b = world.boss?.alive ? world.boss : null;
     this.set("bossOn", e.boss, "hidden", !b);
     if (b) {
+      if (this.marksFor !== b) { // phase marks on the boss bar
+        this.marksFor = b;
+        e.bossHp.parentElement.querySelectorAll("s").forEach((x) => x.remove());
+        for (const m of b.stats.phaseMarks ?? []) { const el = document.createElement("s"); el.style.left = `${m * 100}%`; e.bossHp.parentElement.appendChild(el); }
+      }
       this.set("bossName", e.bossName, "text", b.stats.name.toUpperCase() + (b.boss ? `  ·  PHASE ${b.boss.phase}` : ""));
       this.set("bossHp", e.bossHp, "width", pct(b.combatant.health.normalized));
       this.set("bossPost", e.bossPosture, "width", pct(b.combatant.posture.normalized));

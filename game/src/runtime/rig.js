@@ -7,6 +7,7 @@ import { ACOLYTE_POSES } from "../data/acolyte.js";
 import { BAS_POSES, JUNO_POSES } from "../data/companions.js";
 import { ENEMIES } from "../data/enemies.js";
 import { HASK_POSES } from "../data/hask.js";
+import { SEVERIN_POSES } from "../data/severin.js";
 import { EventType } from "../core/abilities.js";
 
 /** Attacks animate over their active frames; a move counts as an attack if it hits (directly or via hitboxes). */
@@ -43,9 +44,19 @@ export const LOOKS = {
   hask: { poses: HASK_POSES, scale: 2.0, skirt: 1.7, coat: "#3d4934", trim: "#5c4a2e", hairColor: "#2c3524", skin: "#3d4934",
     head: "lump", weapon: "claw", shoulders: 1.7, accent: "#262b1d", eyes: "#ffb347", trail: "#c9a24a", mound: true },
   // Story cast (Phase 3). Poses borrow Rook's rest stance until they get their own moves.
+  dagrun: { poses: ACOLYTE_POSES, scale: 1.3, skirt: 1.35, coat: "#3b404c", trim: "#e6b54e", hairColor: "#5a3d2b", skin: "#e2b894",
+    head: "face", hair: "crop", beard: "#5a3d2b", scarf: true, weapon: "none", shoulders: 1.5, trail: "#e6b54e" },
+  cal: { poses: ROOK_POSES, scale: 1.04, skirt: 0.8, coat: "#d9d3c4", trim: "#e6b54e", hairColor: "#2f2a36", skin: "#efd2b8",
+    head: "face", hair: "long", scarf: true, weapon: "sword", trail: "#ffd98a" },
+  corvina: { poses: ACOLYTE_POSES, scale: 1.04, skirt: 1.05, coat: "#f2efe6", trim: "#d4ad4f", hairColor: "#c9d6e8", skin: "#f3dcc8",
+    head: "face", hair: "long", weapon: "none", cape: "#d4ad4f", trail: "#e9f2ff" },
+  brannoc: { poses: ACOLYTE_POSES, scale: 1.16, skirt: 1.1, coat: "#6b7280", trim: "#8a3a2a", hairColor: "#9a9a9a", skin: "#d8a888",
+    head: "face", hair: "crop", beard: "#a8a8a8", weapon: "sword", shoulders: 1.35, trail: "#c9d2dc" },
+  ysolde: { poses: ACOLYTE_POSES, scale: 1.0, skirt: 0.95, coat: "#2f6b5a", trim: "#9fe6c8", hairColor: "#c96a3a", skin: "#e8bf9c",
+    head: "face", hair: "sidetail", accent: "#9fe6c8", weapon: "spear", trail: "#9fe6c8" },
   stranger: { poses: ACOLYTE_POSES, scale: 1.08, skirt: 0.78, coat: "#0d0c12", trim: "#0d0c12", hairColor: "#0d0c12", skin: "#0d0c12",
     head: "blank", hair: "crop", weapon: "none", carry: true, trail: "#000000" },
-  severin: { poses: ROOK_POSES, scale: 1.02, skirt: 0.9, coat: "#ece8f4", trim: "#d4ad4f", hairColor: "#e6d6a2", skin: "#f2d7c2",
+  severin: { poses: SEVERIN_POSES, scale: 1.02, skirt: 0.9, coat: "#ece8f4", trim: "#d4ad4f", hairColor: "#e6d6a2", skin: "#f2d7c2",
     head: "face", hair: "swept", scarf: false, weapon: "needle", accent: "#d4ad4f", cape: "#2c3a6e", trail: "#fff1b8" },
   moss: { poses: ACOLYTE_POSES, scale: 0.9, skirt: 1.1, coat: "#6b5236", trim: "#8f7c58", hairColor: "#cfcbc2", skin: "#e8c8a8",
     head: "face", hair: "crop", weapon: "broom", accent: "#b89a5a", stoop: 0.22, trail: "#e8d6a0" },
@@ -124,6 +135,11 @@ export class Rig {
       } else if (L.hair === "swept") { // a noble's swept fringe falling over one eye
         const sweep = add(MB.CreateSphere("sweep", { diameter: 0.3, segments: 8 }, scene), this.head, -0.07, 0.13, 0.12, 0.015);
         sweep.scaling.set(1.15, 0.45, 0.75); sweep.rotation.set(0.35, 0.2, 0.4); sweep.material = dark;
+      } else if (L.hair === "long") { // loose hair down past the shoulders
+        const back = add(MB.CreateCapsule("hairBack", { height: 0.7, radius: 0.2, tessellation: 10 }, scene), this.head, 0, -0.18, -0.16, 0.02);
+        back.scaling.set(1.15, 1, 0.55); back.material = dark;
+        const fringe = add(MB.CreateSphere("fringe", { diameter: 0.34, segments: 8 }, scene), this.head, 0.03, 0.14, 0.12, 0.015);
+        fringe.scaling.set(1.25, 0.42, 0.7); fringe.rotation.set(0.3, 0, -0.18); fringe.material = dark;
       } else if (L.hair === "crop") {
         cap.scaling.set(1.02, 0.86, 1); // close-cropped and flat on top
         cap.position.y = 0.04;
@@ -162,6 +178,10 @@ export class Rig {
         eye.material = eyeMat;
       }
       this.maskNode = mask;
+    }
+    if (L.beard && L.head === "face") {
+      const beard = add(MB.CreateSphere("beard", { diameter: 0.3, segments: 8 }, scene), this.head, 0, -0.13, 0.12, 0.015);
+      beard.scaling.set(1.1, 0.7, 0.7); beard.material = M("beard", L.beard);
     }
     if (L.sash) {
       const sash = add(MB.CreateBox("sash", { width: 0.12, height: 1.1, depth: 0.66 }, scene), this.body, 0, 0.35, 0, 0.02);
@@ -446,14 +466,16 @@ export class Rig {
     if (c.isStaggered) bodyLean = c.postureBroken ? -0.15 + Math.sin(this.time * 3) * 0.05 : -0.3;
     if (c.blocking) bodyLean = -0.08;
     if (!fighter.grounded) bodyLean += fighter.vel.y > 0 ? -0.15 : 0.15;
-    if (!fighter.alive) {
+    if (fighter.alive && this.deathT) { this.deathT = 0; this.visibility = 1; } // got back up
+    if (!fighter.alive && fighter.stats?.yields) bodyLean = 0.55; // a duel ends on one knee, not dead
+    else if (!fighter.alive) {
       this.deathT = (this.deathT ?? 0) + dt;
       bodyLean = -Math.min(1.45, this.deathT * 3.5);
       this.visibility = 1 - clamp01((fighter.deadFrames - 50) / 50);
     }
     this.body.rotation.x = bodyLean + (this.look.stoop ?? 0) + (fighter.bow ?? 0);
     if (this.cape) this.cape.rotation.x = 0.12 + run * 0.6 + Math.sin(this.time * 7) * 0.04;
-    this.body.position.y = this.bodyY + bob - (c.postureBroken ? 0.18 : 0);
+    this.body.position.y = this.bodyY + bob - (c.postureBroken ? 0.18 : 0) - (!fighter.alive && fighter.stats?.yields ? 0.35 : 0);
     if (this.beastTail) this.beastTail.rotation.x = -2.1 + Math.sin(this.time * 10) * 0.25;
     if (this.legs) for (const hip of this.legs) hip.rotation.x = Math.sin(this.time * 16 + hip.phase) * 0.7 * run;
     if (this.halo) { this.halo.rotation.y += dt * 2; }
@@ -543,7 +565,7 @@ export class Rig {
   }
 }
 
-const RELAXED = [1.25, 0.15, 0.1];
+const RELAXED = [1.45, 0.3, 0.15];
 const CRADLE = [0.95, -0.55, 0];
 const mix = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k)];
 const lerpAngleSafe = (a, b, t) => a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * t;

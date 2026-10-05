@@ -4,7 +4,7 @@
 
 import { Rig } from "./rig.js";
 import { FlagStore } from "../core/flags.js";
-import { parseScript, DialogueRunner } from "../core/script.js";
+import { parseScript, DialogueRunner, fillText } from "../core/script.js";
 import { EpisodeDirector, validateEpisode, BeatType } from "../sim/episode.js";
 import { CAST, speakerName } from "../data/story/cast.js";
 import { CUTSCENES } from "../data/story/cutscenes.js";
@@ -63,6 +63,7 @@ class Stage {
     p.relaxed = true;
     for (const c of beat.cast ?? beat.actors ?? []) {
       const actor = makeActor(c.x, c.z, c.yaw ?? 0, c.down);
+      actor.pos.y = actor.prev.y = c.y ?? 0;
       const rig = new Rig(this.scene, c.look, `story-${c.id}`);
       if (c.hidden) { rig.setVisible(false); actor.hiddenActor = true; }
       this.actors.set(c.id, { actor, rig, look: c.look });
@@ -166,16 +167,17 @@ class Stage {
       for (const p of vis) { cx += p.pos.x; cz += p.pos.z; }
       cx /= vis.length; cz /= vis.length;
       const span = Math.max(...vis.map((p) => Math.hypot(p.pos.x - cx, p.pos.z - cz)));
+      const cy = vis.reduce((m, p) => m + (p.pos.y ?? 0), 0) / vis.length;
       const d = 5 + span * 1.3, front = ids[0] === "front" ? -1 : 1;
-      if (ids[0] === "side") return { pos: { x: cx + d, y: 2.4 + span * 0.2, z: cz - d * 0.3 }, look: { x: cx, y: 1.3, z: cz + 0.6 }, fov: 0.8 };
-      return { pos: { x: cx + d * 0.35, y: 2.6 + span * 0.25, z: cz - d * front }, look: { x: cx, y: 1.3, z: cz + front }, fov: 0.8 };
+      if (ids[0] === "side") return { pos: { x: cx + d, y: cy + 2.4 + span * 0.2, z: cz - d * 0.3 }, look: { x: cx, y: cy + 1.3, z: cz + 0.6 }, fov: 0.8 };
+      return { pos: { x: cx + d * 0.35, y: cy + 2.6 + span * 0.25, z: cz - d * front }, look: { x: cx, y: cy + 1.3, z: cz + front }, fov: 0.8 };
     }
     if (kind === "on") {
       const a = this.get(ids[0]);
       if (!a) return null;
       const scale = a === this.getWorld().player ? 1 : this.actors.get(ids[0])?.rig.look.scale ?? 1;
       const down = !!a.down;
-      const look = { x: a.pos.x, y: down ? 0.4 : 1.75 * scale, z: a.pos.z };
+      const look = { x: a.pos.x, y: (a.pos.y ?? 0) + (down ? 0.4 : 1.75 * scale), z: a.pos.z };
       // Try a few angles around the subject and keep the one with the clearest line of sight.
       const others = pts.filter((p) => p !== a);
       let best = null, bestScore = -1;
@@ -197,9 +199,12 @@ class Stage {
       // Shoulder side: the one that keeps the camera toward the front of the set (−z).
       let rx = uz, rz = -ux;
       if (rz > 0) { rx = -rx; rz = -rz; }
-      const back = 1.5 + sep * 0.25;
-      const pos = { x: b.pos.x - ux * back + rx * 0.95, y: 2.05, z: b.pos.z - uz * back + rz * 0.95 };
-      const look = { x: a.pos.x - ux * 0.3, y: 1.6, z: a.pos.z - uz * 0.3 };
+      const sb = b === this.getWorld().player ? 1 : this.actors.get(ids[1])?.rig.look.scale ?? 1;
+      const wide = sb * (this.actors.get(ids[1])?.rig.look.shoulders ?? 1); // big shoulders need a wider offset
+      const back = 1.5 + sep * 0.25 + (sb - 1) * 1.5;
+      const side = 0.95 + (wide - 1) * 0.9;
+      const pos = { x: b.pos.x - ux * back + rx * side, y: 2.05 * sb + (b.pos.y ?? 0), z: b.pos.z - uz * back + rz * side };
+      const look = { x: a.pos.x - ux * 0.3, y: 1.6 + (a.pos.y ?? 0), z: a.pos.z - uz * 0.3 };
       return { pos, look, fov: 0.62 };
     }
     return null;
@@ -640,12 +645,12 @@ export class StoryPlayer {
       world.resetPlayer();
       world.spawnWave(beat.wave);
       this.ctx.onEvents(world.drainEvents());
-      this.fight = { beat, t: 0, hints: [...(beat.tutorial ?? [])], result: null };
+      this.fight = { beat, t: 0, hints: [...(beat.tutorial ?? [])], result: null, getUps: beat.getUps ?? 0, falls: 0 };
       const won = await new Promise((res) => { this.fight.resolve = res; });
       this._hint("");
       if (won || !beat.retry) { this.fight = null; return { won }; }
       this.fight = null;
-      this.ctx.hud.say("Rook", beat.retry);
+      this.say("Rook", beat.retry);
       await this.sleep(2.2);
     }
   }
@@ -654,22 +659,39 @@ export class StoryPlayer {
   onWorldEvent(ev) {
     const f = this.fight;
     if (!f || f.done) return;
+    const hint = f.beat.eventHints?.[ev.type];
+    if (hint && !f.shown?.has(ev.type)) { (f.shown ??= new Set()).add(ev.type); this._showHint(hint); }
     if (ev.type === "waveClear") { f.done = true; this.sleep(0.4).then(() => f.resolve(true)); }
-    if (ev.type === "playerDown") { f.done = true; this.sleep(2.4).then(() => f.resolve(false)); }
+    if (ev.type === "playerDown") {
+      f.falls++;
+      if (f.getUps > 0) { // story duels: you can get back up a few times
+        f.getUps--;
+        this.flags.set(f.beat.countFlag ?? "GET_UPS", f.falls);
+        const lines = f.beat.getUpLines ?? [];
+        if (lines[f.falls - 1]) this.say(lines[f.falls - 1][0], lines[f.falls - 1][1]);
+        this.sleep(1.8).then(() => { if (this.fight === f) { this.ctx.getWorld().revivePlayer(0.5); this.ctx.onEvents(this.ctx.getWorld().drainEvents()); } });
+        return;
+      }
+      f.done = true; this.sleep(2.4).then(() => f.resolve(false));
+    }
   }
 
   _tutorial(dt) {
     const f = this.fight;
     f.t += dt;
-    if (f.hints.length && f.t >= f.hints[0].at) {
-      const h = f.hints.shift();
-      const c = this.ctx.controls;
-      const device = c.device === "keyboard" && !c.keyboardUsed && this.ctx.root.classList.contains("is-touch") ? "touch" : c.device;
-      const text = h.text.replace(/\{(\w+)\}/g, (_, k) => `<b>${this.ctx.hud.label(device, k) ?? k}</b>`);
-      this._hint(text);
-      this.hintTimer = 5.5;
-    }
+    if (f.hints.length && f.t >= f.hints[0].at) this._showHint(f.hints.shift().text);
     if (this.hintTimer > 0 && (this.hintTimer -= dt) <= 0) this._hint("");
+  }
+
+  /** A subtitle line during a fight, with the player's name and pronouns filled in. */
+  say(speakerId, text) { this.ctx.hud.say(speakerName(speakerId, this.player.name), fillText(text, { ...this.player, flags: this.flags })); }
+
+  /** A tutorial pill; {Light}, {Dodge}… become the current device's buttons. */
+  _showHint(text) {
+    const c = this.ctx.controls;
+    const device = c.device === "keyboard" && !c.keyboardUsed && this.ctx.root.classList.contains("is-touch") ? "touch" : c.device;
+    this._hint(text.replace(/\{(\w+)\}/g, (_, k) => `<b>${this.ctx.hud.label(device, k) ?? k}</b>`));
+    this.hintTimer = 5.5;
   }
 
   _hint(html) {

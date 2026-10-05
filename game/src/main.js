@@ -18,8 +18,10 @@ import { Hud } from "./runtime/hud.js";
 import { buildArena } from "./runtime/arena.js";
 import { StoryPlayer } from "./runtime/story.js";
 import { Sets } from "./runtime/sets.js";
+import { Constellation } from "./runtime/constellation.js";
 import { SaveStore, cleanName } from "./core/save.js";
 import { EPISODE_1, EP1_SCRIPT } from "./data/story/ep1.js";
+import { EPISODE_2, EP2_SCRIPT } from "./data/story/ep2.js";
 
 const TRAIL_COLORS = { default: "#ffd98a", GaleCutter: PALETTE.gale, VacuumPull: PALETTE.gale, TempestEdge: "#a8f5dc", Counter: "#dff6ff", LanternBreak: "#ffcc55", enemy: "#ff5a4a" };
 const SPELLS = [
@@ -51,6 +53,8 @@ export function boot(doc = document) {
   scene.skipPointerMovePicking = true;
   const arena = buildArena(scene, { mobile });
   const sets = new Sets(scene, arena, { mobile });
+  const setBog = (on, instant = false) => sets.setBog(on, instant);
+  const constellation = new Constellation(scene);
   const camera = new FollowCamera(scene, { mobile });
   camera.reduceMotion = reduced;
   const gl = new BB.GlowLayer("glow", scene, { mainTextureRatio: mobile ? 0.35 : 0.5, blurKernelSize: mobile ? 24 : 40 });
@@ -111,6 +115,7 @@ export function boot(doc = document) {
 
   function onEvents(events) {
     for (const ev of events) {
+      if (state.mode === "story") story.onWorldEvent(ev);
       const isPlayer = (f) => f === world.player;
       switch (ev.type) {
         case "spawn": addView(ev.fighter); break;
@@ -141,6 +146,7 @@ export function boot(doc = document) {
             if (e.key === "tempest") {
               for (const [h, s] of [[0.6, 4.6], [1.1, 5.2], [1.6, 4.2]]) vfx.ring({ x: f.pos.x, y: f.pos.y + h, z: f.pos.z }, s, PALETTE.gale, 0.45);
             }
+            if (e.key === "starcharge") { vfx.flash({ x: f.pos.x, y: f.pos.y + 2.1, z: f.pos.z }, 1.6, "#fff1b8", 0.3); vfx.sparksAt({ x: f.pos.x, y: f.pos.y + 2, z: f.pos.z }, 8, "gold", 4, 2); }
             if (e.key === "sing") vfx.ring({ x: f.pos.x, y: f.pos.y + 2.2, z: f.pos.z }, 1.6, "#c9a4ff", 0.4);
             if (e.key === "mudwave") { vfx.ring({ x: f.pos.x, y: 0.08, z: f.pos.z }, 8, "#8a7a4a", 0.5); vfx.sparksAt({ x: f.pos.x, y: 0.3, z: f.pos.z }, 18, "gold", 10, 5); camera.shake(0.5); }
             if (e.key === "glint") { vfx.flash(head(f), 1.4, PALETTE.danger, 0.35); sfx.play("glint"); }
@@ -245,10 +251,27 @@ export function boot(doc = document) {
         case "allyRevive": hud.toast(`${ev.fighter.stats.name.toUpperCase()} IS BACK`, "clear"); break;
         case "projectile": sfx.play(ev.projectile.def.flat ? "mud" : "glint", 0.6); break;
         case "bossIntro":
-          arena.setBog(true);
-          showBossCard(ev.fighter.stats.name, "BOSS 2 · THE GREYWATER FENS");
+          if (ev.fighter.stats.bog) setBog(true);
+          showBossCard(ev.fighter.stats.name, ev.fighter.stats.bossTitle ?? "BOSS");
           sfx.play("bossIntro"); camera.shake(0.4);
           break;
+        case "starsPlaced":
+          constellation.place(ev.stars, ev.lines, ev.polaris);
+          vfx.ring({ x: ev.polaris.x, y: 0.06, z: ev.polaris.z }, 15, "#ffd36a", 0.6); sfx.play("surgeFull"); camera.shake(0.3);
+          hud.pushLog("Severin pins his stars");
+          break;
+        case "starWarn": constellation.warn(ev.frames); sfx.play("glint"); break;
+        case "starStrike": constellation.strike(); sfx.play("ultActivate", 0.6); camera.shake(0.35); break;
+        case "starsDim":
+          constellation.clear(!ev.dimmed);
+          if (ev.dimmed) { hud.toast("THE STARS GO DARK", "break"); sfx.play("postureBreak"); impact(2); }
+          break;
+        case "playerRevive": {
+          const p = ev.fighter;
+          vfx.ring({ x: p.pos.x, y: 0.06, z: p.pos.z }, 5, PALETTE.lantern, 0.6); vfx.flash(chest(p), 2.4, "#fff2cf", 0.3);
+          hud.toast("GET UP", "afterimage"); sfx.play("surgeFull");
+          break;
+        }
         case "submerge": {
           const f = ev.fighter;
           vfx.ring({ x: f.pos.x, y: 0.06, z: f.pos.z }, 7, "#8a7a4a", 0.5); vfx.sparksAt({ x: f.pos.x, y: 0.4, z: f.pos.z }, 16, "gold", 9, 6);
@@ -263,7 +286,8 @@ export function boot(doc = document) {
           hud.toast("UPROOTED", "afterimage");
           break;
         case "bossPhase":
-          if (ev.drained) { arena.setBog(false); hud.toast("THE BOG DRAINS", "clear"); hud.banner("PHASE 3 · EXPOSED"); }
+          if (ev.drained) { setBog(false); hud.toast("THE BOG DRAINS", "clear"); hud.banner("PHASE 3 · EXPOSED"); }
+          else if (ev.fighter.kind === "severin") { hud.toast("CONSTELLATION", "afterimage"); hud.banner("PHASE 2 · POLARIS"); }
           else { hud.toast("HASK ENRAGES", "danger"); hud.banner(`PHASE ${ev.phase}`); }
           sfx.play("bossIntro"); camera.shake(0.6);
           break;
@@ -294,9 +318,10 @@ export function boot(doc = document) {
           if (!ev.ability?.tags.includes("finisher")) sfx.play("kill");
           if (ev.defender.stats.boss) {
             state.cinematic = 0.9; state.cinematicScale = 0.2; impact(5, true); camera.kick(1);
-            arena.setBog(false);
-            hud.toast("BOGWARDEN DEFEATED", "finisher");
-            later(1.6, () => hud.banner("RARE PAGE · VACUUM PULL"));
+            setBog(false);
+            const st = ev.defender.stats;
+            hud.toast(st.defeatText ?? "BOSS DEFEATED", "finisher");
+            if (st.drop) later(1.6, () => hud.banner(st.drop));
           }
           break;
         case "land": if (isPlayer(ev.fighter)) sfx.play("land"); break;
@@ -307,28 +332,28 @@ export function boot(doc = document) {
           sfx.play("slam"); camera.shake(0.45);
           break;
         }
-        case "wave": if (!world.run && state.mode !== "story") hud.banner(`WAVE ${ev.wave}`); sfx.play("wave"); break;
+        case "wave": constellation.clear(true); if (!world.run && state.mode !== "story") hud.banner(`WAVE ${ev.wave}`); sfx.play("wave"); break;
         case "waveClear":
-          if (state.mode === "story") { story.onWorldEvent(ev); hud.toast("CLEAR", "clear"); break; }
+          if (state.mode === "story") { hud.toast("CLEAR", "clear"); break; }
           if (world.run) break; // the run director handles clears
           hud.toast("YARD CLEAR", "clear");
           later(2.4, () => world.spawnWave());
           break;
         case "playerDown":
           hud.toast(`${(state.mode === "story" ? story.player.name : "Rook").toUpperCase()} FALLS`, "danger");
-          if (state.mode === "story") { story.onWorldEvent(ev); break; }
+          if (state.mode === "story") break;
           if (!world.run) later(2.6, restart);
           break;
         case "runStart": hud.banner(ev.episode.subtitle); break;
         case "runStage": {
           const enc = ev.encounter;
           showBossCard(enc.title, ev.index === 0 ? `${EPISODE_4.title.toUpperCase()} · 1/${ev.total}` : `ENCOUNTER ${ev.index + 1} / ${ev.total}`);
-          arena.setBog(false);
+          setBog(false);
           break;
         }
         case "runLine": hud.say(ev.speaker, ev.text); break;
         case "runCleared": hud.toast("CLEAR", "clear"); hud.banner("THE SQUAD CATCHES ITS BREATH · +35% HP"); sfx.play("wave"); break;
-        case "runRetry": hud.toast("ONE MORE TIME", "afterimage"); arena.setBog(false, true); walls.clear(); break;
+        case "runRetry": hud.toast("ONE MORE TIME", "afterimage"); setBog(false, true); walls.clear(); break;
         case "runComplete": showResults(ev); break;
         case "pageReady": {
           const name = PAGES[ev.slot].name;
@@ -354,7 +379,7 @@ export function boot(doc = document) {
 
   function restart() {
     world.resetPlayer();
-    arena.setBog(false, true);
+    setBog(false, true);
     world.wave = 0;
     world.spawnWave();
     onEvents(world.drainEvents());
@@ -449,7 +474,7 @@ export function boot(doc = document) {
   /** A fresh world for a new run or sandbox session (views rebuilt, settings kept). */
   const newWorld = (opts = {}) => {
     for (const f of [...views.keys()]) removeView(f);
-    walls.clear(); arena.setBog(false, true);
+    walls.clear(); setBog(false, true); constellation.clear(true);
     world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, companions: true, ...opts });
     if (opts.tokens == null) world.tokens.capacity = mobile ? 1 : 2;
     world.pageDefs = PAGES;
@@ -486,7 +511,7 @@ export function boot(doc = document) {
     getWorld: () => world,
     makeWorld: (opts) => newWorld(opts),
     onEvents: (evs) => onEvents(evs),
-  }, [{ episode: EPISODE_1, script: EP1_SCRIPT }]);
+  }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }]);
   const playerName = root.querySelector(".player-card .name");
   const showName = (n) => { if (playerName?.firstChild) playerName.firstChild.textContent = `${n.toUpperCase()} `; };
   const backToTitle = () => {
@@ -600,7 +625,7 @@ export function boot(doc = document) {
       }
       if (cmd === "stance" && running) { world.cycleStance(); onEvents(world.drainEvents()); }
       if (cmd === "boss" && running) { // sandbox shortcut: straight to the boss
-        world.resetPlayer(); arena.setBog(false, true); world.wave = 6; world.spawnWave(); onEvents(world.drainEvents());
+        world.resetPlayer(); setBog(false, true); world.wave = 6; world.spawnWave(); onEvents(world.drainEvents());
       }
       if (cmd === "lockTap") { if (world.lockTarget && world.liveEnemies.length > 1) world.switchLock(1); else world.toggleLock(); sfx.play("ui"); }
       if (cmd === "switchRight" || cmd === "switchLeft" || ((cmd === "flickRight" || cmd === "flickLeft") && world.lockTarget)) {
@@ -668,6 +693,7 @@ export function boot(doc = document) {
     vfx.update(dt, camera.cam, engine);
     arena.update(dt, state.time);
     sets.update(dt, state.time);
+    constellation.update(dt, state.time);
     walls.update(state.time);
     hud.update(dt, world, controls.device);
     story.update(dt, state.paused || state.help || state.frozen);

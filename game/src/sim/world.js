@@ -10,7 +10,8 @@ import { AttackTokenPool, EnemyBrain, MoveIntent, CompanionBrain, AllyMove, STAN
 import { COMPANIONS } from "../data/companions.js";
 import { ENEMIES, WAVES } from "../data/enemies.js";
 import { HASK_STATS, HASK_HITBOXES, HASK_TUNING, haskOptions } from "../data/hask.js";
-import { HaskController } from "./boss.js";
+import { HaskController, SeverinController } from "./boss.js";
+import { SEVERIN_STATS, SEVERIN_HITBOXES, severinOptions } from "../data/severin.js";
 import { RunDirector } from "./run.js";
 import { seededRandom, SECONDS_PER_TICK } from "../core/timing.js";
 import { boxHitsCapsule, hitboxCenter } from "./overlap.js";
@@ -35,6 +36,11 @@ export const Tuning = Object.freeze({
   juggleDecay: 0.12, juggleDecayMax: 2.5, // each air hit adds 12% gravity (GDD §9.3), up to 2.5x
   weightedSpeed: 0.55, weightedJump: 0.7, // WEIGHTED (mud): slower, lower jumps
 });
+
+const BOSSES = {
+  hask: { stats: HASK_STATS, hitboxes: HASK_HITBOXES, options: haskOptions, traits: { heavy: true, armoredAttacks: true }, Controller: HaskController, z: 7 },
+  severin: { stats: SEVERIN_STATS, hitboxes: SEVERIN_HITBOXES, options: severinOptions, traits: {}, Controller: SeverinController, z: 6 },
+};
 
 const AIR = new Set(["AirL1", "AirL2", "AirL3"]);
 const HANG = new Set(["AirL1", "AirL2", "AirL3"]); // started in the air, these hold Rook up (plus anything tagged "hang")
@@ -177,6 +183,8 @@ export class Fighter {
         else if (e.key === "airJump") { this.vel.y = e.value * (this.tags.has("WEIGHTED") ? Tuning.weightedJump : 1); this.airJumps = 0; }
         else if (e.key === "submerge") this.boss?.submerge();
         else if (e.key === "summon") this.world.summon(this, "hound", e.value);
+        else if (e.key === "fan") this.world.fireFan(this, a, "Needle", 15, e.value, 0.26);
+        else if (e.key === "stars") this.boss?.placeStars?.();
         else if (e.key === "airDash") { this.vel.y = 0; this.hoverFrames = e.value; this.airDashes = 0; }
         else if (e.key === "hover") { this.vel.y = 0; this.hoverFrames = e.value; }
         else if (e.key === "timeStop") this.world.stopFrames = Math.max(this.world.stopFrames, e.value);
@@ -341,15 +349,16 @@ export class World {
 
   /** Boss: an enemy with a scripted controller and its own attack token (it never waits in line). */
   spawnBoss(kind, x = 0, z = 6) {
-    if (kind !== "hask") throw new Error(`unknown boss ${kind}`);
-    const brain = new EnemyBrain("hask", new AttackTokenPool(1), haskOptions(1), this.rng);
+    const B = BOSSES[kind];
+    if (!B) throw new Error(`unknown boss ${kind}`);
+    const brain = new EnemyBrain(kind, new AttackTokenPool(1), B.options(1), this.rng);
     brain.aggroRange = 40;
     const f = new Fighter(this, {
-      id: "hask", kind: "hask", team: Team.Enemy, stats: HASK_STATS, hitboxes: HASK_HITBOXES,
-      traits: { heavy: true, armoredAttacks: true }, brain, x, z,
+      id: kind, kind, team: Team.Enemy, stats: B.stats, hitboxes: B.hitboxes,
+      traits: B.traits, brain, x, z,
     });
     f.yaw = angleTo(f.pos, this.player.pos);
-    f.boss = new HaskController(this, f);
+    f.boss = new B.Controller(this, f);
     this.boss = f;
     this.emit({ type: "spawn", fighter: f });
     this.emit({ type: "bossIntro", fighter: f });
@@ -377,12 +386,31 @@ export class World {
     const kinds = Array.isArray(spec) ? spec : typeof spec === "number" ? Array(spec).fill("acolyte") : WAVES[(this.wave - 1) % WAVES.length];
     this.boss = null;
     kinds.forEach((kind, i) => {
-      if (kind === "hask") { this.spawnBoss("hask", 0, 7); return; }
+      if (BOSSES[kind]) { this.spawnBoss(kind, 0, BOSSES[kind].z); return; }
       const a = (i / kinds.length) * Math.PI * 2 + 0.6;
       const r = ENEMIES[kind].traits.ranged ? 11 : 8;
       this.spawnEnemy(kind, Math.sin(a) * r, Math.cos(a) * r + 2, i);
     });
     this.emit({ type: "wave", wave: this.wave, kinds });
+  }
+
+  /** A fan of `count` projectiles aimed at the owner's target, `spread` radians apart. */
+  fireFan(owner, ability, key, speed, count, spread) {
+    const t = owner.target?.alive ? owner.target : this.player;
+    const base = angleTo(owner.pos, t.pos);
+    owner.yaw = base;
+    for (let i = 0; i < count; i++) {
+      const a = base + (i - (count - 1) / 2) * spread;
+      this.fireProjectile(owner, ability, key, speed, { x: Math.sin(a), y: 0, z: Math.cos(a) });
+    }
+  }
+
+  /** Back on your feet mid-fight (story duels let you get up). */
+  revivePlayer(fraction = 0.5) {
+    const p = this.player;
+    p.combatant.reset(); p.combatant.health.set(p.combatant.health.max * fraction);
+    p.combatant.startInvulnerability(90); p.tags.clear(); p.deadFrames = 0; p.runner.interrupt();
+    this.emit({ type: "playerRevive", fighter: p });
   }
 
   /** Launch a projectile from `owner` toward its target (or along `dir`). Flat ones skim the ground. */
@@ -619,7 +647,7 @@ export class World {
     for (const e of this.fighters) {
       if (!e.brain || !live(e)) continue;
       if (e.companion) { this._companionBrain(e, frame); continue; }
-      if (e.boss && e.boss.state !== "surface") { e.moveInput.x = 0; e.moveInput.z = 0; continue; } // the controller has it
+      if (e.boss && !e.boss.brainActive) { if (e.boss.state !== "toPolaris") { e.moveInput.x = 0; e.moveInput.z = 0; } continue; } // the controller has it
       const p = this._enemyTarget(e);
       e.target = p;
       const d = p ? flatDistance(e.pos, p.pos) : Infinity;
@@ -708,7 +736,7 @@ export class World {
         for (const def of this.fighters) {
           if (def === att || def.team === att.team || !def.alive || hb.hitSet.has(def)) continue;
           // Wind tears Hask out of the bog (mid-dive or from its mound); otherwise a submerged boss can't be touched.
-          if (def.boss && def.boss.state !== "surface" && def.boss.state !== "erupting") {
+          if (def.boss?.untouchable) {
             if (hb.ability.tags.includes("gust") && boxHitsCapsule(hb.def, att.pos, att.yaw, def.pos, def.stats.radius + 0.6, 2.5) && def.boss.uproot(att)) hb.hitSet.add(def);
             if (def.submerged) continue;
           }

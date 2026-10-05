@@ -43,7 +43,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -60,6 +60,11 @@ export class Sets {
     if (L.sun) { L.sun.intensity = e.sun[0]; L.sun.diffuse = color3(e.sun[1]).clone(); L.sun.direction = new BB.Vector3(...e.sun[2]); }
     if (L.warm) L.warm.intensity = e.warm ?? 0;
     setToonEnvironment(toonEnv);
+  }
+
+  /** Hask's bog: the yard has one built in; other sets may provide their own. */
+  setBog(on, instant = false) {
+    if (this.current === "yard") this.arena.setBog(on, instant); else this.built.get(this.current)?.setBog?.(on, instant);
   }
 
   /** Per-frame animation for the active set. */
@@ -283,5 +288,69 @@ function buildLarkspur(scene, mobile) {
   return {
     env, toon: toonEnv, show: K.show,
     update(dt, t) { for (const f of fires) f.light.intensity = 0.8 + Math.sin(t * 13 + f.phase) * 0.15 + Math.sin(t * 7.3 + f.phase) * 0.1; },
+  };
+}
+
+// ---- The Knight Exam grounds: an arena under open sky, full stands, the captains' box ---------
+export const EXAM_BOX = { y: 2.4, z: 21 }; // the captains watch from here
+function buildExamGrounds(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add;
+  const sand = toon(scene, "eg-sand", "#b38f62"), sandDark = toon(scene, "eg-sandDark", "#a8875a");
+  const stone = toon(scene, "eg-stone", "#8f8a80"), wood = toon(scene, "eg-wood", "#6b4a32"), gold = toon(scene, "eg-gold", "#d9ae4f");
+  const floor = add(MB.CreateCylinder("eg-floor", { diameter: 38, height: 0.6, tessellation: 56 }, scene)); floor.position.y = -0.3; floor.material = sand;
+  for (const d of [10, 24]) { const r = add(MB.CreateTorus("eg-line", { diameter: d, thickness: 0.1, tessellation: 64 }, scene)); r.position.y = 0.01; r.material = sandDark; }
+  const center = add(MB.CreateBox("eg-mid", { width: 0.12, height: 0.01, depth: 24 }, scene)); center.position.y = 0.012; center.rotation.y = Math.PI / 2; center.material = sandDark;
+  // A low wall, then three tiers of stands rising behind it.
+  const wall = add(MB.CreateCylinder("eg-wall", { diameter: 39.4, height: 1.4, tessellation: 56, cap: BB.Mesh.NO_CAP, sideOrientation: BB.Mesh.DOUBLESIDE }, scene), 0.04);
+  wall.position.y = 0.7; wall.material = stone;
+  const cols = ["#c0504d", "#4f81bd", "#9bbb59", "#e6b54e", "#8064a2", "#4bacc6", "#f79646", "#d8d2c4"];
+  const rng = mulberry(23);
+  const crowdMats = cols.map((c, i) => toon(scene, `eg-crowd${i}`, c));
+  const headMat = toon(scene, "eg-head", "#3a2a22"), headMat2 = toon(scene, "eg-head2", "#c9a26a");
+  const fans = [];
+  for (let tier = 0; tier < 3; tier++) {
+    const r = 21 + tier * 2.4, h = 1 + tier * 1.3;
+    const step = add(MB.CreateCylinder("eg-tier", { diameter: r * 2 + 2.4, height: h, tessellation: 56, cap: BB.Mesh.NO_CAP, sideOrientation: BB.Mesh.DOUBLESIDE }, scene));
+    step.position.y = h / 2; step.material = tier % 2 ? stone : toon(scene, `eg-tierMat${tier}`, "#a39d92");
+    const seat = add(MB.CreateTorus("eg-seat", { diameter: r * 2 + 1.2, thickness: 2.4, tessellation: 56 }, scene)); seat.position.y = h - 1; seat.scaling.y = 0.2; seat.material = stone;
+    const n = mobile ? 34 : 60;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + rng() * 0.05;
+      if (Math.abs(Math.atan2(Math.sin(a), Math.cos(a))) < 0.35) continue; // the captains' box
+      const x = Math.sin(a) * (r + 0.6), z = Math.cos(a) * (r + 0.6);
+      const b = add(MB.CreateCylinder("eg-fan", { height: 0.8, diameterTop: 0.35, diameterBottom: 0.55, tessellation: 6 }, scene));
+      b.position.set(x, h - 0.2, z); b.material = crowdMats[(i + tier * 3) % crowdMats.length];
+      const hd = add(MB.CreateSphere("eg-fanHead", { diameter: 0.34, segments: 6 }, scene));
+      hd.position.set(x, h + 0.35, z); hd.material = i % 3 ? headMat : headMat2;
+      fans.push({ b, hd, base: h, phase: rng() * 6 });
+    }
+  }
+  // The captains' box: a raised platform with a canopy, seven squad banners above it.
+  const box = add(MB.CreateBox("eg-box", { width: 12, height: EXAM_BOX.y, depth: 4 }, scene), 0.05); box.position.set(0, EXAM_BOX.y / 2, EXAM_BOX.z); box.material = stone;
+  const rail = add(MB.CreateBox("eg-rail", { width: 12, height: 0.5, depth: 0.2 }, scene), 0.03); rail.position.set(0, EXAM_BOX.y + 0.25, EXAM_BOX.z - 1.9); rail.material = wood;
+  const canopy = add(MB.CreateBox("eg-canopy", { width: 13, height: 0.3, depth: 5 }, scene), 0.05); canopy.position.set(0, EXAM_BOX.y + 4, EXAM_BOX.z + 0.3); canopy.material = toon(scene, "eg-canopyMat", "#2b4f8f");
+  for (const x of [-6, 6]) { const p = add(MB.CreateCylinder("eg-post", { height: 4, diameter: 0.3, tessellation: 8 }, scene), 0.03); p.position.set(x, EXAM_BOX.y + 2, EXAM_BOX.z - 1.9); p.material = gold; }
+  const squads = ["#f2b84a", "#f2efe6", "#6b7280", "#5f9e5a", "#2a2a34", "#2f6b5a", "#a3262a"]; // Lanterns, Lances, Wardens, Verdant, Quill, Riders, Bell
+  squads.forEach((c, i) => {
+    const x = (i - 3) * 1.8;
+    const ban = add(MB.CreateBox("eg-ban", { width: 1.1, height: 2.6, depth: 0.05 }, scene), 0.03);
+    ban.position.set(x, EXAM_BOX.y + 2.2, EXAM_BOX.z + 2.6); ban.material = toon(scene, `eg-ban${i}`, c);
+  });
+  // Distant hills and puffy clouds.
+  const hill = toon(scene, "eg-hill", "#7ea37a");
+  for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2; const h = add(MB.CreateSphere("eg-hill", { diameter: 34, segments: 10 }, scene)); h.position.set(Math.sin(a) * 80, -8, Math.cos(a) * 80); h.scaling.y = 0.45; h.material = hill; }
+  const cloud = toon(scene, "eg-cloud", "#f7f6ff");
+  for (let i = 0; i < (mobile ? 6 : 10); i++) { const a = rng() * Math.PI * 2; const c = add(MB.CreateSphere("eg-cloud", { diameter: 9, segments: 8 }, scene)); c.position.set(Math.sin(a) * 75, 26 + rng() * 10, Math.cos(a) * 75); c.scaling.set(2.2, 0.5, 1.2); c.material = cloud; }
+  let cheer = 0;
+  const env = { clear: "#9ec4ee", fog: "#b8d2f0", fogDensity: 0.008, hemi: [0.7, "#fff6e6", "#7a86a8"], sun: [0.95, "#fff1d0", [-0.4, -1, 0.5]], warm: 0 };
+  const toonEnv = { lightDir: [0.4, 1, -0.5], fogColor: "#b8d2f0", fogDensity: 0.005, sky: [1.1, 1.08, 1.04], ground: [0.9, 0.86, 0.84] };
+  return {
+    env, toon: toonEnv, show: K.show,
+    cue(name) { if (name === "cheer") cheer = 2.5; },
+    update(dt, t) {
+      cheer = Math.max(0, cheer - dt);
+      const amp = 0.05 + cheer * 0.12;
+      for (const f of fans) { const y = Math.max(0, Math.sin(t * (cheer ? 9 : 2) + f.phase)) * amp; f.b.position.y = f.base - 0.2 + y; f.hd.position.y = f.base + 0.35 + y; }
+    },
   };
 }
