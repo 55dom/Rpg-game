@@ -56,6 +56,7 @@ class Stage {
     const p = this.getWorld().player;
     const r = beat.rook === undefined ? { x: 0, z: -4, yaw: 0 } : beat.rook;
     this.setPlayerVisible?.(!!r);
+    this.setSquadVisible?.(false); // scenes stage their own Bas and Juno; hide the fighting copies
     if (r) {
       p.pos.x = p.prev.x = r.x; p.pos.z = p.prev.z = r.z; p.pos.y = p.prev.y = 0;
       p.yaw = p.prevYaw = r.yaw ?? 0; p.vel.x = p.vel.y = p.vel.z = 0;
@@ -102,6 +103,7 @@ class Stage {
     const p = this.getWorld()?.player;
     if (p) { p.relaxed = false; p.armPose = p.offPose = null; p.bow = p.headTilt = 0; p.move = null; }
     this.setPlayerVisible?.(true);
+    this.setSquadVisible?.(true);
     for (const { rig } of this.actors.values()) rig.dispose();
     this.actors.clear();
   }
@@ -304,6 +306,7 @@ export class StoryPlayer {
     for (const { episode } of episodes) for (const b of episode.beats) if (b.cutscene && !CUTSCENES[b.cutscene]) throw new Error(`${episode.id}/${b.id}: no cutscene ${b.cutscene}`);
     this.stage = new Stage(ctx.scene, ctx.getWorld);
     this.stage.setPlayerVisible = (on) => ctx.setPlayerVisible?.(on);
+    this.stage.setSquadVisible = (on) => ctx.setSquadVisible?.(on);
     this.tweens = [];
     this.time = 0;
     this.cut = null; // the cutscene playing, if any

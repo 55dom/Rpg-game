@@ -510,6 +510,7 @@ export function boot(doc = document) {
   const story = new StoryPlayer({
     root, scene, camera, hud, sfx, vfx, controls, saves, sets,
     setPlayerVisible: (on) => views.get(world.player)?.setVisible(on),
+    setSquadVisible: (on) => { for (const c of world.companions) views.get(c)?.setVisible(on); },
     getWorld: () => world,
     makeWorld: (opts) => newWorld(opts),
     onEvents: (evs) => onEvents(evs),

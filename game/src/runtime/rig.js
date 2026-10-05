@@ -115,7 +115,15 @@ export class Rig {
     this.head.parent = this.body;
     this.head.position.y = 0.98;
     if (L.head === "face" || L.head === "blank") { // "blank": a featureless silhouette head
-      const face = add(MB.CreateSphere("head", { diameter: 0.46, segments: 12 }, scene), this.head, 0, 0, 0);
+      // Faces and hair overlap, so their own ink outlines would draw lines across the face (and hide the
+      // eyes from the side). Instead one silhouette shell wraps the whole head: an inverted hull that only
+      // shows around the outside edge.
+      const face = add(MB.CreateSphere("head", { diameter: 0.46, segments: 12 }, scene), this.head, 0, 0, 0, 0);
+      const shell = add(MB.CreateSphere("headLine", { diameter: 0.6, segments: 14, sideOrientation: BB.Mesh.BACKSIDE }, scene), this.head, 0, 0.04, -0.04, 0);
+      const lineMat = new BB.StandardMaterial(`${id}-headLine`, scene);
+      lineMat.disableLighting = true; lineMat.emissiveColor = lineOf(L.hairColor); lineMat.diffuseColor = BB.Color3.Black(); lineMat.specularColor = BB.Color3.Black();
+      shell.material = lineMat;
+      if (L.hair === "crop") shell.scaling.set(1.02, 0.92, 1);
       face.material = skin;
       const eyeMat = toon(scene, `${id}-eye`, "#1a1c26");
       for (const x of L.head === "blank" ? [] : [-0.085, 0.085]) {
@@ -129,7 +137,7 @@ export class Rig {
         hl2.material = this.eyeHi;
       }
       // Hair: a full sphere set back and up. The face sphere pokes out of its front, eyes included.
-      const cap = add(MB.CreateSphere("hairCap", { diameter: 0.5, segments: 12 }, scene), this.head, 0, 0.06, -0.07, 0.02);
+      const cap = add(MB.CreateSphere("hairCap", { diameter: 0.5, segments: 12 }, scene), this.head, 0, 0.06, -0.07, 0);
       cap.material = dark;
       if (L.hair === "spiky") {
         const spikes = [[0, 0.2, -0.05, -0.5, 0], [0.14, 0.16, -0.06, -0.6, -0.5], [-0.14, 0.16, -0.06, -0.6, 0.5],
@@ -140,12 +148,12 @@ export class Rig {
           c.material = dark;
         }
       } else if (L.hair === "swept") { // a noble's swept fringe falling over one eye
-        const sweep = add(MB.CreateSphere("sweep", { diameter: 0.3, segments: 8 }, scene), this.head, -0.07, 0.13, 0.12, 0.015);
+        const sweep = add(MB.CreateSphere("sweep", { diameter: 0.3, segments: 8 }, scene), this.head, -0.07, 0.13, 0.12, 0);
         sweep.scaling.set(1.15, 0.45, 0.75); sweep.rotation.set(0.35, 0.2, 0.4); sweep.material = dark;
       } else if (L.hair === "long") { // loose hair down past the shoulders
         const back = add(MB.CreateCapsule("hairBack", { height: 0.7, radius: 0.2, tessellation: 10 }, scene), this.head, 0, -0.18, -0.16, 0.02);
         back.scaling.set(1.15, 1, 0.55); back.material = dark;
-        const fringe = add(MB.CreateSphere("fringe", { diameter: 0.34, segments: 8 }, scene), this.head, 0.03, 0.14, 0.12, 0.015);
+        const fringe = add(MB.CreateSphere("fringe", { diameter: 0.34, segments: 8 }, scene), this.head, 0.03, 0.14, 0.12, 0);
         fringe.scaling.set(1.25, 0.42, 0.7); fringe.rotation.set(0.3, 0, -0.18); fringe.material = dark;
       } else if (L.hair === "crop") {
         cap.scaling.set(1.02, 0.86, 1); // close-cropped and flat on top
@@ -157,7 +165,7 @@ export class Rig {
         tail.rotation.z = -0.25;
         tail.material = dark;
         this.hairTail = tail;
-        const bang = add(MB.CreateBox("bangs", { width: 0.34, height: 0.1, depth: 0.12 }, scene), this.head, 0.02, 0.17, 0.15, 0.015);
+        const bang = add(MB.CreateBox("bangs", { width: 0.34, height: 0.1, depth: 0.12 }, scene), this.head, 0.02, 0.17, 0.15, 0);
         bang.rotation.set(0.5, 0, -0.12);
         bang.material = dark;
       }
