@@ -17,6 +17,7 @@ import { FollowCamera } from "./runtime/camera.js";
 import { Hud } from "./runtime/hud.js";
 import { buildArena } from "./runtime/arena.js";
 import { StoryPlayer } from "./runtime/story.js";
+import { Sets } from "./runtime/sets.js";
 import { SaveStore, cleanName } from "./core/save.js";
 import { EPISODE_1, EP1_SCRIPT } from "./data/story/ep1.js";
 
@@ -49,6 +50,7 @@ export function boot(doc = document) {
   const scene = new BB.Scene(engine);
   scene.skipPointerMovePicking = true;
   const arena = buildArena(scene, { mobile });
+  const sets = new Sets(scene, arena, { mobile });
   const camera = new FollowCamera(scene, { mobile });
   camera.reduceMotion = reduced;
   const gl = new BB.GlowLayer("glow", scene, { mainTextureRatio: mobile ? 0.35 : 0.5, blurKernelSize: mobile ? 24 : 40 });
@@ -479,7 +481,8 @@ export function boot(doc = document) {
   // ---- Story mode (Phase 3) ----
   const saves = SaveStore.browser();
   const story = new StoryPlayer({
-    root, scene, camera, hud, sfx, vfx, controls, saves,
+    root, scene, camera, hud, sfx, vfx, controls, saves, sets,
+    setPlayerVisible: (on) => views.get(world.player)?.setVisible(on),
     getWorld: () => world,
     makeWorld: (opts) => newWorld(opts),
     onEvents: (evs) => onEvents(evs),
@@ -664,6 +667,7 @@ export function boot(doc = document) {
     vfx.syncProjectiles(world.projectiles, dt);
     vfx.update(dt, camera.cam, engine);
     arena.update(dt, state.time);
+    sets.update(dt, state.time);
     walls.update(state.time);
     hud.update(dt, world, controls.device);
     story.update(dt, state.paused || state.help || state.frozen);
@@ -681,7 +685,7 @@ export function boot(doc = document) {
 
   // Test hook: freeze the live clock so automated checks can step the sim frame-exactly.
   const freezeLogic = (on) => { state.frozen = on; };
-  const handle = { engine, scene, world, camera, start, restart, freezeLogic, openPages, choosePage, story, saves, playStory, backToTitle, data: { acolyte: ACOLYTE_ABILITIES } };
+  const handle = { engine, scene, world, camera, start, restart, freezeLogic, openPages, choosePage, story, saves, sets, playStory, backToTitle, data: { acolyte: ACOLYTE_ABILITIES } };
   return handle;
 }
 

@@ -166,7 +166,18 @@ FIFTEEN YEARS LATER                          all caps narration = a big caption
 - **Verb agreement:** `{is}`, `{was}`, `{has}`, and `walk{s}` (they walk / she walks).
 - **Temper tags:** `#bold`, `#earnest`, and `#wry` on an option raise that Temper flag when it's picked.
 - **Speakers:** every speaker must exist in `data/story/cast.js`. The tests check this.
+- **Staging:** `<<move Severin 1 2>>` walks there (add `wait` to finish first), `<<face Rook Severin>>`, `<<pose Herald raise>>` (point, raise, hand, cross, bow, tilt, fist, none), `<<show Acolyte>>` / `<<hide …>>`, `<<cue dark>>` (set moments), `<<cutscene id>>`, and `<<shot wide side>>` / `<<shot wide front>>`.
 - **Spoilers:** keep comments in story data spoiler-free. Players can read the page source (GDD §15.11).
+
+## Phase 3, Step 2: cutscenes and sets
+| Feature | Where |
+|---|---|
+| Timeline math (camera keys, events, moves) | `core/timeline.js` |
+| Cutscene data | `data/story/cutscenes.js` |
+| Story sets (Tower steps, Tower hall, Larkspur) | `runtime/sets.js` |
+| Cutscene playback, staging, descending grimoires | `runtime/story.js` |
+
+A beat or fight picks its set with `stage: "towerHall"`. A cutscene beat is `{ type: "cutscene", cutscene: "ep1_larkspur" }`.
 
 ## Publishing the artifact
 `npm run build` also writes `dist/fragment.html` (the page without its outer `<html>` shell). That file is what gets published to the Claude artifact link.

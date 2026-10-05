@@ -43,6 +43,8 @@ export const LOOKS = {
   hask: { poses: HASK_POSES, scale: 2.0, skirt: 1.7, coat: "#3d4934", trim: "#5c4a2e", hairColor: "#2c3524", skin: "#3d4934",
     head: "lump", weapon: "claw", shoulders: 1.7, accent: "#262b1d", eyes: "#ffb347", trail: "#c9a24a", mound: true },
   // Story cast (Phase 3). Poses borrow Rook's rest stance until they get their own moves.
+  stranger: { poses: ACOLYTE_POSES, scale: 1.08, skirt: 0.78, coat: "#0d0c12", trim: "#0d0c12", hairColor: "#0d0c12", skin: "#0d0c12",
+    head: "blank", hair: "crop", weapon: "none", carry: true, trail: "#000000" },
   severin: { poses: ROOK_POSES, scale: 1.02, skirt: 0.9, coat: "#ece8f4", trim: "#d4ad4f", hairColor: "#e6d6a2", skin: "#f2d7c2",
     head: "face", hair: "swept", scarf: false, weapon: "needle", accent: "#d4ad4f", cape: "#2c3a6e", trail: "#fff1b8" },
   moss: { poses: ACOLYTE_POSES, scale: 0.9, skirt: 1.1, coat: "#6b5236", trim: "#8f7c58", hairColor: "#cfcbc2", skin: "#e8c8a8",
@@ -94,11 +96,11 @@ export class Rig {
     this.head = new BB.TransformNode(`${id}-head`, scene);
     this.head.parent = this.body;
     this.head.position.y = 0.98;
-    if (L.head === "face") {
+    if (L.head === "face" || L.head === "blank") { // "blank": a featureless silhouette head
       const face = add(MB.CreateSphere("head", { diameter: 0.46, segments: 12 }, scene), this.head, 0, 0, 0);
       face.material = skin;
       const eyeMat = toon(scene, `${id}-eye`, "#1a1c26");
-      for (const x of [-0.085, 0.085]) {
+      for (const x of L.head === "blank" ? [] : [-0.085, 0.085]) {
         const eye = add(MB.CreateSphere("eye", { diameter: 0.09, segments: 6 }, scene), this.head, x, 0.03, 0.218, 0);
         eye.scaling.set(0.8, 1.4, 0.85); // must clear the face's ink-outline shell (+0.03) to show
         eye.material = eyeMat;
@@ -179,6 +181,11 @@ export class Rig {
       const cape = add(MB.CreateCylinder("cape", { height: 1.0, diameterTop: 0.5, diameterBottom: 0.75, tessellation: 10, arc: 0.5 }, scene), this.body, 0, 0.3, -0.06, 0.02);
       cape.rotation.set(0.12, Math.PI / 2, 0); cape.material = M("cape", L.cape); // a half-cylinder draped over the back
       this.cape = cape;
+    }
+
+    if (L.carry) { // something small, wrapped, held against the chest
+      const bundle = add(MB.CreateSphere("bundle", { diameter: 0.34, segments: 10 }, scene), this.body, 0.02, 0.5, 0.3, 0.02);
+      bundle.scaling.set(1.3, 0.8, 0.85); bundle.rotation.z = 0.4; bundle.material = M("bundle", "#e9dfca");
     }
 
     // Weapon arm: shoulder pivot, arm along +Z, weapon beyond the hand.
@@ -425,7 +432,7 @@ export class Rig {
     this.root.rotation.y = lerpAngleSafe(fighter.prevYaw, fighter.yaw, t);
 
     let { rot, lean, active, spin } = this.armPose(fighter, t);
-    if (fighter.relaxed && !fighter.current) rot = RELAXED; // story scenes: weapon lowered
+    if (fighter.relaxed && !fighter.current) rot = fighter.armPose ?? (this.look.carry ? CRADLE : RELAXED); // story scenes: weapon lowered, or a gesture
     this.shoulder.rotation.set(rot[0], rot[1], rot[2]);
     this.body.rotation.y = spin;
     if (this.skirt) this.skirt.rotation.y = spin;
@@ -444,7 +451,7 @@ export class Rig {
       bodyLean = -Math.min(1.45, this.deathT * 3.5);
       this.visibility = 1 - clamp01((fighter.deadFrames - 50) / 50);
     }
-    this.body.rotation.x = bodyLean + (this.look.stoop ?? 0);
+    this.body.rotation.x = bodyLean + (this.look.stoop ?? 0) + (fighter.bow ?? 0);
     if (this.cape) this.cape.rotation.x = 0.12 + run * 0.6 + Math.sin(this.time * 7) * 0.04;
     this.body.position.y = this.bodyY + bob - (c.postureBroken ? 0.18 : 0);
     if (this.beastTail) this.beastTail.rotation.x = -2.1 + Math.sin(this.time * 10) * 0.25;
@@ -454,6 +461,8 @@ export class Rig {
     if (this.skirt) this.skirt.rotation.x = bodyLean * 0.25;
     if (this.scarfTail) this.scarfTail.rotation.x = 0.35 + run * 0.7 + Math.sin(this.time * 9) * 0.08 * (0.3 + run);
     if (this.offArm) this.offArm.rotation.x = c.blocking || fighter.current?.id === "Guard" ? -0.9 : 0.35 + Math.sin(this.time * 13) * 0.25 * run;
+    if (this.offArm && (this.look.carry || fighter.offPose)) { const o = fighter.offPose ?? [-1.15, 0, -0.35]; this.offArm.rotation.set(o[0], o[1], o[2]); }
+    if (this.head !== this.shoulder) this.head.rotation.z = fighter.headTilt ?? 0;
 
     if (this.grimoire) {
       this.grimoire.position.y = 1.75 + Math.sin(this.time * 2.2) * 0.06;
@@ -491,6 +500,9 @@ export class Rig {
     this.shadow.visibility = this.visibility;
   }
 
+  /** Hide or show the whole character (cutscenes hide the player). */
+  setVisible(on) { this.root.setEnabled(on); this.shadow.setEnabled(on); }
+
   hitFlash(seconds = 0.07, hex) {
     this.flash = seconds;
     this.flashColor = hex ? B().Color3.FromHexString(hex) : null;
@@ -526,11 +538,12 @@ export class Rig {
   }
 
   dispose() {
-    this.root.dispose(false, false);
+    this.root.dispose(false, true); // this rig's materials go with it (they're per-rig)
     this.shadow.dispose(false, true);
   }
 }
 
 const RELAXED = [1.25, 0.15, 0.1];
+const CRADLE = [0.95, -0.55, 0];
 const mix = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k)];
 const lerpAngleSafe = (a, b, t) => a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * t;

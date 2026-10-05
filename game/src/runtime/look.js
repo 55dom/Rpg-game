@@ -107,8 +107,26 @@ export function lineOf(hex) {
   return hslToColor((h + ((245 - h + 540) % 360 - 180) * 0.1 + 360) % 360, Math.min(0.5, s * 0.4 + 0.1), Math.min(0.09, l * 0.16));
 }
 
-export const TOON_SCENE = { lightDir: [0.45, 1, -0.35], fogColor: "#141826", fogDensity: 0.018, sky: [1.0, 1.0, 1.05], ground: [0.82, 0.8, 0.92] };
-const toonMaterials = [];
+export const TOON_SCENE = { lightDir: [0.45, 1, -0.35], fogColor: "#141826", fogDensity: 0.018, sky: [1.0, 1.0, 1.05], ground: [0.82, 0.8, 0.92], rim: [0.72, 0.84, 1.0] };
+let toonMaterials = [];
+const toonEnv = { ...TOON_SCENE }; // the current set's lighting (sets change it)
+
+/** Apply a set's lighting to every character material, now and for ones made later. */
+export function setToonEnvironment(env) {
+  Object.assign(toonEnv, TOON_SCENE, env);
+  const BB = B();
+  toonMaterials = toonMaterials.filter((m) => !m.gone);
+  for (const m of toonMaterials) applyToonEnv(m, BB);
+}
+function applyToonEnv(m, BB) {
+  const T = toonEnv;
+  m.setVector3("lightDir", new BB.Vector3(...T.lightDir));
+  m.setColor3("fogColor", color3(T.fogColor));
+  m.setColor3("ambientSky", new BB.Color3(...T.sky));
+  m.setColor3("ambientGround", new BB.Color3(...T.ground));
+  m.setFloat("fogDensity", T.fogDensity);
+  m.setColor3("rimColor", new BB.Color3(...T.rim));
+}
 
 /** Cel-shading v2 material for characters. `gloss`: anime hair highlights. */
 export function toon2(scene, name, hex, { gloss = false, rim = 0.45, softShadow = 0 } = {}) {
@@ -122,18 +140,12 @@ export function toon2(scene, name, hex, { gloss = false, rim = 0.45, softShadow 
     uniforms: ["world", "worldViewProjection", "baseColor", "shadowColor", "lightDir", "rimColor", "glossColor", "cameraPosition",
       "fogColor", "ambientSky", "ambientGround", "rimStrength", "glossStrength", "fogDensity", "visibility"],
   });
-  const T = TOON_SCENE;
   m.setColor3("baseColor", color3(hex));
   m.setColor3("shadowColor", softShadow ? BB.Color3.Lerp(shadowOf(hex), color3(hex), softShadow) : shadowOf(hex)); // faces: a lighter shadow
-  m.setVector3("lightDir", new BB.Vector3(...T.lightDir));
-  m.setColor3("rimColor", new BB.Color3(0.72, 0.84, 1.0));
   m.setColor3("glossColor", glossOf(hex));
-  m.setColor3("fogColor", color3(T.fogColor));
-  m.setColor3("ambientSky", new BB.Color3(...T.sky));
-  m.setColor3("ambientGround", new BB.Color3(...T.ground));
+  applyToonEnv(m, BB);
   m.setFloat("rimStrength", rim);
   m.setFloat("glossStrength", gloss ? 1 : 0);
-  m.setFloat("fogDensity", T.fogDensity);
   m.setFloat("visibility", 1);
   m.onBindObservable.add((mesh) => {
     const e = m.getEffect();
@@ -143,6 +155,7 @@ export function toon2(scene, name, hex, { gloss = false, rim = 0.45, softShadow 
     e.setFloat("visibility", mesh.visibility ?? 1);
   });
   m.toonHex = hex;
+  m.onDisposeObservable.add(() => { m.gone = true; });
   toonMaterials.push(m);
   return m;
 }

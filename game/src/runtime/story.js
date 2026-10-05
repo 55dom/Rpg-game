@@ -7,6 +7,21 @@ import { FlagStore } from "../core/flags.js";
 import { parseScript, DialogueRunner } from "../core/script.js";
 import { EpisodeDirector, validateEpisode, BeatType } from "../sim/episode.js";
 import { CAST, speakerName } from "../data/story/cast.js";
+import { CUTSCENES } from "../data/story/cutscenes.js";
+import { validateCutscene, sampleCamera, eventsBetween, sampleMove } from "../core/timeline.js";
+import { B, toon2, glow } from "./look.js";
+
+/** Gesture poses for dialogue: weapon-arm and off-arm rotations, a bow, a head tilt. */
+const GESTURES = Object.freeze({
+  none: {},
+  point: { arm: [0.05, 0.1, 0] },
+  raise: { arm: [-1.3, 0.2, 0] },
+  hand: { arm: [0.55, -0.65, 0] },              // holding something in front of the chest
+  cross: { arm: [0.85, -1.15, 0], off: [-0.5, 0, 1.25] },
+  bow: { bow: 0.38 },
+  tilt: { tilt: -0.2 },
+  fist: { arm: [0.35, -0.3, 0.2] },
+});
 
 const CPS = 48; // typewriter characters per second
 const CAPS = /^[A-Z0-9 .,'·-]+$/;
@@ -39,20 +54,53 @@ class Stage {
   setup(beat) {
     this.clear();
     const p = this.getWorld().player;
-    const r = beat.rook ?? { x: 0, z: -4, yaw: 0 };
-    p.pos.x = p.prev.x = r.x; p.pos.z = p.prev.z = r.z; p.pos.y = p.prev.y = 0;
-    p.yaw = p.prevYaw = r.yaw ?? 0; p.vel.x = p.vel.y = p.vel.z = 0;
+    const r = beat.rook === undefined ? { x: 0, z: -4, yaw: 0 } : beat.rook;
+    this.setPlayerVisible?.(!!r);
+    if (r) {
+      p.pos.x = p.prev.x = r.x; p.pos.z = p.prev.z = r.z; p.pos.y = p.prev.y = 0;
+      p.yaw = p.prevYaw = r.yaw ?? 0; p.vel.x = p.vel.y = p.vel.z = 0;
+    }
     p.relaxed = true;
-    for (const c of beat.cast ?? []) {
+    for (const c of beat.cast ?? beat.actors ?? []) {
       const actor = makeActor(c.x, c.z, c.yaw ?? 0, c.down);
       const rig = new Rig(this.scene, c.look, `story-${c.id}`);
+      if (c.hidden) { rig.setVisible(false); actor.hiddenActor = true; }
       this.actors.set(c.id, { actor, rig, look: c.look });
     }
   }
 
+  /** Walk an actor to (x, z) over `dur` seconds (or at walking pace). */
+  move(id, x, z, dur) {
+    const a = this.get(id);
+    if (!a) return 0;
+    const d = Math.hypot(x - a.pos.x, z - a.pos.z);
+    const time = dur ?? Math.max(0.4, d / 2.4);
+    a.move = { from: [a.pos.x, a.pos.z], to: [x, z], t: 0, dur: time };
+    a.targetYaw = Math.atan2(x - a.pos.x, z - a.pos.z);
+    if (a === this.getWorld().player) a.yaw = a.prevYaw = a.targetYaw;
+    return time;
+  }
+
+  pose(id, name) {
+    const a = this.get(id);
+    const g = GESTURES[name] ?? GESTURES.none;
+    if (!a) return;
+    a.armPose = g.arm ?? null; a.offPose = g.off ?? null; a.bow = g.bow ?? 0; a.headTilt = g.tilt ?? 0;
+  }
+
+  face(id, targetId) {
+    const a = this.get(id), t = this.get(targetId);
+    if (!a || !t) return;
+    const yaw = Math.atan2(t.pos.x - a.pos.x, t.pos.z - a.pos.z);
+    if (a === this.getWorld().player) a.yaw = a.prevYaw = yaw; else a.targetYaw = yaw;
+  }
+
+  show(id, on) { const a = this.actors.get(id); if (!a) return; a.rig.setVisible(on); a.actor.hiddenActor = !on; }
+
   clear() {
     const p = this.getWorld()?.player;
-    if (p) p.relaxed = false;
+    if (p) { p.relaxed = false; p.armPose = p.offPose = null; p.bow = p.headTilt = 0; p.move = null; }
+    this.setPlayerVisible?.(true);
     for (const { rig } of this.actors.values()) rig.dispose();
     this.actors.clear();
   }
@@ -84,26 +132,43 @@ class Stage {
     return best;
   }
 
-  update(dt) {
+  update(dt, time) {
+    const p = this.getWorld().player;
+    if (p.move) this._step(p, dt);
     for (const { actor, rig } of this.actors.values()) {
-      actor.prevYaw = actor.yaw;
+      if (actor.move) this._step(actor, dt);
       actor.yaw += wrap(actor.targetYaw - actor.yaw) * Math.min(1, dt * 5);
       actor.prevYaw = actor.yaw;
       rig.update(actor, 1, dt);
       if (actor.down) { rig.root.rotation.x = -1.45; rig.root.position.y = 0.32; } // lying on their back
+      if (actor.talking) { rig.body.rotation.y += Math.sin(time * 5.5) * 0.06; if (rig.head !== rig.shoulder) rig.head.rotation.x = Math.sin(time * 8.5) * 0.06; }
+      else if (rig.head !== rig.shoulder) rig.head.rotation.x = 0;
     }
+  }
+
+  _step(a, dt) {
+    const m = a.move;
+    m.t += dt;
+    const [x, z] = sampleMove(m.from, m.to, 0, m.dur, m.t);
+    a.prev.x = a.pos.x = x; a.prev.z = a.pos.z = z;
+    const moving = m.t < m.dur;
+    const speed = moving ? Math.hypot(m.to[0] - m.from[0], m.to[1] - m.from[1]) / m.dur : 0;
+    a.vel.x = Math.sin(a.targetYaw ?? a.yaw) * speed; a.vel.z = Math.cos(a.targetYaw ?? a.yaw) * speed;
+    if (!moving) { a.move = null; a.vel.x = a.vel.z = 0; }
   }
 
   /** Camera framings. Returns { pos, look, fov } or null. */
   shot(kind, ids = []) {
     const pts = [this.getWorld().player, ...[...this.actors.values()].map((a) => a.actor)];
-    if (kind === "wide") {
+    if (kind === "wide") { // ids[0]: "front" looks back from the far side of the set, "side" from the right
+      const vis = pts.filter((p) => !p.hiddenActor);
       let cx = 0, cz = 0;
-      for (const p of pts) { cx += p.pos.x; cz += p.pos.z; }
-      cx /= pts.length; cz /= pts.length;
-      const span = Math.max(...pts.map((p) => Math.hypot(p.pos.x - cx, p.pos.z - cz)));
-      const d = 5 + span * 1.3;
-      return { pos: { x: cx + d * 0.35, y: 2.6 + span * 0.25, z: cz - d }, look: { x: cx, y: 1.3, z: cz + 1 }, fov: 0.8 };
+      for (const p of vis) { cx += p.pos.x; cz += p.pos.z; }
+      cx /= vis.length; cz /= vis.length;
+      const span = Math.max(...vis.map((p) => Math.hypot(p.pos.x - cx, p.pos.z - cz)));
+      const d = 5 + span * 1.3, front = ids[0] === "front" ? -1 : 1;
+      if (ids[0] === "side") return { pos: { x: cx + d, y: 2.4 + span * 0.2, z: cz - d * 0.3 }, look: { x: cx, y: 1.3, z: cz + 0.6 }, fov: 0.8 };
+      return { pos: { x: cx + d * 0.35, y: 2.6 + span * 0.25, z: cz - d * front }, look: { x: cx, y: 1.3, z: cz + front }, fov: 0.8 };
     }
     if (kind === "on") {
       const a = this.get(ids[0]);
@@ -115,7 +180,7 @@ class Stage {
       const others = pts.filter((p) => p !== a);
       let best = null, bestScore = -1;
       for (const off of down ? [1.6, -1.6, 2.4, -2.4] : [0.3, -0.3, 0.7, -0.7, 1.1, -1.1]) {
-        const ang = a.yaw + off, dist = down ? 3.3 : 2.7;
+        const ang = (a.targetYaw ?? a.yaw) + off, dist = down ? 3.3 : 2.7;
         const pos = { x: a.pos.x + Math.sin(ang) * dist, y: down ? 2.9 : look.y + 0.15, z: a.pos.z + Math.cos(ang) * dist };
         let clear = 9;
         for (const o of others) clear = Math.min(clear, segDist(pos, look, o.pos));
@@ -230,16 +295,23 @@ export class StoryPlayer {
     }
     this.flags = new FlagStore();
     this.player = { name: "Rook", pronouns: "they" };
+    for (const cs of Object.values(CUTSCENES)) validateCutscene(cs);
+    for (const { episode } of episodes) for (const b of episode.beats) if (b.cutscene && !CUTSCENES[b.cutscene]) throw new Error(`${episode.id}/${b.id}: no cutscene ${b.cutscene}`);
     this.stage = new Stage(ctx.scene, ctx.getWorld);
+    this.stage.setPlayerVisible = (on) => ctx.setPlayerVisible?.(on);
+    this.tweens = [];
+    this.time = 0;
+    this.cut = null; // the cutscene playing, if any
     this.view = new DialogueView(ctx.root, ctx.sfx);
     const r = ctx.root;
     this.ui = {
       story: r.querySelector("[data-story]"), cold: r.querySelector("[data-coldopen]"), coldText: r.querySelector("[data-co-text]"),
       title: r.querySelector("[data-titlecard]"), preview: r.querySelector("[data-preview]"), hint: r.querySelector("[data-hint]"),
-      skip: r.querySelector("[data-skip]"),
+      skip: r.querySelector("[data-skip]"), fade: r.querySelector("[data-fade]"), caption: r.querySelector("[data-caption]"),
     };
     this.ui.skip.addEventListener("click", (e) => { e.stopPropagation(); this.skipping = true; this.view.advance(); });
     for (const el of [this.ui.cold, this.ui.title]) el.addEventListener("click", () => this.confirm());
+    r.querySelector("[data-cutskip]")?.addEventListener("click", (e) => { e.stopPropagation(); this.confirm(); });
     this.timers = [];
     this.active = false;     // an episode is playing
     this.blocking = false;   // a scene/card is up: the world doesn't step and gameplay input is ignored
@@ -256,14 +328,24 @@ export class StoryPlayer {
   update(dt, paused) {
     if (!paused) for (let i = this.timers.length - 1; i >= 0; i--) { const t = this.timers[i]; t.t -= dt; if (t.t <= 0) { this.timers.splice(i, 1); t.res(); } }
     if (paused) return;
+    this.time += dt;
     this.view.update(dt, this.skipping);
     if (this.skipping && !this.view.typing && this.view.waiting) this.view.advance();
-    this.stage.update(dt);
+    for (const a of this.stage.actors.values()) a.actor.talking = a.actor === this.talker && this.view.typing;
+    this.stage.update(dt, this.time);
+    for (let i = this.tweens.length - 1; i >= 0; i--) {
+      const tw = this.tweens[i];
+      tw.t += dt;
+      tw.fn(Math.min(1, tw.t / tw.dur));
+      if (tw.t >= tw.dur) { this.tweens.splice(i, 1); tw.done?.(); }
+    }
+    if (this.cut) this._cutStep(dt);
     if (this.fight) this._tutorial(dt);
   }
 
   /** Light / Enter / tap while a scene or card is up. */
   confirm() {
+    if (this.cut) { this.cut.t = this.cut.cs.duration; return; } // skip the cutscene
     if (this.waitingCard) { const r = this.waitingCard; this.waitingCard = null; r(); return; }
     this.view.advance();
   }
@@ -295,7 +377,13 @@ export class StoryPlayer {
   stop() {
     this.active = false; this.blocking = false; this.fight = null; this.skipping = false;
     this.timers.length = 0;
+    if (this.cut) { const c = this.cut; this.cut = null; c.resolve(); }
+    this.ctx.root.classList.remove("in-cut");
+    for (const tw of this.tweens) tw.done?.();
+    this.tweens.length = 0;
+    this._caption(null); this._fade(false, 0);
     this.stage.clear(); this.view.hide();
+    this.ctx.sets?.use("yard");
     for (const el of [this.ui.cold, this.ui.title, this.ui.preview]) el.hidden = true;
     this._hint("");
     this.ctx.root.classList.remove("in-scene");
@@ -305,6 +393,7 @@ export class StoryPlayer {
   async runBeat(beat) {
     switch (beat.type) {
       case BeatType.ColdOpen: return this.coldOpen(beat);
+      case BeatType.Cutscene: { this._enterScene(true); await this.playCutscene(beat.cutscene); return {}; }
       case BeatType.Title: return this.titleCard();
       case BeatType.Scene: return this.scene(beat);
       case BeatType.Fight: return this.runFight(beat);
@@ -346,6 +435,7 @@ export class StoryPlayer {
 
   async scene(beat) {
     this._enterScene(true);
+    this.ctx.sets?.use(beat.stage ?? "yard");
     this.stage.setup(beat);
     const wide = this.stage.shot("wide");
     if (wide) this.ctx.camera.frame(wide.pos, wide.look, { fov: wide.fov, cut: true });
@@ -385,12 +475,13 @@ export class StoryPlayer {
       return;
     }
     const cast = CAST[s.speaker];
-    if (s.speaker) this._autoFrame(cast?.actor);
-    if (cast?.actor) {
+    this.talker = cast?.actor ? this.stage.get(cast.actor) : null;
+    if (cast?.actor) { // turn first, then frame, so close-ups catch the face
       const cur = this.currentShot;
       const other = cur.kind === "two" && cur.ids.includes(cast.actor) ? cur.ids.find((i) => i !== cast.actor) : null;
       this.stage.lookAt(cast.actor, other);
     }
+    if (s.speaker) this._autoFrame(cast?.actor);
     const name = s.speaker ? speakerName(s.speaker, this.player.name).toUpperCase() : null;
     await this.view.line(name, cast?.color, s.text);
   }
@@ -400,14 +491,20 @@ export class StoryPlayer {
     if (!actorId || this.stage.get(actorId) == null) return;
     const cur = this.currentShot;
     if (cur.kind === "two" && cur.ids[1] === actorId) { this._shot("two", [cur.ids[1], cur.ids[0]]); return; } // reverse angle
-    if (cur.kind === "wide" || (cur.kind === "two" && cur.ids[0] === actorId) || (cur.kind === "on" && cur.ids[0] === actorId)) return;
+    if (cur.kind === "on" && cur.ids[0] === actorId) { // re-aim if they turned since the shot was set
+      const a = this.stage.get(actorId), yaw = a.targetYaw ?? a.yaw;
+      if (Math.abs(wrap(yaw - (cur.yaw ?? yaw))) > 0.5) this._shot("on", [actorId]);
+      return;
+    }
+    if (cur.kind === "wide" || (cur.kind === "two" && cur.ids[0] === actorId)) return;
     this._shot("on", [actorId]);
   }
 
   _shot(kind, ids, cut = true) {
     const sh = this.stage.shot(kind, ids);
     if (!sh) return;
-    this.currentShot = { kind, ids };
+    const subj = kind === "on" ? this.stage.get(ids[0]) : null;
+    this.currentShot = { kind, ids, yaw: subj ? subj.targetYaw ?? subj.yaw : null };
     this.ctx.camera.frame(sh.pos, sh.look, { fov: sh.fov, cut });
   }
 
@@ -416,13 +513,22 @@ export class StoryPlayer {
     switch (name) {
       case "shot": {
         const [kind, ...who] = args;
-        this._shot(kind, who.map(actorOf), kind !== "wide");
+        this._shot(kind, kind === "wide" ? who : who.map(actorOf), kind !== "wide");
         break;
       }
       case "wait": await this.sleep(this.skipping ? 0 : Number(args[0]) || 0.5); break;
       case "sfx": this.ctx.sfx.play(args[0]); break;
       case "fx": await this.fx(args); break;
-      case "set": break; // flags are handled by the runner
+      case "move": { // <<move Severin x z>> walks there; add "wait" to finish first
+        const t = this.stage.move(actorOf(args[0]), Number(args[1]), Number(args[2]));
+        if (args[3] === "wait") await this.sleep(this.skipping ? 0 : t);
+        break;
+      }
+      case "pose": this.stage.pose(actorOf(args[0]), args[1] ?? "none"); break;
+      case "face": this.stage.face(actorOf(args[0]), actorOf(args[1])); break;
+      case "cue": this.ctx.sets?.cue(args[0]); break;
+      case "show": case "hide": this.stage.show(actorOf(args[0]), name === "show"); break;
+      case "cutscene": await this.playCutscene(args[0]); break;
       default: break;   // unknown commands are ignored (forward-compatible scripts)
     }
   }
@@ -435,22 +541,100 @@ export class StoryPlayer {
       if (kind === "clear") c.classList.remove("figure");
       return;
     }
-    if (kind === "book") {
-      const a = this.stage.get(CAST[who]?.actor ?? who);
-      if (!a) return;
-      const { vfx, sfx } = this.ctx;
-      const at = { x: a.pos.x, y: 2.4, z: a.pos.z };
-      vfx.flash(at, 2.6, "#fff2cf", 0.5);
-      vfx.ring({ x: a.pos.x, y: 0.06, z: a.pos.z }, 4, "#e6b54e", 0.6);
-      vfx.sparksAt(at, 14, "gold", 4, 4);
-      sfx.play("surgeFull");
-      await this.sleep(this.skipping ? 0 : 0.6);
+    if (kind === "book") await this.bookDescends(CAST[who]?.actor ?? who, who === "Severin" ? "tome" : "thin");
+  }
+
+  /** A grimoire floats down out of the light into someone's hands. */
+  async bookDescends(id, kind) {
+    const a = this.stage.get(id);
+    if (!a) return;
+    const BB = B(), MB = BB.MeshBuilder, scene = this.ctx.scene, { vfx, sfx } = this.ctx;
+    const tome = kind === "tome";
+    const node = new BB.TransformNode("story-book", scene);
+    const mats = [];
+    const part = (mesh, mat) => { mesh.parent = node; mesh.material = mat; mesh.isPickable = false; mats.push(mat); mesh.renderOutline = true; mesh.outlineWidth = 0.02; return mesh; };
+    part(MB.CreateBox("bookCover", { width: tome ? 0.5 : 0.36, height: tome ? 0.62 : 0.46, depth: tome ? 0.22 : 0.05 }, scene), toon2(scene, "story-cover", tome ? "#f1ead8" : "#6a4a32"));
+    part(MB.CreateBox("bookPages", { width: tome ? 0.44 : 0.32, height: tome ? 0.56 : 0.42, depth: tome ? 0.18 : 0.03 }, scene), glow(scene, "story-pages", "#fff2cf")).position.x = 0.03;
+    if (tome) for (let i = 0; i < 7; i++) part(MB.CreateBox("clasp", { width: 0.08, height: 0.05, depth: 0.25 }, scene), glow(scene, `story-clasp${i}`, "#ffd27a")).position.set(0.26, -0.24 + i * 0.08, 0);
+    const fx = Math.sin(a.yaw), fz = Math.cos(a.yaw);
+    const end = { x: a.pos.x + fx * 0.5, y: 1.35, z: a.pos.z + fz * 0.5 };
+    const start = { ...end, y: 6.5 };
+    sfx.play("bookDescend");
+    vfx.ring({ x: a.pos.x, y: 0.06, z: a.pos.z }, 4, "#e6b54e", 0.8);
+    const dur = this.skipping ? 0.05 : 1.6;
+    await new Promise((res) => this.tweens.push({ t: 0, dur, fn: (k) => {
+      const e = 1 - (1 - k) * (1 - k);
+      node.position.set(start.x, start.y + (end.y - start.y) * e + Math.sin(k * 9) * 0.05 * (1 - k), start.z);
+      node.rotation.y = a.yaw + Math.PI / 2 + (1 - e) * 4;
+    }, done: res }));
+    vfx.flash(end, tome ? 3 : 1.6, "#fff2cf", 0.35);
+    vfx.sparksAt(end, tome ? 18 : 6, "gold", 4, 3);
+    this.stage.pose(id, "hand");
+    this.heldBook = node;
+    const dispose = () => { node.dispose(false, true); if (this.heldBook === node) this.heldBook = null; };
+    this.tweens.push({ t: 0, dur: tome ? 6 : 3.5, fn: () => {}, done: dispose });
+  }
+
+  // ---- Cutscenes (timeline playback) ----
+  playCutscene(id) {
+    const cs = CUTSCENES[id];
+    if (!cs) return Promise.resolve();
+    this.ctx.sets?.use(cs.stage ?? "yard");
+    this.stage.setup({ actors: cs.actors, rook: null });
+    this.view.hide();
+    this.ctx.root.classList.add("in-cut");
+    return new Promise((resolve) => {
+      this.cut = { cs, t: 0, prev: -Infinity, resolve };
+      this._cutStep(0);
+    });
+  }
+
+  _cutStep(dt) {
+    const c = this.cut, cs = c.cs;
+    c.t = Math.min(cs.duration, c.t + dt);
+    for (const e of eventsBetween(cs.events, c.prev, c.t)) {
+      if ("caption" in e) this._caption(e.caption);
+      if (e.sfx) this.ctx.sfx.play(e.sfx);
+      if (e.show) this.stage.show(e.show, true);
+      if (e.hide) this.stage.show(e.hide, false);
+      if (e.move) this.stage.move(e.move.id, e.move.to[0], e.move.to[1], e.move.dur);
+      if (e.pose) this.stage.pose(e.pose.id, e.pose.name);
+      if (e.cue) this.ctx.sets?.cue(e.cue);
+      if (e.fade) this._fade(e.fade === "out", 1);
     }
+    c.prev = c.t;
+    const cam = sampleCamera(cs.camera, c.t);
+    this.ctx.camera.frame({ x: cam.pos[0], y: cam.pos[1], z: cam.pos[2] }, { x: cam.look[0], y: cam.look[1], z: cam.look[2] }, { fov: cam.fov, cut: true });
+    if (c.t >= cs.duration) {
+      this.cut = null;
+      this.ctx.root.classList.remove("in-cut");
+      this._caption(null);
+      this.stage.clear();
+      this._fade(false, 0.6);
+      c.resolve();
+    }
+  }
+
+  _caption(text) {
+    const el = this.ui.caption;
+    if (!el) return;
+    if (!text) { el.classList.remove("show"); return; }
+    el.textContent = text;
+    el.className = `caption${CAPS.test(text) ? " caps" : ""}`;
+    void el.offsetWidth; el.classList.add("show");
+  }
+
+  _fade(black, seconds) {
+    const el = this.ui.fade;
+    if (!el) return;
+    el.style.transitionDuration = `${seconds}s`;
+    el.classList.toggle("on", black);
   }
 
   async runFight(beat) {
     this._enterScene(false);
     this.stage.clear();
+    this.ctx.sets?.use(beat.stage ?? "yard");
     const world = this.ctx.makeWorld({ ...this.ep.world, tokens: beat.tokens ?? this.ep.world?.tokens });
     for (;;) {
       world.resetPlayer();

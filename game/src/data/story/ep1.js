@@ -1,28 +1,20 @@
 // Episode 1 · The Tower of Choosing (GDD §14, Arc 1).
 
 export const EP1_SCRIPT = `
-title: Ep1_ColdOpen
----
-<<fx fire>>
-FIFTEEN YEARS AGO
-A village burns at the edge of the map. Its name is Larkspur.
-<<sfx cry>>
-Somewhere in the smoke, an infant is crying.
-<<fx silhouette>>
-A thin figure walks out of the fire, carrying something small against its chest.
-It doesn't look back.
-<<fx clear>>
-===
-
 title: Ep1_Steps
 ---
 FIFTEEN YEARS LATER
 <<shot wide>>
+<<pose Herald raise>>
 Herald: Fifteen-year-olds of Liraen! Today the Tower reads you, and the book it gives you is your fate.
+<<pose Herald none>>
 Herald: One at a time. Hands where the book can see them.
-<<shot on Severin>>
 A boy in a white coat walks to the front of the line. Nobody stops him.
+<<move Severin 0.6 -0.4 wait>>
+<<shot on Severin>>
 Severin: Valcourt. I go first. I always go first.
+<<face Severin Rook>>
+<<pose Severin cross>>
 <<shot two Severin Rook>>
 Severin: Thornwick mud on your boots. They let the border villages climb now?
 -> "They let anyone climb. Even you." #bold
@@ -33,26 +25,34 @@ Severin: Thornwick mud on your boots. They let the border villages climb now?
 -> "It's not mud. It's a fashion statement." #wry
     Severin: ...Thornwick has fashion?
     He almost smiles. Then he remembers who he is.
+<<pose Severin none>>
+<<move Moss 0.9 -2.3 wait>>
 <<shot on Moss>>
 An old man sweeping the steps shuffles between you, broom first.
 Moss: Feet up, both of you. These steps are older than your families.
 Severin: Out of the way, sweeper.
 Moss: Brother Moss. And no.
+<<move Severin 2.2 0.4>>
 He sweeps around Severin's boots until Severin steps aside.
 ===
 
 title: Ep1_Ceremony
 ---
-<<shot wide>>
+<<shot wide side>>
 Inside, the grimoires drift in the Tower's light, waiting for their owners.
 Herald: Severin Valcourt.
+<<move Severin 0.9 3.4 wait>>
+<<face Severin Herald>>
 <<shot on Severin>>
 <<fx book Severin>>
 A tome descends into his hands. Seven clasps. The hall goes silent, then roars.
 Herald: Seven clasps. The most pages given in a generation.
 Severin: Of course.
+<<move Severin 1.8 1.4>>
 <<shot on Herald>>
 Herald: {name}, of Thornwick.
+<<move Rook -0.5 3.4 wait>>
+<<face Rook Herald>>
 <<shot on Rook>>
 <<fx book Rook>>
 A book drops into your hands. It's thin. Too thin.
@@ -60,6 +60,8 @@ You open it. One page. The rest are scraped blank, right down to the paper.
 <<sfx laugh>>
 Someone laughs. Then everyone does.
 Herald: ...One page. The Tower has spoken.
+<<face Severin Rook>>
+<<face Rook Severin>>
 <<shot two Severin Rook>>
 Severin: One page. Don't worry, Thornwick. Nobody will ask you to read aloud.
 -> Snap the book shut and stare him down. #bold
@@ -77,12 +79,19 @@ But Brother Moss is already sweeping somewhere else.
 
 title: Ep1_Attack
 ---
-<<shot wide>>
+<<shot wide side>>
+<<cue dark>>
 <<sfx hymn>>
 The great windows go dark. Somewhere above, people are singing.
+<<show Acolyte>>
+<<move Acolyte -2.6 6.4>>
+<<pose Acolyte raise>>
 <<shot on Acolyte>>
 Acolyte: The Choir sings for the unwritten! Burn the books, and the chains burn with them!
+<<pose Herald raise>>
 Herald: Choir! Guard the candidates!
+<<face Severin Rook>>
+<<face Rook Severin>>
 <<shot two Severin Rook>>
 Severin: Stay behind me, Thornwick. One page won't stop a blade.
 -> "Then I'll use the blade." #bold
@@ -107,12 +116,12 @@ Severin: What did he mean, "it's you"?
     Severin: ...That isn't funny.
 Severin: Whatever this is, stay out of my way at the Exam.
 <<shot on Moss>>
-At the top of the steps, the broom has stopped moving.
+Across the hall, the broom has stopped moving.
 <<set $EP1_ITS_YOU to 1>>
 ===
 `;
 
-const TOWER = { stage: "tower" };
+const STEPS = { stage: "towerSteps" }, HALL = { stage: "towerHall" };
 
 export const EPISODE_1 = {
   id: "ep1",
@@ -122,30 +131,30 @@ export const EPISODE_1 = {
   // What Rook can do this episode: one page, no ultimate, no squad yet.
   world: { companions: false, ultimate: false, pages: false, loadout: { Spell2: null, Spell3: null, Spell4: null } },
   beats: [
-    { id: "coldopen", type: "coldopen", node: "Ep1_ColdOpen" },
+    { id: "coldopen", type: "cutscene", cutscene: "ep1_larkspur" },
     { id: "title", type: "title" },
-    { id: "steps", type: "scene", node: "Ep1_Steps", ...TOWER,
-      rook: { x: -1.2, z: -3, yaw: 0.4 },
+    { id: "steps", type: "scene", node: "Ep1_Steps", ...STEPS,
+      rook: { x: -1.2, z: -2.6, yaw: 0.4 },
       cast: [
-        { id: "severin", look: "severin", x: 1.3, z: -1.2, yaw: Math.PI + 0.5 },
-        { id: "herald", look: "herald", x: 0, z: 4.5, yaw: Math.PI },
-        { id: "moss", look: "moss", x: 2.8, z: -3.6, yaw: -1.4 },
+        { id: "severin", look: "severin", x: 2.6, z: -2.4, yaw: -0.6 },
+        { id: "herald", look: "herald", x: 0, z: 5.4, yaw: Math.PI },
+        { id: "moss", look: "moss", x: 4.6, z: -4.4, yaw: -1.4 },
       ] },
-    { id: "ceremony", type: "scene", node: "Ep1_Ceremony", ...TOWER,
+    { id: "ceremony", type: "scene", node: "Ep1_Ceremony", ...HALL,
       rook: { x: -1.4, z: 0.5, yaw: 0.2 },
       cast: [
-        { id: "severin", look: "severin", x: 1.4, z: 1.6, yaw: Math.PI + 0.4 },
-        { id: "herald", look: "herald", x: 0, z: 5, yaw: Math.PI },
-        { id: "moss", look: "moss", x: -3.2, z: -1.8, yaw: 0.9 },
+        { id: "severin", look: "severin", x: 1.6, z: 1.2, yaw: -0.2 },
+        { id: "herald", look: "herald", x: 0, z: 5.4, yaw: Math.PI },
+        { id: "moss", look: "moss", x: -3.4, z: -1.6, yaw: 0.9 },
       ] },
-    { id: "attack", type: "scene", node: "Ep1_Attack", ...TOWER,
-      rook: { x: -1.4, z: 0.5, yaw: 0.2 },
+    { id: "attack", type: "scene", node: "Ep1_Attack", ...HALL,
+      rook: { x: -0.5, z: 3, yaw: 0.2 },
       cast: [
-        { id: "severin", look: "severin", x: 1.4, z: 1.6, yaw: Math.PI + 0.4 },
-        { id: "herald", look: "herald", x: 0, z: 5, yaw: Math.PI },
-        { id: "acolyte", look: "acolyte", x: 0.5, z: 8, yaw: Math.PI },
+        { id: "severin", look: "severin", x: 1.8, z: 1.4, yaw: -0.4 },
+        { id: "herald", look: "herald", x: 0, z: 5.4, yaw: Math.PI },
+        { id: "acolyte", look: "acolyte", x: -6.5, z: 11, yaw: 2.6, hidden: true },
       ] },
-    { id: "fight", type: "fight", ...TOWER, wave: ["acolyte", "acolyte", "acolyte"], tokens: 1,
+    { id: "fight", type: "fight", ...HALL, wave: ["acolyte", "acolyte", "acolyte"], tokens: 1,
       tutorial: [
         { at: 0.5, text: "{Light}: chain up to four slashes." },
         { at: 6, text: "Two slashes, then {Heavy}, launches them into the air." },
@@ -154,12 +163,12 @@ export const EPISODE_1 = {
         { at: 26, text: "Guard broken? {Heavy} finishes them: Lantern Break." },
       ],
       retry: "Get up. The steps are still yours." },
-    { id: "hook", type: "scene", node: "Ep1_Hook", ...TOWER,
+    { id: "hook", type: "scene", node: "Ep1_Hook", ...HALL,
       rook: { x: 0, z: 0, yaw: 0 },
       cast: [
         { id: "acolyte", look: "acolyte", x: 0, z: 1.6, yaw: Math.PI, down: true },
         { id: "severin", look: "severin", x: 2.2, z: 0.8, yaw: -1.6 },
-        { id: "moss", look: "moss", x: -1, z: 9, yaw: Math.PI },
+        { id: "moss", look: "moss", x: -5, z: 8, yaw: 2.6 },
       ] },
     { id: "preview", type: "preview", next: "Episode 2 · The Knight Exam",
       lines: [

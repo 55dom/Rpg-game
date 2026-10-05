@@ -116,6 +116,25 @@ export class Sfx {
       case "heal": for (const [i, f] of [784, 988, 1175].entries()) this._tone(t + i * 0.07, 0.4, { f0: f, gain: 0.07 }); break;
       case "shield": this._tone(t, 0.5, { type: "triangle", f0: 180, f1: 140, gain: 0.2 }); this._noise(t, 0.3, { type: "lowpass", f0: 900, f1: 200, gain: 0.25 }); break;
       case "stone": this._tone(t, 0.35, { f0: 90, f1: 40, gain: 0.45 }); this._noise(t, 0.3, { type: "lowpass", f0: 1800, f1: 200, gain: 0.35 }); break;
+      // Story sounds (Phase 3).
+      case "cry": // a thin, wavering infant's cry in the distance
+        for (const [i, d] of [[0, 0.55], [0.75, 0.7], [1.6, 0.9]]) {
+          this._tone(t + i, d, { type: "sawtooth", f0: 560, f1: 760, gain: 0.025, attack: 0.08 });
+          this._tone(t + i + 0.02, d, { type: "sine", f0: 1100, f1: 1450, gain: 0.02, attack: 0.08 });
+        }
+        break;
+      case "hymn": // the Choir: a slow minor chord, voices swelling in
+        for (const [i, f] of [220, 261.6, 329.6, 440, 523.2].entries()) {
+          this._tone(t + i * 0.12, 3.2, { type: "triangle", f0: f, f1: f * 0.995, gain: 0.05, attack: 1.1 });
+          this._tone(t + i * 0.12, 3.2, { type: "sine", f0: f * 1.006, gain: 0.03, attack: 1.2 });
+        }
+        break;
+      case "laugh": for (let i = 0; i < 9; i++) this._noise(t + i * 0.09 + Math.random() * 0.05, 0.12, { f0: 700 + Math.random() * 900, q: 4, gain: 0.05 }); break;
+      case "fire": this._noise(t, 2.5, { type: "lowpass", f0: 900, f1: 300, q: 0.7, gain: 0.12, attack: 0.6 }); break;
+      case "bookDescend":
+        for (const [i, f] of [784, 988, 1175, 1568].entries()) this._tone(t + i * 0.15, 1.2, { type: "sine", f0: f, gain: 0.05, attack: 0.05 });
+        this._noise(t, 1.2, { f0: 3000, f1: 6000, q: 2, gain: 0.04, attack: 0.3 });
+        break;
       case "surgeFull": for (const [i, f] of [523, 659, 784, 1046].entries()) this._tone(t + i * 0.06, 0.5, { type: "triangle", f0: f, gain: 0.08 }); break;
       case "vacuum":
         this._noise(t, 0.45, { f0: 3500, f1: 400, q: 4, gain: 0.22, attack: 0.3 });

@@ -6,7 +6,7 @@
 import { compileExpr, truthy } from "../core/flags.js";
 
 export const BeatType = Object.freeze({
-  Title: "title", Scene: "scene", Fight: "fight", Explore: "explore", Preview: "preview", ColdOpen: "coldopen",
+  Title: "title", Scene: "scene", Fight: "fight", Explore: "explore", Preview: "preview", ColdOpen: "coldopen", Cutscene: "cutscene",
 });
 
 export function validateEpisode(ep, nodes = null) {
