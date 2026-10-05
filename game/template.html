@@ -149,7 +149,8 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .bar.enemy i { background: linear-gradient(90deg, #a83a34, var(--danger)); }
 .broken { font: 400 11px/1 var(--font-mono); letter-spacing: 0.2em; color: var(--ink); background: #fff; padding: 3px 6px; border-radius: 3px; animation: blink 0.4s steps(2) infinite; }
 @keyframes blink { 50% { background: var(--lantern); } }
-.menu { margin-left: auto; display: flex; gap: 6px; pointer-events: auto; }
+.menu { margin-left: auto; display: flex; gap: 6px; pointer-events: auto; position: relative; z-index: 5; }
+.hud-top { z-index: 5; }
 .menu button { font: 600 12px/1 var(--font-mono); color: var(--text); background: rgba(23, 26, 35, 0.85); border: 1px solid var(--line); border-radius: 8px; min-width: 38px; height: 34px; padding: 0 10px; cursor: pointer; }
 .menu button[aria-pressed="false"] { color: var(--muted); text-decoration: line-through; }
 .menu button:hover { border-color: var(--lantern); }
@@ -264,7 +265,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .letterbox { position: absolute; left: 0; right: 0; height: 0; background: #05060a; transition: height 380ms ease; }
 .letterbox.top { top: 0; } .letterbox.bottom { bottom: 0; }
 .in-scene .letterbox { height: 7vh; }
-.in-scene .hud-top, .in-scene .combo, .in-scene .touch, .in-scene .fd, .in-scene .prompt, .in-scene .target-card, .in-scene .bossbar { opacity: 0; pointer-events: none !important; }
+.in-scene .hud-top .card, .in-scene .combo, .in-scene .touch, .in-scene .fd, .in-scene .prompt, .in-scene .target-card, .in-scene .bossbar { opacity: 0; pointer-events: none !important; }
 .in-scene .touch * { pointer-events: none !important; }
 .no-ult .bar.surge, .no-ult .b-ult { display: none; }
 .solo .party, .solo .b-bas, .solo .b-juno, .solo .b-stance { display: none; }
@@ -292,6 +293,18 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .choices button:disabled { opacity: 0.4; cursor: default; }
 .skip { position: absolute; right: 14px; top: -14px; font: 600 11px/1 var(--font-mono); letter-spacing: 0.14em; color: var(--muted); background: #141722;
   border: 1px solid #343a50; border-radius: 999px; padding: 6px 10px; cursor: pointer; pointer-events: auto; }
+.save-btn { display: none; }
+.story-mode .save-btn { display: inline-block; }
+.slots-card { max-height: calc(100vh - 32px); overflow: auto; }
+.slots-card h3 { font: 600 11px/1 var(--font-mono); letter-spacing: 0.24em; color: var(--muted); margin: 18px 0 10px; text-align: left; }
+.ep-list, .slot-list { display: grid; gap: 8px; }
+.ep-list button, .slot-list button { display: flex; gap: 12px; align-items: center; text-align: left; width: 100%; font: 400 15px/1.3 var(--font-body); color: var(--text);
+  background: #1d2131; border: 1px solid #343a50; border-radius: 10px; padding: 11px 14px; cursor: pointer; }
+.ep-list button:hover:not(:disabled), .slot-list button:hover { border-color: var(--lantern); }
+.ep-list button:disabled { opacity: 0.45; cursor: default; }
+.ep-list b, .slot-list b { font: 600 12px/1 var(--font-mono); color: var(--lantern); min-width: 52px; }
+.slot-list small, .ep-list small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+.ep-list[hidden], .slots-card h3[hidden] { display: none; }
 .objective { position: absolute; left: 50%; top: max(14px, env(safe-area-inset-top)); transform: translateX(-50%); max-width: calc(100vw - 32px);
   font: 400 13px/1.4 var(--font-body); color: var(--text); background: rgba(15, 17, 23, 0.82); border: 1px solid var(--line); border-left: 3px solid var(--lantern);
   border-radius: 8px; padding: 8px 14px; text-align: center; }
@@ -393,6 +406,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <button data-menu="flashes" title="Impact flashes" aria-pressed="true">FX</button>
       <button data-menu="sound" title="Sound" aria-pressed="true">SND</button>
       <button data-menu="assist" title="Assist: wider parry and perfect-dodge windows, hold Slash to keep comboing" aria-pressed="false">AST</button>
+      <button data-menu="save" class="save-btn" title="Save your story">SAVE</button>
       <button data-menu="reset" title="Restart (R)">↺</button>
     </nav>
   </header>
@@ -540,6 +554,15 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <div class="start-buttons" data-pv-buttons></div>
     </div>
   </div>
+  <div class="modal" data-slots hidden>
+    <div class="modal-card slots-card">
+      <h2 data-slots-title>EPISODES</h2>
+      <div class="ep-list" data-ep-list></div>
+      <h3 data-slots-sub>SAVES</h3>
+      <div class="slot-list" data-slot-list></div>
+      <div class="start-buttons"><button class="go alt" data-slots-close>BACK</button></div>
+    </div>
+  </div>
   <div class="modal" data-create hidden>
     <div class="modal-card create-card">
       <h2>WHO CLIMBS THE TOWER?</h2>
@@ -559,12 +582,13 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
     <div class="start-card">
       <h1>UNWRITTEN</h1>
       <div class="sub">KNIGHTS OF THE LAST LANTERN</div>
-      <p><b>Story:</b> begin at Episode 1, the Tower of Choosing, where you're handed a grimoire with one page. Your progress saves itself.</p>
+      <p><b>Story · Episodes 1–4:</b> the Tower of Choosing, the Knight Exam, the Lighthouse, and your first mission in the Greywater Fens. Your progress saves itself.</p>
       <p><b>Episode 4 combat run:</b> lead Bas and Juno through the Greywater Fens to Hask the Bogwarden (about 12 minutes).</p>
       <p>Keyboard and mouse, gamepad, or touch. Press <b>H</b> or <b>?</b> for controls.</p>
       <div class="start-buttons">
         <button class="go" data-continue hidden>CONTINUE</button>
         <button class="go" data-start-story>NEW STORY</button>
+        <button class="go alt" data-episodes>EPISODES & SAVES</button>
         <button class="go alt" data-start-run>EPISODE 4 RUN</button>
         <button class="go alt" data-start-yard>TRAINING YARD</button>
       </div>

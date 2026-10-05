@@ -68,6 +68,15 @@ export class SaveStore {
 
   remove(slot) { try { this.storage.removeItem(PREFIX + slot); } catch { /* ignore */ } }
 
+  /** Story progress (which episodes are unlocked), kept apart from the slots so deleting a save doesn't relock anything. */
+  get reached() {
+    try { return Math.max(1, Number(JSON.parse(this.storage.getItem(PREFIX + "progress") ?? "{}").reached) || 1); } catch { return 1; }
+  }
+  reach(n) {
+    if (n <= this.reached) return;
+    try { this.storage.setItem(PREFIX + "progress", JSON.stringify({ reached: n })); } catch { /* ignore */ }
+  }
+
   /** The most recent save across all slots (for "Continue"). */
   latest() {
     let best = null, bestSlot = null;

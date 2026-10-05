@@ -59,6 +59,8 @@ export const LOOKS = {
     head: "face", hair: "crop", weapon: "none", grimoire: true, trail: "#a9b8d8" },
   tamsin: { poses: ACOLYTE_POSES, scale: 0.95, skirt: 0.95, coat: "#b8503a", trim: "#f0c26a", hairColor: "#e0b050", skin: "#f1d0b4",
     head: "face", hair: "spiky", scarf: true, weapon: "none", lute: true, trail: "#f0c26a" },
+  mirren: { poses: ACOLYTE_POSES, scale: 0.66, skirt: 0.95, coat: "#9a7a5a", trim: "#c9a26a", hairColor: "#5a3a22", skin: "#f0cfb2",
+    head: "face", hair: "sidetail", accent: "#d9634a", weapon: "none", trail: "#c9a26a" },
   stranger: { poses: ACOLYTE_POSES, scale: 1.08, skirt: 0.78, coat: "#0d0c12", trim: "#0d0c12", hairColor: "#0d0c12", skin: "#0d0c12",
     head: "blank", hair: "crop", weapon: "none", carry: true, trail: "#000000" },
   severin: { poses: SEVERIN_POSES, scale: 1.02, skirt: 0.9, coat: "#ece8f4", trim: "#d4ad4f", hairColor: "#e6d6a2", skin: "#f2d7c2",

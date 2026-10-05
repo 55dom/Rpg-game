@@ -17,6 +17,7 @@ export const CAST = Object.freeze({
   Bas: { name: "Bas", color: "#e8b46a", actor: "bas" },
   Lio: { name: "Lio", color: "#a9b8d8", actor: "lio" },
   Tamsin: { name: "Tamsin", color: "#f0c26a", actor: "tamsin" },
+  Mirren: { name: "Mirren", color: "#ffb38a", actor: "mirren" },
   Crowd: { name: "Candidates", color: "#aab4cc", actor: null },
 });
 

@@ -47,7 +47,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -469,4 +469,68 @@ function buildLighthouse(scene, mobile) {
     },
   };
   return self;
+}
+
+// ---- The Greywater Fens: reeds, dead trees, still water, and a village nobody remembers -------
+function buildFens(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add;
+  const rng = mulberry(41);
+  const ground = add(MB.CreateCylinder("fn-ground", { diameter: 120, height: 0.6, tessellation: 48 }, scene)); ground.position.y = -0.3; ground.material = toon(scene, "fn-ground", "#5f6a44");
+  const mud = toon(scene, "fn-mud", "#4a4630");
+  for (let i = 0; i < 14; i++) { const a = rng() * Math.PI * 2, r = 4 + rng() * 14; const m = add(MB.CreateDisc("fn-mudPatch", { radius: 1.5 + rng() * 2.5, tessellation: 18 }, scene)); m.rotation.x = Math.PI / 2; m.position.set(Math.sin(a) * r, 0.012, Math.cos(a) * r); m.material = mud; }
+  const water = new BB.StandardMaterial("fn-water", scene); water.diffuseColor = color3("#2f4a46"); water.specularColor = color3("#9fc0b0"); water.specularPower = 32; water.alpha = 0.85;
+  for (const [x, z, r] of [[-22, 8, 9], [20, -16, 11], [24, 14, 7], [-18, -22, 8]]) { const w = add(MB.CreateDisc("fn-pond", { radius: r, tessellation: 28 }, scene)); w.rotation.x = Math.PI / 2; w.position.set(x, 0.03, z); w.material = water; }
+  // Reed clumps around the edges (and a few inside).
+  const reed = toon(scene, "fn-reed", "#8a9a52"), reedTop = toon(scene, "fn-reedTop", "#6b4a32");
+  for (let i = 0; i < (mobile ? 40 : 80); i++) {
+    const a = rng() * Math.PI * 2, r = i % 6 === 0 ? 8 + rng() * 6 : 17 + rng() * 14;
+    const x = Math.sin(a) * r, z = Math.cos(a) * r;
+    for (let k = 0; k < 3; k++) {
+      const h = 1.2 + rng() * 1.2;
+      const st = add(MB.CreateCylinder("fn-reed", { height: h, diameter: 0.06, tessellation: 4 }, scene)); st.position.set(x + (rng() - 0.5) * 0.6, h / 2, z + (rng() - 0.5) * 0.6); st.rotation.z = (rng() - 0.5) * 0.3; st.material = reed;
+      if (k === 0) { const tip = add(MB.CreateCylinder("fn-cattail", { height: 0.3, diameter: 0.12, tessellation: 6 }, scene)); tip.position.set(st.position.x, h, st.position.z); tip.material = reedTop; }
+    }
+  }
+  // Dead trees.
+  const bark = toon(scene, "fn-bark", "#3e3428");
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2 + rng() * 0.3, r = 20 + rng() * 10;
+    const x = Math.sin(a) * r, z = Math.cos(a) * r, h = 5 + rng() * 4;
+    const t = add(MB.CreateCylinder("fn-tree", { height: h, diameterTop: 0.3, diameterBottom: 0.9, tessellation: 7 }, scene), 0.04); t.position.set(x, h / 2, z); t.rotation.z = (rng() - 0.5) * 0.25; t.material = bark;
+    for (let k = 0; k < 3; k++) { const b = add(MB.CreateCylinder("fn-branch", { height: 2 + rng() * 1.5, diameterTop: 0.05, diameterBottom: 0.25, tessellation: 5 }, scene), 0.03); b.position.set(x, h * (0.55 + k * 0.12), z); b.rotation.set(rng() * 0.6 - 0.3, rng() * 6, 0.9 + rng() * 0.5); b.material = bark; }
+  }
+  // The village that wasn't on the map: whole houses, standing empty, with no one inside.
+  const wall = toon(scene, "fn-houseWall", "#8f8470"), roof = toon(scene, "fn-houseRoof", "#5a4a3a"), dark = toon(scene, "fn-window", "#1c1f22");
+  for (const [x, z, rot] of [[-12, 14, 0.5], [-4, 19, 0.1], [6, 18, -0.3], [14, 11, -0.8], [-15, 4, 1.2]]) {
+    const h = add(MB.CreateBox("fn-house", { width: 4, height: 2.8, depth: 3.4 }, scene), 0.04); h.position.set(x, 1.4, z); h.rotation.y = rot; h.material = wall;
+    const r = add(MB.CreateCylinder("fn-roof", { height: 4.4, diameter: 3.8, tessellation: 3 }, scene), 0.04); r.position.set(x, 3.4, z); r.rotation.set(0, rot, Math.PI / 2); r.scaling.set(1, 1, 0.8); r.material = roof;
+    const w = add(MB.CreatePlane("fn-win", { width: 0.8, height: 0.7 }, scene)); w.position.set(x - Math.sin(rot) * 1.72, 1.5, z - Math.cos(rot) * 1.72); w.rotation.y = rot; w.material = dark;
+  }
+  const well = add(MB.CreateCylinder("fn-well", { height: 0.8, diameter: 1.6, tessellation: 14 }, scene), 0.04); well.position.set(3, 0.4, 12); well.material = toon(scene, "fn-wellStone", "#7a7466");
+  const mist = new BB.ParticleSystem("fn-mist", mobile ? 30 : 60, scene);
+  mist.particleTexture = softTexture(scene); mist.emitter = new BB.Vector3(0, 0.4, 0);
+  mist.minEmitBox = new BB.Vector3(-18, 0, -18); mist.maxEmitBox = new BB.Vector3(18, 0.3, 18);
+  mist.color1 = new BB.Color4(0.75, 0.82, 0.72, 0.18); mist.color2 = new BB.Color4(0.65, 0.72, 0.66, 0.12); mist.colorDead = new BB.Color4(0.6, 0.7, 0.6, 0);
+  mist.minSize = 3; mist.maxSize = 6; mist.minLifeTime = 6; mist.maxLifeTime = 10; mist.emitRate = mobile ? 4 : 8;
+  mist.blendMode = BB.ParticleSystem.BLENDMODE_STANDARD; mist.gravity = new BB.Vector3(0.05, 0, 0); mist.minEmitPower = 0.05; mist.maxEmitPower = 0.15;
+  K.systems.push(mist);
+  // Hask's bog: murky water that floods the clearing and drains in phase 3.
+  const bog = MB.CreateDisc("fn-bog", { radius: 16.5, tessellation: mobile ? 40 : 64 }, scene); bog.parent = K.root;
+  bog.rotation.x = Math.PI / 2; bog.position.y = 0.04; bog.isPickable = false;
+  const bogMat = new BB.StandardMaterial("fn-bogMat", scene);
+  bogMat.diffuseColor = color3("#2f3a26"); bogMat.specularColor = color3("#9fb07a"); bogMat.specularPower = 24; bogMat.emissiveColor = color3("#141a10"); bogMat.alpha = 0;
+  bog.material = bogMat; bog.setEnabled(false);
+  let bogLevel = 0, bogTarget = 0;
+  const env = { clear: "#7f8f86", fog: "#8a9a8c", fogDensity: 0.022, hemi: [0.6, "#e0ecd8", "#3a3a2a"], sun: [0.7, "#f0ecd0", [-0.3, -1, 0.4]], warm: 0 };
+  const toonEnv = { lightDir: [0.3, 1, -0.4], fogColor: "#8a9a8c", fogDensity: 0.016, sky: [1.0, 1.02, 0.98], ground: [0.78, 0.82, 0.74], rim: [0.8, 0.9, 0.85] };
+  return {
+    env, toon: toonEnv,
+    show(on) { K.show(on); bogLevel = bogTarget = 0; bog.setEnabled(false); },
+    setBog(on, instant) { bogTarget = on ? 1 : 0; if (instant) bogLevel = bogTarget; },
+    update(dt, t) {
+      bogLevel += (bogTarget - bogLevel) * Math.min(1, dt * (bogTarget ? 2 : 0.6));
+      bog.setEnabled(bogLevel > 0.01);
+      if (bogLevel > 0.01) { const sc = 0.15 + 0.85 * bogLevel; bog.scaling.set(sc, sc, 1); bogMat.alpha = 0.82 * bogLevel; bog.rotation.z = t * 0.02; }
+    },
+  };
 }

@@ -376,8 +376,16 @@ export class StoryPlayer {
     if (this.active) this.autosave();
   }
 
+  /** The current resume point as a save record (for the slots menu). */
+  snapshot() {
+    if (!this.director || !this.ep) return null;
+    const { episode, beat } = this.director.done ? { episode: this.ep.id, beat: this.ep.beats.length } : this.director.resumePoint;
+    return { player: this.player, flags: this.flags.snapshot(), episode, beat };
+  }
+
   autosave() {
     if (!this.director) return;
+    this.ctx.saves.reach(this.ep.number + (this.director.done ? 1 : 0));
     const { episode, beat } = this.director.done ? { episode: this.ep.id, beat: this.ep.beats.length } : this.director.resumePoint;
     this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), episode, beat });
   }
@@ -757,6 +765,7 @@ export class StoryPlayer {
       world.spawnWave(beat.wave);
       this.ctx.onEvents(world.drainEvents());
       this.fight = { beat, t: 0, hints: [...(beat.tutorial ?? [])], result: null, getUps: beat.getUps ?? 0, falls: 0 };
+      for (const [who, text] of beat.lines ?? []) this.say(who, text); // squad chatter as the fight starts
       const won = await new Promise((res) => { this.fight.resolve = res; });
       this._hint("");
       if (won || !beat.retry) { this.fight = null; return { won }; }

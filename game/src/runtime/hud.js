@@ -15,6 +15,9 @@ const LABELS = {
 LABELS.keyboard.Spell2 = "R"; LABELS.keyboard.Spell3 = "T"; LABELS.keyboard.Spell4 = "Y"; LABELS.keyboard.Ultimate = "V";
 LABELS.gamepad.Spell2 = "RT"; LABELS.gamepad.Spell3 = "LT"; LABELS.gamepad.Spell4 = "▼"; LABELS.gamepad.Ultimate = "LB+RB";
 LABELS.touch.Ultimate = "ULT"; LABELS.touch.Spell4 = "Wall";
+Object.assign(LABELS.keyboard, { Assist: "1", Assist2: "2" });
+Object.assign(LABELS.gamepad, { Assist: "D-pad ◀", Assist2: "D-pad ▶" });
+Object.assign(LABELS.touch, { Assist: "BAS", Assist2: "JUNO" });
 
 export class Hud {
   /** @param {{slot:string, short:string}[]} spells the spell buttons, in order */
@@ -99,6 +102,10 @@ export class Hud {
     const host = this.el.party;
     if (!host) return;
     const keys = { keyboard: ["1", "2"], gamepad: ["◀", "▶"], touch: ["", ""] }[device] ?? ["1", "2"];
+    for (const [c, el] of this.partyEls) if (!world.companions.includes(c)) { // a new world brings new companions
+      el.remove(); this.partyEls.delete(c);
+      for (const k of [...this.cache.keys()]) if (/^a(hp|cd|cls|key|st)\d/.test(k)) this.cache.delete(k);
+    }
     world.companions.forEach((c, i) => {
       let el = this.partyEls.get(c);
       if (!el) {
@@ -193,7 +200,7 @@ export class Hud {
 
     if (this.toastTimer > 0) { this.toastTimer -= dt; if (this.toastTimer <= 0) e.toast.classList.remove("show"); }
 
-    if (world.companions?.length) this.updateParty(world, device);
+    this.updateParty(world, device);
 
     // Boss bar.
     const b = world.boss?.alive ? world.boss : null;

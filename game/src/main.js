@@ -23,6 +23,7 @@ import { SaveStore, cleanName } from "./core/save.js";
 import { EPISODE_1, EP1_SCRIPT } from "./data/story/ep1.js";
 import { EPISODE_2, EP2_SCRIPT } from "./data/story/ep2.js";
 import { EPISODE_3, EP3_SCRIPT } from "./data/story/ep3.js";
+import { EPISODE_4_STORY, EP4_SCRIPT } from "./data/story/ep4.js";
 
 const TRAIL_COLORS = { default: "#ffd98a", GaleCutter: PALETTE.gale, VacuumPull: PALETTE.gale, TempestEdge: "#a8f5dc", Counter: "#dff6ff", LanternBreak: "#ffcc55", enemy: "#ff5a4a" };
 const SPELLS = [
@@ -512,7 +513,7 @@ export function boot(doc = document) {
     getWorld: () => world,
     makeWorld: (opts) => newWorld(opts),
     onEvents: (evs) => onEvents(evs),
-  }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }, { episode: EPISODE_3, script: EP3_SCRIPT }]);
+  }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }, { episode: EPISODE_3, script: EP3_SCRIPT }, { episode: EPISODE_4_STORY, script: EP4_SCRIPT }]);
   const playerName = root.querySelector(".player-card .name");
   const showName = (n) => { if (playerName?.firstChild) playerName.firstChild.textContent = `${n.toUpperCase()} `; };
   const backToTitle = () => {
@@ -567,6 +568,60 @@ export function boot(doc = document) {
   };
   continueBtn.addEventListener("click", (e) => { e.stopPropagation(); doContinue(); });
   startScreen.querySelector("[data-start-story]")?.addEventListener("click", (e) => { e.stopPropagation(); openCreate(); });
+
+  // Episodes & saves: pick any unlocked episode, load a slot, or (in the story) save to one.
+  const slotsModal = root.querySelector("[data-slots]");
+  const slotLabel = (sv) => {
+    if (!sv) return "<span>Empty</span>";
+    const ep = story.episodeById(sv.episode);
+    const where = ep ? (sv.beat >= ep.beats.length ? `Episode ${ep.number} complete` : `Episode ${ep.number} · ${ep.title}`) : "—";
+    const when = sv.savedAt ? new Date(sv.savedAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "";
+    return `<span>${sv.player.name} · ${where}<small>${when}</small></span>`;
+  };
+  const closeSlots = () => { slotsModal.hidden = true; state.modal = false; };
+  const loadSave = (sv) => {
+    closeSlots();
+    story.player = { name: sv.player.name, pronouns: sv.player.pronouns };
+    story.flags.load(sv.flags);
+    const ep = story.episodeById(sv.episode);
+    if (state.started) { story.stop(); state.started = false; }
+    playStory(sv.episode, sv.beat >= (ep?.beats.length ?? 0) ? 0 : sv.beat);
+  };
+  const openSlots = (mode) => {
+    sfx.unlock(); sfx.play("ui");
+    const saving = mode === "save";
+    slotsModal.querySelector("[data-slots-title]").textContent = saving ? "SAVE YOUR STORY" : "EPISODES & SAVES";
+    const epList = slotsModal.querySelector("[data-ep-list]");
+    epList.hidden = saving;
+    slotsModal.querySelector("[data-slots-sub]").textContent = saving ? "CHOOSE A SLOT" : "LOAD A SAVE";
+    const reached = saves.reached;
+    epList.innerHTML = story.episodes.map(({ episode: e }) =>
+      `<button data-ep="${e.id}" ${e.number > reached ? "disabled" : ""}><b>EP ${e.number}</b><span>${e.number > reached ? "Locked" : e.title}<small>${e.arc ?? ""}</small></span></button>`).join("");
+    for (const b of epList.querySelectorAll("[data-ep]")) b.addEventListener("click", () => {
+      const last = saves.latest()?.save;
+      closeSlots();
+      story.player = last ? { name: last.player.name, pronouns: last.player.pronouns } : { name: "Rook", pronouns: "they" };
+      story.flags.load(last?.flags ?? {});
+      playStory(b.dataset.ep, 0);
+    });
+    const list = slotsModal.querySelector("[data-slot-list]");
+    const slots = saving ? ["1", "2", "3"] : ["auto", "1", "2", "3"];
+    list.innerHTML = slots.map((k) => `<button data-slot="${k}"><b>${k === "auto" ? "AUTO" : `SLOT ${k}`}</b>${slotLabel(saves.read(k))}</button>`).join("");
+    for (const b of list.querySelectorAll("[data-slot]")) b.addEventListener("click", () => {
+      const k = b.dataset.slot;
+      if (saving) {
+        const snap = story.snapshot();
+        if (snap && saves.write(k, snap)) { b.innerHTML = `<b>SLOT ${k}</b>${slotLabel(saves.read(k))}`; hud.toast("SAVED", "clear"); sfx.play("ui"); }
+      } else {
+        const sv = saves.read(k);
+        if (sv) loadSave(sv);
+      }
+    });
+    slotsModal.hidden = false; state.modal = true;
+  };
+  slotsModal.querySelector("[data-slots-close]").addEventListener("click", () => { sfx.play("ui"); closeSlots(); });
+  startScreen.querySelector("[data-episodes]")?.addEventListener("click", (e) => { e.stopPropagation(); openSlots("load"); });
+  menu("save", () => { if (state.mode === "story") openSlots("save"); });
   refreshContinue();
   const replay = (mode) => { results.hidden = true; state.modal = false; newWorld(); state.started = false; start(mode); };
   results.querySelector("[data-again]")?.addEventListener("click", () => replay("run"));
@@ -601,7 +656,7 @@ export function boot(doc = document) {
     let running = state.started && !state.paused && !state.help && !state.frozen && !state.modal && !story.blocking;
     for (const cmd of controls.drainCommands()) {
       if (!state.started) {
-        if (cmd === "confirm") { if (!createModal.hidden) begin(); else (continueBtn.hidden ? openCreate() : doContinue()); }
+        if (cmd === "confirm" && slotsModal.hidden) { if (!createModal.hidden) begin(); else (continueBtn.hidden ? openCreate() : doContinue()); }
         continue;
       }
       if (story.blocking) { // scenes and cards: menu-style input
@@ -639,7 +694,7 @@ export function boot(doc = document) {
       if (cmd === "pause") { if (state.help) toggleHelp(false); else state.paused = !state.paused; root.classList.toggle("paused", state.paused); }
     }
     const presses = controls.drainPresses();
-    if (!state.started && presses.length && createModal.hidden) (continueBtn.hidden ? openCreate() : doContinue()); // any attack button on the title screen
+    if (!state.started && presses.length && createModal.hidden && slotsModal.hidden) (continueBtn.hidden ? openCreate() : doContinue()); // any attack button on the title screen
     if (story.blocking) { if (presses.includes(1) || presses.includes(3)) story.confirm(); presses.length = 0; } // Slash or Jump advances dialogue
     else if (story.exploring?.near && presses.includes(1)) { story.interact(); presses.length = 0; } // Slash talks to whoever is close
     if (!pageModal.hidden) for (const p of presses) { if (p === 1) choosePage("A"); if (p === 2) choosePage("B"); } // Light / Heavy pick a branch
@@ -714,7 +769,7 @@ export function boot(doc = document) {
 
   // Test hook: freeze the live clock so automated checks can step the sim frame-exactly.
   const freezeLogic = (on) => { state.frozen = on; };
-  const handle = { engine, scene, world, camera, start, restart, freezeLogic, openPages, choosePage, story, saves, sets, playStory, backToTitle, data: { acolyte: ACOLYTE_ABILITIES } };
+  const handle = { engine, scene, world, camera, start, restart, freezeLogic, openPages, choosePage, story, saves, sets, playStory, backToTitle, openSlots, data: { acolyte: ACOLYTE_ABILITIES } };
   return handle;
 }
 
