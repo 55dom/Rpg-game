@@ -1570,6 +1570,16 @@ Estimates assume **1–2 people, part-time-ish**. Every phase ends with a **go/n
   - Lip sync.
   - Episode 5 onward.
 
+
+### 23.3 Phase 4 plan (World)
+| Step | Content | Status |
+|---|---|---|
+| 1 | **Zone engine and the Aurelin hub.**<br>• **Zones as data** (`data/zones.js`): a set, bounds, solids, arrivals, townsfolk, and exits. Each zone's layout drives both what's drawn and what's solid.<br>• **Free roam** ("The World" on the title screen): walk out through exits, or use the world map (**P**).<br>• **Saves:** the autosave remembers which zone you're in.<br>• **Aurelin:** the fountain plaza, the Hall of Lanterns, the Lowmarket stalls, streets of houses, the city walls and south gate, and a walking crowd (instanced).<br>• **Townsfolk** whose lines react to the story (the exam result, Mirren, your lantern) | ✅ Done |
+| 2 | Marks (currency), curated equipment (weapon, cloak, 2 charms), Lowmarket shops | Next |
+| 3 | Squad reputation and regional renown, squad merit, side quests and the quest log | — |
+| 4 | Thornwick, the Greywater Fens as a field zone, and the Undercroft dungeon | — |
+| 5 | Performance budget in the largest zone (PC and phone), and the gate review | — |
+
 ---
 
 ## 24. OVERBUILD CHECK (§33 of the brief)
@@ -1901,4 +1911,4 @@ The foundation questions from v0.1 are still open:
 3. **Cast & story:** Brannoc's real death, Aurek Valcourt as the red herring, the Palimpsest protagonist. Anything to change?
 4. **Scope calls:** 4 player affinities at launch, AI companions first (tag-swap for Rook, Severin, and Cal later), zones rather than a seamless open world, "Season 1" = Arcs 1–3.
 
-**Phase 1:** complete (§22). **Phase 2:** complete (§23.1): Skyrender, reactions, the squad, the Fens roster, Hask the Bogwarden, page evolution, cel-shading v2, and the Episode 4 combat run. It waits on your gate review ("does it feel anime?"). **Phase 3:** complete (§23.2): Episodes 1–4 playable as story, with dialogue, choices, saves, cutscenes, and hubs. It waits on your gate review. **Next: Phase 4**, the World (§23): Aurelin hub, zones, NPCs and shops, reputation, and the performance budget. **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.
+**Phase 1:** complete (§22). **Phase 2:** complete (§23.1): Skyrender, reactions, the squad, the Fens roster, Hask the Bogwarden, page evolution, cel-shading v2, and the Episode 4 combat run. It waits on your gate review ("does it feel anime?"). **Phase 3:** complete (§23.2): Episodes 1–4 playable as story, with dialogue, choices, saves, cutscenes, and hubs. It waits on your gate review. **Phase 4 progress** (§23.3): Step 1 is done (zones and the Aurelin hub). **Next: Step 2**, Marks, equipment, and shops. **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.

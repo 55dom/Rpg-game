@@ -295,6 +295,10 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
   border: 1px solid #343a50; border-radius: 999px; padding: 6px 10px; cursor: pointer; pointer-events: auto; }
 .save-btn { display: none; }
 .story-mode .save-btn { display: inline-block; }
+.map-btn { display: none; }
+.roaming .map-btn { display: inline-block; }
+.roaming .save-btn { display: none; }
+.map-card .ep-list button span { font-size: 13px; color: var(--muted); }
 .slots-card { max-height: calc(100vh - 32px); overflow: auto; }
 .slots-card h3 { font: 600 11px/1 var(--font-mono); letter-spacing: 0.24em; color: var(--muted); margin: 18px 0 10px; text-align: left; }
 .ep-list, .slot-list { display: grid; gap: 8px; }
@@ -406,6 +410,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <button data-menu="flashes" title="Impact flashes" aria-pressed="true">FX</button>
       <button data-menu="sound" title="Sound" aria-pressed="true">SND</button>
       <button data-menu="assist" title="Assist: wider parry and perfect-dodge windows, hold Slash to keep comboing" aria-pressed="false">AST</button>
+      <button data-menu="map" class="map-btn" title="World map (P)">MAP</button>
       <button data-menu="save" class="save-btn" title="Save your story">SAVE</button>
       <button data-menu="reset" title="Restart (R)">↺</button>
     </nav>
@@ -563,6 +568,14 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <div class="start-buttons"><button class="go alt" data-slots-close>BACK</button></div>
     </div>
   </div>
+  <div class="modal" data-map hidden>
+    <div class="modal-card slots-card map-card">
+      <h2>WORLD MAP</h2>
+      <div class="ep-list" data-map-list></div>
+      <p class="hint">Walk out through a zone's exit, or travel here. P opens the map.</p>
+      <div class="start-buttons"><button class="go alt" data-map-close>BACK</button></div>
+    </div>
+  </div>
   <div class="modal" data-create hidden>
     <div class="modal-card create-card">
       <h2>WHO CLIMBS THE TOWER?</h2>
@@ -583,12 +596,14 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <h1>UNWRITTEN</h1>
       <div class="sub">KNIGHTS OF THE LAST LANTERN</div>
       <p><b>Story · Episodes 1–4:</b> the Tower of Choosing, the Knight Exam, the Lighthouse, and your first mission in the Greywater Fens. Your progress saves itself.</p>
+      <p><b>The World:</b> walk the Lighthouse grounds and the capital, Aurelin. Talk to people and travel by map.</p>
       <p><b>Episode 4 combat run:</b> lead Bas and Juno through the Greywater Fens to Hask the Bogwarden (about 12 minutes).</p>
       <p>Keyboard and mouse, gamepad, or touch. Press <b>H</b> or <b>?</b> for controls.</p>
       <div class="start-buttons">
         <button class="go" data-continue hidden>CONTINUE</button>
         <button class="go" data-start-story>NEW STORY</button>
         <button class="go alt" data-episodes>EPISODES & SAVES</button>
+        <button class="go alt" data-start-world>THE WORLD</button>
         <button class="go alt" data-start-run>EPISODE 4 RUN</button>
         <button class="go alt" data-start-yard>TRAINING YARD</button>
       </div>

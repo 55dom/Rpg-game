@@ -21,6 +21,7 @@ import { REACTIONS } from "../data/reactions.js";
 import { ROOK_STATS, ROOK_ABILITIES, ROOK_HITBOXES, buildRookGraph, defaultLoadout } from "../data/rook.js";
 import { PAGES, PAGE_HITBOXES } from "../data/pages.js";
 import { hitSpec } from "../core/combat.js";
+import { YARD, constrain, outOfBounds } from "./bounds.js";
 
 export const Tuning = Object.freeze({
   gravity: 32, juggleGravity: 18, airAttackGravity: 9,
@@ -231,6 +232,7 @@ export class World {
    */
   constructor(o = {}) {
     this.frame = 0;
+    this.bounds = o.bounds ?? YARD; // where fighters may stand (zones swap this)
     this.fighters = [];
     this.events = [];
     this.tokens = new AttackTokenPool(o.tokens ?? 2);
@@ -777,7 +779,7 @@ export class World {
       if (scale === 0) continue; // frozen by a time stop
       p.pos.x += p.dir.x * p.speed * dt * scale; p.pos.y += p.dir.y * p.speed * dt * scale; p.pos.z += p.dir.z * p.speed * dt * scale;
       p.life -= scale;
-      if (p.life <= 0 || p.pos.y < 0 || Math.hypot(p.pos.x, p.pos.z) > Tuning.arenaRadius + 2) { p.dead = true; continue; }
+      if (p.life <= 0 || p.pos.y < 0 || outOfBounds(p.pos, this.bounds)) { p.dead = true; continue; }
       for (const def of this.fighters) {
         if (def.team === p.team || !def.alive || p.hitSet.has(def) || def.submerged) continue;
         const grace = def.combatant.invulnerableFrames > 0 ? Tuning.nearMissGrace * 0.5 : 0;
@@ -1019,8 +1021,7 @@ export class World {
       }
     }
     for (const f of this.fighters) {
-      const r = Math.hypot(f.pos.x, f.pos.z);
-      if (r > Tuning.arenaRadius) { f.pos.x *= Tuning.arenaRadius / r; f.pos.z *= Tuning.arenaRadius / r; }
+      constrain(f.pos, f.stats.radius, this.bounds);
       if (!live(f)) continue;
       if (f.afterDashFrames > 0) f.afterDashFrames--;
       if (f.counterFrames > 0) f.counterFrames--;

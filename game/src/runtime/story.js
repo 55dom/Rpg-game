@@ -10,6 +10,8 @@ import { CAST, speakerName } from "../data/story/cast.js";
 import { CUTSCENES } from "../data/story/cutscenes.js";
 import { validateCutscene, sampleCamera, eventsBetween, sampleMove } from "../core/timeline.js";
 import { B, toon2, glow } from "./look.js";
+import { ZONES, arrivalPoint } from "../data/zones.js";
+import { inRect } from "../sim/bounds.js";
 
 /** Gesture poses for dialogue: weapon-arm and off-arm rotations, a bow, a head tilt. */
 const GESTURES = Object.freeze({
@@ -292,10 +294,11 @@ class DialogueView {
  * { root, scene, camera, hud, sfx, vfx, controls, getWorld, makeWorld(opts), onEvents, saves, onExit(kind) }
  */
 export class StoryPlayer {
-  constructor(ctx, episodes) {
+  constructor(ctx, episodes, extraScripts = []) {
     this.ctx = ctx;
     this.episodes = episodes; // [{ episode, script }]
     this.nodes = {};
+    for (const [i, src] of extraScripts.entries()) Object.assign(this.nodes, parseScript(src, `extra${i}`));
     for (const { episode, script } of episodes) {
       Object.assign(this.nodes, parseScript(script, episode.id));
       validateEpisode(episode, this.nodes);
@@ -406,6 +409,7 @@ export class StoryPlayer {
     for (const el of [this.ui.cold, this.ui.title, this.ui.preview]) el.hidden = true;
     this._hint("");
     this._endExplore();
+    this.roaming = false; this.zone = null;
     this.ctx.root.classList.remove("in-scene");
     this.ctx.camera.release();
   }
@@ -632,9 +636,9 @@ export class StoryPlayer {
     this.ctx.camera.release();
     this.exploring = { beat, talked: new Set(), near: null, busy: false };
     this._objective();
-    await new Promise((res) => { this.exploring.resolve = res; });
+    const out = await new Promise((res) => { this.exploring.resolve = res; });
     this._endExplore();
-    return {};
+    return out ?? {};
   }
 
   _endExplore() {
@@ -648,6 +652,7 @@ export class StoryPlayer {
     const x = this.exploring, b = x.beat, npcs = b.cast.filter((c) => c.node);
     const n = npcs.filter((c) => x.talked.has(c.id)).length;
     this.ui.objective.innerHTML = fillText(b.objective ?? "", { ...this.player, flags: this.flags }).replace("{n}", n).replace("{total}", npcs.length).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+    if (this.roaming) this.ui.objective.innerHTML = `<b>${this.zone.name}</b> · ${this.ui.objective.innerHTML}`;
     this.ui.objective.hidden = !b.objective;
   }
 
@@ -655,6 +660,11 @@ export class StoryPlayer {
     const x = this.exploring;
     if (!x || x.busy) return;
     if (x.cooldown > 0) x.cooldown -= dt;
+    const pp = this.ctx.getWorld().player.pos;
+    for (const e of x.beat.exits ?? []) {
+      if (!inRect(pp, e.rect)) continue;
+      x.busy = true; x.resolve({ exit: e }); return; // leaving the zone
+    }
     const p = this.ctx.getWorld().player;
     let near = null, best = 2.4;
     for (const c of x.beat.cast) {
@@ -664,10 +674,10 @@ export class StoryPlayer {
       if (d < 0.95 && d > 0.01) { const k = (0.95 - d) / d; p.pos.x += (p.pos.x - a.pos.x) * k; p.pos.z += (p.pos.z - a.pos.z) * k; } // don't walk through people
       if (c.node && d < best) { best = d; near = c; }
     }
+    const t = this.ui.talk;
+    if (t.hidden !== !near) t.hidden = !near; // checked every frame, so it can never get stuck
     if (near !== x.near) {
       x.near = near;
-      const t = this.ui.talk;
-      t.hidden = !near;
       if (near) {
         const c = this.ctx.controls;
         const device = c.device === "keyboard" && !c.keyboardUsed && this.ctx.root.classList.contains("is-touch") ? "touch" : c.device;
@@ -698,9 +708,41 @@ export class StoryPlayer {
     this.view.hide();
     x.busy = false; x.near = null; x.cooldown = 0.6; // the key that closed the last line mustn't reopen it
     this._objective();
-    if ((x.beat.required ?? []).every((id) => x.talked.has(id))) x.resolve();
+    if (x.beat.required?.length && x.beat.required.every((id) => x.talked.has(id))) x.resolve();
     return true;
   }
+
+  // ---- Free roam: walk between zones (GDD §13) ----
+  /** Wander the world from `zoneId`, arriving at `arrival` (a key in the zone's arrivals). Runs until stopped. */
+  async roam(zoneId, arrival = null) {
+    this.active = true;
+    this.roaming = true;
+    this.ep = null; this.director = null;
+    this.ctx.makeWorld({ companions: false, ultimate: true, pages: true });
+    let id = zoneId, arr = arrival;
+    while (this.active) {
+      const zone = ZONES[id];
+      this.zone = zone;
+      const world = this.ctx.getWorld();
+      world.bounds = zone.bounds;
+      this.ctx.camera.bounds = zone.bounds;
+      this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), zone: id, arrival: arr, episode: null, beat: 0 });
+      this.ctx.onZone?.(zone);
+      const at = arrivalPoint(zone, arr);
+      this._fade(false, 0.5);
+      this.ctx.hud.banner(`${zone.name.toUpperCase()} · ${zone.region.toUpperCase()}`);
+      const out = await this.explore({ id: `zone-${id}`, stage: zone.stage, rook: at, cast: zone.cast, exits: zone.exits,
+        objective: zone.exits.map((e) => `<b>Exit:</b> ${e.label}`).join(" · ") });
+      if (!this.active) return;
+      this._fade(true, 0.35);
+      await this.sleep(0.4);
+      if (out.travel) { id = out.travel; arr = null; continue; }
+      if (out.exit) { id = out.exit.to; arr = out.exit.spawn; }
+    }
+  }
+
+  /** Map travel: jump to another zone's main arrival point. */
+  travel(zoneId) { if (this.exploring && !this.exploring.busy && ZONES[zoneId]) { this.exploring.busy = true; this.exploring.resolve({ travel: zoneId }); } }
 
   // ---- Cutscenes (timeline playback) ----
   playCutscene(id) {

@@ -1,6 +1,7 @@
 // Story sets (Phase 3): each one is built on first use from primitives, carries its own sky, fog,
 // and lighting, and can be swapped in and out. "yard" is the original training yard (arena.js).
 
+import { AURELIN_LAYOUT } from "../data/zones.js";
 import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } from "./look.js";
 
 const mulberry = (seed) => () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -47,7 +48,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -531,6 +532,117 @@ function buildFens(scene, mobile) {
       bogLevel += (bogTarget - bogLevel) * Math.min(1, dt * (bogTarget ? 2 : 0.6));
       bog.setEnabled(bogLevel > 0.01);
       if (bogLevel > 0.01) { const sc = 0.15 + 0.85 * bogLevel; bog.scaling.set(sc, sc, 1); bogMat.alpha = 0.82 * bogLevel; bog.rotation.z = t * 0.02; }
+    },
+  };
+}
+
+// ---- Aurelin: the capital (plaza, Hall of Lanterns, Lowmarket, streets, a walking crowd) ------
+function buildAurelin(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, L = AURELIN_LAYOUT;
+  const rng = mulberry(53);
+  const cobble = toon(scene, "au-cobble", "#857c6c"), cobbleDark = toon(scene, "au-cobbleDark", "#6f6759");
+  const ground = add(MB.CreateGround("au-ground", { width: 120, height: 120 }, scene)); ground.position.set(0, 0, 5); ground.material = cobble;
+  const plaza = add(MB.CreateDisc("au-plaza", { radius: 13, tessellation: 48 }, scene)); plaza.rotation.x = Math.PI / 2; plaza.position.y = 0.01; plaza.material = cobbleDark;
+  for (const r of [6, 10]) { const ring = add(MB.CreateTorus("au-ring", { diameter: r * 2, thickness: 0.12, tessellation: 48 }, scene)); ring.position.y = 0.02; ring.material = toon(scene, "au-ringMat", "#c9a24a"); }
+  // Fountain with a lantern-bearer statue.
+  const F = L.fountain, stone = toon(scene, "au-stone", "#cfc6b4"), water = glow(scene, "au-water", "#3f86b0", 0.9);
+  const basin = add(MB.CreateCylinder("au-basin", { height: 0.9, diameter: F.r * 2, tessellation: 28 }, scene), 0.05); basin.position.set(F.x, 0.45, F.z); basin.material = stone;
+  const pool = add(MB.CreateDisc("au-pool", { radius: F.r - 0.25, tessellation: 28 }, scene)); pool.rotation.x = Math.PI / 2; pool.position.set(F.x, 0.86, F.z); pool.material = water; K.noGlow(pool);
+  const plinth = add(MB.CreateCylinder("au-plinth", { height: 2.2, diameter: 1.1, tessellation: 12 }, scene), 0.04); plinth.position.set(F.x, 1.6, F.z); plinth.material = stone;
+  const statue = add(MB.CreateCylinder("au-statue", { height: 2.2, diameterTop: 0.5, diameterBottom: 0.9, tessellation: 10 }, scene), 0.04); statue.position.set(F.x, 3.8, F.z); statue.material = toon(scene, "au-bronze", "#6a8a7a");
+  const sHead = add(MB.CreateSphere("au-sHead", { diameter: 0.6, segments: 8 }, scene), 0.03); sHead.position.set(F.x, 5.2, F.z); sHead.material = statue.material;
+  const sLamp = add(MB.CreateBox("au-sLamp", { size: 0.4 }, scene)); sLamp.position.set(F.x + 0.6, 5.6, F.z); sLamp.material = glow(scene, "au-lampGlow", "#ffd36a");
+  const spray = new BB.ParticleSystem("au-spray", mobile ? 40 : 90, scene);
+  spray.particleTexture = softTexture(scene); spray.emitter = new BB.Vector3(F.x, 2.6, F.z);
+  spray.color1 = new BB.Color4(0.8, 0.95, 1, 0.7); spray.color2 = new BB.Color4(0.7, 0.9, 1, 0.5); spray.colorDead = new BB.Color4(1, 1, 1, 0);
+  spray.minSize = 0.12; spray.maxSize = 0.3; spray.minLifeTime = 0.6; spray.maxLifeTime = 1; spray.emitRate = mobile ? 40 : 80; spray.gravity = new BB.Vector3(0, -9, 0);
+  spray.direction1 = new BB.Vector3(-1, 4, -1); spray.direction2 = new BB.Vector3(1, 5, 1); spray.minEmitPower = 0.6; spray.maxEmitPower = 1; spray.blendMode = BB.ParticleSystem.BLENDMODE_ADD;
+  K.systems.push(spray);
+  // Houses: walls, a pitched roof, a door and windows facing the street.
+  const winMat = toon(scene, "au-win", "#3a4a6a"), doorMat = toon(scene, "au-door", "#6b4a32");
+  const wallMats = new Map(), roofMats = new Map();
+  const mat = (map, hex, pre) => { if (!map.has(hex)) map.set(hex, toon(scene, `${pre}${map.size}`, hex)); return map.get(hex); };
+  for (const h of L.houses) {
+    const body = add(MB.CreateBox("au-house", { width: h.w, height: h.h, depth: h.d }, scene), 0.05); body.position.set(h.x, h.h / 2, h.z); body.material = mat(wallMats, h.color, "au-wall");
+    const roof = add(MB.CreateCylinder("au-roof", { height: h.d + 0.6, diameter: h.w * 0.72, tessellation: 3 }, scene), 0.05);
+    roof.position.set(h.x, h.h + h.w * 0.17, h.z); roof.rotation.set(Math.PI / 2, 0, Math.PI / 2); roof.scaling.set(1.45, 1, 0.75); roof.material = mat(roofMats, h.roof, "au-roof");
+    const face = h.x < 0 ? 1 : -1; // windows and door face the middle of town
+    const fx = h.x + face * (h.w / 2 + 0.02);
+    const door = add(MB.CreatePlane("au-doorP", { width: 1.2, height: 2.2, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); door.position.set(fx, 1.1, h.z); door.rotation.y = Math.PI / 2; door.material = doorMat;
+    for (const dz of [-h.d / 3, h.d / 3]) for (const y of h.h > 6 ? [2.6, 4.8] : [2.6]) {
+      const w = add(MB.CreatePlane("au-winP", { width: 0.9, height: 1, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); w.position.set(fx, y, h.z + dz); w.rotation.y = Math.PI / 2; w.material = winMat;
+    }
+  }
+  // The Hall of Lanterns: a long stone hall with columns and a golden lantern over the door.
+  const H = L.hall, hw = H.x1 - H.x0, hd = H.z1 - H.z0;
+  const hall = add(MB.CreateBox("au-hall", { width: hw, height: 11, depth: hd }, scene), 0.06); hall.position.set((H.x0 + H.x1) / 2, 5.5, (H.z0 + H.z1) / 2); hall.material = toon(scene, "au-hallMat", "#e8e0cf");
+  const hallRoof = add(MB.CreateCylinder("au-hallRoof", { height: hd + 1, diameter: hw * 0.8, tessellation: 3 }, scene), 0.06);
+  hallRoof.position.set(hall.position.x, 11 + hw * 0.19, hall.position.z); hallRoof.rotation.set(Math.PI / 2, 0, Math.PI / 2); hallRoof.scaling.set(1.45, 1, 0.75); hallRoof.material = toon(scene, "au-hallRoofMat", "#2b4f8f");
+  for (let i = 0; i < 6; i++) { const c = add(MB.CreateCylinder("au-col", { height: 9, diameter: 1, tessellation: 10 }, scene), 0.04); c.position.set(H.x0 + 1.5 + i * ((hw - 3) / 5), 4.5, H.z0 - 1.2); c.material = stone; }
+  const portico = add(MB.CreateBox("au-portico", { width: hw + 1, height: 1, depth: 3 }, scene), 0.05); portico.position.set(hall.position.x, 9.5, H.z0 - 1.2); portico.material = stone;
+  const hallDoor = add(MB.CreatePlane("au-hallDoor", { width: 3.2, height: 5, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); hallDoor.position.set(H.door.x, 2.5, H.z0 - 0.02); hallDoor.material = toon(scene, "au-hallDoorMat", "#5a3a22");
+  const bigLantern = add(MB.CreateBox("au-bigLantern", { width: 1.4, height: 1.8, depth: 1.4 }, scene), 0.04); bigLantern.position.set(H.door.x, 7.5, H.z0 - 0.6); bigLantern.material = glow(scene, "au-bigLanternMat", "#ffd36a");
+  // The Lowmarket: stalls with striped canopies and crates.
+  const wood = toon(scene, "au-wood", "#8a5a3a");
+  for (const st of L.stalls) {
+    const table = add(MB.CreateBox("au-table", { width: 2.8, height: 1, depth: 2 }, scene), 0.03); table.position.set(st.x, 0.5, st.z); table.material = wood;
+    const canopy = add(MB.CreateBox("au-canopy", { width: 3.2, height: 0.15, depth: 2.6 }, scene), 0.03); canopy.position.set(st.x, 2.6, st.z); canopy.rotation.x = 0.12; canopy.material = toon(scene, `au-can${st.canopy}`, st.canopy);
+    for (const dx of [-1.4, 1.4]) { const p = add(MB.CreateCylinder("au-pole", { height: 2.6, diameter: 0.1, tessellation: 5 }, scene)); p.position.set(st.x + dx, 1.3, st.z - 1); p.material = wood; }
+    for (let k = 0; k < 3; k++) { const g = add(MB.CreateSphere("au-goods", { diameter: 0.35, segments: 6 }, scene), 0.015); g.position.set(st.x - 0.8 + k * 0.8, 1.15, st.z); g.material = toon(scene, `au-good${k}`, ["#e65a4a", "#e6b54e", "#7ac06a"][k]); }
+  }
+  // City walls and the south gate.
+  const wallMat = toon(scene, "au-cityWall", "#9a9080");
+  for (const [x0, x1] of [[-42, -4], [4, 42]]) { const w = add(MB.CreateBox("au-cityWallM", { width: x1 - x0, height: 7, depth: 3 }, scene), 0.05); w.position.set((x0 + x1) / 2, 3.5, -34.5); w.material = wallMat; }
+  for (const x of [-5, 5]) { const t = add(MB.CreateCylinder("au-gateTower", { height: 11, diameter: 4, tessellation: 12 }, scene), 0.05); t.position.set(x, 5.5, -34.5); t.material = wallMat; }
+  const arch = add(MB.CreateBox("au-gateArch", { width: 8, height: 2, depth: 3 }, scene), 0.05); arch.position.set(0, 8, -34.5); arch.material = wallMat;
+  // Distant skyline: the palace and towers beyond the hall.
+  const far = toon(scene, "au-far", "#b8b0c8");
+  for (const [x, z, w, h] of [[0, 70, 26, 30], [-26, 64, 8, 38], [26, 64, 8, 34], [-50, 50, 14, 16], [50, 52, 14, 18]]) { const b = add(MB.CreateBox("au-skyline", { width: w, height: h, depth: 8 }, scene)); b.position.set(x, h / 2, z); b.material = far; }
+  // Bunting across the plaza.
+  const flagCols = ["#c0504d", "#e6b54e", "#4f81bd", "#f2efe6"].map((c, i) => toon(scene, `au-flag${i}`, c));
+  for (let i = 0; i < 18; i++) { const f = add(MB.CreateCylinder("au-flagT", { height: 0.5, diameter: 0.5, tessellation: 3 }, scene)); const a = (i / 18) * Math.PI * 2; f.position.set(Math.sin(a) * 9, 5.4 + Math.sin(i) * 0.2, Math.cos(a) * 9); f.rotation.set(Math.PI / 2, a, 0); f.material = flagCols[i % 4]; }
+  // A crowd walking loops around town (simple figures, instanced for speed).
+  const bodyCols = ["#c0504d", "#4f81bd", "#9bbb59", "#8064a2", "#f79646", "#4bacc6", "#d8d2c4", "#7a5a3a"];
+  const sources = bodyCols.map((c, i) => {
+    const b = MB.CreateCylinder(`au-pb${i}`, { height: 1.2, diameterTop: 0.42, diameterBottom: 0.7, tessellation: 8 }, scene); b.material = toon(scene, `au-pm${i}`, c); b.parent = K.root; b.isPickable = false; b.setEnabled(false);
+    return b;
+  });
+  const headSrc = MB.CreateSphere("au-ph", { diameter: 0.42, segments: 6 }, scene); headSrc.material = toon(scene, "au-phm", "#e2b894"); headSrc.parent = K.root; headSrc.isPickable = false; headSrc.setEnabled(false);
+  const hairSrc = MB.CreateSphere("au-phair", { diameter: 0.45, segments: 6, slice: 0.55 }, scene); hairSrc.material = toon(scene, "au-phairm", "#3a2a22"); hairSrc.parent = K.root; hairSrc.isPickable = false; hairSrc.setEnabled(false);
+  const loops = [
+    { cx: 0, cz: 0, r: 8, dir: 1 }, { cx: 0, cz: 0, r: 11, dir: -1 },
+    { line: [[-23, -26], [-23, 34]] }, { line: [[23, -26], [23, 34]] }, { line: [[-20, 20], [20, 20]] }, { line: [[8, -28], [8, 18]] },
+  ];
+  const n = mobile ? Math.round(22 * 0.6) : 22;
+  const walkers = [];
+  for (let i = 0; i < n; i++) {
+    const b = sources[i % sources.length].createInstance(`au-walker${i}`), h = headSrc.createInstance(`au-wh${i}`), hr = hairSrc.createInstance(`au-whr${i}`);
+    for (const m of [b, h, hr]) { m.parent = K.root; m.isPickable = false; }
+    walkers.push({ b, h, hr, path: loops[i % loops.length], t: rng() * 100, speed: 0.6 + rng() * 0.6, side: (rng() - 0.5) * 2.2 });
+  }
+  const env = { clear: "#a8cdf0", fog: "#c4dbf2", fogDensity: 0.008, hemi: [0.6, "#fff6e6", "#7a86a8"], sun: [0.8, "#fff1d0", [-0.4, -1, 0.55]], warm: 0 };
+  const toonEnv = { lightDir: [0.4, 1, -0.55], fogColor: "#c4dbf2", fogDensity: 0.005, sky: [1.1, 1.08, 1.04], ground: [0.9, 0.88, 0.9], rim: [0.75, 0.85, 1] };
+  return {
+    env, toon: toonEnv, show: K.show,
+    update(dt) {
+      for (const w of walkers) {
+        w.t += dt * w.speed;
+        let x, z, yaw;
+        if (w.path.r) {
+          const a = (w.t / w.path.r) * w.path.dir;
+          x = w.path.cx + Math.sin(a) * (w.path.r + w.side * 0.4); z = w.path.cz + Math.cos(a) * (w.path.r + w.side * 0.4);
+          yaw = a + (w.path.dir > 0 ? Math.PI / 2 : -Math.PI / 2);
+        } else {
+          const [[x0, z0], [x1, z1]] = w.path.line, len = Math.hypot(x1 - x0, z1 - z0);
+          const u = (w.t % (len * 2)) / len, k = u < 1 ? u : 2 - u;
+          const nx = -(z1 - z0) / len, nz = (x1 - x0) / len;
+          x = x0 + (x1 - x0) * k + nx * w.side; z = z0 + (z1 - z0) * k + nz * w.side;
+          yaw = Math.atan2(x1 - x0, z1 - z0) + (u < 1 ? 0 : Math.PI);
+        }
+        const bob = Math.abs(Math.sin(w.t * 6)) * 0.06;
+        w.b.position.set(x, 0.6 + bob, z); w.h.position.set(x, 1.42 + bob, z); w.hr.position.set(x, 1.47 + bob, z);
+        w.hr.rotation.set(0, yaw, 0); w.b.rotation.y = yaw;
+      }
     },
   };
 }

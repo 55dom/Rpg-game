@@ -133,9 +133,15 @@ export class FollowCamera {
       this.focus.y + Math.sin(this.pitch) * dist,
       this.focus.z - Math.cos(this.yaw) * dist * cp,
     );
-    // Keep the camera inside the yard so pillars never block the view.
-    const r = Math.hypot(pos.x, pos.z);
-    if (r > 19) { pos.x *= 19 / r; pos.z *= 19 / r; }
+    // Keep the camera inside the play area so walls and pillars never block the view.
+    const b = this.bounds;
+    if (b?.rect) {
+      const [x0, z0, x1, z1] = b.rect;
+      pos.x = Math.min(x1 + 3, Math.max(x0 - 3, pos.x)); pos.z = Math.min(z1 + 3, Math.max(z0 - 3, pos.z));
+    } else {
+      const R = (b?.radius ?? 17) + 2, r = Math.hypot(pos.x, pos.z);
+      if (r > R) { pos.x *= R / r; pos.z *= R / r; }
+    }
 
     const s = this.trauma * this.trauma * 0.35;
     if (s > 0) {
