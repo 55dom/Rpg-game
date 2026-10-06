@@ -1,6 +1,12 @@
 # UNWRITTEN — Knights of the Last Lantern
 ### Game Design Document · Foundation Draft v1.2
 
+> **v1.6 changes:** **Character & world design standard (§29).**
+> - **Every character redesigned** around their storyboard head (faces unchanged): anime proportions with long, slender legs; eight body types; occupation-based clothing with wear and repairs; one skinned model per character.
+> - **Animation:** planted-foot walking and running, jumps with landings, personal idles and gaits, and full-body attacks.
+> - **Townsfolk** follow daily routines and react to fights, rain, night and the player.
+> - **The world lives:** a day/night cycle, weather, districts, animals, set dressing, and visible aftermath and rebuilding.
+
 > **v1.5 changes:** Ghorran's hairstyle follows `ref-03` (messy, swept, long bangs; still long with the knee-length ponytail). Ties now match hair: dark blue for Ghorran, pink for Vaelith (§28).
 
 > **v1.4 changes:** Clergy Duo revised (§28): **the same smooth white mask for both, hers smiling and his turned upside down into a frown**; Ghorran's silky dark-blue hair (white and light-blue gloss); Vaelith's short silky pink twin ponytails (light-pink gloss) and **maid detailing** on her suit and slit skirt. New **§19.6.1 Color grading** for the whole game, modeled on the anime *That Time I Got Reincarnated as a Slime*.
@@ -1593,6 +1599,18 @@ Estimates assume **1–2 people, part-time-ish**. Every phase ends with a **go/n
 - **Budget:** at most **400 draw calls on PC** and **250 on phones**, at most **80K triangles on phones**, and a scene CPU time under 8 ms per frame (measured: about 6 ms on PC and 3–3.5 ms on phones).
 - **Every zone is within budget.** The phone figure is the worst view, including the whole crowd in Aurelin.
 - **Adaptive resolution** (0.6×–2×) protects the frame rate on slow GPUs.
+- **Re-measured after the character and world redesign (§29)**, at the worst spot in each zone:
+
+  | Zone | PC draws | Phone draws | Phone triangles |
+  |---|---|---|---|
+  | Lighthouse | 206 | 148 | 116K |
+  | **Aurelin** | **396** | **212** | **142K** |
+  | Thornwick | 271 | 122 | 54K |
+  | Greywater Fens | 218 | 159 | 81K |
+  | Undercroft | 81 | 50 | 22K |
+
+  - **Draw calls stay within budget.** Each character is now one skinned mesh plus its weapon arm and face, and the crowd and animals are instanced.
+  - **The phone triangle budget is raised to 150K, on purpose.** Full anatomy and layered clothing need the extra triangles, and current phones handle them easily; draw calls are the real limit. Phones also get lighter bodies (`LOD.tess` 0.75) and ink lines only within 20 m.
 - **Frame rates were not measured on real hardware.** The test browser renders on the CPU, so its frame rates mean nothing. The real check is the meter on the reference phone.
 
 **Phase 4 gate review.** The gate is *"Performance budget met in the largest zone in a PC browser and on the mobile reference phone."*
@@ -1923,6 +1941,83 @@ Whatever is decided must stay consistent with §28.1–28.4.
 
 ---
 
+## 29. CHARACTER & WORLD DESIGN STANDARD
+
+**Visual target:** a grounded medieval world, stylized anime characters, and spectacular fantasy combat. Everyday life looks believable and lived in (the design principles of *Kingdom Come: Deliverance II*, never its characters, costumes, places or assets), so that supernatural combat hits harder by contrast. Every visible element should look deliberately placed: no clones, no filler, no outfit that contradicts its wearer's job, and no redesigns between scenes.
+
+### 29.1 Identity rules (locked)
+- **Storyboard = identity.** A character's head (face shape, eyes, hair silhouette, colors, beard, mask or hood) is defined once in `runtime/rig.js` `LOOKS` and is never redesigned or swapped. The body is built *around* the head; the head is never forced onto a generic body.
+- **Body reference = proportions.** The supplied reference sets the lower-body silhouette (slim thighs, long slender calves, narrow ankles, proportional feet, smooth joints). It is used for proportion only, never identity, clothing or face.
+- **One model everywhere.** A character is one model (`Rig`): the same one in gameplay, dialogue, cutscenes and fights. Nothing is regenerated per scene. Every scene, script and cutscene keeps its storyboard: same staging, same lines, same shots.
+
+### 29.2 Character sheets (`data/sheets.js`)
+Every character has a sheet: **build**, **gait**, **idle**, and **outfit**.
+- **The head height is fixed** (`HEAD_Y`), so each build fits its body under the head: longer legs mean a shorter torso, never a different head.
+- **Eight builds:** slim, lithe, athletic, broad, stocky, frail, child, and brute. Each sets leg length, shoulder width, chest, waist and hip radii, depth, limb radii, and hand size. Legs are longer than the torso for every build except brutes.
+- **Height** comes from the head's own scale (`LOOKS.scale`), from the 0.62 child to the 2.0 Hask.
+
+### 29.3 Clothing system
+Clothing = **occupation + social class + region + weather + age + personality + wealth + faction**. Outfits are built from layers:
+- **Torso:** a top whose hem falls to the hip, thigh, knee or ankle (open coat or closed robe), and long, rolled or short sleeves.
+- **Legs and feet:** trousers or shorts; tall, ankle or waders boots, or shoes.
+- **Layers:** apron, vest, breastplate, pauldrons, tabard (with a faction emblem), cloak, collar, and gloves.
+- **Kit:** belt with pouches, tool belt, satchel, bracers, and jewelry (brooch, chain).
+- **Wear:** patches (repairs, seeded per character so they never move) and grime (dirt baked toward the hem and boots).
+
+| Who | Their outfit says |
+|---|---|
+| **Smith** | Heavy apron, rolled sleeves, leather gloves, tool belt, soot (grime 0.85) |
+| **Farmer** | Linen shirt, worn trousers, work boots, rough belt, a vest, patches, mud (0.7) |
+| **Merchant (vendor)** | Better cloth, an open long coat, pouches, a satchel, a gold chain |
+| **Guard** | Breastplate over a gambeson, the city's blue tabard and emblem, gloves, cloak, weapon |
+| **Nobility (Severin, Corvina)** | Fine pale fabrics, gold brooch and trim, tall polished boots, spotless (grime 0) |
+| **Adventurers (the Lanterns, bandits)** | Mixed gear, travel-worn coats, pouches, bracers, weapons (the bandits are patched and filthy) |
+| **Clergy (Moss, Keeper, the Choir)** | Long robes; patched (Moss), gold chain of office (Keeper), uniform sashes and hoods (the Choir) |
+
+### 29.4 Body model (`runtime/body.js`)
+- **Anatomy:** a lathed torso (chest, waist, hips) with collarbones and shoulder caps, and a neck. Two-bone legs with modeled thighs, kneecaps, calves, ankles and feet. Arms with an elbow (the off arm bends), forearms, and hands with a thumb.
+- **Garments are thick shells**, so ink lines never show through an edge. Coat tails and robes swing with the thighs.
+- **Rendering:** every cel-shaded part is baked into one **skinned mesh** colored per vertex (`toonSkin` in `look.js`). Its bones follow the rig's nodes. Garment wear is baked into the vertex colors.
+- **The weapon arm keeps its own ink line**, because it crosses the body. The face has none of its own: the head's silhouette shell draws it.
+- **Swords are sheathed** out of combat: long swords across the back, rapiers at the hip. Staffs, spears and rods are held upright.
+
+### 29.5 Animation (`runtime/motion.js`, `core/ik.js`)
+- **Walking:** contact → down → passing → up. Two-bone IK puts each foot on its target.
+- **No skating:** the walk cycle advances by distance travelled, so a planted foot moves back at exactly the body's speed. Measured in the browser: planted feet move at most 0.1 m/s while the body walks at 1–3 m/s.
+- **Gaits** (confident, soldier, graceful, lively, nervous, heavy, old, child, prowl, machine) change stride, cadence, bounce, hip sway, arm swing and lean. A knight doesn't walk like a nervous villager.
+- **Running** leans in, lengthens the stride, lifts the feet higher, and bends the elbows. Turning on the spot takes small steps.
+- **Jumping:** crouch → tuck → reach → landing compression, with the knees bending on impact.
+- **Idles:** breathing and occasional weight shifts, with personal carriage (proud, tired, fidgety…).
+- **Combat:** a planted fighting stance, and lunges that drive from the feet through the hips: the stance widens, the hips turn and the chest counter-turns (anticipation → strike → follow-through → recovery).
+- **Kneeling and falls** are posed from the hips.
+- **Drawn on twos:** secondary motion (hair, scarf, cape) is held for two frames, the stop-motion-inspired look: clean key poses, not choppy.
+
+### 29.6 NPC behavior (`sim/routine.js`, `runtime/ambient.js`)
+- **Routines:** each townsperson has a day: they walk to a spot and work there (hammering, sweeping, stirring, hawking, fishing, reading, sewing, strumming, sparring, lighting the lamps, hoeing), wander, and move on. Routines can depend on story flags. Farmer Odo frets on the road until the bandits are gone, then goes back to his field.
+- **Reactions, in priority order:**
+  1. **A fight within 24 m:** civilians run to the shelter farthest from it and cower; children run fastest; guards turn to face it.
+  2. **Rain:** everyone but the guards heads for cover.
+  3. **Night:** people with a home go in.
+  4. **The player stops beside them:** they stop and look. Walking past earns a glance.
+- **The background crowd** (`runtime/crowd.js`) has legs and arms in step with the ground, varied height, build, skin, hair, clothes, age and pace, and pairs who stop to talk. Weather and night thin it out, and rain hurries it along.
+
+### 29.7 Living world
+- **Time and weather** (`sim/weather.js`): a 16-minute day and per-region climates (the Fens are wet, the dry sea almost never rains). The sky, fog and light follow the clock. Windows and lamps light up at night, rain falls around the camera, and the time and weather show in the zone tracker. Both are saved with the world.
+- **Districts:**
+  - **Aurelin:** the Crown Ward's stone townhouses (pilasters, balconies, family banners, hedges), the poor quarter by the grate (patched-plank shacks, laundry, a puddle), the chapel, the Lantern & Anchor tavern, the cooper's yard, the market's goods, street lamps, and a horse and cart at the gate.
+  - **Thornwick:** the tavern corner, the well, woodpiles, laundry, a chicken run, the sheep and cow pasture, the mill cart, and lamps.
+  - **The Fens' empty village:** an overturned cart, a cold cookpot, a dropped doll, and laundry still on the line.
+  - **The Undercroft:** broken statues, bones, and rat nests.
+- **Animals** (`runtime/critters.js`, one draw call per species): chickens, sheep, cows, dogs, cats, pigeons and crows (the birds fly off when you come close), and a horse.
+- **Visual history** (`kit.when`): the bandits' barn goes from charred ruin to scaffolding (one visit after you clear the road) to rebuilt (three visits after). The mill road goes from bandit camp, to the mess the fight left, to carts on the road again.
+
+### 29.8 What a browser game can and can't do here (honest scope)
+- **Blender pipeline:** the characters are still procedural (built in code), not Blender meshes; there is no Blender in this toolchain. The pipeline is ready for the swap: one skinned mesh per character with a named skeleton. A Blender-authored `.glb` per character can replace `buildBody` while keeping `LOOKS`, the sheet, and every animation and scene.
+- **Animation:** procedural (IK, gait and pose data), not keyframed by hand. Authored key poses can be layered on top later.
+- **Faces:** no lip sync or facial expressions yet (§23.2 gaps).
+
+---
+
 ## NEXT STEP
 
 **Your approval of this foundation.** Settled: **Cal is Ash Line Eleven** (confirmed). Still open from v0.3:
@@ -1939,4 +2034,4 @@ The foundation questions from v0.1 are still open:
 3. **Cast & story:** Brannoc's real death, Aurek Valcourt as the red herring, the Palimpsest protagonist. Anything to change?
 4. **Scope calls:** 4 player affinities at launch, AI companions first (tag-swap for Rook, Severin, and Cal later), zones rather than a seamless open world, "Season 1" = Arcs 1–3.
 
-**Phase 1:** complete (§22). **Phase 2:** complete (§23.1): Skyrender, reactions, the squad, the Fens roster, Hask the Bogwarden, page evolution, cel-shading v2, and the Episode 4 combat run. It waits on your gate review ("does it feel anime?"). **Phase 3:** complete (§23.2): Episodes 1–4 playable as story, with dialogue, choices, saves, cutscenes, and hubs. It waits on your gate review. **Phase 4:** complete (§23.3): five connected zones, shops and equipment, reputation, merit and side quests, field and dungeon fights, and the performance budget (met in every zone). It waits on your gate review: check the performance meter on your phone. **Next: Phase 5 (Full RPG)**, Step 1: character progression (levels, stat growth, and a skill tree for Rook's pages). **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.
+**Phase 1:** complete (§22). **Phase 2:** complete (§23.1): Skyrender, reactions, the squad, the Fens roster, Hask the Bogwarden, page evolution, cel-shading v2, and the Episode 4 combat run. It waits on your gate review ("does it feel anime?"). **Phase 3:** complete (§23.2): Episodes 1–4 playable as story, with dialogue, choices, saves, cutscenes, and hubs. It waits on your gate review. **Phase 4:** complete (§23.3): five connected zones, shops and equipment, reputation, merit and side quests, field and dungeon fights, and the performance budget (met in every zone). It waits on your gate review: check the performance meter on your phone. **Character & world redesign (§29):** done. Every character has a fitted body, outfit, gait and idle around their unchanged storyboard head; townsfolk have routines; and the world has a day/night cycle, weather, districts and animals. **Next: Phase 5 (Full RPG)**, Step 1: character progression (levels, stat growth, and a skill tree for Rook's pages). **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.

@@ -313,4 +313,14 @@ A pile of fish bones at the bottom of the stairs, picked clean. Dozens of them.
 Tiny teeth marks on every one. And something else: a thin brass shaving, curled like a ribbon.
 Rats don't shave brass.
 ===
+
+title: W_Guard2
+---
+<<if $RENOWN_AURELIN >= 10>>
+    Guard2: Lantern. The Hall's open to you, any hour. The Keeper says you're the talk of the plaza.
+<<else>>
+    Guard2: Hall of Lanterns. No running, no singing, no touching the wicks.
+<<endif>>
+Guard2: Watch your purse in the Lowmarket. And don't feed the pigeons. They unionized.
+===
 `;

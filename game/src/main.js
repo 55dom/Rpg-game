@@ -10,6 +10,8 @@ import { PAGES } from "./data/pages.js";
 import { EPISODE_4 } from "./data/run.js";
 import { B, PALETTE, glow, clamp01, toonFallbackIfBroken } from "./runtime/look.js";
 import { Rig, LOOKS } from "./runtime/rig.js";
+import { WorldClock } from "./sim/weather.js";
+import { LOD } from "./runtime/body.js";
 import { Vfx, Trail } from "./runtime/vfx.js";
 import { Sfx } from "./runtime/audio.js";
 import { Controls } from "./runtime/controls.js";
@@ -69,6 +71,7 @@ export function boot(doc = document) {
   // Performance (Phase 4 Step 5): the glow pass draws only things that glow (unlit or emissive
   // materials), instead of every mesh in the scene a second time. New meshes are picked up as they appear.
   Rig.outlineRange = mobile ? 20 : 30; // characters past this lose their ink lines (level of detail)
+  LOD.tess = mobile ? 0.75 : 1;         // phones get rounder-is-cheaper bodies
   const glowing = new Set();
   const syncGlow = () => {
     for (const m of scene.meshes) {
@@ -558,7 +561,7 @@ export function boot(doc = document) {
   // ---- Story mode (Phase 3) ----
   const saves = SaveStore.browser();
   const story = new StoryPlayer({
-    root, scene, camera, hud, sfx, vfx, controls, saves, sets,
+    root, scene, camera, hud, sfx, vfx, controls, saves, sets, mobile,
     setPlayerVisible: (on) => views.get(world.player)?.setVisible(on),
     setSquadVisible: (on) => { for (const c of world.companions) views.get(c)?.setVisible(on); },
     getWorld: () => world,
@@ -629,6 +632,7 @@ export function boot(doc = document) {
     story.player = last ? { name: last.player.name, pronouns: last.player.pronouns } : { name: "Rook", pronouns: "they" };
     story.flags.load(last?.flags ?? {});
     story.inventory = new Inventory(last?.inv);
+    story.clock = new WorldClock(); story.clock.load(last?.clock); // the day carries on where you left it
     playWorld(last?.zone ?? "lighthouse", last?.zone ? last.arrival : null);
   });
   const mapModal = root.querySelector("[data-map]");
@@ -934,7 +938,7 @@ export function boot(doc = document) {
     quality.update(dt);
     if ((state.glowTick = (state.glowTick ?? 0) + 1) % 15 === 1) syncGlow();
     perfTick(dt);
-    const cp = camera.cam.position; Rig.view = { x: cp.x, z: cp.z };
+    const cp = (scene.activeCamera ?? camera.cam).position; Rig.view = { x: cp.x, z: cp.z };
     if (!state.toonChecked && state.time > 1.5) { state.toonChecked = true; if (toonFallbackIfBroken(scene)) console.warn("toon shader failed; using classic cel shading"); }
     scene.render();
   });
@@ -946,7 +950,7 @@ export function boot(doc = document) {
 
   // Test hook: freeze the live clock so automated checks can step the sim frame-exactly.
   const freezeLogic = (on) => { state.frozen = on; };
-  const handle = { engine, scene, world, camera, start, restart, freezeLogic, openPages, choosePage, story, saves, sets, playStory, backToTitle, openSlots, playWorld, openMap, openShop, data: { acolyte: ACOLYTE_ABILITIES } };
+  const handle = { Rig, LOOKS, engine, scene, world, camera, start, restart, freezeLogic, openPages, choosePage, story, saves, sets, playStory, backToTitle, openSlots, playWorld, openMap, openShop, data: { acolyte: ACOLYTE_ABILITIES } };
   return handle;
 }
 

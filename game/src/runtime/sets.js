@@ -3,6 +3,9 @@
 
 import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS } from "../data/zones.js";
 import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } from "./look.js";
+import { buildCrowd } from "./crowd.js";
+import { buildCritters } from "./critters.js";
+import { palette, props } from "./props.js";
 
 const mulberry = (seed) => () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 
@@ -79,6 +82,33 @@ export class Sets {
     this._env(e, { lightDir: t.lightDir, fogColor: e.fog, fogDensity: t.fogDensity, sky: lerp3(t.sky, nt.sky), ground: lerp3(t.ground, nt.ground), rim: lerp3(t.rim, nt.rim) });
   }
 
+  /**
+   * Time of day and weather on an outdoor set (GDD §29.10): darken toward night, grey toward overcast,
+   * thicken the fog in rain; windows and lamps light up after dark. The set's own base look is untouched.
+   * @param {{ daylight: number, cloud: number, wet: number }} a
+   */
+  atmosphere({ daylight, cloud, wet }) {
+    const set = this.built.get(this.current);
+    if (!set?.outdoor) return;
+    const k = 1 - daylight, D = set.env, N = NIGHT, T = set.toon, NT = NIGHT_TOON;
+    const mixc = (a, b, t) => { const A = color3(a), Bc = color3(b); return `#${[A.r + (Bc.r - A.r) * t, A.g + (Bc.g - A.g) * t, A.b + (Bc.b - A.b) * t].map((v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, "0")).join("")}`; };
+    const grey = (c) => mixc(c, "#7d8590", cloud * 0.55 * (1 - k * 0.6));
+    const e = {
+      clear: grey(mixc(D.clear, N.clear, k)), fog: grey(mixc(D.fog, N.fog, k)), fogDensity: D.fogDensity * (1 + wet * 1.3 + cloud * 0.3) + k * 0.004,
+      hemi: [D.hemi[0] * (0.45 + 0.55 * daylight) * (1 - cloud * 0.25), mixc(D.hemi[1], N.hemi[1], k), mixc(D.hemi[2], N.hemi[2], k)],
+      sun: [D.sun[0] * (0.2 + 0.8 * daylight) * (1 - cloud * 0.55), mixc(D.sun[1], N.sun[1], k), D.sun[2]], warm: 0,
+    };
+    const lerp3 = (a, b, t) => a.map((v, i) => (v + (b[i] - v) * t) * (1 - cloud * 0.12));
+    this._env(e, { lightDir: T.lightDir, fogColor: e.fog, fogDensity: T.fogDensity * (1 + wet * 1.2 + cloud * 0.3), sky: lerp3(T.sky, NT.sky, k), ground: lerp3(T.ground, NT.ground, k), rim: lerp3(T.rim ?? [0.8, 0.9, 1], NT.rim, k) });
+    // Lit windows and lamps after dark.
+    const glowK = Math.max(0, Math.min(1, (k - 0.25) / 0.6));
+    for (const w of set.windows ?? []) w.emissiveColor.copyFrom(B().Color3.Lerp(w.dayColor, w.nightColor, glowK));
+    for (const l of set.lamps ?? []) l.emissiveColor.copyFrom(B().Color3.Lerp(l.dayColor, l.nightColor, Math.max(0.15, glowK)));
+  }
+
+  /** Switch conditional set dressing on or off from story flags (aftermath, repairs…). */
+  applyFlags(test) { const set = this.built.get(this.current); for (const [cond, node] of set?.conditions ?? []) node.setEnabled(test(cond)); }
+
   /** Hask's bog: the yard has one built in; other sets may provide their own. */
   setBog(on, instant = false) {
     if (this.current === "yard") this.arena.setBog(on, instant); else this.built.get(this.current)?.setBog?.(on, instant);
@@ -101,8 +131,14 @@ function kit(scene) {
   /** Big translucent shapes (light shafts) must stay out of the glow layer or they bloom over everything. */
   const noGlow = (m) => { glowLayer?.addExcludedMesh(m); return m; };
   const glowless = new Set();
+  const windows = [], lamps = [], conditions = [];
+  /** A window pane that's dark glass by day and warm light at night. */
+  const windowMat = (name, day = "#34405a", night = "#ffcf7a") => { const m = glow(scene, name, day); m.dayColor = color3(day).clone(); m.nightColor = color3(night).clone(); windows.push(m); return m; };
+  const lampMat = (name, day = "#8a7a5a", night = "#ffd36a") => { const m = glow(scene, name, day); m.dayColor = color3(day).clone(); m.nightColor = color3(night).clone(); lamps.push(m); return m; };
   return {
-    root, add, systems, lights,
+    root, add, systems, lights, windows, lamps, conditions, windowMat, lampMat,
+    /** A group of props shown only while a flag condition holds (it's never merged into the static scenery). */
+    when: (cond) => { const n = new (B().TransformNode)(`cond-${conditions.length}`, scene); n.parent = root; conditions.push([cond, n]); return n; },
     noGlow: (m) => { glowless.add(m); m.metadata = { ...m.metadata, noGlow: true }; return noGlow(m); },
     /**
      * Performance (Phase 4 Step 5): merge the set's static scenery into one mesh per material,
@@ -168,7 +204,7 @@ function buildTowerSteps(scene, mobile) {
   // Banners on poles flanking the stairs (Crown blue and gold).
   for (const [bi, x] of [-8.5, -5, 5, 8.5].entries()) {
     const pole = add(MB.CreateCylinder("ts-pole", { height: 9, diameter: 0.18, tessellation: 6 }, scene)); pole.position.set(x, 4.5, 7); pole.material = stoneDark;
-    const ban = add(MB.CreateBox("ts-banner", { width: 1.4, height: 4, depth: 0.05 }, scene), 0.03); ban.position.set(x, 6.4, 7.1); ban.material = toon(scene, `ts-ban${bi}`, bi % 2 ? "#d9ae4f" : "#2b4f8f");
+    const ban = add(MB.CreateBox("ts-banner", { width: 1.4, height: 4, depth: 0.16 }, scene), 0.016); // thick enough that its ink line can't show through ban.position.set(x, 6.4, 7.1); ban.material = toon(scene, `ts-ban${bi}`, bi % 2 ? "#d9ae4f" : "#2b4f8f");
   }
   // Clouds and hills.
   const cloud = toon(scene, "ts-cloud", "#f7f6ff");
@@ -381,7 +417,7 @@ function buildExamGrounds(scene, mobile) {
   const squads = ["#f2b84a", "#f2efe6", "#6b7280", "#5f9e5a", "#2a2a34", "#2f6b5a", "#a3262a"]; // Lanterns, Lances, Wardens, Verdant, Quill, Riders, Bell
   squads.forEach((c, i) => {
     const x = (i - 3) * 1.8;
-    const ban = add(MB.CreateBox("eg-ban", { width: 1.1, height: 2.6, depth: 0.05 }, scene), 0.03);
+    const ban = add(MB.CreateBox("eg-ban", { width: 1.1, height: 2.6, depth: 0.16 }, scene), 0.016); // thick enough that its ink line can't show through
     ban.position.set(x, EXAM_BOX.y + 2.2, EXAM_BOX.z + 2.6); ban.material = toon(scene, `eg-ban${i}`, c);
   });
   // Distant hills and puffy clouds.
@@ -478,6 +514,10 @@ function buildLighthouse(scene, mobile) {
   const warm = new BB.PointLight("lh-warm", new BB.Vector3(T.x, 3, T.z), scene); warm.diffuse = color3("#ffb86a").clone(); warm.intensity = 0.4; warm.range = 14; K.lights.push(warm);
   const bulbs = [];
   for (let i = 0; i < 9; i++) { const b = add(MB.CreateSphere("lh-bulb", { diameter: 0.18, segments: 6 }, scene)); b.position.set(T.x - 2 + Math.sin(i * 0.7) * 0.3, 2.8 - Math.sin((i / 8) * Math.PI) * 0.5, T.z - 3 + i * 0.75); b.material = flame; bulbs.push(b); }
+  // Supplies by the house, and the squad's cat on the porch.
+  const P = palette(scene, "lh"), PR = props(scene, K, P);
+  PR.crate(-8.4, 13.6, { ry: 0.3 }); PR.crate(-8.5, 14.6, { ry: 1.1, s: 0.6 }); PR.barrel(-8.6, 12.3); PR.woodpile(-0.2, 16.6, { ry: 0 });
+  const cat = buildCritters(scene, K, [{ kind: "cat", n: 1, area: { x: -3.2, z: 9.7, r: 0.01 }, still: true }], rng);
   K.bake([beam, ...lanterns, newLantern]);
   let night = 0, nightTarget = 0;
   const DUSK = { clear: "#8a5f7c", fog: "#c08070", fogDensity: 0.012, hemi: [0.65, "#ffd2b0", "#4a3a5a"], sun: [0.85, "#ffb070", [0.6, -0.55, 0.6]], warm: 0 };
@@ -491,7 +531,9 @@ function buildLighthouse(scene, mobile) {
       if (name === "dusk") nightTarget = 0;
       if (name === "lantern") newLantern.setEnabled(true);
     },
+    outdoor: true,
     update(dt, t) {
+      cat.update(dt, self.mood ?? {});
       beam.rotation.y = t * 0.5;
       const prev = night;
       night += (nightTarget - night) * Math.min(1, dt * 0.8);
@@ -554,14 +596,25 @@ function buildFens(scene, mobile) {
   bogMat.diffuseColor = color3("#2f3a26"); bogMat.specularColor = color3("#9fb07a"); bogMat.specularPower = 24; bogMat.emissiveColor = color3("#141a10"); bogMat.alpha = 0;
   bog.material = bogMat; bog.setEnabled(false);
   let bogLevel = 0, bogTarget = 0;
+  // The village nobody remembers: everything left exactly where it was dropped.
+  const P = palette(scene, "fn"), PR = props(scene, K, P);
+  PR.cart(-8.5, 9.5, { broken: true, ry: 0.8 }); PR.sack(-7, 8); PR.sack(-6.2, 10.6); PR.sack(-7.6, 11.2);
+  PR.campfire(8, 14.4, { lit: false }); const pot = add(MB.CreateCylinder("fn-pot", { height: 0.45, diameterTop: 0.5, diameterBottom: 0.36, tessellation: 10 }, scene), 0.02); pot.position.set(8, 0.3, 14.4); pot.material = P("#2a2a33");
+  const fcloths = PR.laundry(-9.2, 15.2, -6.6, 16.4, { colors: ["#d8d4c8", "#c8c4b8", "#b8b4a8"] });
+  const dollBody = add(MB.CreateCylinder("fn-doll", { height: 0.22, diameterTop: 0.08, diameterBottom: 0.16, tessellation: 8 }, scene), 0.01); dollBody.position.set(4.1, 0.11, 13.4); dollBody.rotation.z = 1.4; dollBody.material = P("#c0504d");
+  const dollHead = add(MB.CreateSphere("fn-dollHead", { diameter: 0.1, segments: 6 }, scene), 0.008); dollHead.position.set(4.24, 0.06, 13.4); dollHead.material = P("#f0d0b2");
+  PR.bench(1.5, 15.8, { ry: 0.3 }); PR.table(-1, 9.4, { ry: 0.6, mugs: 3 });
+  const crows = buildCritters(scene, K, [{ kind: "crow", n: 4, area: { x: 2, z: 12, r: 6 } }], rng);
   K.bake([bog]);
   const env = { clear: "#7f8f86", fog: "#8a9a8c", fogDensity: 0.022, hemi: [0.6, "#e0ecd8", "#3a3a2a"], sun: [0.7, "#f0ecd0", [-0.3, -1, 0.4]], warm: 0 };
   const toonEnv = { lightDir: [0.3, 1, -0.4], fogColor: "#8a9a8c", fogDensity: 0.016, sky: [1.0, 1.02, 0.98], ground: [0.78, 0.82, 0.74], rim: [0.8, 0.9, 0.85] };
   return {
-    env, toon: toonEnv,
+    env, toon: toonEnv, outdoor: true, windows: K.windows, lamps: K.lamps, conditions: K.conditions,
     show(on) { K.show(on); bogLevel = bogTarget = 0; bog.setEnabled(false); },
     setBog(on, instant) { bogTarget = on ? 1 : 0; if (instant) bogLevel = bogTarget; },
     update(dt, t) {
+      crows.update(dt, this.mood ?? {});
+      for (const [i, c] of fcloths.entries()) c.rotation.x = Math.sin(t * 1.4 + i) * 0.1;
       bogLevel += (bogTarget - bogLevel) * Math.min(1, dt * (bogTarget ? 2 : 0.6));
       bog.setEnabled(bogLevel > 0.01);
       if (bogLevel > 0.01) { const sc = 0.15 + 0.85 * bogLevel; bog.scaling.set(sc, sc, 1); bogMat.alpha = 0.82 * bogLevel; bog.rotation.z = t * 0.02; }
@@ -592,7 +645,7 @@ function buildAurelin(scene, mobile) {
   spray.direction1 = new BB.Vector3(-1, 4, -1); spray.direction2 = new BB.Vector3(1, 5, 1); spray.minEmitPower = 0.6; spray.maxEmitPower = 1; spray.blendMode = BB.ParticleSystem.BLENDMODE_ADD;
   K.systems.push(spray);
   // Houses: walls, a pitched roof, a door and windows facing the street.
-  const winMat = toon(scene, "au-win", "#3a4a6a"), doorMat = toon(scene, "au-door", "#6b4a32");
+  const winMat = K.windowMat("au-win"), doorMat = toon(scene, "au-door", "#6b4a32");
   const wallMats = new Map(), roofMats = new Map();
   const mat = (map, hex, pre) => { if (!map.has(hex)) map.set(hex, toon(scene, `${pre}${map.size}`, hex)); return map.get(hex); };
   for (const h of L.houses) {
@@ -605,7 +658,50 @@ function buildAurelin(scene, mobile) {
     for (const dz of [-h.d / 3, h.d / 3]) for (const y of h.h > 6 ? [2.6, 4.8] : [2.6]) {
       const w = add(MB.CreatePlane("au-winP", { width: 0.9, height: 1, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); w.position.set(fx, y, h.z + dz); w.rotation.y = Math.PI / 2; w.material = winMat;
     }
+    if (h.rich) { // the Crown Ward: pilasters, a balcony, a family banner, a clipped hedge and an iron railing
+      for (const dz of [-h.d / 2 + 0.3, h.d / 2 - 0.3]) { const pil = add(MB.CreateBox("au-pilaster", { width: 0.3, height: h.h, depth: 0.5 }, scene), 0.03); pil.position.set(fx + face * 0.1, h.h / 2, h.z + dz); pil.material = mat(wallMats, "#e8e0cf", "au-wall"); }
+      const bal = add(MB.CreateBox("au-balcony", { width: 0.8, height: 0.12, depth: 2.4 }, scene), 0.03); bal.position.set(fx + face * 0.4, 4, h.z); bal.material = mat(wallMats, "#e8e0cf", "au-wall");
+      const ban = add(MB.CreateBox("au-houseBanner", { width: 0.12, height: 2.2, depth: 1 }, scene), 0.02); ban.position.set(fx + face * 0.12, h.h - 2, h.z - h.d / 4); ban.material = mat(roofMats, "#8a2a3a", "au-roof");
+      const hedge = add(MB.CreateBox("au-hedge", { width: 1, height: 0.9, depth: h.d - 1 }, scene), 0.03); hedge.position.set(fx + face * 1.6, 0.45, h.z); hedge.material = toon(scene, "au-hedgeMat", "#4a6a3a");
+    }
   }
+  const P = palette(scene, "au"), PR = props(scene, K, P);
+  // The chapel of the Lantern: a narrow nave, a bell tower, a round window, candles at the door.
+  const C = L.chapel, stoneC = toon(scene, "au-chapelStone", "#d8cfbe");
+  const nave = add(MB.CreateBox("au-nave", { width: C.w, height: 7, depth: C.d }, scene), 0.05); nave.position.set(C.x, 3.5, C.z); nave.material = stoneC;
+  const naveRoof = add(MB.CreateCylinder("au-naveRoof", { height: C.d + 0.6, diameter: C.w * 0.8, tessellation: 3 }, scene), 0.05); naveRoof.position.set(C.x, 7 + C.w * 0.2, C.z); naveRoof.rotation.set(Math.PI / 2, 0, Math.PI / 2); naveRoof.scaling.set(1.5, 1, 0.75); naveRoof.material = toon(scene, "au-chapelRoof", "#5a4a6a");
+  const tower = add(MB.CreateBox("au-belltower", { width: 2.4, height: 12, depth: 2.4 }, scene), 0.05); tower.position.set(C.x, 6, C.z - C.d / 2 + 1.2); tower.material = stoneC;
+  const spire = add(MB.CreateCylinder("au-spire", { height: 3.4, diameterTop: 0, diameterBottom: 3, tessellation: 4 }, scene), 0.05); spire.position.set(C.x, 13.7, C.z - C.d / 2 + 1.2); spire.rotation.y = Math.PI / 4; spire.material = naveRoof.material;
+  const rose = add(MB.CreateCylinder("au-rose", { height: 0.1, diameter: 1.6, tessellation: 16 }, scene)); rose.position.set(C.x - C.w / 2 - 0.03, 5, C.z + 1); rose.rotation.z = Math.PI / 2; rose.material = K.windowMat("au-roseGlass", "#4a3a6a", "#ffcf7a");
+  const cdoor = add(MB.CreatePlane("au-chapelDoor", { width: 1.6, height: 2.8, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); cdoor.position.set(C.x - C.w / 2 - 0.02, 1.4, C.z + 1); cdoor.rotation.y = Math.PI / 2; cdoor.material = doorMat;
+  const candle = K.lampMat("au-candle", "#c9a24a", "#ffd36a");
+  for (let i = 0; i < 5; i++) { const c = add(MB.CreateCylinder("au-candle", { height: 0.3 + (i % 3) * 0.08, diameter: 0.08, tessellation: 6 }, scene)); c.position.set(C.x - C.w / 2 - 0.5, 0.2, C.z - 0.4 + i * 0.35); c.material = candle; }
+  // The Lantern & Anchor: the tavern in the west street, with benches, barrels and a sign.
+  const TV = L.tavern;
+  PR.sign(TV.x + 3.8, TV.z + 2.1, { ry: Math.PI / 2, hex: "#2b4f8f" });
+  PR.bench(TV.x + 5.6, TV.z - 2.6, { ry: 0 }); PR.table(TV.x + 5.4, TV.z + 2.8, { ry: 0.1 }); PR.barrel(TV.x + 4.2, TV.z - 4.4); PR.barrel(TV.x + 4.9, TV.z - 4.6); PR.crate(TV.x + 4.4, TV.z + 4.4, { ry: 0.3, s: 0.7 });
+  // The cooper's yard by the east houses: barrels in every state of being made.
+  PR.barrel(25.2, 14.6); PR.barrel(25.9, 15.3); PR.barrel(24.6, 15.8, { tipped: true, ry: 0.4 }); PR.woodpile(26.2, 12.4, { ry: Math.PI / 2 });
+  // The poor quarter by the grate: shacks of patched planks, laundry, crates, a puddle.
+  const plank = ["#7a5a3a", "#8a6a4a", "#6a4a32", "#9a7a5a"];
+  for (const [i, h] of L.shacks.entries()) {
+    const sb = add(MB.CreateBox("au-shack", { width: h.w, height: 2.6, depth: h.d }, scene), 0.04); sb.position.set(h.x, 1.3, h.z); sb.rotation.z = (i - 1) * 0.03; sb.material = P(plank[i % 4]);
+    const roofS = add(MB.CreateBox("au-shackRoof", { width: h.w + 0.6, height: 0.12, depth: h.d + 0.6 }, scene), 0.03); roofS.position.set(h.x, 2.75, h.z); roofS.rotation.x = 0.12 * (i % 2 ? 1 : -1); roofS.material = P("#5a5048");
+    for (let k = 0; k < 3; k++) { const pt = add(MB.CreateBox("au-roofPatch", { width: 0.9, height: 0.03, depth: 0.7 }, scene)); pt.position.set(h.x - h.w / 3 + k * h.w / 3, 2.83, h.z + (k - 1) * 0.5); pt.rotation.y = k * 0.5; pt.material = P(plank[(i + k + 1) % 4]); }
+    const sd = add(MB.CreatePlane("au-shackDoor", { width: 0.9, height: 1.9, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); sd.position.set(h.x - h.w / 2 - 0.02, 0.95, h.z); sd.rotation.y = Math.PI / 2; sd.material = P("#3a2a22");
+  }
+  const poorCloths = PR.laundry(34.6, -25.6, 34.6, -22.4, { colors: ["#c9b48a", "#8a7a6a", "#a08a6a"] });
+  PR.crate(33.5, -29.5, { ry: 0.2 }); PR.crate(34.3, -30.2, { ry: 0.9, s: 0.6 }); PR.barrel(39.4, -24); PR.sack(38.8, -23.4);
+  const puddle = add(MB.CreateDisc("au-puddle", { radius: 1.2, tessellation: 14 }, scene)); puddle.rotation.x = Math.PI / 2; puddle.position.set(32.5, 0.012, -19); puddle.scaling.y = 0.6; puddle.material = P("#4a5866");
+  // Market goods on every stall, and a horse waiting with a cart inside the gate.
+  ["fish", "bread", "apples", "pots", "cloth", "fish"].forEach((kind, i) => { const st = L.stalls[i]; PR.goods(st.x, st.z, { kind }); });
+  PR.cart(-8.5, -27.5, { ry: 0.3 });
+  // Lamps along the plaza and the streets.
+  const lampMat = K.lampMat("au-lamp");
+  for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2 + 0.3; PR.lampPost(Math.sin(a) * 13.5, Math.cos(a) * 13.5, { lampMat }); }
+  for (const [x, z] of [[-20, -14], [-20, 10], [20, 12], [6, -24], [-6, -24], [28, -16]]) PR.lampPost(x, z, { lampMat });
+  const critters = buildCritters(scene, K, [{ kind: "pigeon", n: 10, area: { x: 0, z: -6, r: 5 } }, { kind: "dog", n: 1, area: { x: -10.5, z: -8, r: 3 } },
+    { kind: "cat", n: 1, area: { x: 35, z: -24, r: 2 } }, { kind: "horse", n: 1, area: { x: -8.5, z: -25.2, r: 0.01 }, still: true }], rng);
   // The Hall of Lanterns: a long stone hall with columns and a golden lantern over the door.
   const H = L.hall, hw = H.x1 - H.x0, hd = H.z1 - H.z0;
   const hall = add(MB.CreateBox("au-hall", { width: hw, height: 11, depth: hd }, scene), 0.06); hall.position.set((H.x0 + H.x1) / 2, 5.5, (H.z0 + H.z1) / 2); hall.material = toon(scene, "au-hallMat", "#e8e0cf");
@@ -641,49 +737,19 @@ function buildAurelin(scene, mobile) {
   // Bunting across the plaza.
   const flagCols = ["#c0504d", "#e6b54e", "#4f81bd", "#f2efe6"].map((c, i) => toon(scene, `au-flag${i}`, c));
   for (let i = 0; i < 18; i++) { const f = add(MB.CreateCylinder("au-flagT", { height: 0.5, diameter: 0.5, tessellation: 3 }, scene)); const a = (i / 18) * Math.PI * 2; f.position.set(Math.sin(a) * 9, 5.4 + Math.sin(i) * 0.2, Math.cos(a) * 9); f.rotation.set(Math.PI / 2, a, 0); f.material = flagCols[i % 4]; }
-  // A crowd walking loops around town (simple figures, instanced for speed).
-  const bodyCols = ["#c0504d", "#4f81bd", "#9bbb59", "#8064a2", "#f79646", "#4bacc6", "#d8d2c4", "#7a5a3a"];
-  const sources = bodyCols.map((c, i) => {
-    const b = MB.CreateCylinder(`au-pb${i}`, { height: 1.2, diameterTop: 0.42, diameterBottom: 0.7, tessellation: 8 }, scene); b.material = toon(scene, `au-pm${i}`, c); b.parent = K.root; b.isPickable = false; b.setEnabled(false);
-    return b;
-  });
-  const headSrc = MB.CreateSphere("au-ph", { diameter: 0.42, segments: 6 }, scene); headSrc.material = toon(scene, "au-phm", "#e2b894"); headSrc.parent = K.root; headSrc.isPickable = false; headSrc.setEnabled(false);
-  const hairSrc = MB.CreateSphere("au-phair", { diameter: 0.45, segments: 6, slice: 0.55 }, scene); hairSrc.material = toon(scene, "au-phairm", "#3a2a22"); hairSrc.parent = K.root; hairSrc.isPickable = false; hairSrc.setEnabled(false);
-  const loops = [
-    { cx: 0, cz: 0, r: 8, dir: 1 }, { cx: 0, cz: 0, r: 11, dir: -1 },
-    { line: [[-23, -26], [-23, 34]] }, { line: [[23, -26], [23, 34]] }, { line: [[-20, 20], [20, 20]] }, { line: [[8, -28], [8, 18]] },
-  ];
-  const n = mobile ? Math.round(22 * 0.6) : 22;
-  const walkers = [];
-  for (let i = 0; i < n; i++) {
-    const b = sources[i % sources.length].createInstance(`au-walker${i}`), h = headSrc.createInstance(`au-wh${i}`), hr = hairSrc.createInstance(`au-whr${i}`);
-    for (const m of [b, h, hr]) { m.parent = K.root; m.isPickable = false; }
-    walkers.push({ b, h, hr, path: loops[i % loops.length], t: rng() * 100, speed: 0.6 + rng() * 0.6, side: (rng() - 0.5) * 2.2 });
-  }
+  // The crowd: townsfolk with legs and arms walking the streets, and a few pairs stopped to talk (runtime/crowd.js).
+  const crowd = buildCrowd(scene, K, { count: 22, rng, mobile,
+    paths: [{ cx: 0, cz: 0, r: 8, dir: 1 }, { cx: 0, cz: 0, r: 11, dir: -1 }, { line: [[-23, -26], [-23, 34]] }, { line: [[23, -26], [23, 34]] }, { line: [[-20, 20], [20, 20]] }, { line: [[8, -28], [8, 18]] }],
+    chatters: [[-9, -14, 0.6], [14, 9, -1.2], [-20, 24, 2.1], [26, 10, 3.0]] });
   K.bake([]);
   const env = { clear: "#a8cdf0", fog: "#c4dbf2", fogDensity: 0.008, hemi: [0.6, "#fff6e6", "#7a86a8"], sun: [0.8, "#fff1d0", [-0.4, -1, 0.55]], warm: 0 };
   const toonEnv = { lightDir: [0.4, 1, -0.55], fogColor: "#c4dbf2", fogDensity: 0.005, sky: [1.1, 1.08, 1.04], ground: [0.9, 0.88, 0.9], rim: [0.75, 0.85, 1] };
   return {
     env, toon: toonEnv, show: K.show,
-    update(dt) {
-      for (const w of walkers) {
-        w.t += dt * w.speed;
-        let x, z, yaw;
-        if (w.path.r) {
-          const a = (w.t / w.path.r) * w.path.dir;
-          x = w.path.cx + Math.sin(a) * (w.path.r + w.side * 0.4); z = w.path.cz + Math.cos(a) * (w.path.r + w.side * 0.4);
-          yaw = a + (w.path.dir > 0 ? Math.PI / 2 : -Math.PI / 2);
-        } else {
-          const [[x0, z0], [x1, z1]] = w.path.line, len = Math.hypot(x1 - x0, z1 - z0);
-          const u = (w.t % (len * 2)) / len, k = u < 1 ? u : 2 - u;
-          const nx = -(z1 - z0) / len, nz = (x1 - x0) / len;
-          x = x0 + (x1 - x0) * k + nx * w.side; z = z0 + (z1 - z0) * k + nz * w.side;
-          yaw = Math.atan2(x1 - x0, z1 - z0) + (u < 1 ? 0 : Math.PI);
-        }
-        const bob = Math.abs(Math.sin(w.t * 6)) * 0.06;
-        w.b.position.set(x, 0.6 + bob, z); w.h.position.set(x, 1.42 + bob, z); w.hr.position.set(x, 1.47 + bob, z);
-        w.hr.rotation.set(0, yaw, 0); w.b.rotation.y = yaw;
-      }
+    crowd, outdoor: true, windows: K.windows, lamps: K.lamps, conditions: K.conditions,
+    update(dt, t) {
+      crowd.update(dt, this.mood); critters.update(dt, this.mood ?? {});
+      for (const [i, c] of poorCloths.entries()) c.rotation.x = Math.sin(t * 2 + i) * 0.12 * (1 + (this.mood?.wind ?? 0));
     },
   };
 }
@@ -708,7 +774,7 @@ function buildThornwick(scene, mobile) {
   tree(L.oak.x, L.oak.z, 1.6);
   for (let i = 0; i < 14; i++) { const a = rng() * Math.PI * 2, r = 34 + rng() * 14; tree(Math.sin(a) * r, Math.cos(a) * r, 1 + rng() * 0.6); }
   // Houses: timber walls, steep thatched roofs, a door facing the green.
-  const wall = toon(scene, "tw-wall", "#e6d6b4"), beam = toon(scene, "tw-beam", "#5a4230"), thatch = toon(scene, "tw-thatch", "#c9a24a"), door = toon(scene, "tw-door", "#6b4a32"), win = toon(scene, "tw-win", "#ffd98a");
+  const wall = toon(scene, "tw-wall", "#e6d6b4"), beam = toon(scene, "tw-beam", "#5a4230"), thatch = toon(scene, "tw-thatch", "#c9a24a"), door = toon(scene, "tw-door", "#6b4a32"), win = K.windowMat("tw-win", "#4a4a3a", "#ffcf7a");
   const house = (x, z, w, d, h, roofCol = thatch) => {
     const b = add(MB.CreateBox("tw-house", { width: w, height: h, depth: d }, scene), 0.05); b.position.set(x, h / 2, z); b.material = wall;
     for (const dx of [-w / 2, w / 2]) for (const dz of [-d / 2, d / 2]) { const post = add(MB.CreateBox("tw-post", { width: 0.25, height: h, depth: 0.25 }, scene)); post.position.set(x + dx, h / 2, z + dz); post.material = beam; }
@@ -720,7 +786,16 @@ function buildThornwick(scene, mobile) {
     const wp = add(MB.CreatePlane("tw-winP", { width: 0.8, height: 0.7, sideOrientation: BB.Mesh.DOUBLESIDE }, scene));
     wp.position.set(x + tx * (w / 2 + 0.02) + (tx ? 0 : 1.6), 1.6, z + tz * (d / 2 + 0.02) + (tx ? 1.6 : 0)); wp.rotation.y = dp.rotation.y; wp.material = win;
   };
-  for (const h of L.houses) house(h.x, h.z, h.w, h.d, 3 + rng() * 0.6);
+  // Props built inside `under(node, …)` go under a conditional node instead of the set root.
+  const under = (node, fn) => { const before = new Set(K.root.getChildren()); fn(); for (const c of K.root.getChildren()) if (!before.has(c) && c !== node) c.parent = node; };
+  const BARN = L.houses.find((h) => h.x === -22 && h.z === -18);
+  for (const h of L.houses) if (h !== BARN) house(h.x, h.z, h.w, h.d, 3 + rng() * 0.6);
+  // The barn the bandits burned (GDD §29.12): ruins → scaffolding a visit after the road is cleared → rebuilt two visits later.
+  const P = palette(scene, "tw"), PR = props(scene, K, P);
+  const since = "$VISITS_THORNWICK - $BANDITS_CLEARED_VISIT";
+  under(K.when(`not $BANDITS_CLEARED or ${since} < 1`), () => PR.ruin(BARN.x, BARN.z, { w: BARN.w, d: BARN.d }));
+  under(K.when(`$BANDITS_CLEARED and ${since} >= 1 and ${since} < 3`), () => { PR.ruin(BARN.x, BARN.z, { w: BARN.w * 0.5, d: BARN.d * 0.5 }); PR.scaffold(BARN.x, BARN.z, { w: BARN.w, d: BARN.d }); });
+  under(K.when(`$BANDITS_CLEARED and ${since} >= 3`), () => house(BARN.x, BARN.z, BARN.w, BARN.d, 3.2, toon(scene, "tw-newThatch", "#e0c060")));
   // The orphanage: the biggest building in the village, two floors and a bell.
   const O = L.orphanage, ow = O.x1 - O.x0, od = O.z1 - O.z0;
   house((O.x0 + O.x1) / 2, (O.z0 + O.z1) / 2, ow, od, 5.4, toon(scene, "tw-orphRoof", "#8a4a3a"));
@@ -756,8 +831,30 @@ function buildThornwick(scene, mobile) {
     c.position.set(x + (rng() - 0.5) * 0.3, 0.22, z + (rng() - 0.5) * 0.3); c.scaling.y = 0.8 + rng() * 0.5;
   }
   const furrow = add(MB.CreateGround("tw-furrow", { width: F.x1 - F.x0, height: F.z1 - F.z0 }, scene)); furrow.position.set((F.x0 + F.x1) / 2, 0.012, (F.z0 + F.z1) / 2); furrow.material = dirtDark;
-  // The bandits' camp on the mill road: crates and a cold fire.
-  for (const [x, z] of [[24, -21], [25.2, -21.4], [15, -27]]) { const c = add(MB.CreateBox("tw-crate", { size: 0.9 }, scene), 0.03); c.position.set(x, 0.45, z); c.rotation.y = rng(); c.material = toon(scene, "tw-crateMat", "#8a5a3a"); }
+  // The mill road: the bandits' camp → after the fight, the mess they left → later, carts on the road again.
+  under(K.when("not $BANDITS_CLEARED"), () => {
+    PR.crate(24, -21, { ry: 0.4 }); PR.crate(25.2, -21.6, { ry: 1.1, s: 0.6 }); PR.crate(15, -27, { ry: 2 });
+    PR.campfire(20, -25, { lit: false }); PR.sack(21.3, -24.2); PR.sack(18.8, -25.6);
+    for (const [x, z, r] of [[22, -26.5, 0.3], [18, -23.5, 1.9]]) { const roll = add(MB.CreateCylinder("tw-bedroll", { height: 1.6, diameter: 0.35, tessellation: 8 }, scene), 0.02); roll.position.set(x, 0.17, z); roll.rotation.set(Math.PI / 2, r, 0); roll.material = P("#6a5a4a"); }
+  });
+  under(K.when(`$BANDITS_CLEARED and ${since} < 1`), () => {
+    PR.crate(24, -21, { broken: true, ry: 0.4 }); PR.crate(15.5, -26, { broken: true, ry: 1.5 }); PR.campfire(20, -25, { lit: false });
+    PR.droppedBlade(19, -22.5, { ry: 0.8 }); PR.droppedBlade(22.4, -24, { ry: 2.3 }); PR.sack(21.3, -24.2);
+  });
+  under(K.when(`$BANDITS_CLEARED and ${since} >= 1`), () => { PR.cart(22, -23, { ry: -0.9 }); PR.hay(26, -26, { ry: 0.3 }); });
+  // Everyday Thornwick: the tavern, the well, the woodpile, laundry, hay, the mill cart, lamps.
+  PR.sign(-15.4, 10.4, { ry: Math.PI / 2, hex: "#8a3a2a" });
+  PR.bench(-13.8, 7.6, { ry: 0 }); PR.table(-13.6, 10.8, { ry: 0.2 }); PR.barrel(-15.9, 12.6); PR.barrel(-15.2, 13.3); PR.barrel(-14.6, 12.5, { tipped: true, ry: 0.6 });
+  PR.well(L.well.x, L.well.z);
+  PR.woodpile(-12.6, -10.8, { ry: 0 }); PR.woodpile(-21, 5.5, { ry: Math.PI / 2 });
+  const cloths = PR.laundry(-12.5, 13.5, -8.2, 14.6, { colors: ["#e8e2d4", "#c9b48a", "#8a6a9a", "#d8c8a8"] });
+  PR.hay(17.4, -8.6, { ry: 0.4 }); PR.hay(18.6, -7.4, { ry: 1.2 }); PR.cart(25.5, -9.5, { ry: 1.3 }); PR.barrel(23.5, -14.6); PR.sack(24.2, -14.9);
+  PR.fence(22, 2.6, 28.4, 2.6); PR.fence(22, 5.8, 28.4, 5.8); PR.fence(28.4, 2.6, 28.4, 5.8); PR.fence(22, 2.6, 22, 3.6);
+  PR.fence(20, 16, 28.6, 16); PR.fence(20, 16, 20, 20); PR.fence(20, 22, 20, 28.6);
+  const lampMat = K.lampMat("tw-lamp");
+  for (const [x, z] of [[6.5, 6.5], [-6.5, 6.5], [6.5, -7], [-14.6, 6.4]]) PR.lampPost(x, z, { lampMat });
+  const critters = buildCritters(scene, K, [{ kind: "chicken", n: 6, area: { rect: [22.6, 3, 28, 5.4] } }, { kind: "sheep", n: 4, area: { rect: [21, 17, 28, 28] } },
+    { kind: "cow", n: 2, area: { rect: [21, 17, 28, 28] } }, { kind: "dog", n: 1, area: { x: 0, z: -2, r: 8 } }, { kind: "cat", n: 1, area: { x: 3.2, z: 15.3, r: 0.1 }, still: true }], rng);
   // A wooden palisade around the village, with gaps for the roads (instanced posts).
   const postSrc = MB.CreateCylinder("tw-fence", { height: 2.4, diameter: 0.4, tessellation: 6 }, scene); postSrc.material = beam; postSrc.parent = K.root; postSrc.isPickable = false;
   const posts = [];
@@ -776,12 +873,20 @@ function buildThornwick(scene, mobile) {
   smoke.minSize = 0.6; smoke.maxSize = 1.4; smoke.minLifeTime = 2; smoke.maxLifeTime = 3.5; smoke.emitRate = 8; smoke.gravity = new BB.Vector3(0.2, 0.6, 0);
   smoke.direction1 = new BB.Vector3(-0.1, 1, -0.1); smoke.direction2 = new BB.Vector3(0.1, 1, 0.1); smoke.minEmitPower = 0.2; smoke.maxEmitPower = 0.4; smoke.blendMode = BB.ParticleSystem.BLENDMODE_STANDARD;
   K.systems.push(smoke);
+  // Villagers about their day: across the green, down the mill road, and two neighbors gossiping.
+  const crowd = buildCrowd(scene, K, { count: 6, rng, mobile,
+    paths: [{ cx: 0, cz: 0, r: 6.5, dir: 1 }, { line: [[3, -5], [17, -15]] }, { line: [[-4, 6], [-13, 19]] }, { line: [[1, -9], [1, 12]] }],
+    chatters: [[-4.5, -13.5, 0.4], [9.5, 3.5, 2.0]] });
   K.bake([]);
   const env = { clear: "#b4d4ee", fog: "#cfe0ea", fogDensity: 0.009, hemi: [0.62, "#fff4e0", "#6a7a5a"], sun: [0.85, "#fff0c8", [-0.5, -1, 0.35]], warm: 0 };
   const toonEnv = { lightDir: [0.5, 1, -0.35], fogColor: "#cfe0ea", fogDensity: 0.006, sky: [1.1, 1.08, 1.0], ground: [0.86, 0.9, 0.8], rim: [0.85, 0.85, 0.8] };
   return {
     env, toon: toonEnv, show: K.show,
-    update(dt) { hub.rotation.x += dt * 0.5; },
+    crowd, outdoor: true, windows: K.windows, lamps: K.lamps, conditions: K.conditions,
+    update(dt, t) {
+      hub.rotation.x += dt * 0.5; crowd.update(dt, this.mood); critters.update(dt, this.mood ?? {});
+      for (const [i, c] of cloths.entries()) c.rotation.x = Math.sin(t * 2.2 + i) * 0.12 * (1 + (this.mood?.wind ?? 0));
+    },
   };
 }
 
@@ -835,6 +940,12 @@ function buildUndercroft(scene, mobile) {
   dust.minSize = 0.05; dust.maxSize = 0.14; dust.minLifeTime = 4; dust.maxLifeTime = 7; dust.emitRate = mobile ? 5 : 10; dust.gravity = new BB.Vector3(0, 0.02, 0);
   dust.minEmitPower = 0.02; dust.maxEmitPower = 0.08; dust.blendMode = BB.ParticleSystem.BLENDMODE_ADD;
   K.systems.push(dust);
+  // The old city: broken statues, bone piles, rat nests, crates nobody has opened in a century.
+  const P = palette(scene, "uc"), PR = props(scene, K, P);
+  PR.statue(-9, 39, { broken: true }); PR.statue(9, 44); PR.statue(-6, -31, { broken: true });
+  PR.bones(-7, -8); PR.bones(6, -1); PR.bones(-3, 0.5); PR.bones(8, 20);
+  for (const [x, z] of [[-8.5, -11], [8.5, -2.5], [-10.5, 22]]) { const nest = add(MB.CreateSphere("uc-nest", { diameter: 1.2, segments: 6 }, scene), 0.02); nest.position.set(x, 0.1, z); nest.scaling.y = 0.3; nest.material = P("#8a7a4a"); }
+  PR.crate(-10, 12.4, { ry: 0.2 }); PR.crate(-10.6, 13.4, { ry: 0.8, s: 0.6 }); PR.crate(9.5, 24, { broken: true }); PR.droppedBlade(-4, 40.5, { ry: 1.2 }); PR.barrel(10.6, 12, { tipped: true, ry: 0.9 });
   K.bake([]);
   const env = { clear: "#0a0b0f", fog: "#14151b", fogDensity: 0.028, hemi: [0.5, "#ffd9a8", "#2a2420"], sun: [0.35, "#ffcf9a", [0.2, -1, 0.3]], warm: 0 };
   const toonEnv = { lightDir: [-0.2, 1, -0.3], fogColor: "#14151b", fogDensity: 0.02, sky: [0.92, 0.84, 0.74], ground: [0.6, 0.56, 0.52], rim: [0.6, 0.85, 1.0] };

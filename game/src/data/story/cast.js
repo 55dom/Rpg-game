@@ -21,6 +21,7 @@ export const CAST = Object.freeze({
   Keeper: { name: "Hall Keeper", color: "#ffd98a", actor: "keeper" },
   Vendor: { name: "Lowmarket Vendor", color: "#ffb38a", actor: "vendor" },
   Guard: { name: "Gate Guard", color: "#c9d2dc", actor: "guard" },
+  Guard2: { name: "Hall Guard", color: "#c9d2dc", actor: "guard2" },
   Gossip: { name: "Townsperson", color: "#d8c8e8", actor: "gossip" },
   Kid: { name: "Kid", color: "#9fe6c8", actor: "kid" },
   Crier: { name: "Town Crier", color: "#b9a6ff", actor: "crier" },

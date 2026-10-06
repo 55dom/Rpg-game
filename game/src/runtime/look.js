@@ -155,6 +155,59 @@ export function toon2(scene, name, hex, { gloss = false, rim = 0.45, softShadow 
     e.setFloat("visibility", mesh.visibility ?? 1);
   });
   m.toonHex = hex;
+  m.toonBake = { base: color3(hex), shade: softShadow ? BB.Color3.Lerp(shadowOf(hex), color3(hex), softShadow) : shadowOf(hex), gloss: gloss ? 1 : 0 };
+  m.onDisposeObservable.add(() => { m.gone = true; });
+  toonMaterials.push(m);
+  return m;
+}
+
+// ---- Skinned characters (GDD §29.6): one mesh per character, colored per vertex ------------------
+// The same cel-shading as toon2, but base color, shadow color and hair gloss come from each vertex,
+// and the mesh is bent by a skeleton that follows the rig's nodes. A whole body is one draw call.
+const SKIN_VS = `precision highp float;
+attribute vec3 position; attribute vec3 normal; attribute vec4 color; attribute vec3 shade;
+#include<bonesDeclaration>
+uniform mat4 world; uniform mat4 viewProjection;
+varying vec3 vN; varying vec3 vP; varying vec4 vC; varying vec3 vS;
+void main() {
+  mat4 finalWorld = world;
+#include<bonesVertex>
+  vec4 wp = finalWorld * vec4(position, 1.0);
+  vP = wp.xyz;
+  vN = normalize(mat3(finalWorld) * normal);
+  vC = color; vS = shade;
+  gl_Position = viewProjection * wp;
+}`;
+const SKIN_FS = TOON_FS
+  .replace("varying vec3 vN; varying vec3 vP;", "varying vec3 vN; varying vec3 vP; varying vec4 vC; varying vec3 vS;")
+  .replace("uniform vec3 baseColor; uniform vec3 shadowColor; ", "")
+  .replace("uniform vec3 glossColor;", "")
+  .replace("uniform float rimStrength; uniform float glossStrength;", "uniform float rimStrength;")
+  .replace("void main() {", "void main() {\n  vec3 baseColor = vC.rgb; vec3 shadowColor = vS; float glossStrength = vC.a;\n  vec3 glossColor = min(baseColor * 1.35 + 0.14, vec3(0.9));");
+
+/** Cel-shaded skinned material: colors and gloss come from the mesh's vertices (see runtime/body.js). */
+export function toonSkin(scene, name, { rim = 0.45 } = {}) {
+  const BB = B();
+  if (!BB.Effect.ShadersStore.toonSkinVertexShader) {
+    BB.Effect.ShadersStore.toonSkinVertexShader = SKIN_VS;
+    BB.Effect.ShadersStore.toonSkinFragmentShader = SKIN_FS;
+  }
+  const m = new BB.ShaderMaterial(name, scene, { vertex: "toonSkin", fragment: "toonSkin" }, {
+    attributes: ["position", "normal", "color", "shade"],
+    uniforms: ["world", "viewProjection", "lightDir", "rimColor", "cameraPosition", "fogColor", "ambientSky", "ambientGround",
+      "rimStrength", "fogDensity", "visibility"],
+  });
+  applyToonEnv(m, BB);
+  m.setFloat("rimStrength", rim);
+  m.setFloat("visibility", 1);
+  m.onBindObservable.add((mesh) => {
+    const e = m.getEffect();
+    if (!e) return;
+    const cam = scene.activeCamera;
+    if (cam) e.setVector3("cameraPosition", cam.globalPosition);
+    e.setFloat("visibility", mesh.visibility ?? 1);
+  });
+  m.toonSkin = true;
   m.onDisposeObservable.add(() => { m.gone = true; });
   toonMaterials.push(m);
   return m;
@@ -167,6 +220,11 @@ export function toonFallbackIfBroken(scene) {
   const swap = new Map();
   for (const mesh of scene.meshes) {
     const m = mesh.material;
+    if (m?.toonSkin) { // skinned bodies: a plain lit material that reads the vertex colors
+      if (!swap.has(m)) { const sm = new (B().StandardMaterial)(`${m.name}-fallback`, scene); sm.specularColor = B().Color3.Black(); swap.set(m, sm); }
+      mesh.material = swap.get(m);
+      continue;
+    }
     if (!m?.toonHex) continue;
     if (!swap.has(m)) swap.set(m, toon(scene, `${m.name}-fallback`, m.toonHex));
     mesh.material = swap.get(m);

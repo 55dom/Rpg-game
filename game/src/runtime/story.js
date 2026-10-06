@@ -17,6 +17,9 @@ import { QuestLog } from "../core/quests.js";
 import { QUESTS } from "../data/quests.js";
 import { compileExpr, truthy } from "../core/flags.js";
 import { inRect } from "../sim/bounds.js";
+import { Ambient } from "./ambient.js";
+import { WorldClock } from "../sim/weather.js";
+import { RainFX } from "./weather.js";
 
 /** Gesture poses for dialogue: weapon-arm and off-arm rotations, a bow, a head tilt. */
 const GESTURES = Object.freeze({
@@ -370,6 +373,12 @@ export class StoryPlayer {
     }
     if (this.cut) this._cutStep(dt);
     if (this.fight) this._tutorial(dt);
+    if (this.roaming && this.clock && this.exploring) this._weatherTick(dt);
+    if (this.ambient && this.exploring) { // townsfolk go about their day (runtime/ambient.js)
+      const p = this.ctx.getWorld().player, x = this.exploring;
+      this.ambient.update({ dt, player: { x: p.pos.x, z: p.pos.z, moving: Math.hypot(p.vel.x, p.vel.z) > 0.4 }, combat: x.combat?.at ?? null,
+        raining: !!this.weather?.raining, night: !!this.weather?.night, busy: x.busy });
+    }
     if (this.exploring) this._exploreTick(dt);
   }
 
@@ -430,6 +439,7 @@ export class StoryPlayer {
     this._hint("");
     this._endExplore();
     this.roaming = false; this.zone = null;
+    this.rain?.stop(); this.weather = null;
     this.ctx.root.classList.remove("in-scene");
     this.ctx.camera.release();
   }
@@ -657,11 +667,13 @@ export class StoryPlayer {
   async explore(beat) {
     this._enterScene(false);
     this.ctx.sets?.use(beat.stage ?? "yard");
+    this.ctx.sets?.applyFlags?.((cond) => truthy(compileExpr(cond)(this.flags))); // aftermath and repairs follow the story
     this.stage.setup(beat);
     const p = this.ctx.getWorld().player;
     p.relaxed = true;
     this.ctx.root.classList.add("exploring");
     this.ctx.camera.release();
+    this.ambient = beat.zone ? new Ambient(this.stage, beat.zone, this.flags) : null;
     this.exploring = { beat, talked: new Set(), near: null, busy: false, pickups: this._makePickups(beat.pickups ?? []),
       encounters: (beat.encounters ?? []).map((e) => ({ ...e, cond: compileExpr(e.when ?? "1"), armed: true, done: false })), combat: null };
     this._objective();
@@ -674,6 +686,7 @@ export class StoryPlayer {
     if (this.exploring?.combat) this._endCombat(false);
     for (const pk of this.exploring?.pickups ?? []) pk.node.dispose(false, true);
     this.exploring = null;
+    this.ambient = null;
     this.ctx.root.classList.remove("exploring");
     if (this.ui.objective) this.ui.objective.hidden = true;
     if (this.ui.talk) this.ui.talk.hidden = true;
@@ -692,6 +705,24 @@ export class StoryPlayer {
     });
   }
 
+  /** The world clock: time of day and weather drive the sky, rain, crowd and townsfolk (GDD §29.10). */
+  _weatherTick(dt) {
+    const c = this.clock, sets = this.ctx.sets;
+    c.update(dt);
+    this.weather = { raining: c.raining, night: c.night };
+    this.rain ??= new RainFX(this.ctx.scene, { mobile: this.ctx.mobile });
+    this.rain.update(c.wet, this.ctx.scene.activeCamera?.position);
+    const p = this.ctx.getWorld().player.pos, fight = !!this.exploring?.combat;
+    const set = sets?.built?.get(sets.current);
+    if (set) set.mood = { density: c.density * (fight ? 0.1 : 1), hurry: 1 + c.wet * 0.7, wind: c.wet + c.cloud * 0.3, player: { x: p.x, z: p.z } };
+    if ((this.atmoT = (this.atmoT ?? 0) - dt) <= 0) {
+      this.atmoT = 0.5;
+      sets?.atmosphere?.({ daylight: c.daylight, cloud: c.cloud, wet: c.wet });
+      const label = `${c.label} · ${c.raining ? "Rain" : c.cloud > 0.5 ? "Overcast" : c.night ? "Night" : "Clear"}`;
+      if (label !== this.skyLabel) { this.skyLabel = label; this._objective(); }
+    }
+  }
+
   _objective() {
     const x = this.exploring, b = x.beat, npcs = b.cast.filter((c) => c.node);
     const n = npcs.filter((c) => x.talked.has(c.id)).length;
@@ -699,7 +730,7 @@ export class StoryPlayer {
     if (this.roaming) {
       const q = this.quests.entries().find((e) => !e.done);
       const track = q ? ` · <b>Quest:</b> ${fillText(q.objective, { ...this.player, flags: this.flags })}` : "";
-      this.ui.objective.innerHTML = `<b>${this.zone.name}</b>${track}`;
+      this.ui.objective.innerHTML = `<b>${this.zone.name}</b>${this.skyLabel ? ` · ${this.skyLabel}` : ""}${track}`;
       this.ui.objective.hidden = false;
     }
     this.ui.objective.hidden = !b.objective;
@@ -731,7 +762,7 @@ export class StoryPlayer {
     }
     for (const c of x.beat.cast) {
       const a = this.stage.get(c.id);
-      if (!a) continue;
+      if (!a || a.hiddenActor) continue; // gone home for the night
       const d = Math.hypot(a.pos.x - p.pos.x, a.pos.z - p.pos.z);
       if (d < 0.95 && d > 0.01) { const k = (0.95 - d) / d; p.pos.x += (p.pos.x - a.pos.x) * k; p.pos.z += (p.pos.z - a.pos.z) * k; } // don't walk through people
       if (c.node && d < best) { best = d; near = c; }
@@ -860,7 +891,7 @@ export class StoryPlayer {
     this.bars = null;
     if (won) {
       e.done = true;
-      if (e.flag) this.flags.set(e.flag, 1);
+      if (e.flag) { this.flags.set(e.flag, 1); this.flags.set(`${e.flag}_VISIT`, Number(this.flags.get(`VISITS_${this.zone.id.toUpperCase()}`)) || 1); }
       const p = world.player.combatant.health;
       p.add(p.max * 0.3); // catch your breath
       this.ctx.hud.banner(`${e.label ?? "AMBUSH"} · CLEARED`);
@@ -905,14 +936,18 @@ export class StoryPlayer {
       const world = this.ctx.getWorld();
       world.bounds = zone.bounds;
       this.ctx.camera.bounds = zone.bounds;
-      this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), inv: this.inventory.toJSON(), zone: id, arrival: arr, episode: null, beat: 0 });
+      this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), inv: this.inventory.toJSON(), zone: id, arrival: arr, episode: null, beat: 0, clock: this.clock?.toJSON() });
       this.ctx.onZone?.(zone);
       const at = arrivalPoint(zone, arr);
       this._fade(false, 0.5);
       this.ctx.hud.banner(`${zone.name.toUpperCase()} · ${zone.region.toUpperCase()}`);
       this.flags.set(`VISITED_${id.toUpperCase()}`, 1);
+      this.flags.set(`VISITS_${id.toUpperCase()}`, (Number(this.flags.get(`VISITS_${id.toUpperCase()}`)) || 0) + 1);
+      this.clock ??= new WorldClock();
+      this.clock.setClimate(id);
+      this.skyLabel = null; this.atmoT = 0;
       world.resetPlayer(); // a new zone: back to full health (explore puts Rook at the arrival point)
-      const out = await this.explore({ id: `zone-${id}`, stage: zone.stage, rook: at, cast: zone.cast, exits: zone.exits, pickups: zone.pickups, encounters: zone.encounters,
+      const out = await this.explore({ id: `zone-${id}`, zone, stage: zone.stage, rook: at, cast: zone.cast, exits: zone.exits, pickups: zone.pickups, encounters: zone.encounters,
         objective: zone.exits.map((e) => `<b>Exit:</b> ${e.label}`).join(" · ") });
       if (!this.active) return;
       this._fade(true, 0.35);
@@ -924,7 +959,7 @@ export class StoryPlayer {
 
   /** Save right now (after shopping, etc.): the current zone when roaming, else the episode's resume point. */
   saveNow() {
-    if (this.roaming && this.zone) this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), inv: this.inventory.toJSON(), zone: this.zone.id, arrival: this.arrival ?? null, episode: null, beat: 0 });
+    if (this.roaming && this.zone) this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), inv: this.inventory.toJSON(), zone: this.zone.id, arrival: this.arrival ?? null, episode: null, beat: 0, clock: this.clock?.toJSON() });
     else this.autosave();
   }
 
