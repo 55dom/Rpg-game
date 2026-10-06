@@ -5,7 +5,7 @@ import { EventType } from "./core/abilities.js";
 import { Team } from "./core/combat.js";
 import { World } from "./sim/world.js";
 import { ACOLYTE_ABILITIES } from "./data/acolyte.js";
-import { ROOK_ABILITIES } from "./data/rook.js";
+import { ROOK_ABILITIES, ROOK_STATS } from "./data/rook.js";
 import { PAGES } from "./data/pages.js";
 import { EPISODE_4 } from "./data/run.js";
 import { B, PALETTE, glow, clamp01, toonFallbackIfBroken } from "./runtime/look.js";
@@ -29,6 +29,8 @@ import { EPISODE_4_STORY, EP4_SCRIPT } from "./data/story/ep4.js";
 import { WORLD_SCRIPT } from "./data/story/world.js";
 import { ZONES } from "./data/zones.js";
 import { Inventory } from "./core/inventory.js";
+import { Progress, addMods, pageLevel, pageLevelProgress } from "./core/progress.js";
+import { SKILLS, TREE_COLUMNS, XP_BY_KIND, PAGE_ROMAN, MAX_LEVEL } from "./data/skills.js";
 import { ITEMS, SHOPS, SLOTS, BOUNTIES, slotKind } from "./data/items.js";
 import { squadRank } from "./core/quests.js";
 import { fillText } from "./core/script.js";
@@ -339,6 +341,11 @@ export function boot(doc = document) {
           break;
         }
         case "kill":
+          if (state.mode === "story" && ev.defender.team === Team.Enemy && XP_BY_KIND[ev.defender.kind]) {
+            const n = XP_BY_KIND[ev.defender.kind];
+            vfx.number({ x: ev.defender.pos.x, y: ev.defender.pos.y + 2.9, z: ev.defender.pos.z }, `+${n} XP`, "text");
+            story.gainXp(n);
+          }
           if (state.mode === "story" && ev.defender.team === Team.Enemy && BOUNTIES[ev.defender.kind]) {
             const n = BOUNTIES[ev.defender.kind];
             story.inventory.earn(n);
@@ -391,6 +398,11 @@ export function boot(doc = document) {
           sfx.play("surgeFull");
           break;
         }
+        case "pageLevel":
+          if (ev.level !== 3) { hud.toast(`${ev.page.name.toUpperCase()} · ${PAGE_ROMAN[ev.level - 1]}`, "afterimage"); sfx.play("ui"); }
+          if (ev.level === 5) hud.banner(`${ev.page.name.toUpperCase()} MASTERED · A QUARTER LESS MANA`);
+          refreshGrimDot();
+          break;
         case "pageEvolved": hud.toast(ev.branch.name.toUpperCase(), "finisher"); sfx.play("ultActivate"); break;
         case "windWall": {
           const z = ev.zone;
@@ -446,6 +458,7 @@ export function boot(doc = document) {
   // Page evolution choice (pauses the fight).
   const pageModal = root.querySelector("[data-pages]");
   const openPages = () => {
+    if (state.mode === "story" && world.progress) { openGrimoire(); return; }
     const slot = Object.keys(world.pages).find((k) => world.pages[k].ready);
     if (!slot) { hud.pushLog("No page is ready to evolve yet"); return; }
     const def = PAGES[slot];
@@ -541,6 +554,7 @@ export function boot(doc = document) {
     root.querySelector("[data-start]").classList.add("gone");
     state.mode = mode;
     root.classList.toggle("story-mode", mode === "story");
+    if (mode === "story") refreshGrimDot();
     if (mode === "story") return; // the story player drives the world
     if (world.ultimate === false || !world.companions.length) newWorld();
     if (mode === "run") world.startRun(EPISODE_4); else world.spawnWave();
@@ -565,7 +579,7 @@ export function boot(doc = document) {
     setPlayerVisible: (on) => views.get(world.player)?.setVisible(on),
     setSquadVisible: (on) => { for (const c of world.companions) views.get(c)?.setVisible(on); },
     getWorld: () => world,
-    makeWorld: (opts) => newWorld({ ...opts, mods: story.inventory.mods }),
+    makeWorld: (opts) => newWorld({ ...opts, mods: statMods(), progress: story.progress }),
     openShop: (id) => openShop(id),
     onQuest: (e) => {
       if (e.type === "questStart") { hud.toast("NEW QUEST", "afterimage"); hud.banner(e.quest.title.toUpperCase()); sfx.play("surgeFull"); }
@@ -576,6 +590,15 @@ export function boot(doc = document) {
         hud.banner(`${e.quest.title.toUpperCase()}${r.marks ? ` · +${r.marks} MARKS` : ""}`);
       }
     },
+    onXp: (n, levels) => {
+      if (!levels) return;
+      const pr = story.progress;
+      hud.toast(`LEVEL UP · ${pr.level}`, "finisher"); sfx.play("surgeFull");
+      hud.banner(`+${levels} SKILL POINT${levels > 1 ? "S" : ""}`);
+      applyGear();
+      const p = world.player; p.combatant.health.set(p.combatant.health.max); p.mana?.fill(); // a level-up restores you
+      refreshGrimDot();
+    },
     onEvents: (evs) => onEvents(evs),
   }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }, { episode: EPISODE_3, script: EP3_SCRIPT }, { episode: EPISODE_4_STORY, script: EP4_SCRIPT }], [WORLD_SCRIPT]);
   const playerName = root.querySelector(".player-card .name");
@@ -584,7 +607,7 @@ export function boot(doc = document) {
     story.stop();
     state.started = false; state.mode = null; state.modal = false;
     root.classList.remove("story-mode", "in-scene", "roaming");
-    mapModal.hidden = true; journal.hidden = true; shopModal.hidden = true;
+    mapModal.hidden = true; journal.hidden = true; shopModal.hidden = true; grim.hidden = true;
     newWorld();
     showName("Rook");
     refreshContinue();
@@ -612,7 +635,7 @@ export function boot(doc = document) {
   const begin = () => {
     createModal.hidden = true; state.modal = false;
     story.flags.load({});
-    story.inventory = new Inventory();
+    story.inventory = new Inventory(); story.progress = new Progress();
     story.player = { name: cleanName(nameInput.value), pronouns };
     playStory("ep1", 0);
   };
@@ -631,7 +654,7 @@ export function boot(doc = document) {
     const last = saves.latest()?.save;
     story.player = last ? { name: last.player.name, pronouns: last.player.pronouns } : { name: "Rook", pronouns: "they" };
     story.flags.load(last?.flags ?? {});
-    story.inventory = new Inventory(last?.inv);
+    story.inventory = new Inventory(last?.inv); story.progress = new Progress(last?.prog);
     story.clock = new WorldClock(); story.clock.load(last?.clock); // the day carries on where you left it
     playWorld(last?.zone ?? "lighthouse", last?.zone ? last.arrival : null);
   });
@@ -688,14 +711,17 @@ export function boot(doc = document) {
     const total = inv.mods;
     shopModal.querySelector("[data-total]").textContent = modsText(Object.fromEntries(Object.entries(total).filter(([, v]) => v)));
   };
+  /** Rook's stat mods: equipment plus level growth and Margin skills. */
+  const statMods = () => addMods(story.inventory.mods, story.progress.mods);
   /** Gear changes apply to Rook immediately (outside fights the world can be rebuilt cheaply). */
   const applyGear = () => {
-    const w = world, old = w.mods, m = story.inventory.mods, p = w.player;
-    const base = { maxHealth: p.stats.maxHealth - old.health, manaRegenPerSecond: p.stats.manaRegenPerSecond - old.manaRegen, runSpeed: p.stats.runSpeed / (1 + old.speed) };
-    Object.assign(w.mods, m);
-    p.stats = Object.freeze({ ...p.stats, maxHealth: base.maxHealth + m.health, manaRegenPerSecond: base.manaRegenPerSecond + m.manaRegen, runSpeed: base.runSpeed * (1 + m.speed) });
+    const w = world, old = w.mods, m = statMods(), p = w.player;
+    const base = { maxHealth: p.stats.maxHealth - old.health, maxMana: p.stats.maxMana - (old.mana ?? 0), manaRegenPerSecond: p.stats.manaRegenPerSecond - old.manaRegen, runSpeed: p.stats.runSpeed / (1 + old.speed) };
+    Object.assign(w.mods, { mana: 0, ...m });
+    p.stats = Object.freeze({ ...p.stats, maxHealth: base.maxHealth + m.health, maxMana: base.maxMana + (m.mana ?? 0), manaRegenPerSecond: base.manaRegenPerSecond + m.manaRegen, runSpeed: base.runSpeed * (1 + m.speed) });
     const hp = p.combatant.health;
     hp.max = p.stats.maxHealth; hp.set(Math.min(hp.current, hp.max));
+    if (p.mana) { p.mana.max = p.stats.maxMana; p.mana.set(Math.min(p.mana.current, p.mana.max)); }
   };
   const openShop = (shopId = null) => new Promise((res) => {
     shopDone = res;
@@ -723,6 +749,58 @@ export function boot(doc = document) {
   journal.querySelector("[data-journal-close]").addEventListener("click", () => { journal.hidden = true; state.modal = false; sfx.play("ui"); });
   menu("journal", openJournal);
 
+  // Grimoire: level and stats, page mastery (and evolution), and the Grimoire Tree.
+  const grim = root.querySelector("[data-grimoire]"), grimDot = root.querySelector("[data-grim-dot]");
+  const grimShort = root.querySelector("[data-grim-short]");
+  const refreshGrimDot = () => {
+    if (grimDot) grimDot.hidden = !(story.progress.points > 0 || Object.values(world.pages).some((p) => p.ready));
+    if (grimShort) grimShort.textContent = `LV${story.progress.level}`;
+  };
+  const renderGrimoire = () => {
+    const pr = story.progress, m = statMods();
+    grim.querySelector("[data-grim-lv]").textContent = `LEVEL ${pr.level}`;
+    grim.querySelector("[data-grim-xp]").style.width = pr.next ? `${Math.round((pr.xp / pr.next) * 100)}%` : "100%";
+    grim.querySelector("[data-grim-xptext]").textContent = pr.level >= MAX_LEVEL ? "MAX" : `${pr.xp} / ${pr.next} XP`;
+    grim.querySelector("[data-grim-stats]").innerHTML = [
+      ["HEALTH", `${ROOK_STATS.maxHealth + m.health}`], ["MANA", `${ROOK_STATS.maxMana + (m.mana ?? 0)} · +${(ROOK_STATS.manaRegenPerSecond + m.manaRegen).toFixed(0)}/s`],
+      ["ATTACK", `+${Math.round(m.attack * 100)}%`], ["POSTURE DAMAGE", `+${Math.round(m.posture * 100)}%`],
+      ["DEFENSE", `${Math.round((m.defense ?? 0) * 100)}%`], ["SURGE GAIN", `+${Math.round((m.surge ?? 0) * 100)}%`],
+    ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+    grim.querySelector("[data-grim-pages]").innerHTML = Object.entries(PAGES).map(([slot, def]) => {
+      const pg = pr.pages[slot], lv = pageLevel(slot, pg.xp), br = pg.branch && def.branches.find((b) => b.key === pg.branch);
+      const b = pr.pageBonus(slot), locked = !world.loadout[slot];
+      const choose = pg.ready ? def.branches.map((x) => `<button class="go" data-evolve="${slot}:${x.key}" title="${x.desc}">${x.name.toUpperCase()}</button>`).join(" ") : "";
+      return `<div class="row${pg.ready ? " ready" : ""}"><b>${PAGE_ROMAN[lv - 1]}</b><span>${br ? br.name : def.name}${locked ? " <em>not in this grimoire yet</em>" : ""}<small>${pg.ready ? "Ready to evolve: choose a branch" : br ? `Evolved from ${def.name}` : lv < 3 ? "Evolves at III" : ""}${b.dmg > 1 ? ` · +${Math.round((b.dmg - 1) * 100)}% damage` : ""}${b.mana < 1 ? ` · −${Math.round((1 - b.mana) * 100)}% mana` : ""}</small>${choose ? `<span class="evo">${choose}</span>` : ""}</span><span class="xpbar"><u style="width:${Math.round(pageLevelProgress(slot, pg.xp) * 100)}%"></u></span></div>`;
+    }).join("");
+    grim.querySelector("[data-grim-pts]").textContent = `THE GRIMOIRE TREE · ${pr.points} SKILL POINT${pr.points === 1 ? "" : "S"}`;
+    grim.querySelector("[data-grim-tree]").innerHTML = TREE_COLUMNS.map(({ col, name }) => `<div class="col"><b>${name}</b>${
+      Object.values(SKILLS).filter((n) => n.col === col).map((n) => {
+        const have = pr.skills.has(n.id), why = pr.blocker(n.id);
+        return `<button data-learn="${n.id}" class="${have ? "have" : why ? "" : "can"}" ${have || why ? "disabled" : ""}><b>${n.name}</b><small>${n.desc}</small><em>${have ? "LEARNED" : why ? why.toUpperCase() : `LEARN · ${n.cost} PT${n.cost > 1 ? "S" : ""}`}</em></button>`;
+      }).join("")}</div>`).join("");
+    for (const btn of grim.querySelectorAll("[data-learn]")) btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!story.progress.learn(btn.dataset.learn)) return;
+      sfx.play("ultActivate"); hud.toast(SKILLS[btn.dataset.learn].name.toUpperCase(), "finisher");
+      if (world.progress === story.progress) world.applyLoadout(); // page bonuses apply mid-fight too
+      applyGear(); story.saveNow(); renderGrimoire(); refreshGrimDot();
+    });
+    for (const btn of grim.querySelectorAll("[data-evolve]")) btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const [slot, key] = btn.dataset.evolve.split(":");
+      if (world.progress !== story.progress) { story.progress.pages[slot].branch = key; story.progress.pages[slot].ready = false; }
+      else world.evolvePage(slot, key);
+      onEvents(world.drainEvents()); story.saveNow(); renderGrimoire(); refreshGrimDot();
+    });
+  };
+  const openGrimoire = () => {
+    if (state.mode !== "story") return;
+    sfx.play("ui"); renderGrimoire();
+    grim.hidden = false; state.modal = true;
+  };
+  grim.querySelector("[data-grim-close]").addEventListener("click", () => { grim.hidden = true; state.modal = false; sfx.play("ui"); });
+  menu("grimoire", openGrimoire);
+
   menu("bag", () => { if (state.mode === "story" && shopModal.hidden) openShop(null); });
   const continueBtn = startScreen.querySelector("[data-continue]");
   const refreshContinue = () => {
@@ -737,7 +815,7 @@ export function boot(doc = document) {
     if (!last) return;
     story.player = { name: last.player.name, pronouns: last.player.pronouns };
     story.flags.load(last.flags);
-    story.inventory = new Inventory(last.inv);
+    story.inventory = new Inventory(last.inv); story.progress = new Progress(last.prog);
     if (last.zone && ZONES[last.zone]) { playWorld(last.zone, last.arrival); return; }
     playStory(last.episode, last.beat);
   };
@@ -758,7 +836,7 @@ export function boot(doc = document) {
     closeSlots();
     story.player = { name: sv.player.name, pronouns: sv.player.pronouns };
     story.flags.load(sv.flags);
-    story.inventory = new Inventory(sv.inv);
+    story.inventory = new Inventory(sv.inv); story.progress = new Progress(sv.prog);
     const ep = story.episodeById(sv.episode);
     if (state.started) { story.stop(); state.started = false; }
     playStory(sv.episode, sv.beat >= (ep?.beats.length ?? 0) ? 0 : sv.beat);
@@ -778,7 +856,7 @@ export function boot(doc = document) {
       closeSlots();
       story.player = last ? { name: last.player.name, pronouns: last.player.pronouns } : { name: "Rook", pronouns: "they" };
       story.flags.load(last?.flags ?? {});
-      story.inventory = new Inventory(last?.inv);
+      story.inventory = new Inventory(last?.inv); story.progress = new Progress(last?.prog);
       playStory(b.dataset.ep, 0);
     });
     const list = slotsModal.querySelector("[data-slot-list]");

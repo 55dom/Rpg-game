@@ -12,6 +12,8 @@ import { validateCutscene, sampleCamera, eventsBetween, sampleMove } from "../co
 import { B, toon2, glow } from "./look.js";
 import { ZONES, arrivalPoint } from "../data/zones.js";
 import { Inventory } from "../core/inventory.js";
+import { Progress } from "../core/progress.js";
+import { EPISODE_XP, QUEST_XP } from "../data/skills.js";
 import { EPISODE_REWARD } from "../data/items.js";
 import { QuestLog } from "../core/quests.js";
 import { QUESTS } from "../data/quests.js";
@@ -314,8 +316,9 @@ export class StoryPlayer {
     this.flags = new FlagStore();
     this.player = { name: "Rook", pronouns: "they" };
     this.inventory = new Inventory();
+    this.progress = new Progress();
     this.quests = new QuestLog(QUESTS, this.flags, {
-      onReward: (q, r) => { if (r.marks) this.inventory.earn(r.marks); },
+      onReward: (q, r) => { if (r.marks) this.inventory.earn(r.marks); this.gainXp(r.xp ?? QUEST_XP); },
       onEvent: (e) => this.ctx.onQuest?.(e),
     });
     let updating = false;
@@ -407,22 +410,31 @@ export class StoryPlayer {
     if (this.active && this.director.done && !this.flags.get(`${ep.id.toUpperCase()}_PAID`)) { // a little pay for finishing an episode
       this.flags.set(`${ep.id.toUpperCase()}_PAID`, 1);
       this.inventory.earn(EPISODE_REWARD);
+      this.gainXp(EPISODE_XP);
     }
     if (this.active) this.autosave();
+  }
+
+  /** Rook earns XP (fights, quests, episodes); the host shows level-ups. */
+  gainXp(n, at = null) {
+    if (!n) return 0;
+    const levels = this.progress.gainXp(n);
+    this.ctx.onXp?.(n, levels, at);
+    return levels;
   }
 
   /** The current resume point as a save record (for the slots menu). */
   snapshot() {
     if (!this.director || !this.ep) return null;
     const { episode, beat } = this.director.done ? { episode: this.ep.id, beat: this.ep.beats.length } : this.director.resumePoint;
-    return { player: this.player, flags: this.flags.snapshot(), inv: this.inventory.toJSON(), episode, beat };
+    return { player: this.player, flags: this.flags.snapshot(), inv: this.inventory.toJSON(), prog: this.progress.toJSON(), episode, beat };
   }
 
   autosave() {
     if (!this.director) return;
     this.ctx.saves.reach(this.ep.number + (this.director.done ? 1 : 0));
     const { episode, beat } = this.director.done ? { episode: this.ep.id, beat: this.ep.beats.length } : this.director.resumePoint;
-    this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), inv: this.inventory.toJSON(), episode, beat });
+    this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), inv: this.inventory.toJSON(), prog: this.progress.toJSON(), episode, beat });
   }
 
   stop() {
@@ -936,7 +948,7 @@ export class StoryPlayer {
       const world = this.ctx.getWorld();
       world.bounds = zone.bounds;
       this.ctx.camera.bounds = zone.bounds;
-      this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), inv: this.inventory.toJSON(), zone: id, arrival: arr, episode: null, beat: 0, clock: this.clock?.toJSON() });
+      this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), inv: this.inventory.toJSON(), prog: this.progress.toJSON(), zone: id, arrival: arr, episode: null, beat: 0, clock: this.clock?.toJSON() });
       this.ctx.onZone?.(zone);
       const at = arrivalPoint(zone, arr);
       this._fade(false, 0.5);
@@ -959,7 +971,7 @@ export class StoryPlayer {
 
   /** Save right now (after shopping, etc.): the current zone when roaming, else the episode's resume point. */
   saveNow() {
-    if (this.roaming && this.zone) this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), inv: this.inventory.toJSON(), zone: this.zone.id, arrival: this.arrival ?? null, episode: null, beat: 0, clock: this.clock?.toJSON() });
+    if (this.roaming && this.zone) this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), inv: this.inventory.toJSON(), prog: this.progress.toJSON(), zone: this.zone.id, arrival: this.arrival ?? null, episode: null, beat: 0, clock: this.clock?.toJSON() });
     else this.autosave();
   }
 

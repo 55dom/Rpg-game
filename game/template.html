@@ -257,6 +257,8 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
   .menu button { min-width: 32px; height: 30px; padding: 0 6px; font-size: 11px; }
   .menu [data-menu="flashes"], .menu [data-menu="sound"], .menu [data-menu="frameData"] { display: none; }
   .menu { flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
+  .menu .grim-btn .lg { display: none; } .menu .grim-btn .sm { display: inline; }
+  .grim-btn i { margin-left: 3px; width: 6px; height: 6px; }
   .target-card { position: absolute; top: 64px; right: 10px; left: auto; transform: none; width: min(200px, 46vw); }
   .target-card .name { font-size: 10px; flex-wrap: wrap; justify-content: center; }
   .prompt { bottom: auto; top: 34%; font-size: 12px; }
@@ -312,6 +314,37 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .roaming .map-btn { display: inline-block; }
 .roaming .save-btn { display: none; }
 .map-card .ep-list button span { font-size: 13px; color: var(--muted); }
+.grim-card { width: min(860px, 100%); }
+.grim-level { display: flex; align-items: center; gap: 12px; margin: 0 auto 14px; max-width: 460px; }
+.grim-level b { font: 400 20px/1 var(--font-display); color: #ffe08a; letter-spacing: 0.08em; white-space: nowrap; }
+.grim-level small { font: 12px/1 var(--font-mono); color: var(--muted); white-space: nowrap; }
+.xpbar { flex: 1; height: 8px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+.xpbar u { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gale), #ffe08a); }
+.slot-list .xpbar { flex: 0 0 90px; }
+.slot-list .row { display: flex; gap: 12px; align-items: center; text-align: left; width: 100%; font: 400 15px/1.3 var(--font-body); color: var(--text);
+  background: #1d2131; border: 1px solid #343a50; border-radius: 10px; padding: 11px 14px; box-sizing: border-box; }
+.slot-list .row.ready { border-color: var(--gale); }
+.slot-list .row > b { font: 400 18px/1 var(--font-display); color: #ffe08a; min-width: 34px; text-align: center; }
+.slot-list .row > span:not(.xpbar) { flex: 1; }
+.slot-list .row small { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+.slot-list .row em { font-size: 11px; color: var(--muted); }
+.slot-list .row .evo { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.slot-list .row .evo .go { width: auto; flex: 0 0 auto; padding: 7px 14px; font-size: 12px; margin: 0; }
+.tree { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.tree .col { display: grid; gap: 8px; align-content: start; }
+.tree .col > b { font: 600 11px/1.2 var(--font-mono); letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; }
+.tree button { text-align: left; background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: 9px; padding: 9px; font: 13px/1.35 var(--font-body); cursor: pointer; }
+.tree button b { display: block; color: #ffe08a; font-weight: 600; }
+.tree button small { display: block; color: var(--muted); font-size: 11px; margin-top: 3px; }
+.tree button em { display: block; font: normal 10px/1 var(--font-mono); letter-spacing: 0.1em; margin-top: 6px; color: var(--muted); }
+.tree button.can { border-color: var(--gale); } .tree button.can em { color: var(--gale); }
+.tree button.have { border-color: #ffe08a; background: #ffe08a14; } .tree button.have em { color: #ffe08a; }
+.tree button:disabled { opacity: 0.55; cursor: default; }
+.tree button.have:disabled { opacity: 1; }
+.grim-btn i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #ffe08a; margin-left: 5px; vertical-align: 2px; }
+.grim-btn i[hidden] { display: none; }
+.grim-btn .sm { display: none; }
+@media (max-width: 700px) { .tree { grid-template-columns: 1fr 1fr; } }
 .slots-card { max-height: calc(100vh - 32px); overflow: auto; }
 .slots-card h3 { font: 600 11px/1 var(--font-mono); letter-spacing: 0.24em; color: var(--muted); margin: 18px 0 10px; text-align: left; }
 .ep-list, .slot-list { display: grid; gap: 8px; }
@@ -426,6 +459,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <button data-menu="map" class="map-btn" title="World map (P)">MAP</button>
       <button data-menu="bag" class="bag-btn" title="Bag and equipment">BAG</button>
       <button data-menu="journal" class="bag-btn" title="Quests and reputation">QUESTS</button>
+      <button data-menu="grimoire" class="bag-btn grim-btn" title="Level, stats and the Grimoire Tree"><span class="lg">GRIMOIRE</span><span class="sm" data-grim-short>LV</span><i data-grim-dot hidden></i></button>
       <button data-menu="save" class="save-btn" title="Save your story">SAVE</button>
       <button data-menu="reset" title="Restart (R)">↺</button>
     </nav>
@@ -595,6 +629,19 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <div class="slot-list" data-slots-eq></div>
       <p class="total" data-total></p>
       <div class="start-buttons"><button class="go alt" data-shop-close>DONE</button></div>
+    </div>
+  </div>
+  <div class="modal" data-grimoire hidden>
+    <div class="modal-card slots-card grim-card">
+      <h2>GRIMOIRE</h2>
+      <div class="grim-level"><b data-grim-lv>LEVEL 1</b><span class="xpbar"><u data-grim-xp></u></span><small data-grim-xptext></small></div>
+      <dl class="stats rep" data-grim-stats></dl>
+      <h3>PAGES · LEVELS I–V BY USE · III EVOLVES</h3>
+      <div class="slot-list" data-grim-pages></div>
+      <h3 data-grim-pts>THE GRIMOIRE TREE</h3>
+      <div class="tree" data-grim-tree></div>
+      <p class="hint">Level-ups give skill points. A page's last skill needs that page at level III.</p>
+      <div class="start-buttons"><button class="go alt" data-grim-close>BACK</button></div>
     </div>
   </div>
   <div class="modal" data-journal hidden>

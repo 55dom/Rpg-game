@@ -1,6 +1,7 @@
 // DOM HUD: health/posture/mana, target card, combo counter, toasts, context prompts,
 // and the frame-data panel (the designer's x-ray of the combat system).
 
+import { pageLevelProgress } from "../core/progress.js";
 import { Phase } from "../core/abilities.js";
 import { MoveContext } from "../core/abilities.js";
 import { IntentName, maskNames } from "../core/input.js";
@@ -160,7 +161,7 @@ export class Hud {
       this.set(`spk${i}`, el.firstChild, "text", this.label(device, sp.slot));
       this.set(`spn${i}`, el.children[1], "text", name);
       this.set(`spc${i}`, el.children[2], "text", String(ab.manaCost));
-      this.set(`spx${i}`, el.querySelector("u"), "width", pct(page.branch ? 1 : page.xp / def.hitsToEvolve));
+      this.set(`spx${i}`, el.querySelector("u"), "width", pct(pageLevelProgress(sp.slot, page.xp)));
     });
     this.root.classList.toggle("page-ready", Object.values(world.pages).some((pg) => pg.ready));
 

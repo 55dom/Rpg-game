@@ -20,6 +20,7 @@ import { TagSet, matchReactions } from "../core/tags.js";
 import { REACTIONS } from "../data/reactions.js";
 import { ROOK_STATS, ROOK_ABILITIES, ROOK_HITBOXES, buildRookGraph, defaultLoadout } from "../data/rook.js";
 import { PAGES, PAGE_HITBOXES } from "../data/pages.js";
+import { pageLevel } from "../core/progress.js";
 import { hitSpec } from "../core/combat.js";
 import { YARD, constrain, outOfBounds } from "./bounds.js";
 
@@ -234,9 +235,9 @@ export class World {
     this.frame = 0;
     this.bounds = o.bounds ?? YARD; // where fighters may stand (zones swap this)
     // Equipment (core/inventory.js mods): folded into Rook's stats here and into damage in _resolve.
-    this.mods = { attack: 0, defense: 0, health: 0, manaRegen: 0, posture: 0, surge: 0, speed: 0, ...(o.mods ?? {}) };
+    this.mods = { attack: 0, defense: 0, health: 0, mana: 0, manaRegen: 0, posture: 0, surge: 0, speed: 0, ...(o.mods ?? {}) };
     const m = this.mods;
-    this.playerStats = Object.freeze({ ...ROOK_STATS, maxHealth: ROOK_STATS.maxHealth + m.health,
+    this.playerStats = Object.freeze({ ...ROOK_STATS, maxHealth: ROOK_STATS.maxHealth + m.health, maxMana: ROOK_STATS.maxMana + m.mana,
       manaRegenPerSecond: ROOK_STATS.manaRegenPerSecond + m.manaRegen, runSpeed: ROOK_STATS.runSpeed * (1 + m.speed) });
     this.fighters = [];
     this.events = [];
@@ -249,10 +250,17 @@ export class World {
     this.wave = 0;
     this.comboCount = 0;
     this.comboTimer = 0;
-    this.loadout = { ...defaultLoadout(), ...(o.loadout ?? {}) };
     this.ultimate = o.ultimate ?? true;
     this.pageGrowth = o.pages ?? true; // pages earn XP and evolve
-    this.pages = Object.fromEntries(Object.keys(PAGES).map((slot) => [slot, { xp: 0, ready: false, branch: null }]));
+    // Page mastery: shared with the story's Progress (core/progress.js) when there is one, so it carries over.
+    this.progress = o.progress ?? null;
+    this.pages = this.progress?.pages ?? Object.fromEntries(Object.keys(PAGES).map((slot) => [slot, { xp: 0, ready: false, branch: null }]));
+    this.loadout = {};
+    for (const [slot, ab] of Object.entries({ ...defaultLoadout(), ...(o.loadout ?? {}) })) {
+      const br = ab && PAGES[slot] && this.pages[slot]?.branch && ab.id === PAGES[slot].base.id ? PAGES[slot].branches.find((b) => b.key === this.pages[slot].branch) : null;
+      this.loadout[slot] = br ? br.ability : ab; // an evolved page stays evolved
+    }
+    this._fitLoadout();
     this.zones = [];
     this.player = this.add(new Fighter(this, {
       id: "rook", kind: "player", team: Team.Player, stats: this.playerStats, hitboxes: { ...ROOK_HITBOXES, ...PAGE_HITBOXES },
@@ -457,8 +465,22 @@ export class World {
     this.emit({ type: "projectile", projectile: p });
   }
 
+  /** Page bonuses (mastery and Grimoire Tree): each spell's mana cost, and a damage factor by ability id. */
+  _fitLoadout() {
+    this.pageDmg = {};
+    if (!this.progress) return;
+    for (const slot of Object.keys(PAGES)) {
+      const ab = this.loadout[slot];
+      if (!ab) continue;
+      const b = this.progress.pageBonus(slot), base = ab.baseManaCost ?? ab.manaCost;
+      this.loadout[slot] = { ...ab, baseManaCost: base, manaCost: Math.round(base * b.mana) };
+      this.pageDmg[ab.id] = b.dmg;
+    }
+  }
+
   /** Swap the spell on a button and rebuild Rook's combo graph. */
   applyLoadout() {
+    this._fitLoadout();
     const p = this.player;
     const g = buildRookGraph(() => p.context(), ROOK_ABILITIES, this.loadout, { ultimate: this.ultimate });
     g.runner = p.runner;
@@ -477,15 +499,20 @@ export class World {
     return true;
   }
 
-  /** A spell hit grants its page experience (until it evolves). */
+  /** A spell hit grants its page experience: levels I–V, and at III it's ready to evolve. */
   _pageXp(ability) {
     if (!this.pageGrowth) return;
     for (const [slot, ab] of Object.entries(this.loadout)) {
-      if (ab?.id !== ability.id) continue;
-      const page = this.pages[slot];
-      if (page.branch || page.ready) return;
+      if (ab?.id !== ability.id || !PAGES[slot]) continue;
+      const page = this.pages[slot], before = pageLevel(slot, page.xp);
+      if (before >= 5) return;
       page.xp++;
-      if (page.xp >= PAGES[slot].hitsToEvolve) { page.ready = true; this.emit({ type: "pageReady", slot, page: PAGES[slot] }); }
+      const lv = pageLevel(slot, page.xp);
+      if (lv > before) {
+        this.emit({ type: "pageLevel", slot, level: lv, page: PAGES[slot] });
+        if (this.progress) this.applyLoadout(); // stronger (and at V, cheaper) right away
+      }
+      if (lv >= 3 && !page.branch && !page.ready) { page.ready = true; this.emit({ type: "pageReady", slot, page: PAGES[slot] }); }
       return;
     }
   }
@@ -824,6 +851,8 @@ export class World {
     if (spec.damage > 0 && (def.tags.has("SHIELDED") || def.tags.has("WARDED"))) {
       spec = { ...spec, damage: spec.damage * (def.tags.has("SHIELDED") ? Tuning.shieldFactor : Tuning.wardFactor) };
     }
+    const pd = att === this.player && hb.ability ? this.pageDmg[hb.ability.id] : 0;
+    if (pd && pd !== 1) spec = { ...spec, damage: spec.damage * pd };
     if (att === this.player && (this.mods.attack || this.mods.posture)) spec = { ...spec, damage: spec.damage * (1 + this.mods.attack), posture: spec.posture * (1 + this.mods.posture) };
     if (def === this.player && this.mods.defense) spec = { ...spec, damage: spec.damage * (1 - this.mods.defense) };
     if (def.tags.has("EXPOSED")) { // Hask's soft underside, once the bog drains
