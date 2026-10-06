@@ -71,6 +71,8 @@ export const LOOKS = {
     head: "face", hair: "long", weapon: "none", trail: "#d8c8e8" },
   kid: { poses: ACOLYTE_POSES, scale: 0.62, skirt: 0.9, coat: "#4f81bd", trim: "#e6b54e", hairColor: "#3a2a22", skin: "#e8b894",
     head: "face", hair: "spiky", weapon: "none", trail: "#e6b54e" },
+  cook: { poses: ACOLYTE_POSES, scale: 1.04, skirt: 1.3, coat: "#e8e2d4", trim: "#c0504d", hairColor: "#5a3a22", skin: "#d8a07a",
+    head: "face", hair: "crop", beard: "#5a3a22", weapon: "none", shoulders: 1.25, trail: "#ffcf7a" },
   stranger: { poses: ACOLYTE_POSES, scale: 1.08, skirt: 0.78, coat: "#0d0c12", trim: "#0d0c12", hairColor: "#0d0c12", skin: "#0d0c12",
     head: "blank", hair: "crop", weapon: "none", carry: true, trail: "#000000" },
   severin: { poses: SEVERIN_POSES, scale: 1.02, skirt: 0.9, coat: "#ece8f4", trim: "#d4ad4f", hairColor: "#e6d6a2", skin: "#f2d7c2",

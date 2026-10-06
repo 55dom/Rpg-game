@@ -301,6 +301,9 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .shop-card .marks { font: 600 13px/1 var(--font-mono); letter-spacing: 0.2em; color: var(--lantern); margin: -6px 0 6px; }
 .shop-card em { font: 600 10px/1 var(--font-mono); letter-spacing: 0.16em; color: var(--muted); text-transform: uppercase; font-style: normal; margin-left: 6px; }
 .shop-card .total { font-size: 12px; color: var(--gale); text-align: left; margin: 8px 2px 0; }
+.slot-list button.done { opacity: 0.6; }
+.slot-list button.done b { color: var(--gale); }
+.stats.rep { max-width: 460px; grid-template-columns: 210px 1fr; }
 .dmg.marks { color: var(--lantern); font-size: 15px; }
 .roaming .map-btn { display: inline-block; }
 .roaming .save-btn { display: none; }
@@ -315,7 +318,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .ep-list b, .slot-list b { font: 600 12px/1 var(--font-mono); color: var(--lantern); min-width: 52px; }
 .slot-list small, .ep-list small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
 .ep-list[hidden], .slots-card h3[hidden] { display: none; }
-.objective { position: absolute; left: 50%; top: max(14px, env(safe-area-inset-top)); transform: translateX(-50%); max-width: calc(100vw - 32px);
+.objective { position: absolute; left: 50%; top: calc(max(12px, env(safe-area-inset-top)) + 44px); transform: translateX(-50%); max-width: min(620px, calc(100vw - 32px));
   font: 400 13px/1.4 var(--font-body); color: var(--text); background: rgba(15, 17, 23, 0.82); border: 1px solid var(--line); border-left: 3px solid var(--lantern);
   border-radius: 8px; padding: 8px 14px; text-align: center; }
 .objective b { color: var(--lantern); font-weight: 700; }
@@ -418,6 +421,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <button data-menu="assist" title="Assist: wider parry and perfect-dodge windows, hold Slash to keep comboing" aria-pressed="false">AST</button>
       <button data-menu="map" class="map-btn" title="World map (P)">MAP</button>
       <button data-menu="bag" class="bag-btn" title="Bag and equipment">BAG</button>
+      <button data-menu="journal" class="bag-btn" title="Quests and reputation">QUESTS</button>
       <button data-menu="save" class="save-btn" title="Save your story">SAVE</button>
       <button data-menu="reset" title="Restart (R)">↺</button>
     </nav>
@@ -585,6 +589,15 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <div class="slot-list" data-slots-eq></div>
       <p class="total" data-total></p>
       <div class="start-buttons"><button class="go alt" data-shop-close>DONE</button></div>
+    </div>
+  </div>
+  <div class="modal" data-journal hidden>
+    <div class="modal-card slots-card">
+      <h2>JOURNAL</h2>
+      <dl class="stats rep" data-rep></dl>
+      <h3>QUESTS</h3>
+      <div class="slot-list" data-quests></div>
+      <div class="start-buttons"><button class="go alt" data-journal-close>BACK</button></div>
     </div>
   </div>
   <div class="modal" data-map hidden>

@@ -17,12 +17,13 @@ export class Inventory {
   earn(n) { this.marks += Math.max(0, Math.floor(n)); return this.marks; }
 
   /** Buy an item: needs enough marks and not already owned (equipment is unique). */
-  buy(id) {
+  buy(id, priceFactor = 1) {
     const it = ITEMS[id];
     if (!it) return { ok: false, reason: "unknown" };
     if (this.owned.has(id)) return { ok: false, reason: "owned" };
-    if (this.marks < it.price) return { ok: false, reason: "marks" };
-    this.marks -= it.price;
+    const price = Math.round(it.price * priceFactor);
+    if (this.marks < price) return { ok: false, reason: "marks" };
+    this.marks -= price;
     this.owned.add(id);
     return { ok: true };
   }

@@ -28,6 +28,8 @@ import { WORLD_SCRIPT } from "./data/story/world.js";
 import { ZONES } from "./data/zones.js";
 import { Inventory } from "./core/inventory.js";
 import { ITEMS, SHOPS, SLOTS, BOUNTIES, slotKind } from "./data/items.js";
+import { squadRank } from "./core/quests.js";
+import { fillText } from "./core/script.js";
 
 const TRAIL_COLORS = { default: "#ffd98a", GaleCutter: PALETTE.gale, VacuumPull: PALETTE.gale, TempestEdge: "#a8f5dc", Counter: "#dff6ff", LanternBreak: "#ffcc55", enemy: "#ff5a4a" };
 const SPELLS = [
@@ -512,6 +514,14 @@ export function boot(doc = document) {
     onEvents(world.drainEvents());
   };
   const startScreen = root.querySelector("[data-start]");
+  // Title buttons: once the game is running they must never fire again (a focused button would
+  // otherwise "click" on Enter), so they drop focus and ignore clicks after the start.
+  startScreen.addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    b.blur();
+    if (state.started) { e.stopImmediatePropagation(); e.preventDefault(); }
+  }, true);
   startScreen.querySelector("[data-start-run]")?.addEventListener("click", (e) => { e.stopPropagation(); start("run"); });
   startScreen.querySelector("[data-start-yard]")?.addEventListener("click", (e) => { e.stopPropagation(); start("yard"); });
 
@@ -524,6 +534,15 @@ export function boot(doc = document) {
     getWorld: () => world,
     makeWorld: (opts) => newWorld({ ...opts, mods: story.inventory.mods }),
     openShop: (id) => openShop(id),
+    onQuest: (e) => {
+      if (e.type === "questStart") { hud.toast("NEW QUEST", "afterimage"); hud.banner(e.quest.title.toUpperCase()); sfx.play("surgeFull"); }
+      if (e.type === "questStage") { hud.toast("QUEST UPDATED", "afterimage"); sfx.play("ui"); }
+      if (e.type === "questDone") {
+        const r = e.quest.reward ?? {};
+        hud.toast("QUEST COMPLETE", "finisher"); sfx.play("ultActivate");
+        hud.banner(`${e.quest.title.toUpperCase()}${r.marks ? ` · +${r.marks} MARKS` : ""}`);
+      }
+    },
     onEvents: (evs) => onEvents(evs),
   }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }, { episode: EPISODE_3, script: EP3_SCRIPT }, { episode: EPISODE_4_STORY, script: EP4_SCRIPT }], [WORLD_SCRIPT]);
   const playerName = root.querySelector(".player-card .name");
@@ -532,7 +551,7 @@ export function boot(doc = document) {
     story.stop();
     state.started = false; state.mode = null; state.modal = false;
     root.classList.remove("story-mode", "in-scene", "roaming");
-    mapModal.hidden = true;
+    mapModal.hidden = true; journal.hidden = true; shopModal.hidden = true;
     newWorld();
     showName("Rook");
     refreshContinue();
@@ -608,10 +627,11 @@ export function boot(doc = document) {
     stock.hidden = !shopId;
     shopModal.querySelector("[data-stock-h]").hidden = !shopId;
     if (shopId) {
-      stock.innerHTML = SHOPS[shopId].stock.map((id) => { const it = ITEMS[id], own = inv.owned.has(id);
-        return `<button data-buy="${id}" ${own || inv.marks < it.price ? "disabled" : ""}><b>${own ? "OWNED" : `${it.price} M`}</b><span>${it.name} <em>${it.kind}</em><small>${modsText(it.mods)} — ${it.desc}</small></span></button>`; }).join("");
+      const off = (Number(story.flags.get("RENOWN_AURELIN")) || 0) >= 10 ? 0.9 : 1; // renown buys you a discount
+      stock.innerHTML = SHOPS[shopId].stock.map((id) => { const it = ITEMS[id], own = inv.owned.has(id), price = Math.round(it.price * off);
+        return `<button data-buy="${id}" ${own || inv.marks < price ? "disabled" : ""}><b>${own ? "OWNED" : `${price} M`}</b><span>${it.name} <em>${it.kind}</em><small>${modsText(it.mods)} — ${it.desc}</small></span></button>`; }).join("");
       for (const b of stock.querySelectorAll("[data-buy]")) b.addEventListener("click", () => {
-        const r = inv.buy(b.dataset.buy);
+        const r = inv.buy(b.dataset.buy, off);
         if (r.ok) { sfx.play("surgeFull"); hud.toast("BOUGHT", "clear"); const it = ITEMS[b.dataset.buy];
           const slot = it.kind === "charm" ? (inv.equipped.charm1 ? (inv.equipped.charm2 ? null : "charm2") : "charm1") : it.kind;
           if (slot) inv.equip(slot, b.dataset.buy); // put new gear on right away when there's room
@@ -649,6 +669,26 @@ export function boot(doc = document) {
     shopModal.hidden = false; state.modal = true;
   });
   shopModal.querySelector("[data-shop-close]").addEventListener("click", () => { shopModal.hidden = true; state.modal = false; sfx.play("ui"); story.saveNow(); const r = shopDone; shopDone = null; r?.(); });
+  // Journal: quests, reputation, and the squad's place in the Merit ranking.
+  const journal = root.querySelector("[data-journal]");
+  const openJournal = () => {
+    if (state.mode !== "story") return;
+    sfx.play("ui");
+    const f = story.flags, rank = squadRank(Number(f.get("MERIT")) || 0);
+    journal.querySelector("[data-rep]").innerHTML = [
+      ["SQUAD RANK", `The Lanterns are ${["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th (last)"][rank.place]} of seven`],
+      ["MERIT", `${f.get("MERIT") || 0}${rank.next ? ` · next rank at ${rank.next}` : " · top of the Crown's ranking"}`],
+      ["SQUAD REPUTATION", f.get("REP_SQUAD") || 0], ["RENOWN · AURELIN", f.get("RENOWN_AURELIN") || 0], ["RENOWN · GREYWATER FENS", f.get("RENOWN_FENS") || 0],
+    ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+    const list = story.quests.entries();
+    journal.querySelector("[data-quests]").innerHTML = list.length ? list.map((q) =>
+      `<button class="${q.done ? "done" : ""}"><b>${q.done ? "DONE" : "ACTIVE"}</b><span>${q.title}<small>${fillText(q.objective, { ...story.player, flags: story.flags })} · from ${q.giver}, ${q.region}</small></span></button>`).join("")
+      : `<p class="hint">No quests yet. Talk to people: someone always needs something.</p>`;
+    journal.hidden = false; state.modal = true;
+  };
+  journal.querySelector("[data-journal-close]").addEventListener("click", () => { journal.hidden = true; state.modal = false; sfx.play("ui"); });
+  menu("journal", openJournal);
+
   menu("bag", () => { if (state.mode === "story" && shopModal.hidden) openShop(null); });
   const continueBtn = startScreen.querySelector("[data-continue]");
   const refreshContinue = () => {

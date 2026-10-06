@@ -13,6 +13,9 @@ import { B, toon2, glow } from "./look.js";
 import { ZONES, arrivalPoint } from "../data/zones.js";
 import { Inventory } from "../core/inventory.js";
 import { EPISODE_REWARD } from "../data/items.js";
+import { QuestLog } from "../core/quests.js";
+import { QUESTS } from "../data/quests.js";
+import { compileExpr, truthy } from "../core/flags.js";
 import { inRect } from "../sim/bounds.js";
 
 /** Gesture poses for dialogue: weapon-arm and off-arm rotations, a bow, a head tilt. */
@@ -308,6 +311,16 @@ export class StoryPlayer {
     this.flags = new FlagStore();
     this.player = { name: "Rook", pronouns: "they" };
     this.inventory = new Inventory();
+    this.quests = new QuestLog(QUESTS, this.flags, {
+      onReward: (q, r) => { if (r.marks) this.inventory.earn(r.marks); },
+      onEvent: (e) => this.ctx.onQuest?.(e),
+    });
+    let updating = false;
+    this.flags.onChange(() => { // any flag write can finish a quest stage
+      if (updating) return;
+      updating = true;
+      try { this.quests.update(); } finally { updating = false; }
+    });
     for (const cs of Object.values(CUTSCENES)) validateCutscene(cs);
     for (const { episode } of episodes) for (const b of episode.beats) if (b.cutscene && !CUTSCENES[b.cutscene]) throw new Error(`${episode.id}/${b.id}: no cutscene ${b.cutscene}`);
     this.stage = new Stage(ctx.scene, ctx.getWorld);
@@ -560,6 +573,14 @@ export class StoryPlayer {
       case "face": this.stage.face(actorOf(args[0]), actorOf(args[1])); break;
       case "cue": this.ctx.sets?.cue(args[0]); break;
       case "show": case "hide": this.stage.show(actorOf(args[0]), name === "show"); break;
+      case "quest": if (args[0] === "start") this.quests.start(args[1]); break;
+      case "pay": { // <<pay N>>: spend Marks; $PAID says whether it worked
+        const n = Number(args[0]) || 0, ok = this.inventory.marks >= n;
+        if (ok) this.inventory.marks -= n;
+        this.flags.set("PAID", ok ? 1 : 0);
+        break;
+      }
+      case "earn": this.inventory.earn(Number(args[0]) || 0); this.ctx.hud.toast(`+${args[0]} MARKS`, "clear"); break;
       case "cutscene": await this.playCutscene(args[0]); break;
       default: break;   // unknown commands are ignored (forward-compatible scripts)
     }
@@ -641,7 +662,7 @@ export class StoryPlayer {
     p.relaxed = true;
     this.ctx.root.classList.add("exploring");
     this.ctx.camera.release();
-    this.exploring = { beat, talked: new Set(), near: null, busy: false };
+    this.exploring = { beat, talked: new Set(), near: null, busy: false, pickups: this._makePickups(beat.pickups ?? []) };
     this._objective();
     const out = await new Promise((res) => { this.exploring.resolve = res; });
     this._endExplore();
@@ -649,17 +670,36 @@ export class StoryPlayer {
   }
 
   _endExplore() {
+    for (const pk of this.exploring?.pickups ?? []) pk.node.dispose(false, true);
     this.exploring = null;
     this.ctx.root.classList.remove("exploring");
     if (this.ui.objective) this.ui.objective.hidden = true;
     if (this.ui.talk) this.ui.talk.hidden = true;
   }
 
+  /** Glowing things on the ground you can pick up (quest items). Shown while their condition holds. */
+  _makePickups(list) {
+    const BB = B(), MB = BB.MeshBuilder, scene = this.ctx.scene;
+    return list.map((p) => {
+      const node = new BB.TransformNode(`pickup-${p.id}`, scene);
+      node.position.set(p.x, 0, p.z);
+      const lamp = MB.CreateBox("pickupLamp", { width: 0.28, height: 0.36, depth: 0.28 }, scene); lamp.parent = node; lamp.position.y = 0.4; lamp.material = glow(scene, `pickup-${p.id}-m`, "#ffd36a");
+      const ring = MB.CreateTorus("pickupRing", { diameter: 1, thickness: 0.04, tessellation: 24 }, scene); ring.parent = node; ring.position.y = 0.03; ring.material = lamp.material;
+      for (const m of [lamp, ring]) m.isPickable = false;
+      return { ...p, node, lamp, cond: compileExpr(p.show ?? "1") };
+    });
+  }
+
   _objective() {
     const x = this.exploring, b = x.beat, npcs = b.cast.filter((c) => c.node);
     const n = npcs.filter((c) => x.talked.has(c.id)).length;
     this.ui.objective.innerHTML = fillText(b.objective ?? "", { ...this.player, flags: this.flags }).replace("{n}", n).replace("{total}", npcs.length).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
-    if (this.roaming) this.ui.objective.innerHTML = `<b>${this.zone.name}</b> · ${this.ui.objective.innerHTML}`;
+    if (this.roaming) {
+      const q = this.quests.entries().find((e) => !e.done);
+      const track = q ? ` · <b>Quest:</b> ${fillText(q.objective, { ...this.player, flags: this.flags })}` : "";
+      this.ui.objective.innerHTML = `<b>${this.zone.name}</b>${track}`;
+      this.ui.objective.hidden = false;
+    }
     this.ui.objective.hidden = !b.objective;
   }
 
@@ -674,6 +714,14 @@ export class StoryPlayer {
     }
     const p = this.ctx.getWorld().player;
     let near = null, best = 2.4;
+    for (const pk of x.pickups) {
+      const on = truthy(pk.cond(this.flags));
+      pk.node.setEnabled(on);
+      if (!on) continue;
+      pk.lamp.position.y = 0.4 + Math.sin(this.time * 3) * 0.08; pk.lamp.rotation.y += dt * 1.5;
+      const d = Math.hypot(pk.x - p.pos.x, pk.z - p.pos.z);
+      if (d < best) { best = d; near = { id: pk.id, pickup: pk }; }
+    }
     for (const c of x.beat.cast) {
       const a = this.stage.get(c.id);
       if (!a) continue;
@@ -688,10 +736,10 @@ export class StoryPlayer {
       if (near) {
         const c = this.ctx.controls;
         const device = c.device === "keyboard" && !c.keyboardUsed && this.ctx.root.classList.contains("is-touch") ? "touch" : c.device;
-        t.innerHTML = `<kbd>${this.ctx.hud.label(device, "Light")}</kbd>Talk to ${Object.values(CAST).find((k) => k.actor === near.id)?.name ?? near.id}`;
+        t.innerHTML = `<kbd>${this.ctx.hud.label(device, "Light")}</kbd>${near.pickup ? near.pickup.label : `Talk to ${Object.values(CAST).find((k) => k.actor === near.id)?.name ?? near.id}`}`;
       }
     }
-    if (near) { const a = this.stage.get(near.id); if (!a.down) a.targetYaw = Math.atan2(p.pos.x - a.pos.x, p.pos.z - a.pos.z); }
+    if (near && !near.pickup) { const a = this.stage.get(near.id); if (!a.down) a.targetYaw = Math.atan2(p.pos.x - a.pos.x, p.pos.z - a.pos.z); }
   }
 
   /** Talk to whoever is close (exploration). */
@@ -699,6 +747,13 @@ export class StoryPlayer {
     const x = this.exploring;
     if (!x || x.busy || !x.near || x.cooldown > 0) return false;
     const c = x.near;
+    if (c.pickup) { // pick it up: set its flag (quests notice), then it disappears
+      this.flags.set(c.pickup.flag, 1);
+      this.ctx.sfx.play("surgeFull");
+      this.ctx.hud.toast(c.pickup.label.replace(/^Pick up /, "").toUpperCase(), "clear");
+      x.near = null; x.cooldown = 0.6; this._objective();
+      return true;
+    }
     x.busy = true; this.ui.talk.hidden = true;
     this._enterScene(true);
     const p = this.ctx.getWorld().player;
@@ -716,6 +771,7 @@ export class StoryPlayer {
     this.view.hide();
     x.busy = false; x.near = null; x.cooldown = 0.6; // the key that closed the last line mustn't reopen it
     this._objective();
+    if (this.roaming) this.saveNow(); // talking can start or finish quests
     if (x.beat.required?.length && x.beat.required.every((id) => x.talked.has(id))) x.resolve();
     return true;
   }
@@ -739,7 +795,7 @@ export class StoryPlayer {
       const at = arrivalPoint(zone, arr);
       this._fade(false, 0.5);
       this.ctx.hud.banner(`${zone.name.toUpperCase()} · ${zone.region.toUpperCase()}`);
-      const out = await this.explore({ id: `zone-${id}`, stage: zone.stage, rook: at, cast: zone.cast, exits: zone.exits,
+      const out = await this.explore({ id: `zone-${id}`, stage: zone.stage, rook: at, cast: zone.cast, exits: zone.exits, pickups: zone.pickups,
         objective: zone.exits.map((e) => `<b>Exit:</b> ${e.label}`).join(" · ") });
       if (!this.active) return;
       this._fade(true, 0.35);
