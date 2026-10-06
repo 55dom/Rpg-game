@@ -48,4 +48,13 @@ export const QUESTS = {
     summary: "Rats took the fish. Something made of brass was guarding the rats. Nobody knows who built it.",
     reward: { marks: 50, flags: { RENOWN_AURELIN: 8, MERIT: 15 } },
   },
+  cake: {
+    title: "The Day the Café Lost Its Cake", giver: "Madame Odette", region: "Aurelin",
+    stages: [
+      { text: "Ask around the Gilded Spoon about the missing lemon cake: staff, customers, the cake case. ({$CAKE_CLUES}/4)", done: "$CAKE_CLUES >= 4" },
+      { text: "Everything points to table three, by the window. Go and see.", done: "$CAKE_FOUND" },
+    ],
+    summary: "The cake went to the wrong table. Old Fenwick ate two tiers out of politeness. The Countess got a 'brave, minimalist cake'.",
+    reward: { marks: 40, xp: 120, flags: { RENOWN_AURELIN: 6, MERIT: 5 } },
+  },
 };

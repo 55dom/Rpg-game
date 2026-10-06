@@ -1,7 +1,7 @@
 // Story sets (Phase 3): each one is built on first use from primitives, carries its own sky, fog,
 // and lighting, and can be swapped in and out. "yard" is the original training yard (arena.js).
 
-import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS } from "../data/zones.js";
+import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT } from "../data/zones.js";
 import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } from "./look.js";
 import { buildCrowd } from "./crowd.js";
 import { buildCritters } from "./critters.js";
@@ -51,7 +51,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -440,7 +440,8 @@ function buildExamGrounds(scene, mobile) {
 }
 
 // ---- The Lantern Lighthouse: HQ on the dry Sea of Marrow, at dusk (and later, night) ---------
-export const LIGHTHOUSE = { table: { x: 5, z: 6 }, ring: { x: 0, z: -4 }, lanterns: { x: 2.5, z: 12.4 }, door: { x: -4, z: 10.4 } };
+export const LIGHTHOUSE = { table: { x: 5, z: 6 }, ring: { x: 0, z: -4 }, lanterns: { x: 2.5, z: 12.4 }, door: { x: -4, z: 10.4 },
+  dummies: [[-6, -5], [-6.5, -2.5], [5.8, -6.5], [2.6, -6.6]] }; // the training ring's straw dummies (world positions)
 function buildLighthouse(scene, mobile) {
   const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add;
   const rng = mulberry(31);
@@ -498,12 +499,20 @@ function buildLighthouse(scene, mobile) {
   // The training ring with straw dummies.
   const R = LIGHTHOUSE.ring;
   const ring = add(MB.CreateTorus("lh-ring", { diameter: 9, thickness: 0.12, tessellation: 48 }, scene)); ring.position.set(R.x, 0.02, R.z); ring.material = toon(scene, "lh-ringMat", "#e6b54e");
-  const straw = toon(scene, "lh-straw", "#d9b866");
-  for (const [dx, dz] of [[-6, -1], [-6.5, 1.5], [5.8, -2.5]]) {
-    const post = add(MB.CreateCylinder("lh-dpost", { height: 1.6, diameter: 0.14, tessellation: 6 }, scene)); post.position.set(R.x + dx, 0.8, R.z + dz); post.material = wood;
-    const body = add(MB.CreateCylinder("lh-dummy", { height: 0.9, diameter: 0.55, tessellation: 8 }, scene), 0.025); body.position.set(R.x + dx, 1.4, R.z + dz); body.material = straw;
-    const head = add(MB.CreateSphere("lh-dhead", { diameter: 0.4, segments: 6 }, scene), 0.02); head.position.set(R.x + dx, 2.05, R.z + dz); head.material = straw;
-  }
+  // Each dummy wobbles on its post when hit (sim: World.spawnDummy; hitDummy below), so none of it is baked.
+  const straw = toon(scene, "lh-straw", "#d9b866"), rope = toon(scene, "lh-rope", "#7a5a3a");
+  const dummies = LIGHTHOUSE.dummies.map(([x, z], i) => {
+    const node = new BB.TransformNode(`lh-dummy-${i}`, scene); node.parent = K.root; node.position.set(x, 0, z);
+    node.rotation.y = Math.atan2(R.x - x, R.z - z);
+    const keep = [];
+    const part = (m, px, py, pz, o) => { add(m, o); m.parent = node; m.position.set(px, py, pz); keep.push(m); return m; };
+    part(MB.CreateCylinder("lh-dpost", { height: 1.6, diameter: 0.14, tessellation: 6 }, scene), 0, 0.8, 0).material = wood;
+    const body = part(MB.CreateCylinder("lh-dummy", { height: 0.9, diameter: 0.55, tessellation: 8 }, scene), 0, 1.4, 0, 0.025); body.material = straw;
+    part(MB.CreateSphere("lh-dhead", { diameter: 0.4, segments: 6 }, scene), 0, 2.05, 0, 0.02).material = straw;
+    const arms = part(MB.CreateCylinder("lh-darms", { height: 1.1, diameter: 0.1, tessellation: 6 }, scene), 0, 1.6, 0, 0.015); arms.rotation.z = Math.PI / 2; arms.material = wood;
+    for (const y of [1.15, 1.65]) part(MB.CreateTorus("lh-drope", { diameter: 0.56, thickness: 0.04, tessellation: 12 }, scene), 0, y, 0).material = rope;
+    return { node, keep, wob: 0, dir: 0, t: 0, x, z };
+  });
   // Old boats stranded on the dry sea.
   const hull = toon(scene, "lh-hull", "#5a4030");
   for (const [x, z, r] of [[22, -14, 0.4], [-26, -6, 2.1], [30, 18, 1.2], [-14, -30, 0.9]]) {
@@ -518,7 +527,7 @@ function buildLighthouse(scene, mobile) {
   const P = palette(scene, "lh"), PR = props(scene, K, P);
   PR.crate(-8.4, 13.6, { ry: 0.3 }); PR.crate(-8.5, 14.6, { ry: 1.1, s: 0.6 }); PR.barrel(-8.6, 12.3); PR.woodpile(-0.2, 16.6, { ry: 0 });
   const cat = buildCritters(scene, K, [{ kind: "cat", n: 1, area: { x: -3.2, z: 9.7, r: 0.01 }, still: true }], rng);
-  K.bake([beam, ...lanterns, newLantern]);
+  K.bake([beam, ...lanterns, newLantern, ...dummies.flatMap((d) => d.keep)]);
   let night = 0, nightTarget = 0;
   const DUSK = { clear: "#8a5f7c", fog: "#c08070", fogDensity: 0.012, hemi: [0.65, "#ffd2b0", "#4a3a5a"], sun: [0.85, "#ffb070", [0.6, -0.55, 0.6]], warm: 0 };
   const DUSK_TOON = { lightDir: [-0.6, 0.6, -0.6], fogColor: "#c08070", fogDensity: 0.008, sky: [1.08, 0.98, 0.95], ground: [0.9, 0.78, 0.82], rim: [1.0, 0.8, 0.6] };
@@ -532,7 +541,22 @@ function buildLighthouse(scene, mobile) {
       if (name === "lantern") newLantern.setEnabled(true);
     },
     outdoor: true,
+    dummies: LIGHTHOUSE.dummies,
+    /** A training dummy takes a hit: it rocks on its post, away from the blow. */
+    hitDummy(x, z, from, strength = 1) {
+      let d = null, best = 1.5;
+      for (const c of dummies) { const k = Math.hypot(c.x - x, c.z - z); if (k < best) { best = k; d = c; } }
+      if (!d) return;
+      d.wob = Math.min(0.55, d.wob + 0.18 * strength); d.t = 0;
+      d.dir = Math.atan2(x - from.x, z - from.z) - d.node.rotation.y;
+    },
     update(dt, t) {
+      for (const d of dummies) { // a damped rock back and forth
+        if (d.wob < 0.002) { d.node.rotation.x = d.node.rotation.z = 0; continue; }
+        d.t += dt; d.wob *= Math.exp(-dt * 2.6);
+        const a = Math.sin(d.t * 14) * d.wob;
+        d.node.rotation.x = Math.cos(d.dir) * a; d.node.rotation.z = -Math.sin(d.dir) * a;
+      }
       cat.update(dt, self.mood ?? {});
       beam.rotation.y = t * 0.5;
       const prev = night;
@@ -737,6 +761,41 @@ function buildAurelin(scene, mobile) {
   // Bunting across the plaza.
   const flagCols = ["#c0504d", "#e6b54e", "#4f81bd", "#f2efe6"].map((c, i) => toon(scene, `au-flag${i}`, c));
   for (let i = 0; i < 18; i++) { const f = add(MB.CreateCylinder("au-flagT", { height: 0.5, diameter: 0.5, tessellation: 3 }, scene)); const a = (i / 18) * Math.PI * 2; f.position.set(Math.sin(a) * 9, 5.4 + Math.sin(i) * 0.2, Math.cos(a) * 9); f.rotation.set(Math.PI / 2, a, 0); f.material = flagCols[i % 4]; }
+  // The Gilded Spoon: a café at the top of the Lowmarket, cream walls, a striped awning, a gold spoon sign.
+  // Its door is the way in (zones.js: an exit to the "cafe" zone); its windows light up at night.
+  {
+    const CF = L.cafe, fz = CF.z - CF.d / 2;
+    const cream = toon(scene, "au-cafeWall", "#f4e6d4"), rose = toon(scene, "au-cafeRose", "#c8607a"), white = P("#f6f1e8"), goldM = toon(scene, "au-cafeGold", "#e6b54e");
+    const body = add(MB.CreateBox("au-cafe", { width: CF.w, height: 5, depth: CF.d }, scene), 0.05); body.position.set(CF.x, 2.5, CF.z); body.material = cream;
+    const base = add(MB.CreateBox("au-cafeBase", { width: CF.w + 0.1, height: 0.7, depth: CF.d + 0.1 }, scene), 0.03); base.position.set(CF.x, 0.35, CF.z); base.material = rose;
+    const roof = add(MB.CreateCylinder("au-cafeRoof", { height: CF.w + 0.6, diameter: CF.d * 0.72, tessellation: 3 }, scene), 0.05);
+    roof.position.set(CF.x, 5 + CF.d * 0.17, CF.z); roof.rotation.set(0, 0, Math.PI / 2); roof.scaling.set(1, 1.45, 0.75); roof.material = rose;
+    for (let i = 0; i < 10; i++) { // the striped awning over the front
+      const st = add(MB.CreateBox("au-awning", { width: CF.w / 10, height: 0.08, depth: 1.6 }, scene), 0.02);
+      st.position.set(CF.x - CF.w / 2 + (i + 0.5) * (CF.w / 10), 3.3, fz - 0.7); st.rotation.x = -0.32; st.material = i % 2 ? white : rose;
+    }
+    const door = add(MB.CreatePlane("au-cafeDoor", { width: 1.5, height: 2.4, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); door.position.set(CF.door.x, 1.2, fz - 0.03); door.material = toon(scene, "au-cafeDoorMat", "#6a3a2a");
+    const doorGlass = add(MB.CreatePlane("au-cafeDoorGlass", { width: 0.8, height: 1, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); doorGlass.position.set(CF.door.x, 1.6, fz - 0.04); doorGlass.material = K.windowMat("au-cafeDoorWin", "#8a6a5a", "#ffd9a0");
+    const cafeWin = K.windowMat("au-cafeWin", "#5a4a5a", "#ffd9a0");
+    for (const dx of [-3, 3]) {
+      const w = add(MB.CreatePlane("au-cafeWin", { width: 2.4, height: 1.6, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); w.position.set(CF.x + dx, 1.9, fz - 0.03); w.material = cafeWin;
+      const fb = add(MB.CreateBox("au-flowerBox", { width: 2.5, height: 0.3, depth: 0.35 }, scene), 0.02); fb.position.set(CF.x + dx, 0.95, fz - 0.2); fb.material = P("#7a4a2a");
+      for (let k = 0; k < 5; k++) { const f = add(MB.CreateSphere("au-flower", { diameter: 0.22, segments: 5 }, scene)); f.position.set(CF.x + dx - 1 + k * 0.5, 1.2, fz - 0.2); f.material = P(["#f08aa8", "#f6f1e8", "#e6b54e"][k % 3]); }
+    }
+    // The sign: a gold spoon on a rose board above the door.
+    const board = add(MB.CreateBox("au-cafeSign", { width: 3.2, height: 0.7, depth: 0.12 }, scene), 0.03); board.position.set(CF.door.x, 4.2, fz - 0.08); board.material = rose;
+    const handle = add(MB.CreateCylinder("au-spoonHandle", { height: 1.6, diameter: 0.1, tessellation: 6 }, scene), 0.015); handle.position.set(CF.door.x - 0.25, 4.2, fz - 0.18); handle.rotation.z = Math.PI / 2; handle.material = goldM;
+    const bowl = add(MB.CreateSphere("au-spoonBowl", { diameter: 0.5, segments: 8 }, scene), 0.015); bowl.position.set(CF.door.x + 0.75, 4.2, fz - 0.18); bowl.scaling.set(1.3, 0.85, 0.35); bowl.material = goldM;
+    // A chalk menu board by the door, and the terrace: two tables under parasols.
+    const easel = add(MB.CreateBox("au-cafeMenu", { width: 0.8, height: 1.1, depth: 0.06 }, scene), 0.02); easel.position.set(CF.door.x - 1.6, 0.75, fz - 0.6); easel.rotation.x = -0.2; easel.material = P("#2a2e2a");
+    for (const [x, z] of CF.terrace) {
+      PR.table(x, z, { ry: 0.2, mugs: 2 });
+      const pole = add(MB.CreateCylinder("au-parasolPole", { height: 2.4, diameter: 0.06, tessellation: 5 }, scene)); pole.position.set(x, 1.2, z); pole.material = P("#e8e2d4");
+      const top = add(MB.CreateCylinder("au-parasol", { height: 0.5, diameterTop: 0.05, diameterBottom: 2.4, tessellation: 8 }, scene), 0.03); top.position.set(x, 2.5, z); top.material = rose;
+      for (const dx of [-0.9, 0.9]) PR.chair?.(x + dx, z, { ry: dx < 0 ? Math.PI / 2 : -Math.PI / 2 });
+    }
+    const cafeLamp = add(MB.CreateBox("au-cafeLamp", { width: 0.3, height: 0.4, depth: 0.3 }, scene)); cafeLamp.position.set(CF.door.x + 1.1, 2.7, fz - 0.25); cafeLamp.material = lampMat;
+  }
   // The crowd: townsfolk with legs and arms walking the streets, and a few pairs stopped to talk (runtime/crowd.js).
   const crowd = buildCrowd(scene, K, { count: 22, rng, mobile,
     paths: [{ cx: 0, cz: 0, r: 8, dir: 1 }, { cx: 0, cz: 0, r: 11, dir: -1 }, { line: [[-23, -26], [-23, 34]] }, { line: [[23, -26], [23, 34]] }, { line: [[-20, 20], [20, 20]] }, { line: [[8, -28], [8, 18]] }],
@@ -956,4 +1015,135 @@ function buildUndercroft(scene, mobile) {
       torchGlow.alpha = 0.85 + Math.sin(t * 13) * 0.1;
     },
   };
+}
+
+// ---- Interiors: a room seen from above. The wall between the camera and the room hides itself. ----
+function buildRoom(scene, K, { prefix, half: [hx, hz], height = 4, wall, wainscot, floorA, floorB, door, windows = [] }) {
+  const BB = B(), MB = BB.MeshBuilder, add = K.add;
+  const fa = toon(scene, `${prefix}-floorA`, floorA), fb = toon(scene, `${prefix}-floorB`, floorB);
+  for (let x = -hx; x < hx; x++) for (let z = -hz; z < hz; z++) { const t = add(MB.CreateGround(`${prefix}-tile`, { width: 1, height: 1 }, scene)); t.position.set(x + 0.5, 0.005, z + 0.5); t.material = (x + z) & 1 ? fa : fb; }
+  const outside = add(MB.CreateGround(`${prefix}-outside`, { width: 80, height: 80 }, scene)); outside.position.y = -0.02; outside.material = toon(scene, `${prefix}-void`, "#141218");
+  const wallM = toon(scene, `${prefix}-wall`, wall), lowM = toon(scene, `${prefix}-wainscot`, wainscot), trimM = toon(scene, `${prefix}-trim`, "#5a3a2a");
+  const walls = {}, keep = [];
+  const side = (key, cx, cz, len, alongX, gap) => {
+    const node = new BB.TransformNode(`${prefix}-wall-${key}`, scene); node.parent = K.root; walls[key] = node;
+    const segs = gap ? [[-len / 2, gap[0] - 0.8], [gap[0] + 0.8, len / 2]] : [[-len / 2, len / 2]];
+    for (const [a, b] of segs) {
+      const w = b - a, mid = (a + b) / 2;
+      for (const [y0, y1, m] of [[0, 1.1, lowM], [1.1, height, wallM]]) {
+        const p = add(MB.CreateBox(`${prefix}-wallPart`, { width: alongX ? w : 0.25, height: y1 - y0, depth: alongX ? 0.25 : w }, scene), 0.03);
+        p.parent = node; p.position.set(cx + (alongX ? mid : 0), (y0 + y1) / 2, cz + (alongX ? 0 : mid)); p.material = m; keep.push(p);
+      }
+      const rail = add(MB.CreateBox(`${prefix}-rail`, { width: alongX ? w : 0.32, height: 0.08, depth: alongX ? 0.32 : w }, scene)); rail.parent = node; rail.position.set(cx + (alongX ? mid : 0), 1.12, cz + (alongX ? 0 : mid)); rail.material = trimM; keep.push(rail);
+    }
+    if (gap) { // the door frame over the gap
+      const lintel = add(MB.CreateBox(`${prefix}-lintel`, { width: alongX ? 1.6 : 0.25, height: height - 2.5, depth: alongX ? 0.25 : 1.6 }, scene), 0.03);
+      lintel.parent = node; lintel.position.set(cx + (alongX ? gap[0] : 0), (height + 2.5) / 2, cz + (alongX ? 0 : gap[0])); lintel.material = wallM; keep.push(lintel);
+    }
+    // a skirting strip that stays when the wall hides, so the room's edge still reads
+    const skirt = add(MB.CreateBox(`${prefix}-skirt`, { width: alongX ? len : 0.27, height: 0.18, depth: alongX ? 0.27 : len }, scene)); skirt.position.set(cx, 0.09, cz); skirt.material = trimM;
+  };
+  side("n", 0, hz, hx * 2, true); side("s", 0, -hz, hx * 2, true, [door.x]); side("w", -hx, 0, hz * 2, false); side("e", hx, 0, hz * 2, false);
+  for (const [key, c, y, w, h] of windows) { // glowing panes on a wall: [wall key, centre along it, y, width, height]
+    const node = walls[key], alongX = key === "n" || key === "s", out = { n: hz, s: -hz, e: hx, w: -hx }[key], inset = out > 0 ? -0.14 : 0.14;
+    const pane = add(MB.CreatePlane(`${prefix}-win`, { width: w, height: h, sideOrientation: BB.Mesh.DOUBLESIDE }, scene));
+    pane.parent = node; pane.position.set(alongX ? c : out + inset, y, alongX ? out + inset : c); pane.rotation.y = alongX ? 0 : Math.PI / 2; pane.material = K.windowMat(`${prefix}-winM`, "#9ab8d8", "#2a3050"); keep.push(pane);
+  }
+  return {
+    keep,
+    /** Hide whichever walls stand between the camera and the room. */
+    cutaway(cam) {
+      if (!cam) return;
+      const p = cam.position;
+      walls.n.setEnabled(p.z < hz - 0.5); walls.s.setEnabled(p.z > -hz + 0.5); walls.w.setEnabled(p.x > -hx + 0.5); walls.e.setEnabled(p.x < hx - 0.5);
+    },
+  };
+}
+
+function buildCafe(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, C = CAFE_LAYOUT;
+  const P = palette(scene, "cf"), PR = props(scene, K, P);
+  const room = buildRoom(scene, K, { prefix: "cf", half: C.half, wall: "#f2dfe2", wainscot: "#8a4a5a", floorA: "#e8dccb", floorB: "#3a2e34", door: C.door,
+    windows: [["w", -3.2, 2.2, 1.8, 1.4], ["w", 0.6, 2.2, 1.8, 1.4], ["w", 3.8, 2.2, 1.8, 1.4], ["s", -4, 2.2, 2.2, 1.4], ["s", 4, 2.2, 2.2, 1.4]] });
+  // Tables with cloths and chairs facing in, cups set out; table three's cloth is blue (the one by the window).
+  for (const [id, x, z] of C.tables) {
+    PR.roundTable(x, z, { cloth: id === "3" ? "#bcd4ec" : "#f2d4dc" });
+    PR.chair(x - 0.95, z, { ry: Math.PI / 2 }); PR.chair(x + 0.95, z, { ry: -Math.PI / 2 });
+    PR.teacup(x + 0.2, z + 0.15); const v = add(MB.CreateCylinder("cf-vase", { height: 0.2, diameter: 0.1, tessellation: 8 }, scene), 0.008); v.position.set(x - 0.15, 0.9, z - 0.1); v.material = P("#6a8acb");
+    const fl = add(MB.CreateSphere("cf-bloom", { diameter: 0.14, segments: 5 }, scene)); fl.position.set(x - 0.15, 1.05, z - 0.1); fl.material = P("#f08aa8");
+  }
+  // The counter: dark wood, a marble top, the glass cake case (empty!) and the till.
+  const CT = C.counter, wood = P("#6a3a2a");
+  const ctr = add(MB.CreateBox("cf-counter", { width: CT.x1 - CT.x0, height: 1.05, depth: CT.z1 - CT.z0 }, scene), 0.03); ctr.position.set((CT.x0 + CT.x1) / 2, 0.525, (CT.z0 + CT.z1) / 2); ctr.material = wood;
+  const top = add(MB.CreateBox("cf-counterTop", { width: CT.x1 - CT.x0 + 0.1, height: 0.06, depth: CT.z1 - CT.z0 + 0.12 }, scene), 0.02); top.position.set(ctr.position.x, 1.08, ctr.position.z); top.material = P("#ece8e2");
+  for (let i = 0; i < 5; i++) { const pn = add(MB.CreateBox("cf-panel", { width: 0.9, height: 0.6, depth: 0.02 }, scene)); pn.position.set(CT.x0 + 0.6 + i * 1.15, 0.55, CT.z0 - 0.01); pn.material = P("#8a4a5a"); }
+  const CC = C.cakeCase;
+  const glass = add(MB.CreateBox("cf-caseGlass", { width: 1.2, height: 0.7, depth: 0.7 }, scene), 0.015); glass.position.set(CC.x, 1.46, CC.z); glass.material = glow(scene, "cf-glass", "#d8f0ff", 0.25, true); K.noGlow(glass);
+  const stand = add(MB.CreateCylinder("cf-cakeStand", { height: 0.05, diameter: 0.6, tessellation: 16 }, scene), 0.01); stand.position.set(CC.x, 1.15, CC.z); stand.material = P("#f6f1e8");
+  for (let i = 0; i < 6; i++) { const cr = add(MB.CreateSphere("cf-crumb", { diameter: 0.04, segments: 3 }, scene)); cr.position.set(CC.x + Math.sin(i * 2.3) * 0.2, 1.19, CC.z + Math.cos(i * 1.7) * 0.18); cr.material = P("#e6c890"); }
+  const till = add(MB.CreateBox("cf-till", { width: 0.45, height: 0.35, depth: 0.35 }, scene), 0.015); till.position.set(6, 1.28, 3.1); till.material = P("#c9a24a");
+  // When the cake is found it goes back in the case: what's left of it (one tier, with lemon curls).
+  const cakeBack = K.when("$CAKE_FOUND");
+  const tier = add(MB.CreateCylinder("cf-cakeTier", { height: 0.22, diameter: 0.42, tessellation: 18 }, scene), 0.015); tier.parent = cakeBack; tier.position.set(CC.x, 1.29, CC.z); tier.material = P("#f6e6a0");
+  // ...and until then, it's on table three: a three-tier lemon cake, one tier already eaten.
+  const cakeOut = K.when("not $CAKE_FOUND");
+  const T3 = C.tables.find((t) => t[0] === "3");
+  for (const [i, d] of [[0, 0.62], [1, 0.46]]) {
+    const t = add(MB.CreateCylinder("cf-bigCake", { height: 0.2, diameter: d, tessellation: 18 }, scene), 0.015); t.parent = cakeOut; t.position.set(T3[1] + 0.12, 0.92 + i * 0.2, T3[2]); t.material = P(i ? "#f6e6a0" : "#f2d070");
+  }
+  const curl = add(MB.CreateSphere("cf-lemonCurl", { diameter: 0.1, segments: 5 }, scene), 0.01); curl.parent = cakeOut; curl.position.set(T3[1] + 0.12, 1.36, T3[2]); curl.material = P("#f0e050");
+  // The kitchen behind the counter: a black stove with a fire, pots, shelves of jars.
+  const S = C.stove;
+  const stove = add(MB.CreateBox("cf-stove", { width: S.x1 - S.x0, height: 1, depth: S.z1 - S.z0 }, scene), 0.03); stove.position.set((S.x0 + S.x1) / 2, 0.5, (S.z0 + S.z1) / 2); stove.material = P("#2a2a30");
+  const fire = add(MB.CreateBox("cf-stoveFire", { width: 0.7, height: 0.3, depth: 0.05 }, scene)); fire.position.set(stove.position.x, 0.35, S.z0 - 0.02); fire.material = glow(scene, "cf-fire", "#ff9a3a");
+  for (const dx of [-0.5, 0.5]) { const pot = add(MB.CreateCylinder("cf-pot", { height: 0.35, diameter: 0.45, tessellation: 12 }, scene), 0.015); pot.position.set(stove.position.x + dx, 1.17, stove.position.z); pot.material = P("#8a8a90"); }
+  for (const [x, y] of [[-3, 2.6], [-0.5, 2.6], [5.5, 2.4], [-3, 1.8]]) {
+    const sh = add(MB.CreateBox("cf-shelf", { width: 1.8, height: 0.06, depth: 0.32 }, scene), 0.015); sh.position.set(x, y, C.half[1] - 0.3); sh.material = wood;
+    for (let k = 0; k < 4; k++) { const j = add(MB.CreateCylinder("cf-jar", { height: 0.26, diameter: 0.16, tessellation: 8 }, scene), 0.008); j.position.set(x - 0.6 + k * 0.4, y + 0.16, C.half[1] - 0.3); j.material = P(["#e6b54e", "#c8607a", "#7ac06a", "#6a8acb"][k]); }
+  }
+  // Pictures on the north wall, plants in the corners, a menu board by the door, hanging lamps.
+  for (const [x, hex] of [[-5.4, "#6a8acb"], [-1.8, "#c8607a"]]) { const fr = add(MB.CreateBox("cf-frame", { width: 1.1, height: 0.8, depth: 0.05 }, scene), 0.015); fr.position.set(x, 2.4, C.half[1] - 0.16); fr.material = P("#c9a24a"); const pic = add(MB.CreatePlane("cf-pic", { width: 0.9, height: 0.6 }, scene)); pic.position.set(x, 2.4, C.half[1] - 0.2); pic.rotation.y = Math.PI; pic.material = P(hex); }
+  PR.plant(-6.4, -5.4); PR.plant(6.4, -5.4); PR.plant(-6.4, 5.4, { s: 1.2 });
+  const easel = add(MB.CreateBox("cf-menuBoard", { width: 0.9, height: 1.2, depth: 0.06 }, scene), 0.02); easel.position.set(-1.6, 0.8, -5.2); easel.rotation.set(-0.15, 0.3, 0); easel.material = P("#2a2e2a");
+  for (let i = 0; i < 4; i++) { const ln = add(MB.CreateBox("cf-chalk", { width: 0.6 - (i % 2) * 0.2, height: 0.04, depth: 0.01 }, scene)); ln.position.set(-1.6 - Math.sin(0.3) * 0.04, 1.1 - i * 0.18, -5.24); ln.rotation.set(-0.15, 0.3, 0); ln.material = P("#f6f1e8"); }
+  const lampGlow = glow(scene, "cf-lampGlow", "#ffd9a0");
+  for (const [x, z] of [[-4.6, -1.4], [-4.6, 2.4], [-1.2, -0.8], [2.6, -2.8], [3.6, 3.1]]) { const l = add(MB.CreateSphere("cf-lamp", { diameter: 0.4, segments: 8 }, scene)); l.position.set(x, 3.4, z); l.material = lampGlow; const c = add(MB.CreateCylinder("cf-cord", { height: 0.6, diameter: 0.02, tessellation: 4 }, scene)); c.position.set(x, 3.9, z); c.material = P("#2a2a30"); }
+  const warm = new BB.PointLight("cf-warm", new BB.Vector3(0, 3.2, 0), scene); warm.diffuse = color3("#ffcf9a").clone(); warm.intensity = 0.5; warm.range = 16; K.lights.push(warm);
+  // The café cat, asleep on a cushion by the window.
+  const cushion = add(MB.CreateCylinder("cf-cushion", { height: 0.12, diameter: 0.7, tessellation: 12 }, scene), 0.015); cushion.position.set(-6.2, 0.06, 1.8); cushion.material = P("#c8607a");
+  const cat = buildCritters(scene, K, [{ kind: "cat", n: 1, area: { x: -6.2, z: 1.8, r: 0.01 }, still: true }], mulberry(7));
+  K.bake(room.keep);
+  const env = { clear: "#141218", fog: "#141218", fogDensity: 0.004, hemi: [0.75, "#fff0e0", "#5a4048"], sun: [0.55, "#ffe0c0", [0.3, -1, 0.4]], warm: 0 };
+  const toonEnv = { lightDir: [-0.3, 1, -0.4], fogColor: "#141218", fogDensity: 0.002, sky: [1.08, 1.0, 0.98], ground: [0.86, 0.78, 0.8], rim: [1.0, 0.85, 0.8] };
+  const self = {
+    env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true,
+    update(dt, t) { room.cutaway(scene.activeCamera); cat.update(dt, self.mood ?? {}); fire.scaling.y = 0.85 + Math.sin(t * 11) * 0.15; },
+  };
+  return self;
+}
+
+/** A Lowmarket home: one room with a bed, a hearth, a table and shelves. */
+function buildHome(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, H = HOME_LAYOUT;
+  const P = palette(scene, "hm"), PR = props(scene, K, P);
+  const room = buildRoom(scene, K, { prefix: "hm", half: H.half, wall: "#e8dcc4", wainscot: "#7a5a3a", floorA: "#a07a52", floorB: "#8a6a46", door: H.door,
+    windows: [["e", -1, 2, 1.4, 1.1], ["n", -2, 2, 1.4, 1.1]] });
+  const B2 = H.bed;
+  const bed = add(MB.CreateBox("hm-bed", { width: B2.x1 - B2.x0, height: 0.5, depth: B2.z1 - B2.z0 }, scene), 0.03); bed.position.set((B2.x0 + B2.x1) / 2, 0.25, (B2.z0 + B2.z1) / 2); bed.material = P("#6a4a2a");
+  const quilt = add(MB.CreateBox("hm-quilt", { width: B2.x1 - B2.x0 - 0.1, height: 0.12, depth: B2.z1 - B2.z0 - 0.7 }, scene), 0.015); quilt.position.set(bed.position.x, 0.56, bed.position.z - 0.3); quilt.material = P("#c0504d");
+  const pillow = add(MB.CreateBox("hm-pillow", { width: 1, height: 0.15, depth: 0.45 }, scene), 0.012); pillow.position.set(bed.position.x, 0.6, B2.z1 - 0.35); pillow.material = P("#f2efe6");
+  const HE = H.hearth;
+  const hearth = add(MB.CreateBox("hm-hearth", { width: HE.x1 - HE.x0, height: 1.6, depth: HE.z1 - HE.z0 }, scene), 0.03); hearth.position.set((HE.x0 + HE.x1) / 2, 0.8, (HE.z0 + HE.z1) / 2); hearth.material = P("#8a8278");
+  const flame = add(MB.CreateBox("hm-flame", { width: 0.8, height: 0.45, depth: 0.05 }, scene)); flame.position.set(hearth.position.x, 0.4, HE.z0 - 0.02); flame.material = glow(scene, "hm-fire", "#ff9a3a");
+  const kettle = add(MB.CreateCylinder("hm-kettle", { height: 0.3, diameter: 0.35, tessellation: 10 }, scene), 0.015); kettle.position.set(hearth.position.x + 0.6, 1.75, hearth.position.z); kettle.material = P("#2a2a30");
+  PR.table(H.table.x, H.table.z, { ry: 0, mugs: 2 }); PR.chair(H.table.x - 0.9, H.table.z, { ry: Math.PI / 2 }); PR.chair(H.table.x + 0.9, H.table.z, { ry: -Math.PI / 2 });
+  PR.barrel(4.3, -3.3); PR.crate(4.2, -2.3, { ry: 0.3, s: 0.6 }); PR.sack(3.6, -3.4); PR.plant(-4.4, -3.4);
+  for (const y of [1.4, 2.1]) { const sh = add(MB.CreateBox("hm-shelf", { width: 1.6, height: 0.06, depth: 0.3 }, scene), 0.015); sh.position.set(-0.5, y, H.half[1] - 0.3); sh.material = P("#6a4a2a"); for (let k = 0; k < 3; k++) { const j = add(MB.CreateCylinder("hm-jar", { height: 0.24, diameter: 0.15, tessellation: 8 }, scene), 0.008); j.position.set(-1 + k * 0.5, y + 0.15, H.half[1] - 0.3); j.material = P(["#c9a24a", "#7ac06a", "#c8607a"][k]); } }
+  const rug = add(MB.CreateGround("hm-rug", { width: 2.6, height: 1.8 }, scene)); rug.position.set(0.4, 0.012, -1.4); rug.material = P("#4f81bd");
+  const warm = new BB.PointLight("hm-warm", new BB.Vector3(2, 2.4, 2.6), scene); warm.diffuse = color3("#ffb070").clone(); warm.intensity = 0.55; warm.range = 12; K.lights.push(warm);
+  K.bake(room.keep);
+  const env = { clear: "#141218", fog: "#141218", fogDensity: 0.004, hemi: [0.7, "#ffe6c8", "#4a3a30"], sun: [0.5, "#ffd8a8", [0.3, -1, 0.4]], warm: 0 };
+  const toonEnv = { lightDir: [-0.3, 1, -0.4], fogColor: "#141218", fogDensity: 0.002, sky: [1.06, 0.98, 0.92], ground: [0.84, 0.76, 0.7], rim: [1.0, 0.82, 0.7] };
+  return { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true,
+    update(dt, t) { room.cutaway(scene.activeCamera); flame.scaling.y = 0.85 + Math.sin(t * 9) * 0.15; warm.intensity = 0.5 + Math.sin(t * 7) * 0.05; } };
 }

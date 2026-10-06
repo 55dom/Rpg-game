@@ -82,8 +82,13 @@ export class FollowCamera {
       const sh = this.trauma * this.trauma * 0.3;
       this.t += dt;
       this.cam.position.set(this.shotPos.x + Math.sin(this.t * 71) * sh, this.shotPos.y + Math.sin(this.t * 83) * sh, this.shotPos.z);
-      this.cam.setTarget(this.shotLook);
       this.cam.fov = lerp(this.cam.fov, s.fov, k);
+      // Frame bias: put the look point (a face) where the screen is clear, above the dialogue box,
+      // by aiming a little below it. frameBias is in screen units (+1 = top edge, 0 = centre).
+      this.bias = lerp(this.bias ?? 0, this.frameBias ?? 0, 1 - Math.exp(-6 * dt));
+      const d = Math.hypot(this.shotLook.x - this.shotPos.x, this.shotLook.y - this.shotPos.y, this.shotLook.z - this.shotPos.z);
+      this.tmp.set(this.shotLook.x, this.shotLook.y - this.bias * Math.tan(this.cam.fov / 2) * d, this.shotLook.z);
+      this.cam.setTarget(this.tmp);
       this.trauma = Math.max(0, this.trauma - dt * 2.2);
       this.yaw = playerYaw;
       this.focus.set(playerPos.x, playerPos.y * 0.6 + 1.3, playerPos.z);

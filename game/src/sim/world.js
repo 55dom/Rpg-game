@@ -225,6 +225,9 @@ export class Fighter {
   }
 }
 
+/** Training dummies: health is topped up after every hit, so it reads as infinite. */
+export const DUMMY_STATS = Object.freeze({ name: "Training Dummy", maxHealth: 1e6, maxPosture: 120, runSpeed: 0, circleSpeed: 0, turnRate: 0, radius: 0.4, height: 2.1, dummy: true });
+
 export class World {
   /**
    * @param {{tokens?:number, seed?:number, assist?:boolean, companions?:boolean|string[],
@@ -362,6 +365,20 @@ export class World {
     this.emit({ type: "spawn", fighter: f });
     return this.add(f);
   }
+
+  /**
+   * A training dummy: a target with endless health that never dies, never moves off its post and
+   * never fights back. It still takes hits, staggers, launches and posture-breaks, so every move can be tried on it.
+   */
+  spawnDummy(x, z, yaw = 0, n = 0) {
+    const f = new Fighter(this, {
+      id: `dummy-${n}`, kind: "dummy", team: Team.Enemy, stats: DUMMY_STATS, hitboxes: {}, traits: { dummy: true }, brain: null, x, z,
+    });
+    f.yaw = yaw; f.anchor = { x, z };
+    this.emit({ type: "spawn", fighter: f });
+    return this.add(f);
+  }
+  get dummies() { return this.fighters.filter((f) => f.traits.dummy); }
 
   spawnAcolyte(x, z, n = 0) { return this.spawnEnemy("acolyte", x, z, n); }
 
@@ -682,10 +699,10 @@ export class World {
   /** Who a companion should be fighting, by stance. */
   _companionTarget(c) {
     const p = this.player, stance = c.brain.stance;
-    if (stance === "Press" && this.lockTarget?.alive) return this.lockTarget;
+    if (stance === "Press" && this.lockTarget?.alive && !this.lockTarget.traits.dummy) return this.lockTarget;
     let best = null, bestScore = Infinity;
     for (const e of this.fighters) {
-      if (e.team !== Team.Enemy || !e.alive) continue;
+      if (e.team !== Team.Enemy || !e.alive || e.traits.dummy) continue; // the squad leaves the training dummies to you
       const fromLeader = flatDistance(p.pos, e.pos);
       let score = stance === "Press" ? flatDistance(c.pos, e.pos) : fromLeader;
       if (stance === "Guard" && e.target === p && e.runner.isRunning) score -= 6; // intercept attacks on Rook
@@ -1084,6 +1101,13 @@ export class World {
       }
     }
     if (this.comboTimer > 0 && --this.comboTimer === 0) this.comboCount = 0;
+    for (const f of this.fighters) { // training dummies stay on their posts with endless health
+      if (!f.traits.dummy) continue;
+      f.pos.x = f.prev.x = f.anchor.x; f.pos.z = f.prev.z = f.anchor.z;
+      if (f.vel) { f.vel.x = 0; f.vel.z = 0; }
+      if (f.knock) { f.knock.x = 0; f.knock.z = 0; }
+      const hp = f.combatant.health; if (hp.current < hp.max) hp.fill();
+    }
 
     // Bodies fade, then the wave can end.
     if (!this.fighters.some((f) => f.team === Team.Enemy && f.deadFrames > Tuning.corpseFrames)) return;

@@ -27,7 +27,7 @@ import { RainFX } from "./weather.js";
 const GESTURES = Object.freeze({
   none: {},
   point: { arm: [0.05, 0.1, 0] },
-  raise: { arm: [-1.3, 0.2, 0] },
+  raise: { arm: [-1.2, 0.75, 0] }, // up and out to the side, so it never crosses the face in a close-up
   hand: { arm: [0.55, -0.65, 0] },              // holding something in front of the chest
   cross: { arm: [0.85, -1.15, 0], off: [-0.5, 0, 1.25] },
   bow: { bow: 0.38 },
@@ -67,7 +67,7 @@ class Stage {
     this.clear();
     const p = this.getWorld().player;
     const r = beat.rook === undefined ? { x: 0, z: -4, yaw: 0 } : beat.rook;
-    this.setPlayerVisible?.(!!r);
+    this.setPlayerVisible?.(!!r); this.playerHidden = !r;
     this.setSquadVisible?.(false); // scenes stage their own Bas and Juno; hide the fighting copies
     if (r) {
       p.pos.x = p.prev.x = r.x; p.pos.z = p.prev.z = r.z; p.pos.y = p.prev.y = 0;
@@ -368,6 +368,8 @@ export class StoryPlayer {
     if (this.skipping && !this.view.typing && this.view.waiting) this.view.advance();
     for (const a of this.stage.actors.values()) a.actor.talking = a.actor === this.talker && this.view.typing;
     this.stage.update(dt, this.time);
+    this._occlusion();
+    this._frameBias();
     for (let i = this.tweens.length - 1; i >= 0; i--) {
       const tw = this.tweens[i];
       tw.t += dt;
@@ -472,7 +474,7 @@ export class StoryPlayer {
   _enterScene(on) {
     this.blocking = on;
     this.ctx.root.classList.toggle("in-scene", on);
-    if (!on) { this.view.hide(); this.ctx.camera.release(); }
+    if (!on) { this.view.hide(); this.ctx.camera.release(); this.currentShot = null; this._occlusion(); }
   }
 
   async coldOpen(beat) {
@@ -567,6 +569,49 @@ export class StoryPlayer {
     this._shot("on", [actorId]);
   }
 
+  /**
+   * Nobody blocks the shot: anyone who isn't in it and stands between the camera and its subject
+   * (or right against the lens) is faded out until the camera moves on.
+   */
+  _occlusion() {
+    const cam = this.ctx.camera, faded = this._faded ?? (this._faded = new Map());
+    const want = new Set();
+    if (cam.isScripted && this.blocking && !this.cut && this.currentShot) {
+      const P = cam.scripted.pos, Q = cam.scripted.look, keep = new Set(this.currentShot.kind === "wide" ? [] : this.currentShot.ids);
+      const world = this.ctx.getWorld(), entries = [["player", world.player, 1], ...[...this.stage.actors.entries()].map(([id, a]) => [id, a.actor, a.rig.look.scale ?? 1])];
+      for (const [id, a, sc] of entries) {
+        if (id === "player" && this.stage.playerHidden) continue;
+        if (keep.has(id) || a.hiddenActor || !a.pos) continue;
+        let block = Math.hypot(a.pos.x - P.x, a.pos.z - P.z) < 1.7 * sc; // right against the lens: a head filling the frame
+        for (let i = 0; i <= 10 && !block; i++) {
+          const t = i / 11, y = P.y + (Q.y - P.y) * t;
+          if (y < (a.pos.y ?? 0) || y > (a.pos.y ?? 0) + 2.05 * sc) continue;
+          const x = P.x + (Q.x - P.x) * t, z = P.z + (Q.z - P.z) * t;
+          if (Math.hypot(x - a.pos.x, z - a.pos.z) < 0.5 * sc) block = true;
+        }
+        if (block) want.add(id);
+      }
+    }
+    for (const id of [...faded.keys()]) if (!want.has(id)) { this._fadeActor(id, false); faded.delete(id); }
+    for (const id of want) if (!faded.has(id)) { this._fadeActor(id, true); faded.set(id, true); }
+  }
+  /** Where faces should sit on screen: in the clear band between the top of the screen and the dialogue box. */
+  _frameBias() {
+    const cam = this.ctx.camera;
+    if (!this.blocking || this.cut || typeof innerHeight === "undefined") { cam.frameBias = 0; return; }
+    const H = innerHeight, el = this.view.el;
+    if (!el.hidden) { const r = el.getBoundingClientRect(); if (r.height > 0) this._boxTop = r.top; }
+    const top = H * 0.07 + (H < 560 ? H * 0.12 : H * 0.04); // letterbox, plus room for the menu or the host's title bar on short screens
+    const bottom = Math.min(H * 0.93, this._boxTop ?? H * 0.93 - 140);
+    const y = top + Math.max(0, bottom - top) * 0.42;
+    cam.frameBias = Math.max(-0.1, Math.min(0.55, 1 - (2 * y) / H));
+  }
+  _fadeActor(id, out) {
+    if (id === "player") { this.ctx.setPlayerVisible?.(!out); return; }
+    const a = this.stage.actors.get(id);
+    if (a && !a.actor.hiddenActor) a.rig.setVisible(!out);
+  }
+
   _shot(kind, ids, cut = true) {
     const sh = this.stage.shot(kind, ids);
     if (!sh) return;
@@ -603,6 +648,10 @@ export class StoryPlayer {
         break;
       }
       case "earn": this.inventory.earn(Number(args[0]) || 0); this.ctx.hud.toast(`+${args[0]} MARKS`, "clear"); break;
+      case "heal": { // a good meal: full health and mana
+        const p = this.ctx.getWorld().player; p.combatant.health.fill(); p.mana?.fill();
+        this.ctx.hud.toast(args[0] ? args.join(" ").toUpperCase() : "WARM AND FULL", "clear"); this.ctx.sfx.play("heal"); break;
+      }
       case "cutscene": await this.playCutscene(args[0]); break;
       default: break;   // unknown commands are ignored (forward-compatible scripts)
     }
@@ -681,21 +730,37 @@ export class StoryPlayer {
     this.ctx.sets?.use(beat.stage ?? "yard");
     this.ctx.sets?.applyFlags?.((cond) => truthy(compileExpr(cond)(this.flags))); // aftermath and repairs follow the story
     this.stage.setup(beat);
-    const p = this.ctx.getWorld().player;
+    const world = this.ctx.getWorld(), p = world.player;
     p.relaxed = true;
+    // Episode beats on a zone's set use that zone's walls and buildings, so nothing can be walked through.
+    const zone = beat.zone ?? Object.values(ZONES).find((z) => z.stage === beat.stage);
+    if (zone && !beat.zone) { world.bounds = zone.bounds; this.ctx.camera.bounds = zone.bounds; }
+    // The Lighthouse's straw dummies are real targets: hit them as long as you like.
+    const set = this.ctx.sets?.get?.(beat.stage);
+    if (set?.dummies) {
+      set.dummies.forEach(([x, z], i) => world.spawnDummy(x, z, Math.atan2(-x, -4 - z), i));
+      this.ctx.onEvents(world.drainEvents());
+    }
     this.ctx.root.classList.add("exploring");
     this.ctx.camera.release();
     this.ambient = beat.zone ? new Ambient(this.stage, beat.zone, this.flags) : null;
     this.exploring = { beat, talked: new Set(), near: null, busy: false, pickups: this._makePickups(beat.pickups ?? []),
       encounters: (beat.encounters ?? []).map((e) => ({ ...e, cond: compileExpr(e.when ?? "1"), armed: true, done: false })), combat: null };
     this._objective();
-    const out = await new Promise((res) => { this.exploring.resolve = res; });
+    const done = new Promise((res) => { this.exploring.resolve = res; });
+    if (beat.zone?.intro) this.sleep(0.4).then(() => this._intro(beat.zone));
+    const out = await done;
     this._endExplore();
     return out ?? {};
   }
 
   _endExplore() {
     if (this.exploring?.combat) this._endCombat(false);
+    const w = this.ctx.getWorld?.();
+    if (w?.dummies?.length) { // the dummies stay on the set; their targets leave with the walk-around
+      if (w.lockTarget?.traits.dummy) w.lockTarget = null;
+      w.fighters = w.fighters.filter((f) => !f.traits.dummy);
+    }
     for (const pk of this.exploring?.pickups ?? []) pk.node.dispose(false, true);
     this.exploring = null;
     this.ambient = null;
@@ -713,17 +778,18 @@ export class StoryPlayer {
       const lamp = MB.CreateBox("pickupLamp", { width: 0.28, height: 0.36, depth: 0.28 }, scene); lamp.parent = node; lamp.position.y = 0.4; lamp.material = glow(scene, `pickup-${p.id}-m`, "#ffd36a");
       const ring = MB.CreateTorus("pickupRing", { diameter: 1, thickness: 0.04, tessellation: 24 }, scene); ring.parent = node; ring.position.y = 0.03; ring.material = lamp.material;
       for (const m of [lamp, ring]) m.isPickable = false;
+      if (p.marker === false) { lamp.setEnabled(false); ring.setEnabled(false); } // furniture: no glowing marker, just the prompt
       return { ...p, script: p.node, node, lamp, cond: compileExpr(p.show ?? "1") }; // node = the 3D marker; script = its dialogue
     });
   }
 
   /** The world clock: time of day and weather drive the sky, rain, crowd and townsfolk (GDD §29.10). */
   _weatherTick(dt) {
-    const c = this.clock, sets = this.ctx.sets;
+    const c = this.clock, sets = this.ctx.sets, indoor = !!this.zone?.interior;
     c.update(dt);
-    this.weather = { raining: c.raining, night: c.night };
+    this.weather = { raining: c.raining && !indoor, night: c.night }; // indoors it never rains
     this.rain ??= new RainFX(this.ctx.scene, { mobile: this.ctx.mobile });
-    this.rain.update(c.wet, this.ctx.scene.activeCamera?.position);
+    this.rain.update(indoor ? 0 : c.wet, this.ctx.scene.activeCamera?.position);
     const p = this.ctx.getWorld().player.pos, fight = !!this.exploring?.combat;
     const set = sets?.built?.get(sets.current);
     if (set) set.mood = { density: c.density * (fight ? 0.1 : 1), hurry: 1 + c.wet * 0.7, wind: c.wet + c.cloud * 0.3, player: { x: p.x, z: p.z } };
@@ -763,6 +829,7 @@ export class StoryPlayer {
       x.busy = true; x.resolve({ exit: e }); return; // leaving the zone
     }
     const p = this.ctx.getWorld().player;
+    if (p.seated && (Math.abs(p.moveInput?.x ?? 0) + Math.abs(p.moveInput?.z ?? 0) > 0.1 || p.current)) p.seated = 0; // up from the chair
     let near = null, best = 2.4;
     for (const pk of x.pickups) {
       const on = truthy(pk.cond(this.flags));
@@ -792,6 +859,24 @@ export class StoryPlayer {
     if (near && !near.pickup) { const a = this.stage.get(near.id); if (!a.down) a.targetYaw = Math.atan2(p.pos.x - a.pos.x, p.pos.z - a.pos.z); }
   }
 
+  /** Story flags changed: conditional set dressing follows (a cake goes back in its case…). */
+  _refreshSet() { this.ctx.sets?.applyFlags?.((cond) => truthy(compileExpr(cond)(this.flags))); }
+
+  /** A zone's opening scene (the first time in): played like a conversation, before you can move. */
+  async _intro(zone) {
+    const it = zone.intro, x = this.exploring;
+    if (!it || !x || !truthy(compileExpr(it.when ?? "1")(this.flags))) return;
+    x.busy = true; this.ui.talk.hidden = true;
+    this._enterScene(true);
+    await this.runNode(it.node);
+    if (!this.exploring) return;
+    this.skipping = false;
+    this._enterScene(false);
+    this.view.hide(); this._refreshSet();
+    x.busy = false; x.cooldown = 0.6; this._objective();
+    if (this.roaming) this.saveNow();
+  }
+
   /** Talk to whoever is close (exploration). */
   async interact() {
     const x = this.exploring;
@@ -806,11 +891,17 @@ export class StoryPlayer {
         this._enterScene(true);
         const p = this.ctx.getWorld().player;
         p.vel.x = p.vel.z = 0; p.moveInput.x = p.moveInput.z = 0; p.runner.interrupt();
+        if (pk.sit) { // take a seat: until Rook moves off again
+          const [sx, sz, syaw] = pk.sit;
+          p.pos.x = p.prev.x = sx; p.pos.z = p.prev.z = sz; p.yaw = p.prevYaw = syaw; p.seated = 0.5; p.relaxed = true;
+          this._shot("on", ["player"]);
+        }
         await this.runNode(pk.script);
         if (!this.exploring) return true;
         this.skipping = false;
         this._enterScene(false);
         this.view.hide();
+        this._refreshSet();
         x.busy = false;
       } else {
         this.ctx.sfx.play("surgeFull");
@@ -834,6 +925,7 @@ export class StoryPlayer {
     x.talked.add(c.id);
     this.skipping = false;
     this._enterScene(false);
+    this._refreshSet();
     this.view.hide();
     x.busy = false; x.near = null; x.cooldown = 0.6; // the key that closed the last line mustn't reopen it
     this._objective();

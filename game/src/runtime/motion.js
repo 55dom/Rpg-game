@@ -70,6 +70,8 @@ export function animateHumanoid(rig, f, dt, pose) {
   crouch += mo.land * 0.13;
   if (yields) crouch += 0.42;
   let pelvisY = hipY + bob - crouch + (grounded ? 0 : 0.0);
+  const seated = f.seated && grounded && f.alive && spd < 0.3; // on a chair: hips at seat height, knees forward
+  if (seated) pelvisY = f.seated / scale + 0.06;
   const sway = Math.sin(mo.phase * TAU) * 0.022 * G.sway * moveK + (1 - moveK) * mo.shift * 0.025;
   rig.pelvis.position.set(sway, pelvisY, 0);
   rig.pelvis.rotation.set(-mo.dead * 1.45, Math.sin(mo.phase * TAU) * 0.11 * moveK * (1 - runK * 0.4) + (pose.attacking ? -0.22 * pose.lean : 0),
@@ -93,6 +95,7 @@ export function animateHumanoid(rig, f, dt, pose) {
       if (pose.attacking) { sz = lead ? 0.22 + 0.2 * Math.min(1, Math.abs(pose.lean)) : -0.24; sx = leg.x * 1.4; }
       if (yields) { sz = lead ? 0.32 : -0.18; } // one knee down: the back knee meets the ground
       if (!fighting && !yields) sz += (s === Math.sign(mo.shift || 1) ? 0 : 0.03); // the resting leg eases forward
+      if (seated) { sx = leg.x * 1.15; sz = a * 0.92 + (s > 0 ? 0.02 : -0.02); }
       // Walking/running targets from the cycle.
       const foot = footInCycle(mo.phase + (s > 0 ? 0.5 : 0), cycle, { stance, lift: liftH });
       const gx = leg.x * (G.narrow ? 0.55 : G.wide ? 1.2 : 0.9) + dir.x * foot.along, gz = dir.z * foot.along;
@@ -119,7 +122,7 @@ export function animateHumanoid(rig, f, dt, pose) {
   const swing = (0.32 + runK * 0.45) * G.armSwing * moveK;
   const arm = Math.cos(mo.phase * TAU);
   if (rig.offArm && !f.offPose && !rig.look.carry) {
-    let rx = 0.12 + arm * swing, rz = -0.1 - 0.05 * moveK;
+    let rx = 0.12 + arm * swing, rz = -0.2 - 0.05 * moveK; // angled out from the shoulder, clear of the coat
     if (c.blocking || f.current?.id === "Guard") rx = -0.9;
     if (!grounded) { rx = -0.5; rz = -0.5; }
     if (mo.dead) { rx = -0.6 * mo.dead; rz = -0.9 * mo.dead; }

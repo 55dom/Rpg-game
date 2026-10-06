@@ -137,8 +137,34 @@ export const LOOKS = {
     head: "face", hair: "crop", beard: "#ecebe6", beardLong: true, wrinkles: true, weapon: "branch", accent: "#b89a5a", stoop: 0.24, eyeColor: "#5a5a6a", trail: "#e8d6a0" },
   herald: { poses: ACOLYTE_POSES, scale: 1.05, skirt: 1.15, coat: "#5a34a0", trim: "#e6c040", hairColor: "#16141c", skin: "#f0d0b4",
     head: "face", hair: "bob", weapon: "none", sash: true, eyeColor: "#3a2618", trail: "#d4ad4f" },
+  // The Gilded Spoon café (Aurelin's Lowmarket): five maids, each their own person, the cook and the regulars.
+  pip: { poses: ACOLYTE_POSES, scale: 0.88, skirt: 1.25, coat: "#2a2c48", trim: "#f6f1e8", hairColor: "#f08aa8", skin: "#f6dcc8",
+    head: "face", hair: "bob", headband: "#f6f1e8", weapon: "none", eyeColor: "#c0406a", trail: "#f08aa8" },
+  mari: { poses: ACOLYTE_POSES, scale: 0.95, skirt: 1.25, coat: "#4a2038", trim: "#f6f1e8", hairColor: "#6a3a22", skin: "#efcfb2",
+    head: "face", hair: "ponytail", headband: "#f6f1e8", accent: "#c8414f", weapon: "none", holds: "notepad", eyeColor: "#5a3a22", trail: "#c8414f" },
+  bettany: { poses: ACOLYTE_POSES, scale: 0.92, skirt: 1.25, coat: "#1f3a4c", trim: "#f6f1e8", hairColor: "#f0d070", skin: "#f8e0cc",
+    head: "face", hair: "sidetail", headband: "#f6f1e8", accent: "#5aa0d0", weapon: "none", holds: "tray", eyeColor: "#3a7ab0", trail: "#5aa0d0" },
+  hazel: { poses: ACOLYTE_POSES, scale: 0.97, skirt: 1.25, coat: "#2a2a2e", trim: "#f6f1e8", hairColor: "#141218", skin: "#a8704a",
+    head: "face", hair: "bun", headband: "#f6f1e8", accent: "#7a5aa0", weapon: "broom", eyeColor: "#2a1a12", trail: "#7a5aa0" },
+  odette: { poses: ACOLYTE_POSES, scale: 1.0, skirt: 1.3, coat: "#16161e", trim: "#f6f1e8", hairColor: "#c9ccd8", skin: "#f3dcc8",
+    head: "face", hair: "bob", headband: "#f6f1e8", glasses: "#2a2a30", stern: true, weapon: "none", eyeColor: "#4a5a7a", trail: "#c9ccd8" },
+  barnaby: { poses: ACOLYTE_POSES, scale: 1.08, skirt: 1.2, coat: "#f2ede2", trim: "#c8414f", hairColor: "#c0602a", skin: "#f0c8a8",
+    head: "face", hair: "crop", beard: "#c0602a", weapon: "none", sash: true, shoulders: 1.3, eyeColor: "#3a2618", trail: "#ffcf7a" },
+  tobin: { poses: ACOLYTE_POSES, scale: 1.12, skirt: 1.05, coat: "#8a5a2a", trim: "#5a3a22", hairColor: "#2a1e18", skin: "#d8a07a",
+    head: "face", hair: "crop", beard: "#2a1e18", weapon: "none", shoulders: 1.35, eyeColor: "#2a1a12", trail: "#c9a26a" },
+  fenwick: { poses: ACOLYTE_POSES, scale: 0.9, skirt: 1.1, coat: "#5a7a4a", trim: "#c9a26a", hairColor: "#ececf0", skin: "#f0d0b4",
+    head: "face", hair: "crop", beard: "#ececf0", weapon: "none", stoop: 0.14, glasses: "#8a6a3a", eyeColor: "#4a4a5a", trail: "#c9a26a" },
+  nib: { poses: ACOLYTE_POSES, scale: 0.6, skirt: 0.9, coat: "#e6b54e", trim: "#8a3a2a", hairColor: "#c0402a", skin: "#f3d5bf",
+    head: "face", hair: "spiky", weapon: "none", eyeColor: "#2a5a30", trail: "#e6b54e" },
+  traveler: { poses: ACOLYTE_POSES, scale: 1.02, skirt: 1.15, coat: "#3a3a4a", trim: "#6a6a7a", hairColor: "#3a2a22", skin: "#e2b894",
+    head: "face", hair: "crop", hood: "#2a2a36", weapon: "none", eyeColor: "#6a5a3a", trail: "#9a9aaa" },
+  hetty: { poses: ACOLYTE_POSES, scale: 0.95, skirt: 1.25, coat: "#9a4a3a", trim: "#e8d8b8", hairColor: "#5a3a22", skin: "#7a4a2e",
+    head: "face", hair: "bun", weapon: "none", eyeColor: "#2a1a12", trail: "#e6b54e" },
   juno: { poses: JUNO_POSES, scale: 0.93, skirt: 0.9, coat: "#2b3a5c", trim: "#c8414f", hairColor: "#b04a26", skin: "#f3d5bf",
     head: "face", hair: "sidetail", collar: true, weapon: "needle", accent: "#c8414f", eyeColor: "#6a2a1a", trail: "#ff6f86" },
+  // Juno moonlighting at the Gilded Spoon after hours: same face, hair and red tie, in a maid's uniform.
+  junoMaid: { poses: ACOLYTE_POSES, scale: 0.93, skirt: 1.25, coat: "#2b3a5c", trim: "#f6f1e8", hairColor: "#b04a26", skin: "#f3d5bf",
+    head: "face", hair: "sidetail", headband: "#f6f1e8", weapon: "none", holds: "notepad", accent: "#c8414f", eyeColor: "#6a2a1a", trail: "#ff6f86" },
 };
 
 export class Rig {
@@ -284,6 +310,21 @@ export class Rig {
         bang.rotation.set(0.5, 0, -0.12);
         bang.material = dark;
       }
+      if (L.headband) { // a maid's frilled headband across the crown
+        const bandN = new BB.TransformNode(`${id}-headband`, scene); bandN.parent = this.head; bandN.position.set(0, 0.02, -0.01); bandN.rotation.x = -0.45;
+        const arcPts = Array.from({ length: 13 }, (_, i) => { const t = 0.12 + (i / 12) * (Math.PI - 0.24); return new BB.Vector3(Math.cos(t) * 0.262, Math.sin(t) * 0.262, 0); });
+        const band = add(MB.CreateTube("headband", { path: arcPts, radius: 0.022, tessellation: 8, cap: BB.Mesh.CAP_ALL }, scene), bandN, 0, 0, 0, 0.012);
+        band.material = M("headband", L.headband);
+        for (let i = -2; i <= 2; i++) {
+          const fr = add(MB.CreateSphere("frill", { diameter: 0.07, segments: 5 }, scene), this.head, i * 0.06, 0.25 - Math.abs(i) * 0.025, 0.06 - Math.abs(i) * 0.02, 0.008);
+          fr.scaling.set(1, 0.7, 0.5); fr.material = band.material;
+        }
+      }
+      if (L.glasses) { // little round spectacles
+        const gm = M("glasses", L.glasses);
+        for (const sx of [-1, 1]) { const r = add(MB.CreateTorus("lens", { diameter: 0.105, thickness: 0.012, tessellation: 12 }, scene), this.head, sx * 0.085, 0.0, 0.245, 0); r.rotation.x = Math.PI / 2; r.material = gm; }
+        const br = add(MB.CreateBox("bridge", { width: 0.06, height: 0.012, depth: 0.012 }, scene), this.head, 0, 0.01, 0.25, 0); br.material = gm;
+      }
       if (L.hood) { // a cowl pulled over the head, shading the eyes
         const hd = add(MB.CreateSphere("cowl", { diameter: 0.58, segments: 10, slice: 0.62 }, scene), this.head, 0, 0.0, -0.05, 0.02);
         hd.rotation.x = -0.55; hd.scaling.set(1.05, 1.05, 1.05); hd.material = M("cowl", L.hood);
@@ -418,6 +459,15 @@ export class Rig {
       sc.rotation.z = Math.PI / 2; sc.material = M("scroll", "#efe6cc");
       const sheet = add(MB.CreateBox("scrollSheet", { width: 0.26, height: 0.2, depth: 0.012 }, scene), hand, 0.04, handY - 0.12, 0.07, 0.012);
       sheet.material = sc.material;
+    } else if (L.holds === "notepad") { // an order pad and a pencil
+      const pad = add(MB.CreateBox("notepad", { width: 0.13, height: 0.17, depth: 0.02 }, scene), hand, 0.03, handY - 0.08, 0.07, 0.012);
+      pad.rotation.x = -0.3; pad.material = M("notepad", "#f6f1e0");
+      const pen = add(MB.CreateCylinder("pencil", { height: 0.15, diameter: 0.014, tessellation: 5 }, scene), hand, 0.1, handY - 0.02, 0.06, 0); pen.rotation.z = 0.5; pen.material = M("pencil", "#e6b54e");
+    } else if (L.holds === "tray") { // a round tray with a teacup and a slice of cake
+      const tray = add(MB.CreateCylinder("tray", { height: 0.02, diameter: 0.38, tessellation: 16 }, scene), hand, 0.02, handY - 0.04, 0.16, 0.012); tray.rotation.x = Math.PI / 2;
+      tray.material = M("tray", "#c9ccd2");
+      const cup = add(MB.CreateCylinder("teacup", { height: 0.06, diameterTop: 0.08, diameterBottom: 0.06, tessellation: 10 }, scene), hand, -0.06, handY, 0.14, 0.008); cup.material = M("teacup", "#f6f1e8");
+      const cake = add(MB.CreateCylinder("cakeSlice", { height: 0.07, diameter: 0.12, tessellation: 3 }, scene), hand, 0.09, handY, 0.2, 0.008); cake.material = M("cakeSlice", "#f2c8d0");
     } else if (L.holds === "lantern") {
       const frame = add(MB.CreateBox("lanternFrame", { width: 0.13, height: 0.17, depth: 0.13 }, scene), hand, 0, handY - 0.2, 0.02, 0.015);
       frame.material = M("lanternFrame", "#3a2a22");
@@ -833,6 +883,7 @@ export class Rig {
       // Poles stand upright like a walking staff; a broom is held the other way, straw on the ground.
       const upright = relaxedArm && this.weaponKind === "pole" && !fighter.armPose;
       this.weaponNode.rotation.x = upright ? (this.look.weapon === "broom" ? Math.PI / 2 : -Math.PI / 2) - rot[0] - swingArm : 0;
+      this.weaponNode.rotation.y = upright && this.look.weapon !== "broom" ? POLE_LEAN : 0; // leaning out, clear of the face
     }
     this.body.rotation.y = spin + (this.bodyTwist ?? 0);
     if (this.skirt && !this.legs) this.skirt.rotation.y = spin;
@@ -890,7 +941,8 @@ export class Rig {
     if (this.skirt && !this.legs) this.skirt.rotation.x = bodyLean * 0.25;
     if (this.scarfTail) this.scarfTail.rotation.x = 0.12 + run * 0.45 + Math.sin(held * 9) * 0.08 * (0.3 + run);
     if (this.offArm && !this.legs) this.offArm.rotation.x = c.blocking || fighter.current?.id === "Guard" ? -0.9 : 0.35 + Math.sin(this.time * 13) * 0.25 * run;
-    if (this.offArm && this.look.holds === "scroll" && !fighter.offPose && !fighter.current) { this.offArm.rotation.set(-0.3, 0, -0.2); this.offElbow.rotation.x = -1.35; } // reading
+    if (this.offArm && (this.look.holds === "scroll" || this.look.holds === "notepad") && !fighter.offPose && !fighter.current) { this.offArm.rotation.set(-0.3, 0, -0.2); this.offElbow.rotation.x = -1.35; } // reading
+    if (this.offArm && this.look.holds === "tray" && !fighter.offPose && !fighter.current) { this.offArm.rotation.set(-0.15, 0, -0.35); this.offElbow.rotation.x = -1.5; } // the tray held level
     if (this.offArm && this.look.shield && this.look.shield !== true && !fighter.offPose) { this.offArm.rotation.z = -0.28; this.offElbow.rotation.x = Math.min(this.offElbow.rotation.x, -0.5); } // shield held clear of the body
     if (this.offArm && (this.look.carry || fighter.offPose)) {
       const o = fighter.offPose ?? [-1.15, 0, -0.35]; this.offArm.rotation.set(o[0], o[1], o[2]);
@@ -1019,7 +1071,10 @@ export class Rig {
 Rig.view = null;        // the camera's ground position, set by the game each frame
 Rig.outlineRange = 30;  // metres
 
-const RELAXED = [1.5, -0.12, 0.05]; // hanging at the side, a little away from the body (never across the coat)
+// Hanging at the side, angled a little out from the shoulder so it clears the coat and anything worn across it.
+// (The arm points along +Z: pitch lowers it; with the arm nearly straight down, yaw is what swings its tip outward.)
+const RELAXED = [1.33, 1.25, 0];
+const POLE_LEAN = -0.2; // upright staffs and spears lean away from the head
 const CRADLE = [0.95, -0.55, 0];
 const mix = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k)];
 const lerpAngleSafe = (a, b, t) => a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * t;

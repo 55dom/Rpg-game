@@ -273,12 +273,21 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .in-scene .letterbox { height: 7vh; }
 .in-scene .hud-top .card, .in-scene .combo, .in-scene .touch, .in-scene .fd, .in-scene .prompt, .in-scene .target-card, .in-scene .bossbar { opacity: 0; pointer-events: none !important; }
 .in-scene .touch * { pointer-events: none !important; }
+/* In a scene only SAVE stays in the top menu, so nothing sits over the actors' faces. */
+.in-scene .menu button:not(.save-btn) { display: none !important; }
+@media (max-height: 560px) {
+  .in-scene .letterbox { height: 4vh; }
+  .dialog { bottom: calc(4vh + 6px); padding: 14px 16px 10px; min-height: 0; width: min(760px, calc(100vw - 32px)); }
+  .say { font-size: 15px; line-height: 1.5; min-height: 1.5em; }
+  .plate { font-size: 12px; padding: 5px 10px 4px; top: -11px; }
+  .choices { gap: 5px; margin-top: 6px; } .choices button { padding: 7px 10px 7px 32px; font-size: 14px; }
+}
 .no-ult .bar.surge, .no-ult .b-ult { display: none; }
 .solo .party, .solo .b-bas, .solo .b-juno, .solo .b-stance { display: none; }
 .spell[hidden] { display: none; }
 [data-locked~="Spell2"] .b-pull, [data-locked~="Spell3"] .b-edge, [data-locked~="Spell4"] .b-wall, [data-locked~="pages"] .b-page { display: none; }
 .dialog { position: absolute; left: 50%; bottom: calc(7vh + 14px); transform: translateX(-50%); width: min(860px, calc(100vw - 32px));
-  background: linear-gradient(180deg, rgba(20, 22, 32, 0.94), rgba(12, 13, 19, 0.94)); border: 1px solid #3a3f55; border-left: 3px solid var(--lantern);
+  background: linear-gradient(180deg, #14161f, #0c0d13); border: 1px solid #3a3f55; border-left: 3px solid var(--lantern); z-index: 6; isolation: isolate;
   border-radius: 12px; padding: 22px 22px 18px; pointer-events: auto; cursor: pointer; min-height: 112px; }
 .dialog[hidden] { display: none; }
 .plate { position: absolute; top: -14px; left: 16px; font: 400 14px/1 var(--font-display); letter-spacing: 0.16em; color: var(--ink);

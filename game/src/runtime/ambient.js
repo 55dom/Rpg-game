@@ -27,6 +27,15 @@ const WORK = {
   work: (t) => ({ arm: [0.6, -0.3, 0.2 + Math.sin(t * 3) * 0.2], bow: 0.15 }),
   cower: () => ({ arm: [0.85, -1.15, 0], off: [-0.5, 0, 1.25], bow: 0.5, crouch: true }),
   shelter: () => ({ arm: [0.85, -1.15, 0], off: [-0.5, 0, 1.25], bow: 0.08 }),
+  // The café (and anywhere people sit, serve and tidy).
+  greet: (t) => ((t % 6) < 1.4 ? { arm: [-1.15, 0.7 + Math.sin(t * 9) * 0.25, 0], bow: 0.12 } : { arm: [0.55, -0.6, 0], off: [-0.9, 0, 0.45] }),
+  serve: (t) => ({ arm: [0.25, -0.35, 0.1], off: [-0.25, 0, 0.35], bow: 0.04 + Math.max(0, Math.sin(t * 0.8)) * 0.06 }),
+  write: (t) => ({ arm: [0.5, -0.55 + Math.sin(t * 7) * 0.08, 0], off: [-0.85, 0, 0.5], bow: 0.12 }),
+  wipe: (t) => ({ arm: [0.35 + Math.sin(t * 4) * 0.12, -0.3 + Math.cos(t * 4) * 0.35, 0], bow: 0.3 }),
+  eat: (t) => { const k = (t * 0.45) % 1; return { arm: k < 0.25 ? [-0.2, -0.75, 0] : [0.55, -0.45, 0], sit: true, bow: k < 0.25 ? 0.02 : 0.12 }; },
+  sip: (t) => ({ arm: (t % 7) < 1.6 ? [-0.15, -0.8, 0] : [0.6, -0.5, 0], sit: true, bow: 0.06 }),
+  sit: () => ({ arm: [0.75, -0.3, 0], sit: true, bow: 0.05 }),
+  nap: () => ({ arm: [0.85, -0.6, 0], off: [-0.6, 0, 0.6], sit: true, bow: 0.4 }),
 };
 
 export class Ambient {
@@ -59,6 +68,16 @@ export class Ambient {
       p.t += dt;
       if (ctx.busy) { a.vel.x = a.vel.z = 0; continue; } // a conversation is on: everyone holds still
       const out = p.routine.update({ pos: a.pos, player: ctx.player, combat: ctx.combat, raining: ctx.raining, night: ctx.night, dt });
+      const seat = p.routine.spec.seated; // someone at a table stays in their chair: only the head turns to look
+      if (seat) {
+        a.vel.x = a.vel.z = 0; a.targetYaw = seat.face;
+        const pose = WORK[seat.anim ?? "sit"](p.t);
+        a.armPose = pose.arm ?? null; a.offPose = pose.off ?? null; a.bow = pose.bow ?? 0; a.relaxed = true; a.seated = 0.5;
+        const want = out.look ? clamp(wrap(Math.atan2(out.look.x - a.pos.x, out.look.z - a.pos.z) - a.yaw), -1.1, 1.1) : 0;
+        p.headYaw += (want - p.headYaw) * Math.min(1, dt * 4);
+        if (r.head && r.head !== r.shoulder) r.head.rotation.y = p.headYaw;
+        continue;
+      }
       // Home for the night: out of sight (and out of reach of the talk prompt).
       if (!!out.hidden !== !!a.hiddenActor) { a.hiddenActor = !!out.hidden; r.setVisible(!out.hidden); }
       if (out.hidden) { a.vel.x = a.vel.z = 0; continue; }
@@ -79,6 +98,7 @@ export class Ambient {
       const pose = job ? job(p.t) : {};
       a.armPose = pose.arm ?? null; a.offPose = pose.off ?? null; a.bow = pose.bow ?? 0;
       a.relaxed = !(pose.fight || out.activity === "alert");
+      a.seated = pose.sit ? 0.5 : 0; // on a chair (runtime/motion.js)
       // Eyes on the player: the head turns (within reason) toward whoever they're watching.
       let want = 0;
       if (out.look) want = clamp(wrap(Math.atan2(out.look.x - a.pos.x, out.look.z - a.pos.z) - a.yaw), -1.1, 1.1);

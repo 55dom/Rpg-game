@@ -88,6 +88,27 @@ export function props(scene, K, P) {
       cyl("tableLeg", 0.8, 0.12, "#5a3a22", parent, x, 0.4, z, 0.012, 6);
       for (let i = 0; i < mugs; i++) { const [mx, mz] = off(x, z, ry, (i - 0.5) * 0.4, 0.1); cyl("mug", 0.16, 0.11, "#c9b07a", parent, mx, 0.92, mz, 0.008, 8); }
     },
+    /** A wooden chair; ry turns its seat to face that way (its back is behind). */
+    chair(x, z, { ry = 0, parent, hex = "#8a5a32" } = {}) {
+      rot(box("chairSeat", 0.46, 0.06, 0.46, hex, parent, x, 0.46, z, 0.012), ry);
+      const [bx, bz] = off(x, z, ry, 0, -0.21);
+      rot(box("chairBack", 0.46, 0.5, 0.05, hex, parent, bx, 0.74, bz, 0.012), ry);
+      for (const [dx, dz] of [[-0.19, -0.19], [0.19, -0.19], [-0.19, 0.19], [0.19, 0.19]]) { const [lx, lz] = off(x, z, ry, dx, dz); cyl("chairLeg", 0.46, 0.05, "#5a3a22", parent, lx, 0.23, lz, 0, 5); }
+    },
+    /** A round café table with a cloth. */
+    roundTable(x, z, { parent, cloth = "#f2d4dc" } = {}) {
+      cyl("rtTop", 0.06, 1.1, "#8a5a32", parent, x, 0.78, z, 0.015, 16);
+      cyl("rtCloth", 0.2, 1.16, cloth, parent, x, 0.7, z, 0.012, 16, 1.22);
+      cyl("rtLeg", 0.76, 0.12, "#5a3a22", parent, x, 0.38, z, 0, 6);
+      cyl("rtFoot", 0.05, 0.6, "#5a3a22", parent, x, 0.03, z, 0.01, 10);
+    },
+    /** A cup and saucer on a table at height y. */
+    teacup(x, z, { parent, y = 0.81 } = {}) { cyl("saucer", 0.015, 0.2, "#f6f1e8", parent, x, y + 0.01, z, 0.006, 12); cyl("cup", 0.08, 0.1, "#f6f1e8", parent, x, y + 0.06, z, 0.006, 10, 0.08); },
+    /** A potted plant. */
+    plant(x, z, { parent, s = 1 } = {}) {
+      cyl("pot", 0.45 * s, 0.5 * s, "#b0603a", parent, x, 0.22 * s, z, 0.015, 10, 0.38 * s);
+      for (let i = 0; i < 4; i++) { const m = put(MB.CreateSphere("leaf", { diameter: 0.5 * s, segments: 5 }, scene), parent, x + Math.sin(i * 1.7) * 0.15 * s, (0.6 + i * 0.12) * s, z + Math.cos(i * 1.7) * 0.15 * s, 0.015); m.material = P(i % 2 ? "#4a7a3a" : "#5a8a44"); }
+    },
     /** A cold or burning fire ring. Returns the flame mesh (null when cold). */
     campfire(x, z, { parent, lit = true } = {}) {
       for (let i = 0; i < 7; i++) { const a = (i / 7) * Math.PI * 2; const s = put(MB.CreateSphere("fireStone", { diameter: 0.22, segments: 5 }, scene), parent, x + Math.sin(a) * 0.45, 0.06, z + Math.cos(a) * 0.45, 0.012); s.material = P("#6a6458"); }

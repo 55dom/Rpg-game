@@ -32,8 +32,25 @@ export const AURELIN_LAYOUT = (() => {
     tavern: { x: -16, z: -8 },  // "The Lantern & Anchor", in the west-street house nearest the gate
     // The poor quarter by the grate: shacks of patched planks.
     shacks: [{ x: 37, z: -27, w: 4, d: 4 }, { x: 37, z: -20.5, w: 4, d: 3.6 }, { x: 24.5, z: -29.6, w: 4, d: 3 }],
+    // The Gilded Spoon, a café at the top of the Lowmarket. Its door faces the stalls (south).
+    cafe: { x: 34, z: 8.5, w: 10, d: 8, door: { x: 34, z: 4.5 }, terrace: [[36.8, 3.1], [39.4, 3.1]] },
+    // Street lamps: six around the plaza, the rest along the streets.
+    lamps: [...Array.from({ length: 6 }, (_, i) => { const a = (i / 6) * Math.PI * 2 + 0.3; return [Math.sin(a) * 13.5, Math.cos(a) * 13.5]; }),
+      [-20, -14], [-20, 10], [20, 12], [6, -24], [-6, -24], [28, -16]],
   };
 })();
+
+
+// ---- Interiors: the Gilded Spoon café and a Lowmarket home (runtime/sets.js buildCafe, buildHome) ----
+export const CAFE_LAYOUT = {
+  half: [7, 6],
+  tables: [["1", -4.6, -3.2], ["2", -4.6, 0.6], ["3", -4.6, 3.8], ["4", -1.2, -0.8], ["5", 2.6, -2.8]],
+  counter: { x0: 1.2, z0: 2.6, x1: 7, z1: 3.6 },
+  stove: { x0: 2.4, z0: 5.2, x1: 4.6, z1: 6 },
+  cakeCase: { x: 3.6, z: 3.1 },
+  door: { x: 0, z: -6 },
+};
+export const HOME_LAYOUT = { half: [5, 4], door: { x: 0, z: -4 }, table: { x: 1.6, z: 0.4 }, bed: { x0: -4.9, z0: 1, x1: -2.4, z1: 3.9 }, hearth: { x0: 1.2, z0: 3.3, x1: 3.4, z1: 4 } };
 
 // ---- Thornwick, the home village ------------------------------------------------------------
 // The green and its old oak in the middle; the orphanage to the north; the mill to the south-east
@@ -56,7 +73,7 @@ export const THORNWICK_LAYOUT = {
 export const UNDERCROFT_BANDS = [[-34, -22, 6], [-22, -14, 2], [-14, 2, 10], [2, 10, 2], [10, 26, 12], [26, 32, 2], [32, 46, 14]];
 const UC_HALF = 14;
 
-const A = AURELIN_LAYOUT;
+const A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT;
 const aurelinSolids = [
   ...A.houses.map((h) => box(h.x - h.w / 2, h.z - h.d / 2, h.x + h.w / 2, h.z + h.d / 2)),
   ...A.stalls.map((s) => box(s.x - 1.4, s.z - 1, s.x + 1.4, s.z + 1)),
@@ -65,8 +82,18 @@ const aurelinSolids = [
   box(A.chapel.x - A.chapel.w / 2, A.chapel.z - A.chapel.d / 2, A.chapel.x + A.chapel.w / 2, A.chapel.z + A.chapel.d / 2),
   ...A.shacks.map((h) => box(h.x - h.w / 2, h.z - h.d / 2, h.x + h.w / 2, h.z + h.d / 2)),
   circle(-8.5, -27.5, 1.3), circle(-8.5, -25.2, 0.9), // the cart by the gate, and its horse
-  // City walls on either side of the south gate.
-  box(-42, -36, -4, -33), box(4, -36, 42, -33),
+  // City walls on either side of the south gate, and the gate's two towers.
+  box(-42, -36, -4, -33), box(4, -36, 42, -33), circle(-5, -34.5, 2.1), circle(5, -34.5, 2.1),
+  // The Hall's colonnade, the Crown Ward's front hedges, the street lamps.
+  ...Array.from({ length: 6 }, (_, i) => circle(A.hall.x0 + 1.5 + i * ((A.hall.x1 - A.hall.x0 - 3) / 5), A.hall.z0 - 1.2, 0.55)),
+  ...A.houses.filter((h) => h.rich).map((h) => { const f = h.x < 0 ? 1 : -1, x = h.x + f * (h.w / 2 + 1.6); return box(x - 0.5, h.z - (h.d - 1) / 2, x + 0.5, h.z + (h.d - 1) / 2); }),
+  ...A.lamps.map(([x, z]) => circle(x, z, 0.22)),
+  // The tavern's yard furniture and the cooper's barrels.
+  circle(A.tavern.x + 4.5, A.tavern.z - 4.5, 0.6), box(A.tavern.x + 4.9, A.tavern.z - 3, A.tavern.x + 6.3, A.tavern.z - 2.2), circle(A.tavern.x + 5.4, A.tavern.z + 2.8, 0.75),
+  circle(25.5, 15.2, 1.1),
+  // The café: walls all round (the way in is its door, an exit to the inside), and its terrace tables.
+  box(A.cafe.x - A.cafe.w / 2, A.cafe.z - A.cafe.d / 2, A.cafe.x + A.cafe.w / 2, A.cafe.z + A.cafe.d / 2),
+  ...A.cafe.terrace.map(([x, z]) => circle(x, z, 0.75)),
 ];
 
 const T = THORNWICK_LAYOUT;
@@ -149,13 +176,17 @@ export const ZONES = {
         routine: { role: "elder", home: [-12.3, 16], steps: [{ do: "work", at: [12, 11.8], face: Math.PI / 2, anim: "read", dur: [14, 20] }, { do: "wander", around: [9, 9], r: 2, dur: [6, 9] }] } },
     ],
     // Somewhere dry to stand when it rains: the Hall portico, the market canopies, house doorways.
-    shelters: [[-2, 25], [2, 25], [18, -6.8], [24, -6.8], [30, -6.8], [-12.3, 4], [-12.3, -8]],
+    shelters: [[0, 25.2], [3.8, 25.2], [18, -6.8], [24, -6.8], [30, -6.8], [-12.3, 4], [-12.3, -8]],
     pickups: [{ id: "toyLantern", x: -2.6, z: -28.6, show: "$Q_TOY == 1 and not $TOY_FOUND", flag: "TOY_FOUND", label: "Pick up the toy lantern" }],
     exits: [
       { id: "gate", rect: [-4, -36, 4, -34.4], to: "lighthouse", spawn: "aurelin", label: "The road home to the Lighthouse" },
       { id: "grate", rect: [A.grate.x - 1.3, A.grate.z - 1.3, A.grate.x + 1.3, A.grate.z + 1.3], to: "undercroft", spawn: "aurelin", label: "The grate down to the Undercroft" },
+      // Doors you can walk through: the café, and the vendor's home on the east street.
+      { id: "cafe", rect: [A.cafe.door.x - 0.8, A.cafe.door.z - 0.9, A.cafe.door.x + 0.8, A.cafe.door.z + 0.1], to: "cafe", spawn: "aurelin", label: "The Gilded Spoon" },
+      { id: "home", rect: [25.1, 17.2, 26.1, 18.8], to: "home", spawn: "aurelin", label: "The vendor's house" },
     ],
-    arrivals: { gate: { x: 0, z: -31, yaw: 0 }, undercroft: { x: A.grate.x, z: A.grate.z + 4, yaw: 0 } },
+    arrivals: { gate: { x: 0, z: -31, yaw: 0 }, undercroft: { x: A.grate.x, z: A.grate.z + 4, yaw: 0 },
+      cafe: { x: A.cafe.door.x, z: A.cafe.door.z - 1.9, yaw: Math.PI }, home: { x: 24, z: 18, yaw: -Math.PI / 2 } },
     crowd: 22,
   },
   thornwick: {
@@ -227,6 +258,61 @@ export const ZONES = {
     ],
     exits: [{ id: "stairs", rect: [-3, -34, 3, -33], to: "aurelin", spawn: "undercroft", label: "The stairs up to the Lowmarket" }],
     arrivals: { aurelin: { x: 0, z: -30, yaw: 0 } },
+  },
+  // ---- Interiors ----
+  cafe: {
+    id: "cafe", name: "The Gilded Spoon", region: "Lowmarket, Aurelin", stage: "cafe", interior: true,
+    bounds: { rect: [-6.75, -5.75, 6.75, 5.75], solids: [
+      box(CF.counter.x0, CF.counter.z0, CF.counter.x1, CF.counter.z1), box(CF.stove.x0, CF.stove.z0, CF.stove.x1, CF.stove.z1),
+      ...CF.tables.map(([, x, z]) => circle(x, z, 0.5)),
+      circle(-6.4, -5.4, 0.35), circle(6.4, -5.4, 0.35), circle(-6.4, 5.4, 0.4), circle(-1.6, -5.2, 0.4),
+    ] },
+    spawn: { x: 0, z: -4.4, yaw: 0 },
+    // Five maids (each their own job), Juno moonlighting after hours, the cook, and the regulars at their tables.
+    cast: [
+      { id: "pip", look: "pip", x: 1.2, z: -4.2, yaw: Math.PI, node: "W_Pip",
+        routine: { steps: [{ do: "work", at: [1.2, -4.2], face: Math.PI * 0.85, anim: "greet", dur: [10, 14] }, { do: "wander", around: [0, -3], r: 1.5, dur: [5, 7] }] } },
+      { id: "mari", look: "mari", x: 0.4, z: -1.9, yaw: -0.6, node: "W_Mari",
+        routine: { steps: [{ do: "work", at: [0.4, -1.9], face: -0.9, anim: "write", dur: [6, 9] }, { do: "work", at: [-3.6, -2.4], face: -2.2, anim: "write", dur: [6, 9] }, { do: "idle", at: [0.6, 2.0], face: 0, dur: [4, 6] }] } },
+      { id: "bettany", look: "bettany", x: 0.6, z: 2, yaw: 0, node: "W_Bettany",
+        routine: { speed: 1.5, steps: [{ do: "work", at: [0.4, 2.0], face: 0.4, anim: "serve", dur: [3, 5] }, { do: "work", at: [-3.5, 1.4], face: -2, anim: "serve", dur: [3, 4] },
+          { do: "work", at: [1.6, -2.0], face: 2.2, anim: "serve", dur: [3, 4] }, { do: "work", at: [-3.5, -2.4], face: -2.2, anim: "serve", dur: [3, 4] }] } },
+      { id: "hazel", look: "hazel", x: -2.4, z: -4.4, yaw: 0, node: "W_Hazel",
+        routine: { steps: [{ do: "work", at: [-2.6, -4.4], face: 0.3, anim: "sweep", dur: [8, 12] }, { do: "work", at: [-2.8, 2.2], face: -1.2, anim: "sweep", dur: [8, 12] }, { do: "work", at: [4.6, -1.2], face: 2, anim: "sweep", dur: [8, 12] }] } },
+      { id: "odette", look: "odette", x: 4.6, z: 4.4, yaw: Math.PI, node: "W_Odette",
+        routine: { steps: [{ do: "work", at: [4.8, 4.3], face: Math.PI, anim: "write", dur: [10, 14] }, { do: "work", at: [3.6, 4.3], face: Math.PI, anim: "work", dur: [5, 7] }] } },
+      { id: "juno", look: "junoMaid", x: -2.2, z: 1.2, yaw: -1.4, node: "W_JunoCafe",
+        routine: { steps: [{ do: "work", at: [-3.4, 2.6], face: -2.0, anim: "write", dur: [6, 9] }, { do: "work", at: [1.4, -1.6], face: 2.4, anim: "serve", dur: [5, 7] }, { do: "idle", at: [0.2, 2.1], face: 0.2, dur: [4, 6] }] } },
+      { id: "barnaby", look: "barnaby", x: 3.4, z: 4.7, yaw: 0, node: "W_Barnaby",
+        routine: { steps: [{ do: "work", at: [3.4, 4.75], face: 0, anim: "stir", dur: [12, 18] }, { do: "work", at: [5.6, 4.6], face: 0, anim: "work", dur: [4, 6] }] } },
+      { id: "tobin", look: "tobin", x: -3.65, z: 0.6, yaw: Math.PI / 2, node: "W_Tobin", routine: { seated: { face: -Math.PI / 2, anim: "eat" }, steps: [{ do: "idle", at: [-3.65, 0.6], dur: [99, 99] }] } },
+      { id: "fenwick", look: "fenwick", x: -5.55, z: 3.8, yaw: Math.PI / 2, node: "W_Fenwick", routine: { seated: { face: Math.PI / 2, anim: "eat" }, steps: [{ do: "idle", at: [-5.55, 3.8], dur: [99, 99] }] } },
+      { id: "nib", look: "nib", x: 1.65, z: -2.8, yaw: Math.PI / 2, node: "W_Nib", routine: { seated: { face: Math.PI / 2, anim: "sip" }, steps: [{ do: "idle", at: [1.65, -2.8], dur: [99, 99] }] } },
+      { id: "traveler", look: "traveler", x: -3.65, z: -3.2, yaw: -Math.PI / 2, node: "W_Traveler", routine: { seated: { face: -Math.PI / 2, anim: "sip" }, steps: [{ do: "idle", at: [-3.65, -3.2], dur: [99, 99] }] } },
+    ],
+    // Things to use: empty chairs to sit at (and order), the menu board, the empty cake case.
+    pickups: [
+      { id: "seat4", x: -2.15, z: -0.8, show: "1", node: "W_CafeSit", sit: [-2.15, -0.8, Math.PI / 2], marker: false, label: "Sit down at a table" },
+      { id: "seat4b", x: -0.25, z: -0.8, show: "1", node: "W_CafeSit", sit: [-0.25, -0.8, -Math.PI / 2], marker: false, label: "Sit down at a table" },
+      { id: "seat5", x: 3.55, z: -2.8, show: "1", node: "W_CafeSit", sit: [3.55, -2.8, -Math.PI / 2], marker: false, label: "Sit down at a table" },
+      { id: "menu", x: -1.6, z: -4.6, show: "1", node: "W_CafeMenu", marker: false, label: "Read the menu board" },
+      { id: "cakeCase", x: 3.6, z: 2.1, show: "$Q_CAKE >= 1 and $Q_CAKE < 999 and not $CAKE_CASE", node: "W_CakeCase", label: "Look at the empty cake case" },
+    ],
+    intro: { node: "W_CafeIntro", when: "not $CAKE_INTRO" },
+    exits: [{ id: "door", rect: [-0.8, -5.75, 0.8, -5.4], to: "aurelin", spawn: "cafe", label: "Back out to the Lowmarket" }],
+    arrivals: { aurelin: { x: 0, z: -4.4, yaw: 0 } },
+  },
+  home: {
+    id: "home", name: "The Vendor's House", region: "Lowmarket, Aurelin", stage: "home", interior: true,
+    bounds: { rect: [-4.75, -3.75, 4.75, 3.75], solids: [
+      box(HM.bed.x0, HM.bed.z0, HM.bed.x1, HM.bed.z1), box(HM.hearth.x0, HM.hearth.z0, HM.hearth.x1, HM.hearth.z1),
+      box(HM.table.x - 0.6, HM.table.z - 0.4, HM.table.x + 0.6, HM.table.z + 0.4), circle(4.3, -3.3, 0.4), circle(4.2, -2.3, 0.4), circle(-4.4, -3.4, 0.35),
+    ] },
+    spawn: { x: 0, z: -2.6, yaw: 0 },
+    cast: [{ id: "hetty", look: "hetty", x: 2.2, z: 2.6, yaw: 0, node: "W_Hetty",
+      routine: { steps: [{ do: "work", at: [2.3, 2.6], face: 0, anim: "stir", dur: [10, 14] }, { do: "work", at: [-1.2, 3.2], face: 0, anim: "work", dur: [6, 8] }, { do: "work", at: [1.6, -0.5], face: 0, anim: "wipe", dur: [5, 7] }] } }],
+    exits: [{ id: "door", rect: [-0.8, -3.75, 0.8, -3.4], to: "aurelin", spawn: "home", label: "Back out to the street" }],
+    arrivals: { aurelin: { x: 0, z: -2.6, yaw: 0 } },
   },
 };
 

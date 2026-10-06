@@ -30,6 +30,18 @@ export const CAST = Object.freeze({
   Farmer: { name: "Farmer Odo", color: "#c9d27a", actor: "farmer" },
   Smith: { name: "Thornwick Smith", color: "#e09a6a", actor: "smith" },
   Ness: { name: "Old Ness", color: "#9fc0b0", actor: "ness" },
+  // The Gilded Spoon café.
+  Pip: { name: "Pip", color: "#f08aa8", actor: "pip" },
+  Mari: { name: "Mari", color: "#e88a9a", actor: "mari" },
+  Bettany: { name: "Bettany", color: "#8ac0e8", actor: "bettany" },
+  Hazel: { name: "Hazel", color: "#c0a8e0", actor: "hazel" },
+  Odette: { name: "Madame Odette", color: "#d8dce8", actor: "odette" },
+  Barnaby: { name: "Barnaby", color: "#ffcf7a", actor: "barnaby" },
+  Tobin: { name: "Tobin", color: "#d8b07a", actor: "tobin" },
+  Fenwick: { name: "Old Fenwick", color: "#b8d0a0", actor: "fenwick" },
+  Nib: { name: "Nib", color: "#f0c26a", actor: "nib" },
+  Traveler: { name: "Hooded Traveler", color: "#a8a8b8", actor: "traveler" },
+  Hetty: { name: "Hetty", color: "#e8b48a", actor: "hetty" },
   Crowd: { name: "Candidates", color: "#aab4cc", actor: null },
 });
 

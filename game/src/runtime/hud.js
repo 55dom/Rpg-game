@@ -170,7 +170,7 @@ export class Hud {
     this.set("tHidden", e.target, "hidden", !focus);
     if (focus) {
       const fc = focus.combatant;
-      this.set("tname", e.tname, "text", (focus.stats.name ?? "Enemy").toUpperCase() + (focus.stats.elite ? " ★" : ""));
+      this.set("tname", e.tname, "text", (focus.stats.name ?? "Enemy").toUpperCase() + (focus.stats.elite ? " ★" : "") + (focus.traits?.dummy ? " · HP ∞" : ""));
       this.set("thp", e.thp, "width", pct(fc.health.normalized));
       this.set("tpost", e.tposture, "width", pct(fc.posture.normalized));
       this.set("tbroken", e.tbroken, "hidden", !fc.postureBroken);

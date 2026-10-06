@@ -104,7 +104,7 @@ export function boot(doc = document) {
   const viewFor = (f) => views.get(f);
 
   const addView = (f) => {
-    if (views.has(f)) return;
+    if (views.has(f) || f.traits?.dummy) return; // training dummies are part of the set (they rock on their posts)
     const rig = new Rig(scene, f.kind, f.id);
     views.set(f, rig);
     trails.set(f, new Trail(scene, `${f.id}-trail`, LOOKS[f.kind]?.trail ?? (f.team === Team.Player ? TRAIL_COLORS.default : TRAIL_COLORS.enemy)));
@@ -210,6 +210,7 @@ export function boot(doc = document) {
           vfx.flash(at, heavy ? 2.4 : 1.4, a.team === Team.Player ? "#fff2cf" : "#ffb0a0", heavy ? 0.16 : 0.1);
           vfx.number(at, result.healthDamage, `${isPlayer(d) ? "hurt" : ""} ${heavy ? "big" : ""}`);
           viewFor(d)?.hitFlash(heavy ? 0.1 : 0.06);
+          if (d.traits?.dummy) sets.get(sets.current)?.hitDummy?.(d.pos.x, d.pos.z, a.pos, heavy ? 2 : 1);
           camera.shake(isPlayer(d) ? 0.35 : heavy ? 0.3 : 0.12);
           sfx.play(heavy ? "hitHeavy" : "hit", isPlayer(d) ? 1.1 : 1);
           if (isPlayer(d)) hud.hurt(); else if (d.team === Team.Enemy) hud.setFocus(d);
@@ -663,7 +664,7 @@ export function boot(doc = document) {
     if (!story.roaming) return;
     sfx.play("ui");
     const list = mapModal.querySelector("[data-map-list]");
-    list.innerHTML = Object.values(ZONES).filter((z) => !z.dungeon).map((z) => `<button data-zone="${z.id}" ${story.zone?.id === z.id ? "disabled" : ""}><b>${z.name.toUpperCase()}</b><span>${z.region}${story.zone?.id === z.id ? " · You are here" : ""}</span></button>`).join("");
+    list.innerHTML = Object.values(ZONES).filter((z) => !z.dungeon && !z.interior).map((z) => `<button data-zone="${z.id}" ${story.zone?.id === z.id ? "disabled" : ""}><b>${z.name.toUpperCase()}</b><span>${z.region}${story.zone?.id === z.id ? " · You are here" : ""}</span></button>`).join("");
     for (const b of list.querySelectorAll("[data-zone]")) b.addEventListener("click", () => { mapModal.hidden = true; state.modal = false; story.travel(b.dataset.zone); });
     mapModal.hidden = false; state.modal = true;
   };
