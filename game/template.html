@@ -274,7 +274,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .in-scene .hud-top .card, .in-scene .combo, .in-scene .touch, .in-scene .fd, .in-scene .prompt, .in-scene .target-card, .in-scene .bossbar { opacity: 0; pointer-events: none !important; }
 .in-scene .touch * { pointer-events: none !important; }
 /* In a scene only SAVE stays in the top menu, so nothing sits over the actors' faces. */
-.in-scene .menu button:not(.save-btn) { display: none !important; }
+.in-scene .menu button:not(.save-btn):not([data-menu="reset"]) { display: none !important; }
 @media (max-height: 560px) {
   .in-scene .letterbox { height: 4vh; }
   .dialog { bottom: calc(4vh + 6px); padding: 14px 16px 10px; min-height: 0; width: min(760px, calc(100vw - 32px)); }
