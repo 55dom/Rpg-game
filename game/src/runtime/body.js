@@ -77,12 +77,18 @@ export function buildBody(rig, scene, id, L, kind, add, skin) {
   neck.material = skin;
   // Shoulder caps (deltoids), so the arms join the torso instead of poking out of it.
   for (const s of [-1, 1]) {
-    const d = add(MB.CreateSphere("deltoid", { diameter: Bd.arm * 2.7, segments: 5 }, scene), rig.body, s * (sw - Bd.arm * 0.45), T - 0.075, 0);
-    d.scaling.set(1, 0.85, depth * 1.25); d.material = top;
+    const d = add(MB.CreateSphere("deltoid", { diameter: Bd.arm * 2.25, segments: 6 }, scene), rig.body, s * (sw - Bd.arm * 0.65), T - 0.07, 0);
+    d.scaling.set(0.95, 0.7, depth * 1.2); d.material = top; // a shoulder that blends into the arm, not a ball joint
   }
   if (O.machine) { // clockwork: riveted bands and a chest boiler window
     for (const y of [0.25, 0.55, 0.8]) { const band = add(MB.CreateTorus("band", { diameter: torsoR(y * T) * 2 + 0.02, thickness: 0.035, tessellation: 8 }, scene), rig.body, 0, y * T, 0); band.scaling.z = depth; band.material = M(O.bootColor); }
-    const win = add(MB.CreateCylinder("boiler", { height: 0.03, diameter: 0.16, tessellation: 12 }, scene), rig.body, 0, 0.62 * T, cw * depth + 0.01); win.rotation.x = Math.PI / 2; win.material = M("#ffb35a");
+    const win = add(MB.CreateCylinder("boiler", { height: 0.03, diameter: 0.16, tessellation: 12 }, scene), rig.body, 0, 0.62 * T, cw * depth + 0.01); win.rotation.x = Math.PI / 2; win.material = M("#ff3a1a");
+    // Exposed ribs over the chest: dark iron bars.
+    for (const y of [0.4, 0.5, 0.7, 0.8]) for (const sx of [-1, 1]) { const rib = add(MB.CreateBox("rib", { width: cw * 0.7, height: 0.025, depth: 0.03 }, scene), rig.body, sx * cw * 0.45, y * T, torsoR(y * T) * depth + 0.01); rib.rotation.z = sx * 0.25; rib.material = M("#2a2622"); }
+  }
+  if (O.moss) for (let i = 0; i < 4; i++) { // the bog brutes: bone spines down the hunched back
+    const sp = add(MB.CreateCylinder("spine", { height: 0.22 - i * 0.03, diameterTop: 0, diameterBottom: 0.09, tessellation: 5 }, scene), rig.body, 0, T * (0.95 - i * 0.2), -cw * depth - 0.02);
+    sp.rotation.x = -1.1; sp.material = M("#d8cfb4");
   }
   if (O.moss) for (const s of [-1, 1, 0]) { // the bog brutes: moss on the shoulders and back
     const t = add(MB.CreateCylinder("moss", { height: 0.28, diameterTop: 0, diameterBottom: 0.2, tessellation: 5 }, scene), rig.body, s * sw * 0.7, T, s ? 0 : -cw * depth);
@@ -105,7 +111,7 @@ export function buildBody(rig, scene, id, L, kind, add, skin) {
     } else {
       const thigh = add(lathe(scene, "thigh", [[0, 0.045], [t * 0.85, 0.04], [t, -0.05], [t * 0.97, -0.28 * a], [t * 0.8, -0.62 * a], [k * 1.12, -0.93 * a], [k, -a], [0, -a - 0.01]]), hipN, 0, 0, 0);
       thigh.material = legsMat; wear(thigh);
-      const cap = add(MB.CreateSphere("knee", { diameter: k * 2.15, segments: 4 }, scene), kneeN, 0, 0, 0.008); cap.material = shorts ? skin : legsMat;
+      const cap = add(MB.CreateSphere("knee", { diameter: k * 1.95, segments: 5 }, scene), kneeN, 0, 0, 0.006); cap.material = shorts ? skin : legsMat;
       const calf = add(lathe(scene, "calf", [[0, 0.012], [k, 0], [c, -0.17 * b], [c * 1.03, -0.29 * b], [c * 0.8, -0.58 * b], [an * 1.22, -0.88 * b], [an, -b], [0, -b - 0.006]]), kneeN, 0, 0, 0);
       calf.material = shorts ? skin : legsMat; wear(calf);
       if (shorts) { const hemS = add(MB.CreateTorus("shortsHem", { diameter: t * 1.9, thickness: 0.035, tessellation: 8 }, scene), hipN, 0, -a * 0.55, 0); hemS.material = legsMat; }
@@ -140,6 +146,13 @@ export function buildBody(rig, scene, id, L, kind, add, skin) {
     hem.scaling.z = depth * 1.08; hem.rotation.y = O.open ? Math.PI / 2 + Math.PI * 0.14 : 0; hem.material = top; dirty(hem);
     const stitch = add(MB.CreateTorus("hemStitch", { diameter: r1 * 2 - 0.004, thickness: 0.012, tessellation: 12 }, scene), rig.skirt, 0, -len + 0.03, 0);
     stitch.scaling.z = depth * 1.08; stitch.material = M(O.stitch ?? darken(O.top, 0.55));
+    if (O.tattered) { // ragged strips hanging below the hem, each a different length
+      for (let i = 0; i < 12; i++) {
+        const ang = (i / 12) * Math.PI * 2 + r() * 0.2, L2 = 0.06 + r() * 0.12;
+        const strip = add(MB.CreateBox("tatter", { width: 0.07, height: L2, depth: 0.012 }, scene), rig.skirt, Math.sin(ang) * r1 * 0.97, -len - L2 / 2 + 0.01, Math.cos(ang) * r1 * 0.97 * depth * 1.08);
+        strip.rotation.set(0, ang, (r() - 0.5) * 0.3); strip.material = M(O.tattered);
+      }
+    }
     if (O.embroidery) { // a second gold band just above the hem
       const band = add(MB.CreateTorus("hemBand", { diameter: (r1 - len * flare * 0.12) * 2, thickness: 0.016, tessellation: 12 }, scene), rig.skirt, 0, -len * 0.88, 0);
       band.scaling.z = depth * 1.08; band.material = M(O.embroidery);
@@ -163,7 +176,7 @@ export function buildBody(rig, scene, id, L, kind, add, skin) {
     lathePart("upperArm", [[0, -0.015], [ar * 0.95, 0], [ar, 0.06], [ar * 0.86, 0.26], [ar * 0.74, 0.295], [0, 0.3]], sleeve === "short" ? skin : upperMat, parent);
     if (sleeve === "short") lathePart("sleeve", [[ar * 1.25, -0.01], [ar * 1.18, 0.14], [0, 0.145]], top, parent);
     lathePart("forearm", [[0, 0.285], [ar * 0.76, 0.29], [ar * 0.82, 0.35], [ar * 0.58, 0.54], [0, 0.55]], foreMat, low);
-    const elbow = add(MB.CreateSphere("elbow", { diameter: ar * 1.6, segments: 4 }, scene), low, 0, 0, 0); elbow.material = sleeve === "long" ? top : skin; at(elbow, 0.29);
+    const elbow = add(MB.CreateSphere("elbow", { diameter: ar * 1.2, segments: 5 }, scene), low, 0, 0, 0); elbow.material = sleeve === "long" ? top : skin; at(elbow, 0.29);
     if (sleeve === "rolled") { const cuff = add(MB.CreateTorus("rolledCuff", { diameter: ar * 1.9, thickness: 0.035, tessellation: 8 }, scene), parent, 0, 0, 0); cuff.material = top; at(cuff, 0.27, true); }
     if (O.bracers) lathePart("bracer", [[ar * 0.9, 0.38], [ar * 0.75, 0.52], [0, 0.521]], M(O.bracers), low);
     // Hand: palm and fingers as one mitten, plus a thumb.

@@ -54,24 +54,24 @@ function part(mesh, parent, x, y, z, outline = 0.03) {
 export const LOOKS = {
   player: { poses: ROOK_POSES, scale: 1, skirt: 0.95, coat: PALETTE.rookCoat, trim: PALETTE.rookTrim, hairColor: PALETTE.hair,
     skin: PALETTE.skin, head: "face", hair: "spiky", collar: true, weapon: "sword", grimoire: true, eyeColor: "#2a1e1a", trail: "#ffd98a" },
-  acolyte: { poses: ACOLYTE_POSES, scale: 1, skirt: 1.15, coat: PALETTE.acolyteRobe, trim: PALETTE.acolyteSash, hairColor: "#6a3a9a",
-    skin: PALETTE.mask, head: "helm", helm: "#b4aec4", sash: true, weapon: "blade", trail: "#ff5a4a" },
+  acolyte: { poses: ACOLYTE_POSES, scale: 1.04, skirt: 1.15, coat: PALETTE.acolyteRobe, trim: "#5a2a7a", hairColor: "#3a1a4a",
+    skin: PALETTE.mask, head: "helm", helm: "#7a7488", menace: true, sash: true, weapon: "blade", stoop: 0.1, trail: "#ff5a4a" },
   bas: { poses: BAS_POSES, scale: 1.18, skirt: 1.05, coat: "#2b3a5c", trim: PALETTE.rookTrim, hairColor: "#1b1716", skin: "#6b4632",
-    head: "face", hair: "crop", collar: true, weapon: "fist", accent: "#a8b0bc", shoulders: 1.25, eyeColor: "#2a1a12", trail: "#e8b46a" },
+    head: "face", hair: "crop", collar: true, weapon: "fist", accent: "#7c8490", shoulders: 1.25, eyeColor: "#2a1a12", trail: "#e8b46a" },
   hound: { poses: ENEMIES.hound.poses, scale: 1, form: "beast", fur: "#5b4b39", belly: "#8a7458", eyes: "#ffd25a", trail: "#ffb35a" },
-  cantor: { poses: ENEMIES.cantor.poses, scale: 1.05, skirt: 1.2, coat: "#ece6f4", trim: "#8a5fc0", hairColor: "#7a4aaa", skin: PALETTE.mask,
-    head: "helm", helm: "#bcb6cc", sash: true, weapon: "staff", halo: true, trail: "#b98cff" },
+  cantor: { poses: ENEMIES.cantor.poses, scale: 1.08, skirt: 1.2, coat: "#ece6f4", trim: "#5a2a7a", hairColor: "#3a1a4a", skin: PALETTE.mask,
+    head: "helm", helm: "#827c90", menace: true, sash: true, weapon: "staff", halo: true, stoop: 0.08, trail: "#b98cff" },
   bulwark: { poses: ENEMIES.bulwark.poses, scale: 1.12, skirt: 1.2, coat: "#5a4030", trim: "#6b4f8a", hairColor: "#5a3a8a", skin: PALETTE.mask,
     head: "helm", helm: "#a8a2b8", weapon: "spear", shield: true, shoulders: 1.2, trail: "#c9b8ff" },
-  beast: { poses: ENEMIES.beast.poses, scale: 1.5, skirt: 1.5, coat: "#4e5a37", trim: "#6f5a3a", hairColor: "#3a4129", skin: "#4e5a37",
-    head: "lump", weapon: "claw", shoulders: 1.55, accent: "#2f3324", eyes: "#d8ff6a", trail: "#a6c96a" },
+  beast: { poses: ENEMIES.beast.poses, scale: 1.6, skirt: 1.5, coat: "#3a4a2a", trim: "#4a3a22", hairColor: "#2f3a22", skin: "#3a4a2a",
+    head: "lump", weapon: "claw", shoulders: 1.55, accent: "#24301a", eyes: "#ffd23a", talon: "#d8cfb4", stoop: 0.28, trail: "#a6c96a" },
   rat: { poses: ENEMIES.rat.poses, scale: 0.55, form: "beast", fur: "#5a5560", belly: "#8a8290", eyes: "#ff5a4a", trail: "#c9a4a4" },
-  clockwork: { poses: ENEMIES.clockwork.poses, scale: 1.2, skirt: 0.9, coat: "#9a7a3a", trim: "#d9b45a", hairColor: "#4a3a22", skin: "#9a7a3a",
-    head: "lump", weapon: "fist", shoulders: 1.45, accent: "#5a4a2a", eyes: "#7af0ff", gear: true, trail: "#7af0ff" },
-  bandit: { poses: ENEMIES.bandit.poses, scale: 1.0, skirt: 1.0, coat: "#5a4030", trim: "#8a3a2a", hairColor: "#4a3020", skin: "#e2b894",
-    head: "face", hair: "spiky", weapon: "blade", eyeColor: "#3a2618", trail: "#ff8a6a" },
-  hask: { poses: HASK_POSES, scale: 2.0, skirt: 1.7, coat: "#3d4934", trim: "#5c4a2e", hairColor: "#2c3524", skin: "#3d4934",
-    head: "lump", weapon: "claw", shoulders: 1.7, accent: "#262b1d", eyes: "#ffb347", trail: "#c9a24a", mound: true },
+  clockwork: { poses: ENEMIES.clockwork.poses, scale: 1.25, skirt: 0.9, coat: "#8a6a26", trim: "#d9b45a", hairColor: "#8a6a26", skin: "#8a6a26",
+    head: "skull", weapon: "claw", accent: "#2a2622", talon: "#5a5e66", shoulders: 1.3, eyes: "#ff2a1a", gear: true, stoop: 0.12, trail: "#ff5a3a" },
+  bandit: { poses: ENEMIES.bandit.poses, scale: 1.02, skirt: 1.0, coat: "#4a3022", trim: "#8a2a2a", hairColor: "#3a2618", skin: "#d8a888",
+    head: "face", hair: "spiky", hood: "#2e221c", mask: "#6a1e1e", angry: true, weapon: "blade", eyeColor: "#2a1a10", stoop: 0.06, trail: "#ff8a6a" },
+  hask: { poses: HASK_POSES, scale: 2.0, skirt: 1.7, coat: "#2f3a26", trim: "#5c4a2e", hairColor: "#222a1a", skin: "#2f3a26",
+    head: "lump", weapon: "claw", shoulders: 1.7, accent: "#1a2214", eyes: "#ff8a1a", talon: "#d8cfb4", stoop: 0.3, trail: "#c9a24a", mound: true },
   // Story cast (Phase 3). Poses borrow Rook's rest stance until they get their own moves.
   dagrun: { poses: ACOLYTE_POSES, scale: 1.3, skirt: 1.35, coat: "#2a3346", trim: "#e6b54e", hairColor: "#5a3d2b", skin: "#e2b894",
     head: "face", hair: "crop", beard: "#5a3d2b", collar: true, weapon: "none", shoulders: 1.5, eyeColor: "#3a2618", trail: "#e6b54e" },
@@ -86,7 +86,7 @@ export const LOOKS = {
   lio: { poses: ACOLYTE_POSES, scale: 0.97, skirt: 1.15, coat: "#3a5a8a", trim: "#a9b8d8", hairColor: "#e2e2e8", skin: "#f0d8c6",
     head: "face", hair: "bob", weapon: "none", grimoire: true, holds: "lantern", eyeColor: "#7a808c", trail: "#a9b8d8" },
   tamsin: { poses: ACOLYTE_POSES, scale: 0.95, skirt: 0.95, coat: "#c0402a", trim: "#f0c26a", hairColor: "#f0c850", skin: "#f1d0b4",
-    head: "face", hair: "spiky", collar: true, weapon: "none", eyeColor: "#2a5ab0", trail: "#f0c26a" },
+    head: "face", hair: "tousled", collar: true, weapon: "none", eyeColor: "#2a5ab0", trail: "#f0c26a" },
   mirren: { poses: ACOLYTE_POSES, scale: 0.66, skirt: 0.95, coat: "#8a6a4a", trim: "#c9a26a", hairColor: "#6a4228", skin: "#f0cfb2",
     head: "face", hair: "ponytail", accent: "#d9634a", weapon: "none", eyeColor: "#5a3a22", trail: "#c9a26a" },
   keeper: { poses: ACOLYTE_POSES, scale: 0.95, skirt: 1.2, coat: "#5a3a8a", trim: "#e6c040", hairColor: "#ecebe6", skin: "#f0d0b4",
@@ -189,13 +189,18 @@ export class Rig {
         const brow = M("brow", L.hairColor === "#ecebe6" || L.hairColor === "#e4e4e8" || L.hairColor === "#e2e2e8" ? "#9a9aa4" : L.hairColor);
         for (const sx of [-1, 1]) {
           const b = add(MB.CreateBox("brow", { width: 0.085, height: 0.016, depth: 0.02 }, scene), this.head, sx * 0.088, 0.112, 0.2, 0);
-          b.rotation.set(-0.45, 0, sx * -0.12); b.material = brow;
+          b.rotation.set(-0.45, 0, sx * (L.angry ? 0.42 : -0.12)); b.material = brow; // angry: brows slant down to the nose
+          if (L.angry) b.position.y -= 0.012;
           const ear = add(MB.CreateSphere("ear", { diameter: 0.075, segments: 5 }, scene), this.head, sx * 0.222, 0.0, -0.01, 0);
           ear.scaling.set(0.45, 1, 0.7); ear.material = skin;
         }
         const nose = add(MB.CreateSphere("nose", { diameter: 0.034, segments: 4 }, scene), this.head, 0, -0.03, 0.226, 0);
         nose.scaling.set(0.8, 1.1, 0.8); nose.material = M("nose", L.skin);
         if (!L.beard) { const mouth = add(MB.CreateBox("mouth", { width: 0.05, height: 0.011, depth: 0.012 }, scene), this.head, 0, -0.1, 0.218, 0); mouth.rotation.x = -0.4; mouth.material = M("mouth", "#8a4a42"); }
+      }
+      if (L.mask) { // a cloth mask over the nose and mouth (bandits)
+        const m = add(animeHead(MB.CreateSphere("faceMask", { diameter: 0.475, segments: 12, slice: 0.42, updatable: true }, scene), 0.2375), this.head, 0, 0, 0.006, 0);
+        m.rotation.x = Math.PI; m.material = M("faceMask", L.mask);
       }
       // Hair: a full sphere set back and up. The face sphere pokes out of its front, eyes included.
       const cap = add(MB.CreateSphere("hairCap", { diameter: 0.5, segments: 12 }, scene), this.head, 0, 0.06, -0.07, 0);
@@ -207,6 +212,16 @@ export class Rig {
           const c = add(MB.CreateCylinder("spike", { height: 0.32, diameterTop: 0, diameterBottom: 0.2, tessellation: 6 }, scene), this.head, x, y, z, 0.02);
           c.rotation.set(rx, 0, rz);
           c.material = dark;
+        }
+      } else if (L.hair === "tousled") { // short, messy tufts swept back, a ragged fringe (Tamsin's sheet)
+        cap.scaling.set(1.03, 0.95, 1);
+        for (const [x, y, z, rx, rz] of [[0, 0.21, 0, -0.9, 0], [0.11, 0.19, -0.04, -1.0, -0.4], [-0.11, 0.19, -0.04, -1.0, 0.4], [0.06, 0.12, -0.2, -1.6, -0.2], [-0.06, 0.12, -0.2, -1.6, 0.2]]) {
+          const t = add(MB.CreateCylinder("tuft", { height: 0.2, diameterTop: 0, diameterBottom: 0.16, tessellation: 6 }, scene), this.head, x, y, z, 0.015);
+          t.rotation.set(rx, 0, rz); t.material = dark;
+        }
+        for (const [x, r] of [[-0.09, 0.2], [0.0, 0], [0.09, -0.2]]) {
+          const f = add(MB.CreateCylinder("fringeTuft", { height: 0.13, diameterTop: 0, diameterBottom: 0.1, tessellation: 5 }, scene), this.head, x, 0.15, 0.16, 0);
+          f.rotation.set(Math.PI - 0.5, 0, r); f.material = dark;
         }
       } else if (L.hair === "swept") { // a noble's swept fringe falling over one eye
         const sweep = add(MB.CreateSphere("sweep", { diameter: 0.3, segments: 8 }, scene), this.head, -0.07, 0.13, 0.12, 0);
@@ -222,10 +237,12 @@ export class Rig {
         const fr = add(MB.CreateBox("cropFringe", { width: 0.28, height: 0.05, depth: 0.07 }, scene), this.head, 0, 0.2, 0.12, 0); // a short fringe, as on the sheets
         fr.rotation.x = 0.85; fr.material = dark;
       } else if (L.hair === "bob") { // chin-length, straight fringe
-        const sides = add(MB.CreateSphere("bob", { diameter: 0.54, segments: 10 }, scene), this.head, 0, -0.02, -0.05, 0);
-        sides.scaling.set(1.05, 0.95, 0.95); sides.material = dark;
-        const fringe = add(MB.CreateBox("bobFringe", { width: 0.36, height: 0.08, depth: 0.1 }, scene), this.head, 0, 0.16, 0.16, 0);
-        fringe.rotation.x = 0.45; fringe.material = dark;
+        // The back of the bob sits behind the face; two side locks frame the cheeks down to the jaw; the fringe stays above the brows.
+        const back = add(MB.CreateSphere("bob", { diameter: 0.52, segments: 10 }, scene), this.head, 0, -0.02, -0.1, 0);
+        back.scaling.set(1.06, 0.92, 0.85); back.material = dark;
+        for (const sx of [-1, 1]) { const lock = add(MB.CreateBox("bobLock", { width: 0.07, height: 0.3, depth: 0.2 }, scene), this.head, sx * 0.215, -0.07, 0.03, 0); lock.rotation.z = sx * 0.08; lock.material = dark; }
+        const fringe = add(MB.CreateBox("bobFringe", { width: 0.34, height: 0.06, depth: 0.09 }, scene), this.head, 0, 0.19, 0.15, 0);
+        fringe.rotation.x = 0.7; fringe.material = dark;
       } else if (L.hair === "bun") { // pulled back into a bun
         cap.scaling.set(1.0, 0.9, 1.0);
         const bun = add(MB.CreateSphere("bun", { diameter: 0.2, segments: 8 }, scene), this.head, 0, 0.12, -0.26, 0); bun.material = dark;
@@ -245,33 +262,75 @@ export class Rig {
         bang.rotation.set(0.5, 0, -0.12);
         bang.material = dark;
       }
+      if (L.hood) { // a cowl pulled over the head, shading the eyes
+        const hd = add(MB.CreateSphere("cowl", { diameter: 0.58, segments: 10, slice: 0.62 }, scene), this.head, 0, 0.0, -0.05, 0.02);
+        hd.rotation.x = -0.55; hd.scaling.set(1.05, 1.05, 1.05); hd.material = M("cowl", L.hood);
+        const drape = add(MB.CreateCylinder("cowlDrape", { height: 0.22, diameterTop: 0.38, diameterBottom: 0.5, tessellation: 10 }, scene), this.head, 0, -0.28, -0.04, 0.02); drape.material = hd.material;
+      }
     } else if (L.head === "helm") { // the Choir's knight helm: closed visor, a plume, cloth hanging behind
       const steelH = M("helm", L.helm ?? "#b4aec4"), slot = M("visor", "#16141c"), plume = dark;
       const shellH = add(MB.CreateSphere("helmShell", { diameter: 0.5, segments: 10 }, scene), this.head, 0, 0.02, 0);
       shellH.scaling.set(1, 1.08, 1.06); shellH.material = steelH;
       const guard = add(MB.CreateBox("helmJaw", { width: 0.32, height: 0.16, depth: 0.16 }, scene), this.head, 0, -0.14, 0.12); guard.material = steelH;
       const visor = add(MB.CreateBox("helmVisor", { width: 0.34, height: 0.045, depth: 0.05 }, scene), this.head, 0, 0.0, 0.25, 0); visor.material = slot;
+      if (L.menace) { // the Choir's fanatics: red light burning through the visor, horns swept back from the helm
+        const burn = glow(scene, `${id}-visorGlow`, "#ff2a3a");
+        for (const sx of [-1, 1]) {
+          const e = add(MB.CreateBox("visorEye", { width: 0.1, height: 0.022, depth: 0.03 }, scene), this.head, sx * 0.075, 0.0, 0.272, 0); e.rotation.z = sx * 0.28; e.material = burn;
+          const horn = add(MB.CreateCylinder("helmHorn", { height: 0.36, diameterTop: 0, diameterBottom: 0.08, tessellation: 6 }, scene), this.head, sx * 0.2, 0.18, -0.06, 0.015);
+          horn.rotation.set(-1.0, 0, -sx * 0.55); horn.material = M("helmHorn", "#2a2030");
+        }
+      }
       const vslot = add(MB.CreateBox("helmSlot", { width: 0.035, height: 0.14, depth: 0.05 }, scene), this.head, 0, -0.08, 0.2, 0); vslot.material = slot;
-      const crest = add(MB.CreateBox("helmCrest", { width: 0.05, height: 0.1, depth: 0.42 }, scene), this.head, 0, 0.29, -0.02); crest.material = steelH;
-      const plumeTop = add(MB.CreateBox("plume", { width: 0.09, height: 0.16, depth: 0.42 }, scene), this.head, 0, 0.36, -0.06, 0.02); plumeTop.material = plume;
-      const plumeBack = add(MB.CreateBox("plumeFall", { width: 0.12, height: 0.42, depth: 0.1 }, scene), this.head, 0, 0.12, -0.3, 0.02); plumeBack.rotation.x = 0.2; plumeBack.material = plume;
+      // A crest of blades along the top, and a plume falling behind in ragged strands (not a solid block).
+      for (let i = 0; i < 4; i++) { const b = add(MB.CreateCylinder("crestBlade", { height: 0.16 - i * 0.02, diameterTop: 0, diameterBottom: 0.06, tessellation: 4 }, scene), this.head, 0, 0.29 - i * 0.02, 0.1 - i * 0.1, 0.012); b.rotation.x = -0.5; b.material = steelH; }
+      for (let i = 0; i < 5; i++) {
+        const strand = add(MB.CreateBox("plumeStrand", { width: 0.035, height: 0.3 + (i % 3) * 0.08, depth: 0.035 }, scene), this.head, -0.08 + i * 0.04, 0.12 - (i % 2) * 0.04, -0.27, 0.012);
+        strand.rotation.set(0.25, 0, (i - 2) * 0.08); strand.material = plume;
+      }
       for (const sx of [-1, 1]) { // side drapes and rivets
-        const drape = add(MB.CreateBox("helmDrape", { width: 0.05, height: 0.36, depth: 0.24 }, scene), this.head, sx * 0.26, -0.12, -0.06, 0.02); drape.material = plume;
+        const drape = add(MB.CreateBox("helmDrape", { width: 0.04, height: 0.3, depth: 0.2 }, scene), this.head, sx * 0.25, -0.12, -0.08, 0.015); drape.material = plume;
         const rivet = add(MB.CreateSphere("rivet", { diameter: 0.06, segments: 5 }, scene), this.head, sx * 0.25, 0.05, 0.04, 0); rivet.material = M("rivet", "#c9a24a");
       }
       const scarfN = add(MB.CreateTorus("neckScarf", { diameter: 0.24, thickness: 0.08, tessellation: 8 }, scene), this.head, 0, -0.27, -0.01, 0.02); scarfN.material = plume;
-    } else if (L.head === "lump") { // a mossy brute: no face, just a hunched lump and two glowing eyes
-      const lump = add(MB.CreateSphere("head", { diameter: 0.6, segments: 10 }, scene), this.head, 0, -0.08, 0.06);
-      lump.scaling.set(1.15, 0.85, 1); lump.material = dark;
+    } else if (L.head === "lump") { // a bog brute: a heavy skull, a brow ridge over slanted eyes, a jaw full of fangs, horns
+      const hide = dark, bone = M("fang", "#e8dfc4"), maw = M("maw", "#2a0a0a"), horn = M("horn", "#2a2620");
+      const skull = add(MB.CreateSphere("head", { diameter: 0.56, segments: 10 }, scene), this.head, 0, -0.04, 0.06);
+      skull.scaling.set(1.15, 0.78, 1.05); skull.material = hide;
+      const brow = add(MB.CreateBox("browRidge", { width: 0.5, height: 0.08, depth: 0.14 }, scene), this.head, 0, 0.06, 0.27); brow.rotation.x = 0.35; brow.material = hide;
+      const jaw = add(MB.CreateBox("jaw", { width: 0.44, height: 0.14, depth: 0.32 }, scene), this.head, 0, -0.22, 0.2); jaw.rotation.x = 0.18; jaw.material = hide;
+      const mouth = add(MB.CreateBox("mawGap", { width: 0.4, height: 0.06, depth: 0.04 }, scene), this.head, 0, -0.15, 0.36, 0); mouth.material = maw;
+      for (let i = 0; i < 6; i++) { // upper and lower fangs, the outer ones longest
+        const x = -0.16 + i * 0.064, long = i === 0 || i === 5 ? 1.6 : i === 1 || i === 4 ? 1 : 0.7;
+        const up = add(MB.CreateCylinder("fang", { height: 0.09 * long, diameterTop: 0, diameterBottom: 0.035, tessellation: 4 }, scene), this.head, x, -0.13 - 0.04 * long, 0.37, 0);
+        up.rotation.x = Math.PI; up.material = bone;
+        if (i % 2) { const lo = add(MB.CreateCylinder("fang", { height: 0.07, diameterTop: 0, diameterBottom: 0.03, tessellation: 4 }, scene), this.head, x - 0.03, -0.17, 0.36, 0); lo.material = bone; }
+      }
       const eyeMat = glow(scene, `${id}-eyes`, L.eyes);
-      for (const x of [-0.12, 0.12]) {
-        const eye = add(MB.CreateSphere("eye", { diameter: 0.09, segments: 6 }, scene), this.head, x, -0.02, 0.33, 0);
-        eye.material = eyeMat;
+      for (const sx of [-1, 1]) {
+        const eye = add(MB.CreateSphere("eye", { diameter: 0.13, segments: 6 }, scene), this.head, sx * 0.13, -0.04, 0.33, 0);
+        eye.scaling.set(1.3, 0.55, 0.6); eye.rotation.z = sx * 0.4; eye.material = eyeMat; // slanted, narrowed, burning under the brow
+        const h = add(MB.CreateCylinder("horn", { height: 0.34, diameterTop: 0, diameterBottom: 0.1, tessellation: 6 }, scene), this.head, sx * 0.22, 0.2, -0.02, 0.015);
+        h.rotation.set(-0.5, 0, -sx * 0.7); h.material = horn;
       }
-      for (const [x, z] of [[-0.18, -0.1], [0.2, -0.05], [0, -0.22]]) { // moss tufts
-        const t = add(MB.CreateCylinder("moss", { height: 0.3, diameterTop: 0, diameterBottom: 0.18, tessellation: 5 }, scene), this.head, x, 0.18, z, 0.015);
-        t.rotation.x = -0.4; t.material = M("moss", "#6f8a3a");
+      for (const [x, z] of [[-0.12, -0.18], [0.14, -0.2], [0, -0.26]]) { // moss on the back of the skull
+        const t = add(MB.CreateCylinder("moss", { height: 0.22, diameterTop: 0, diameterBottom: 0.16, tessellation: 5 }, scene), this.head, x, 0.12, z, 0.015);
+        t.rotation.x = -0.7; t.material = M("moss", "#4f6a2a");
       }
+    } else if (L.head === "skull") { // the Clockwork Sentinel: a brass skull with a hinged jaw, deep red eyes and iron horns
+      const brass = dark, iron = M("iron", "#2a2622"), eyeMat = glow(scene, `${id}-eyes`, L.eyes);
+      const cran = add(MB.CreateBox("cranium", { width: 0.4, height: 0.34, depth: 0.42 }, scene), this.head, 0, 0.04, 0); cran.material = brass;
+      const brow = add(MB.CreateBox("browPlate", { width: 0.44, height: 0.07, depth: 0.12 }, scene), this.head, 0, 0.11, 0.18); brow.rotation.x = 0.35; brow.material = iron;
+      for (const sx of [-1, 1]) {
+        const sock = add(MB.CreateBox("socket", { width: 0.12, height: 0.07, depth: 0.04 }, scene), this.head, sx * 0.1, 0.02, 0.205, 0); sock.material = iron;
+        const eye = add(MB.CreateBox("eye", { width: 0.09, height: 0.03, depth: 0.03 }, scene), this.head, sx * 0.1, 0.02, 0.22, 0); eye.rotation.z = sx * 0.3; eye.material = eyeMat;
+        const h = add(MB.CreateCylinder("horn", { height: 0.3, diameterTop: 0, diameterBottom: 0.08, tessellation: 5 }, scene), this.head, sx * 0.15, 0.27, -0.04, 0.012);
+        h.rotation.z = -sx * 0.35; h.material = iron;
+      }
+      const spike = add(MB.CreateCylinder("crest", { height: 0.26, diameterTop: 0, diameterBottom: 0.08, tessellation: 5 }, scene), this.head, 0, 0.3, 0.02, 0.012); spike.material = iron;
+      const jaw = add(MB.CreateBox("jaw", { width: 0.32, height: 0.11, depth: 0.3 }, scene), this.head, 0, -0.18, 0.04); jaw.material = brass;
+      const grille = add(MB.CreateBox("grille", { width: 0.26, height: 0.06, depth: 0.03 }, scene), this.head, 0, -0.12, 0.215, 0); grille.material = iron;
+      for (let i = 0; i < 5; i++) { const t = add(MB.CreateBox("tooth", { width: 0.03, height: 0.06, depth: 0.03 }, scene), this.head, -0.1 + i * 0.05, -0.12, 0.235, 0); t.material = M("toothMetal", "#d9c48a"); }
     } else {
       const hood = add(MB.CreateCylinder("hood", { height: 0.7, diameterTop: 0, diameterBottom: 0.62, tessellation: 10 }, scene), this.head, 0, 0.12, -0.04);
       hood.material = dark;
@@ -344,14 +403,24 @@ export class Rig {
       const badge = add(MB.CreateBox("shieldBadge", { width: 0.12, height: 0.16, depth: 0.02 }, scene), hand, -0.05, handY + 0.06, 0.165, 0.01); badge.material = M("shieldBadge", "#d9b04a");
     }
     // Weapon arm: the shoulder pivot (built with the body) points the arm along +Z; the weapon sits in the hand.
+    /** A plate gauntlet fitted over the hand and wrist: a flared cuff, a back-of-hand plate and knuckle ridges. */
+    const gauntlet = (node, along) => {
+      const mat = M("gauntlet", L.accent ?? "#8c909b"), ar = this.build.arm * (L.scale ?? 1) ** 0;
+      const cuff = add(MB.CreateCylinder("gauntletCuff", { height: 0.17, diameterTop: ar * 2.7, diameterBottom: ar * 2.1, tessellation: 10 }, scene), node, 0, 0, 0, 0.02);
+      const plate = add(MB.CreateBox("gauntletPlate", { width: 0.13, height: 0.06, depth: 0.12 }, scene), node, 0, 0, 0, 0.015);
+      const knuckles = add(MB.CreateBox("gauntletKnuckles", { width: 0.13, height: 0.045, depth: 0.04 }, scene), node, 0, 0, 0, 0.012);
+      if (along > 0) { cuff.rotation.x = -Math.PI / 2; cuff.position.z = 0.47; plate.position.set(0, 0.04, 0.6); knuckles.position.set(0, 0.035, 0.68); }
+      else { cuff.position.y = -0.18; plate.position.set(0, -0.31, 0.04); plate.rotation.x = Math.PI / 2; knuckles.position.set(0, -0.39, 0.035); }
+      cuff.material = plate.material = knuckles.material = mat;
+    };
     const weaponStart = this.meshes.length; // everything added from here to the tip is the weapon
     let tipZ = SWORD_TIP, hiltZ = SWORD_HILT + 0.15;
-    if (L.weapon === "claw") {
-      const claw = add(MB.CreateBox("claw", { width: 0.42, height: 0.32, depth: 0.42 }, scene), this.shoulder, 0, 0, 0.7, 0.025);
-      claw.material = accent;
-      for (const x of [-0.13, 0, 0.13]) {
-        const talon = add(MB.CreateCylinder("talon", { height: 0.42, diameterTop: 0, diameterBottom: 0.09, tessellation: 5 }, scene), this.shoulder, x, -0.04, 1.05, 0.015);
-        talon.rotation.x = Math.PI / 2; talon.material = M("talon", "#e7e1cf");
+    if (L.weapon === "claw") { // a clawed hand: a knuckled fist and long hooked talons
+      const claw = add(MB.CreateSphere("claw", { diameter: 0.2, segments: 7 }, scene), this.shoulder, 0, 0, 0.64, 0.02);
+      claw.scaling.set(1.1, 0.75, 1.1); claw.material = accent;
+      for (const x of [-0.1, 0, 0.1]) {
+        const talon = add(MB.CreateCylinder("talon", { height: 0.46, diameterTop: 0, diameterBottom: 0.08, tessellation: 5 }, scene), this.shoulder, x, -0.06, 0.98, 0.015);
+        talon.rotation.x = Math.PI / 2 + 0.35; talon.material = M("talon", L.talon ?? "#e7e1cf");
       }
       tipZ = 1.25; hiltZ = 0.7;
     } else if (L.weapon === "staff" || L.weapon === "spear" || L.weapon === "rod") {
@@ -372,14 +441,13 @@ export class Rig {
     } else if (L.weapon === "none") {
       tipZ = 0.75; hiltZ = 0.6;
     } else if (L.weapon === "broom") { // Brother Moss's broom: a plain handle and a straw head
-      const shaft = add(MB.CreateCylinder("broom", { height: 1.5, diameter: 0.045, tessellation: 6 }, scene), this.shoulder, 0, 0, 0.95, 0.015);
+      const shaft = add(MB.CreateCylinder("broom", { height: 1.25, diameter: 0.045, tessellation: 6 }, scene), this.shoulder, 0, 0, 0.72, 0.015);
       shaft.rotation.x = Math.PI / 2; shaft.material = M("broomShaft", "#7a5a38");
-      const straw = add(MB.CreateCylinder("straw", { height: 0.4, diameterTop: 0.08, diameterBottom: 0.3, tessellation: 8 }, scene), this.shoulder, 0, 0, 1.85, 0.015);
+      const straw = add(MB.CreateCylinder("straw", { height: 0.36, diameterTop: 0.08, diameterBottom: 0.28, tessellation: 8 }, scene), this.shoulder, 0, 0, 1.48, 0.015);
       straw.rotation.x = Math.PI / 2; straw.material = M("straw", "#d9b866");
-      tipZ = 2; hiltZ = 0.6;
+      tipZ = 1.62; hiltZ = 0.6;
     } else if (L.weapon === "fist") {
-      const gaunt = add(MB.CreateBox("gauntlet", { width: 0.21, height: 0.19, depth: 0.24 }, scene), this.shoulder, 0, 0, 0.64, 0.025);
-      gaunt.material = accent;
+      gauntlet(this.shoulder, 1);
       tipZ = 0.95; hiltZ = 0.55;
     } else {
       const needle = L.weapon === "needle";
@@ -432,14 +500,14 @@ export class Rig {
       this.halo = halo;
     }
     if (L.gear) { // clockwork: a slowly turning brass gear on its back
-      const gear = add(MB.CreateTorus("gear", { diameter: 0.9, thickness: 0.14, tessellation: 16 }, scene), this.body, 0, ty(0.55), -front(this.build.cw) - 0.08, 0.02);
-      gear.rotation.x = Math.PI / 2; gear.material = M("gearMat", L.trim);
-      for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; const t = add(MB.CreateBox("tooth", { width: 0.14, height: 0.14, depth: 0.12 }, scene), gear, Math.sin(a) * 0.5, 0, Math.cos(a) * 0.5); t.material = gear.material; }
+      const gear = add(MB.CreateTorus("gear", { diameter: 0.42, thickness: 0.08, tessellation: 14 }, scene), this.body, 0, ty(0.62), -front(this.build.cw) - 0.06, 0.02);
+      gear.rotation.x = Math.PI / 2; gear.material = M("gearMat", "#5a4a2a");
+      for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; const t = add(MB.CreateBox("tooth", { width: 0.07, height: 0.07, depth: 0.07 }, scene), gear, Math.sin(a) * 0.24, 0, Math.cos(a) * 0.24); t.material = gear.material; }
       this.gear = gear;
     }
-    if (L.weapon === "fist" || L.weapon === "claw") { // a second gauntlet on the off hand
-      const g2 = add(MB.CreateBox("gauntlet2", { width: 0.19, height: 0.22, depth: 0.19 }, scene), this.offElbow, 0, -0.32, 0, 0.025);
-      g2.material = accent;
+    if (L.weapon === "fist") gauntlet(this.offElbow, -1); // a matching gauntlet on the off hand
+    if (L.weapon === "claw") { // the off hand is clawed too
+      for (const x of [-0.07, 0, 0.07]) { const t = add(MB.CreateCylinder("talon2", { height: 0.32, diameterTop: 0, diameterBottom: 0.07, tessellation: 5 }, scene), this.offElbow, x, -0.52, 0.04, 0.012); t.rotation.x = Math.PI + 0.3; t.material = M("talon", L.talon ?? "#e7e1cf"); }
     }
 
     // Rook's grimoire floats at his left shoulder: every knight here has one.
@@ -629,7 +697,9 @@ export class Rig {
       const sheathed = relaxedArm && this.weaponKind === "blade" && !!this.sheathHilt && !fighter.armPose;
       this.weaponNode.scaling.setAll(sheathed ? 0 : 1);
       if (this.sheathHilt) this.sheathHilt.scaling.setAll(sheathed ? 1 : 0);
-      this.weaponNode.rotation.x = relaxedArm && this.weaponKind === "pole" && !fighter.armPose ? -Math.PI / 2 - rot[0] - swingArm : 0;
+      // Poles stand upright like a walking staff; a broom is held the other way, straw on the ground.
+      const upright = relaxedArm && this.weaponKind === "pole" && !fighter.armPose;
+      this.weaponNode.rotation.x = upright ? (this.look.weapon === "broom" ? Math.PI / 2 : -Math.PI / 2) - rot[0] - swingArm : 0;
     }
     this.body.rotation.y = spin + (this.bodyTwist ?? 0);
     if (this.skirt && !this.legs) this.skirt.rotation.y = spin;
