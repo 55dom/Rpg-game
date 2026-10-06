@@ -133,8 +133,29 @@ export class FollowCamera {
       this.focus.y + Math.sin(this.pitch) * dist,
       this.focus.z - Math.cos(this.yaw) * dist * cp,
     );
-    // Keep the camera inside the play area so walls and pillars never block the view.
+    // Never inside a building, tower or wall: walk out from the focus toward the camera and stop short of the
+    // first solid (the lighthouse tower, houses…). Small props (barrels, carts) are ignored: the camera is above them.
     const b = this.bounds;
+    if (b?.solids?.length) {
+      const fx0 = this.focus.x, fz0 = this.focus.z, dx = pos.x - fx0, dz = pos.z - fz0, len = Math.hypot(dx, dz);
+      const inSolid = (x, z) => b.solids.some((sd) => {
+        if (sd.circle) { const [cx, cz, r] = sd.circle; return r >= 1.4 && Math.hypot(x - cx, z - cz) < r + 0.45; }
+        const [x0, z0, x1, z1] = sd.box; return (x1 - x0) * (z1 - z0) > 3 && x > x0 - 0.45 && x < x1 + 0.45 && z > z0 - 0.45 && z < z1 + 0.45;
+      });
+      if (len > 0.01 && !inSolid(fx0, fz0)) {
+        const steps = Math.ceil(len / 0.2);
+        for (let i = 1; i <= steps; i++) {
+          const k = i / steps;
+          if (inSolid(fx0 + dx * k, fz0 + dz * k)) {
+            const kk = Math.max(0.15, (i - 1) / steps);
+            pos.x = fx0 + dx * kk; pos.z = fz0 + dz * kk;
+            pos.y = this.focus.y + (pos.y - this.focus.y) * Math.max(kk, 0.6); // a pulled-in camera stays a little above the head
+            break;
+          }
+        }
+      }
+    }
+    // Keep the camera inside the play area so walls and pillars never block the view.
     if (b?.rect) {
       const [x0, z0, x1, z1] = b.rect;
       pos.x = Math.min(x1 + 3, Math.max(x0 - 3, pos.x)); pos.z = Math.min(z1 + 3, Math.max(z0 - 3, pos.z));

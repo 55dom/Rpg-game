@@ -86,8 +86,8 @@ export const LOOKS = {
   // Story cast (Phase 3). Poses borrow Rook's rest stance until they get their own moves.
   dagrun: { poses: ACOLYTE_POSES, scale: 1.3, skirt: 1.35, coat: "#2a3346", trim: "#e6b54e", hairColor: "#5a3d2b", skin: "#e2b894",
     head: "face", hair: "crop", beard: "#5a3d2b", collar: true, weapon: "none", shoulders: 1.5, eyeColor: "#3a2618", trail: "#e6b54e" },
-  cal: { poses: CAL_POSES, scale: 1.04, skirt: 0.8, coat: "#ece8de", trim: "#e6b54e", hairColor: "#1e1c26", skin: "#efd2b8",
-    head: "face", hair: "long", collar: true, weapon: "sword", eyeColor: "#2a2a3a", trail: "#ffd98a" },
+  cal: { poses: CAL_POSES, scale: 1.06, skirt: 0.8, coat: "#d9d3c4", trim: "#e6b54e", hairColor: "#2f2a36", skin: "#efd2b8",
+    head: "face", hair: "loose", jaw: 0.18, collar: true, weapon: "sword", eyeColor: "#2a2a3a", trail: "#ffd98a" },
   corvina: { poses: ACOLYTE_POSES, scale: 1.04, skirt: 1.05, coat: "#f2efe6", trim: "#d4ad4f", hairColor: "#b8d0ec", skin: "#f3dcc8",
     head: "face", hair: "long", weapon: "none", eyeColor: "#4a6aa0", trail: "#e9f2ff" },
   brannoc: { poses: ACOLYTE_POSES, scale: 1.16, skirt: 1.1, coat: "#6b7280", trim: "#8a3a2a", hairColor: "#9a9a9a", skin: "#d8a888",
@@ -177,7 +177,7 @@ export class Rig {
       // eyes from the side). Instead one silhouette shell wraps the whole head: an inverted hull that only
       // shows around the outside edge.
       // The face shape from the design sheets: a round cranium tapering to a soft, narrower jaw and chin (anime style).
-      const face = add(animeHead(MB.CreateSphere("head", { diameter: 0.46, segments: 14, updatable: true }, scene), 0.23), this.head, 0, 0, 0, 0);
+      const face = add(animeHead(MB.CreateSphere("head", { diameter: 0.46, segments: 14, updatable: true }, scene), 0.23, L.jaw ?? 0.32), this.head, 0, 0, 0, 0);
       const shell = add(animeHead(MB.CreateSphere("headLine", { diameter: 0.6, segments: 14, sideOrientation: BB.Mesh.BACKSIDE, updatable: true }, scene), 0.3, 0.45), this.head, 0, 0.04, -0.04, 0);
       const lineMat = new BB.StandardMaterial(`${id}-headLine`, scene);
       lineMat.disableLighting = true; lineMat.emissiveColor = lineOf(L.hairColor); lineMat.diffuseColor = BB.Color3.Black(); lineMat.specularColor = BB.Color3.Black();
@@ -224,6 +224,17 @@ export class Rig {
           c.rotation.set(rx, 0, rz);
           c.material = dark;
         }
+      } else if (L.hair === "loose") { // a man's loose, unkempt hair: to the nape, ends flicking out, a side-swept fringe
+        cap.scaling.set(1.06, 1.0, 1.04);
+        const nape = add(MB.CreateCylinder("nape", { height: 0.26, diameterTop: 0.46, diameterBottom: 0.38, tessellation: 10 }, scene), this.head, 0, -0.1, -0.1, 0.015);
+        nape.scaling.z = 0.8; nape.material = dark;
+        for (const [x, y, z, rz] of [[-0.19, -0.2, -0.06, 0.5], [0.19, -0.2, -0.06, -0.5], [0, -0.24, -0.2, 0], [-0.1, -0.23, -0.17, 0.3], [0.1, -0.23, -0.17, -0.3]]) {
+          const e = add(MB.CreateCylinder("hairEnd", { height: 0.14, diameterTop: 0.09, diameterBottom: 0, tessellation: 5 }, scene), this.head, x, y, z, 0.012); e.rotation.z = rz; e.material = dark;
+        }
+        for (const [x, r, h] of [[-0.12, 0.5, 0.16], [-0.03, 0.35, 0.18], [0.07, 0.15, 0.14]]) {
+          const f = add(MB.CreateCylinder("sweptFringe", { height: h, diameterTop: 0.11, diameterBottom: 0, tessellation: 5 }, scene), this.head, x, 0.13, 0.16, 0);
+          f.rotation.set(-0.35, 0, r); f.material = dark;
+        }
       } else if (L.hair === "tousled") { // short, messy tufts swept back, a ragged fringe (Tamsin's sheet)
         cap.scaling.set(1.03, 0.95, 1);
         for (const [x, y, z, rx, rz] of [[0, 0.21, 0, -0.9, 0], [0.11, 0.19, -0.04, -1.0, -0.4], [-0.11, 0.19, -0.04, -1.0, 0.4], [0.06, 0.12, -0.2, -1.6, -0.2], [-0.06, 0.12, -0.2, -1.6, 0.2]]) {
@@ -251,7 +262,7 @@ export class Rig {
         // The back of the bob sits behind the face; two side locks frame the cheeks down to the jaw; the fringe stays above the brows.
         const back = add(MB.CreateSphere("bob", { diameter: 0.52, segments: 10 }, scene), this.head, 0, -0.02, -0.1, 0);
         back.scaling.set(1.06, 0.92, 0.85); back.material = dark;
-        for (const sx of [-1, 1]) { const lock = add(softBox("bobLock", { width: 0.07, height: 0.3, depth: 0.2 }, scene), this.head, sx * 0.215, -0.07, 0.03, 0); lock.rotation.z = sx * 0.08; lock.material = dark; }
+        for (const sx of [-1, 1]) { const lock = add(softBox("bobLock", { width: 0.06, height: 0.28, depth: 0.15 }, scene), this.head, sx * 0.225, -0.06, -0.05, 0); lock.rotation.z = sx * 0.08; lock.material = dark; } // behind the cheek line, so a side view still shows the face
         const fringe = add(softBox("bobFringe", { width: 0.34, height: 0.06, depth: 0.09 }, scene), this.head, 0, 0.19, 0.15, 0);
         fringe.rotation.x = 0.7; fringe.material = dark;
       } else if (L.hair === "bun") { // pulled back into a bun
@@ -787,12 +798,19 @@ export class Rig {
     if (this.head !== this.shoulder) this.head.rotation.z = fighter.headTilt ?? 0;
 
     if (this.grimoire) {
-      this.grimoire.position.y = 1.75 + Math.sin(this.time * 2.2) * 0.06;
+      // In a fight the grimoire floats at the shoulder; outside one it hangs closed at the hip, so it never
+      // drifts in front of the camera (or a face) during dialogue.
+      const tucked = fighter.relaxed && !fighter.current;
+      this.grimoireTuck = (this.grimoireTuck ?? 0) + ((tucked ? 1 : 0) - (this.grimoireTuck ?? 0)) * Math.min(1, dt * 6);
+      const k = this.grimoireTuck;
+      this.grimoire.position.set(-0.75 + k * 0.42, 1.75 - k * 0.78 + Math.sin(this.time * 2.2) * 0.06 * (1 - k), -0.1 + k * 0.06);
       this.grimoireGlow = Math.max(0, this.grimoireGlow - dt * 1.6);
       const g = this.grimoireGlow;
       this.grimoire.rotation.y = 0.5 + g * this.time * 8;
       this.pageMat.emissiveColor.set(0.96 + g * 0.04, 0.9, 0.75 - g * 0.3);
-      this.grimoire.scaling.setAll(1 + g * 0.35);
+      this.grimoire.scaling.setAll((1 + g * 0.35) * (1 - k * 0.45));
+      this.pageMat.alpha = 1;
+      if (k > 0.5) this.pageMat.emissiveColor.scaleInPlace(0.55); // closed: the pages stop glowing
     }
 
     // Hit flash via overlay.

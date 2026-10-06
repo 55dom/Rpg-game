@@ -79,9 +79,9 @@ export const SHEETS = Object.freeze({
   dagrun: { build: "broad", gait: "heavy", idle: "tired",
     outfit: { top: "#2a3346", hem: "knee", sleeves: "long", legs: "#2a2c33", boots: "tall", bootColor: "#5a3a22",
       belt: "#5a3a22", pouches: 2, buttons: "#1a1e28", grime: 0.3 } },
-  cal: { build: "slim", gait: "graceful", idle: "relaxed",
-    outfit: { top: "#ece8de", hem: "thigh", sleeves: "long", legs: "#2a2836", boots: "tall", bootColor: "#3a2a44",
-      belt: "#e6b54e", bracers: "#e6b54e", grime: 0.05 } },
+  cal: { build: "athletic", gait: "graceful", idle: "relaxed",
+    outfit: { top: "#d9d3c4", hem: "knee", open: true, sleeves: "long", legs: "#2a2836", boots: "tall", bootColor: "#3a2a22",
+      belt: "#e6b54e", bracers: "#e6b54e", grime: 0.1 } },
   // ---- Squad captains and nobles ----------------------------------------------------------------------
   severin: { build: "slim", gait: "confident", idle: "proud",
     outfit: { top: "#f4f2f8", hem: "thigh", sleeves: "long", legs: "#f4f2f8", boots: "tall", bootColor: "#2c4aa0",

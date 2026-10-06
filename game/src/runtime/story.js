@@ -194,7 +194,7 @@ class Stage {
       const others = pts.filter((p) => p !== a);
       let best = null, bestScore = -1;
       for (const off of down ? [1.6, -1.6, 2.4, -2.4] : [0.3, -0.3, 0.7, -0.7, 1.1, -1.1]) {
-        const ang = (a.targetYaw ?? a.yaw) + off, dist = down ? 3.3 : 2.7;
+        const ang = (a.targetYaw ?? a.yaw) + off, dist = (down ? 3.3 : 2.7) * Math.max(1, scale); // big characters need a step back to fit
         const pos = { x: a.pos.x + Math.sin(ang) * dist, y: down ? 2.9 : look.y + 0.15, z: a.pos.z + Math.cos(ang) * dist };
         let clear = 9;
         for (const o of others) clear = Math.min(clear, segDist(pos, look, o.pos));
@@ -213,8 +213,8 @@ class Stage {
       if (rz > 0) { rx = -rx; rz = -rz; }
       const sb = b === this.getWorld().player ? 1 : this.actors.get(ids[1])?.rig.look.scale ?? 1;
       const wide = sb * (this.actors.get(ids[1])?.rig.look.shoulders ?? 1); // big shoulders need a wider offset
-      const back = 1.5 + sep * 0.25 + (sb - 1) * 1.5;
-      const side = 0.95 + (wide - 1) * 0.9;
+      const back = 1.8 + sep * 0.25 + (sb - 1) * 1.5;
+      const side = 1.3 + (wide - 1) * 0.9; // far enough to the side that the near shoulder frames the shot instead of filling it
       const pos = { x: b.pos.x - ux * back + rx * side, y: 2.05 * sb + (b.pos.y ?? 0), z: b.pos.z - uz * back + rz * side };
       const look = { x: a.pos.x - ux * 0.3, y: 1.6 + (a.pos.y ?? 0), z: a.pos.z - uz * 0.3 };
       return { pos, look, fov: 0.62 };
