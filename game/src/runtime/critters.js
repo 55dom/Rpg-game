@@ -49,7 +49,7 @@ export function buildCritters(scene, K, list, rng) {
   for (const { kind, n, area, still } of list) {
     const S = SPECIES[kind];
     const src = model(scene, `critter-${kind}`, S.parts);
-    src.material = mat; src.parent = K.root; src.isPickable = false;
+    src.material = mat; src.parent = K.root; src.isPickable = false; src.metadata = { noGlow: true };
     src.renderOutline = true; src.outlineWidth = 0.02; src.outlineColor = BB.Color3.FromHexString("#1a1c26");
     src.setEnabled(false);
     const pickPoint = () => {
@@ -57,7 +57,7 @@ export function buildCritters(scene, K, list, rng) {
       const a = rng() * Math.PI * 2, r = area.r * Math.sqrt(rng()); return { x: area.x + Math.sin(a) * r, z: area.z + Math.cos(a) * r };
     };
     for (let i = 0; i < n; i++) {
-      const m = src.createInstance(`${kind}-${i}`); m.parent = K.root; m.isPickable = false;
+      const m = src.createInstance(`${kind}-${i}`); m.parent = K.root; m.isPickable = false; m.metadata = { noGlow: true };
       const p = pickPoint(), s = 0.85 + rng() * 0.3;
       m.scaling.setAll(s);
       herd.push({ kind, S, m, x: p.x, z: p.z, y: 0, yaw: rng() * 6.28, to: null, wait: rng() * 4, t: rng() * 10, pick: pickPoint, still, fly: 0 });

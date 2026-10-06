@@ -67,7 +67,7 @@ test("rain sends people under cover (not guards); at night people with a home go
 test("every townsperson's routine spots, homes and shelters are open ground in their zone", () => {
   for (const z of Object.values(ZONES)) {
     const pts = [...(z.shelters ?? [])];
-    for (const c of z.cast) for (const r of c.routines ?? (c.routine ? [c.routine] : [])) {
+    for (const c of [...z.cast, ...(z.extras ?? [])]) for (const r of c.routines ?? (c.routine ? [c.routine] : [])) {
       if (r.home) pts.push(r.home);
       for (const s of r.steps) { const p = s.at ?? s.to ?? s.around; if (p) pts.push(p); }
     }

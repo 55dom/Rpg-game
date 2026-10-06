@@ -38,7 +38,7 @@ export class Ambient {
     this.stage = stage;
     this.zone = zone;
     this.people = [];
-    for (const c of zone.cast) {
+    for (const c of [...zone.cast, ...(zone.extras ?? [])]) {
       const specs = c.routines ?? (c.routine ? [c.routine] : []);
       const spec = specs.find((r) => !r.when || truthy(compileExpr(r.when)(flags)));
       if (!spec) continue;

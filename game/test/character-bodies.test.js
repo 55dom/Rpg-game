@@ -66,10 +66,10 @@ test("bodies are fitted under the head: long slender legs, a torso that reaches 
   assert.equal(new Set(sig).size, sig.length);
 });
 
-test("occupations dress the part: the smith wears an apron and gloves, guards armor and the city's colors, farmers get dirty", () => {
-  assert.ok(SHEETS.smith.outfit.apron && SHEETS.smith.outfit.gloves && SHEETS.smith.outfit.toolbelt);
-  assert.ok(SHEETS.guard.outfit.breastplate && SHEETS.guard.outfit.tabard);
-  assert.ok(SHEETS.farmer.outfit.grime > 0.5 && SHEETS.farmer.outfit.patches);
+test("outfits follow the design sheets: smith in leather with red gloves, the guard in the city's blue with its emblem, noble spotless", () => {
+  assert.ok(SHEETS.smith.outfit.leather && SHEETS.smith.outfit.gloves === "#a02a2a");
+  assert.ok(SHEETS.guard.outfit.top === "#2b4fa0" && SHEETS.guard.outfit.emblem);
+  assert.ok(SHEETS.farmer.outfit.vest && SHEETS.farmer.outfit.patches);
   assert.ok(SHEETS.severin.outfit.grime === 0 && SHEETS.severin.outfit.brooch); // nobility: spotless, jewelled
-  assert.ok(SHEETS.cook.outfit.apron && SHEETS.cook.outfit.sleeves === "rolled");
+  assert.ok(SHEETS.acolyte.outfit.stitch && SHEETS.bandit.outfit.baldric);
 });

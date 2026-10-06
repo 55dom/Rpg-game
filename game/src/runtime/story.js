@@ -947,7 +947,7 @@ export class StoryPlayer {
       this.clock.setClimate(id);
       this.skyLabel = null; this.atmoT = 0;
       world.resetPlayer(); // a new zone: back to full health (explore puts Rook at the arrival point)
-      const out = await this.explore({ id: `zone-${id}`, zone, stage: zone.stage, rook: at, cast: zone.cast, exits: zone.exits, pickups: zone.pickups, encounters: zone.encounters,
+      const out = await this.explore({ id: `zone-${id}`, zone, stage: zone.stage, rook: at, cast: [...zone.cast, ...(zone.extras ?? [])], exits: zone.exits, pickups: zone.pickups, encounters: zone.encounters,
         objective: zone.exits.map((e) => `<b>Exit:</b> ${e.label}`).join(" · ") });
       if (!this.active) return;
       this._fade(true, 0.35);

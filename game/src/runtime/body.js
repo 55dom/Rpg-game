@@ -139,7 +139,11 @@ export function buildBody(rig, scene, id, L, kind, add, skin) {
     const hem = add(shell(scene, "hem", prof, 0.016, { tess: 12, arc: O.open && O.hem !== "hip" ? 0.86 : 1 }), rig.skirt, 0, 0, 0);
     hem.scaling.z = depth * 1.08; hem.rotation.y = O.open ? Math.PI / 2 + Math.PI * 0.14 : 0; hem.material = top; dirty(hem);
     const stitch = add(MB.CreateTorus("hemStitch", { diameter: r1 * 2 - 0.004, thickness: 0.012, tessellation: 12 }, scene), rig.skirt, 0, -len + 0.03, 0);
-    stitch.scaling.z = depth * 1.08; stitch.material = M(darken(O.top, 0.55));
+    stitch.scaling.z = depth * 1.08; stitch.material = M(O.stitch ?? darken(O.top, 0.55));
+    if (O.embroidery) { // a second gold band just above the hem
+      const band = add(MB.CreateTorus("hemBand", { diameter: (r1 - len * flare * 0.12) * 2, thickness: 0.016, tessellation: 12 }, scene), rig.skirt, 0, -len * 0.88, 0);
+      band.scaling.z = depth * 1.08; band.material = M(O.embroidery);
+    }
     if (O.open && O.hem !== "hip") stitch.setEnabled(false);
     rig.hemLen = len;
   }
@@ -199,6 +203,19 @@ export function buildBody(rig, scene, id, L, kind, add, skin) {
     ap.rotation.x = 0.06; ap.material = M(O.apron); dirty(ap, (O.grime ?? 0) + 0.15);
     const tie = add(MB.CreateTorus("apronTie", { diameter: torsoR(0.3 * T) * 2 + 0.04, thickness: 0.018, tessellation: 8 }, scene), rig.body, 0, 0.3 * T, 0); tie.scaling.z = depth; tie.material = M(O.apron);
   }
+  if (O.leather) { // a leather jerkin: a darker, stitched chest panel over the tunic
+    const lp = add(shell(scene, "leatherPanel", [[sw * 0.62, 0.93 * T], [cw * 1.07, 0.78 * T], [cw * 1.04, 0.55 * T], [ww * 1.1 + 0.01, 0.25 * T]], 0.016, { tess: 11 }), rig.body, 0, 0, 0);
+    lp.scaling.z = depth * 1.04; lp.material = M(darken(O.top, 0.78)); dirty(lp);
+    for (const y of [0.42, 0.66]) { const seam = add(MB.CreateTorus("leatherSeam", { diameter: torsoR(y * T) * 2 + 0.05, thickness: 0.012, tessellation: 8 }, scene), rig.body, 0, y * T, 0); seam.scaling.z = depth * 1.05; seam.material = M(darken(O.top, 0.55)); }
+  }
+  if (O.baldric) for (const z of [1, -1]) { // a strap from one shoulder to the opposite hip
+    const st = add(MB.CreateBox("baldric", { width: 0.06, height: T * 1.15, depth: 0.02 }, scene), rig.body, 0, T * 0.5, z * (front(0.5 * T) + 0.035));
+    st.rotation.z = z * -0.6; st.material = M(O.baldric);
+  }
+  if (O.emblem) { // the city's gold star on the chest
+    for (const r of [0, Math.PI / 4]) { const e = add(MB.CreateBox("emblem", { width: 0.09, height: 0.09, depth: 0.015 }, scene), rig.body, 0, T * 0.72, front(0.72 * T) + 0.02); e.rotation.z = r; e.material = M(O.emblem); }
+  }
+  if (O.buttons) for (let i = 0; i < 5; i++) { const y = T * (0.85 - i * 0.16); const b = add(MB.CreateSphere("button", { diameter: 0.035, segments: 4 }, scene), rig.body, 0.02, y, front(y) + 0.012); b.material = M(O.buttons); }
   if (O.belt) {
     const y = 0.1, br = Math.max(torsoR(y), O.hem ? hw * 1.06 : 0) + 0.014;
     const belt = add(shell(scene, "belt", [[br + 0.004, y + 0.035], [br + 0.004, y - 0.035]], 0.016, { tess: 16 }), rig.body, 0, 0, 0);

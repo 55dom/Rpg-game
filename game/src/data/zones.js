@@ -144,6 +144,10 @@ export const ZONES = {
       { id: "cook", look: "cook", x: 5.6, z: -5.4, yaw: -0.6, node: "W_Cook",
         routine: { home: [25.6, 27], steps: [{ do: "work", at: [5.6, -5.4], face: -0.6, anim: "stir", dur: [14, 20] }, { do: "work", at: [6.8, -6.6], face: 2.6, anim: "work", dur: [4, 6] }] } },
     ],
+    extras: [
+      { id: "pilgrim", look: "elder", x: 12, z: 11.8, yaw: Math.PI / 2,
+        routine: { role: "elder", home: [-12.3, 16], steps: [{ do: "work", at: [12, 11.8], face: Math.PI / 2, anim: "read", dur: [14, 20] }, { do: "wander", around: [9, 9], r: 2, dur: [6, 9] }] } },
+    ],
     // Somewhere dry to stand when it rains: the Hall portico, the market canopies, house doorways.
     shelters: [[-2, 25], [2, 25], [18, -6.8], [24, -6.8], [30, -6.8], [-12.3, 4], [-12.3, -8]],
     pickups: [{ id: "toyLantern", x: -2.6, z: -28.6, show: "$Q_TOY == 1 and not $TOY_FOUND", flag: "TOY_FOUND", label: "Pick up the toy lantern" }],
@@ -171,6 +175,15 @@ export const ZONES = {
         routine: { role: "worker", steps: [{ do: "work", at: [-8, -6.6], face: Math.PI, anim: "hammer", dur: [14, 20] }, { do: "work", at: [-10.2, -6.4], face: Math.PI, anim: "work", dur: [4, 6] }] } },
     ],
     shelters: [[0, 15.4], [-8, -6.6], [-14.5, -3], [14.3, 9]],
+    // Regular townsfolk (no conversation, just their day): a washerwoman, a woodcutter, a man fetching water.
+    extras: [
+      { id: "washer", look: "townswoman", x: -10.4, z: 12.6, yaw: 0.4,
+        routine: { home: [-15.6, 9], steps: [{ do: "work", at: [-10.4, 12.6], face: 0.3, anim: "sew", dur: [10, 14] }, { do: "work", at: [-8.8, 13], face: 0.3, anim: "light", dur: [5, 8] }] } },
+      { id: "woodcutter", look: "laborer", x: -12.6, z: -9.6, yaw: Math.PI,
+        routine: { role: "worker", home: [-10, -15.6], steps: [{ do: "work", at: [-12.6, -9.6], face: Math.PI, anim: "hoe", dur: [12, 18] }, { do: "walk", to: [-6.2, -5.4] }, { do: "idle", at: [-6.2, -5.4], face: 1.2, dur: [4, 6] }] } },
+      { id: "waterman", look: "townsman", x: -3.6, z: -4.2, yaw: -1.6,
+        routine: { home: [-15.2, -3], steps: [{ do: "work", at: [-3.7, -3.9], face: -1.9, anim: "work", dur: [6, 9] }, { do: "walk", to: [-13, 2] }, { do: "idle", at: [-13, 2], face: 0, dur: [5, 8] }] } },
+    ],
     pickups: [{ id: "ledger", x: -3, z: 14.6, show: "1", flag: "LEDGER_READ", node: "W_Ledger", label: "Read the orphan ledger" }],
     encounters: [
       { id: "bandits", rect: [8, -29, 29, -19], at: { x: 18, z: -24, r: 4 }, wave: ["bandit", "bandit", "bandit"], when: "$Q_BANDITS == 1", flag: "BANDITS_CLEARED", label: "BANDITS ON THE MILL ROAD" },

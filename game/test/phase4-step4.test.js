@@ -67,7 +67,7 @@ test("arrival points are open ground, outside exits and encounter areas (no inst
 test("everything in a zone can be walked to from where you arrive", () => {
   for (const z of Object.values(ZONES)) {
     const can = reach(z.bounds, arrivalPoint(z, null));
-    for (const c of z.cast) assert.ok(can(c.x, c.z), `${z.id}: ${c.id}`);
+    for (const c of [...z.cast, ...(z.extras ?? [])]) assert.ok(can(c.x, c.z), `${z.id}: ${c.id}`);
     for (const p of z.pickups ?? []) assert.ok(can(p.x, p.z), `${z.id}: pickup ${p.id}`);
     for (const e of z.exits) { const [x0, z0, x1, z1] = e.rect; assert.ok(can((x0 + x1) / 2, (z0 + z1) / 2, 2.5), `${z.id}: exit ${e.id}`); }
     for (const e of z.encounters ?? []) { const [x0, z0, x1, z1] = e.rect; assert.ok(can((x0 + x1) / 2, (z0 + z1) / 2, 3), `${z.id}: encounter ${e.id}`); }

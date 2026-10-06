@@ -70,7 +70,7 @@ export function boot(doc = document) {
   const gl = new BB.GlowLayer("glow", scene, { mainTextureRatio: mobile ? 0.35 : 0.5, blurKernelSize: mobile ? 24 : 40 });
   // Performance (Phase 4 Step 5): the glow pass draws only things that glow (unlit or emissive
   // materials), instead of every mesh in the scene a second time. New meshes are picked up as they appear.
-  Rig.outlineRange = mobile ? 20 : 30; // characters past this lose their ink lines (level of detail)
+  Rig.outlineRange = mobile ? 20 : 22; // characters past this lose their ink lines (level of detail)
   LOD.tess = mobile ? 0.75 : 1;         // phones get rounder-is-cheaper bodies
   const glowing = new Set();
   const syncGlow = () => {

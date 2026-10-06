@@ -18,6 +18,27 @@ const isAttack = (a) => a.hasHit || a.events.some((e) => e.type === EventType.Sp
 
 const SWORD_TIP = 1.95, SWORD_HILT = 0.72;
 
+/**
+ * Reshape a sphere into an anime head (GDD §29.1, the design sheets): the cranium stays round, the lower
+ * half narrows toward a soft chin that sits a little lower and forward. `r` is the sphere's radius.
+ */
+export function animeHead(mesh, r, jaw = 0.32) {
+  const BB = B(), P = mesh.getVerticesData(BB.VertexBuffer.PositionKind);
+  for (let i = 0; i < P.length; i += 3) {
+    const y = P[i + 1] / r;
+    if (y >= 0) continue;
+    const t = Math.min(1, -y), front = Math.max(0, P[i + 2] / r);
+    P[i] *= 1 - jaw * t * t;                     // narrower jaw
+    P[i + 1] *= 1 + 0.1 * t;                     // a slightly longer chin
+    P[i + 2] = P[i + 2] * (1 - 0.18 * t * t) + 0.04 * r * t * front; // cheeks in, chin forward
+  }
+  mesh.updateVerticesData(BB.VertexBuffer.PositionKind, P);
+  const N = [];
+  BB.VertexData.ComputeNormals(P, mesh.getIndices(), N);
+  mesh.updateVerticesData(BB.VertexBuffer.NormalKind, N);
+  return mesh;
+}
+
 function part(mesh, parent, x, y, z, outline = 0.03) {
   mesh.parent = parent;
   mesh.position.set(x, y, z);
@@ -32,72 +53,81 @@ function part(mesh, parent, x, y, z, outline = 0.03) {
  */
 export const LOOKS = {
   player: { poses: ROOK_POSES, scale: 1, skirt: 0.95, coat: PALETTE.rookCoat, trim: PALETTE.rookTrim, hairColor: PALETTE.hair,
-    skin: PALETTE.skin, head: "face", hair: "spiky", scarf: true, weapon: "sword", grimoire: true, trail: "#ffd98a" },
-  acolyte: { poses: ACOLYTE_POSES, scale: 1, skirt: 1.15, coat: PALETTE.acolyteRobe, trim: PALETTE.acolyteSash, hairColor: PALETTE.acolyteHood,
-    skin: PALETTE.mask, head: "hood", sash: true, weapon: "blade", trail: "#ff5a4a" },
+    skin: PALETTE.skin, head: "face", hair: "spiky", collar: true, weapon: "sword", grimoire: true, eyeColor: "#2a1e1a", trail: "#ffd98a" },
+  acolyte: { poses: ACOLYTE_POSES, scale: 1, skirt: 1.15, coat: PALETTE.acolyteRobe, trim: PALETTE.acolyteSash, hairColor: "#6a3a9a",
+    skin: PALETTE.mask, head: "helm", helm: "#b4aec4", sash: true, weapon: "blade", trail: "#ff5a4a" },
   bas: { poses: BAS_POSES, scale: 1.18, skirt: 1.05, coat: "#2b3a5c", trim: PALETTE.rookTrim, hairColor: "#1b1716", skin: "#6b4632",
-    head: "face", hair: "crop", scarf: true, weapon: "fist", accent: "#8c909b", shoulders: 1.25, trail: "#e8b46a" },
+    head: "face", hair: "crop", collar: true, weapon: "fist", accent: "#a8b0bc", shoulders: 1.25, eyeColor: "#2a1a12", trail: "#e8b46a" },
   hound: { poses: ENEMIES.hound.poses, scale: 1, form: "beast", fur: "#5b4b39", belly: "#8a7458", eyes: "#ffd25a", trail: "#ffb35a" },
-  cantor: { poses: ENEMIES.cantor.poses, scale: 1.05, skirt: 1.2, coat: "#d6cde6", trim: "#8a5fc0", hairColor: "#3d3050", skin: PALETTE.mask,
-    head: "hood", sash: true, weapon: "staff", halo: true, trail: "#b98cff" },
-  bulwark: { poses: ENEMIES.bulwark.poses, scale: 1.12, skirt: 1.2, coat: "#a3a9b5", trim: "#6b4f8a", hairColor: "#2f2a3a", skin: PALETTE.mask,
-    head: "hood", sash: true, weapon: "spear", shield: true, shoulders: 1.2, trail: "#c9b8ff" },
+  cantor: { poses: ENEMIES.cantor.poses, scale: 1.05, skirt: 1.2, coat: "#ece6f4", trim: "#8a5fc0", hairColor: "#7a4aaa", skin: PALETTE.mask,
+    head: "helm", helm: "#bcb6cc", sash: true, weapon: "staff", halo: true, trail: "#b98cff" },
+  bulwark: { poses: ENEMIES.bulwark.poses, scale: 1.12, skirt: 1.2, coat: "#5a4030", trim: "#6b4f8a", hairColor: "#5a3a8a", skin: PALETTE.mask,
+    head: "helm", helm: "#a8a2b8", weapon: "spear", shield: true, shoulders: 1.2, trail: "#c9b8ff" },
   beast: { poses: ENEMIES.beast.poses, scale: 1.5, skirt: 1.5, coat: "#4e5a37", trim: "#6f5a3a", hairColor: "#3a4129", skin: "#4e5a37",
     head: "lump", weapon: "claw", shoulders: 1.55, accent: "#2f3324", eyes: "#d8ff6a", trail: "#a6c96a" },
   rat: { poses: ENEMIES.rat.poses, scale: 0.55, form: "beast", fur: "#5a5560", belly: "#8a8290", eyes: "#ff5a4a", trail: "#c9a4a4" },
   clockwork: { poses: ENEMIES.clockwork.poses, scale: 1.2, skirt: 0.9, coat: "#9a7a3a", trim: "#d9b45a", hairColor: "#4a3a22", skin: "#9a7a3a",
     head: "lump", weapon: "fist", shoulders: 1.45, accent: "#5a4a2a", eyes: "#7af0ff", gear: true, trail: "#7af0ff" },
-  bandit: { poses: ENEMIES.bandit.poses, scale: 1.0, skirt: 1.0, coat: "#5a4a3a", trim: "#8a3a2a", hairColor: "#2a2220", skin: "#d8a888",
-    head: "face", hair: "crop", sash: true, weapon: "blade", trail: "#ff8a6a" },
+  bandit: { poses: ENEMIES.bandit.poses, scale: 1.0, skirt: 1.0, coat: "#5a4030", trim: "#8a3a2a", hairColor: "#4a3020", skin: "#e2b894",
+    head: "face", hair: "spiky", weapon: "blade", eyeColor: "#3a2618", trail: "#ff8a6a" },
   hask: { poses: HASK_POSES, scale: 2.0, skirt: 1.7, coat: "#3d4934", trim: "#5c4a2e", hairColor: "#2c3524", skin: "#3d4934",
     head: "lump", weapon: "claw", shoulders: 1.7, accent: "#262b1d", eyes: "#ffb347", trail: "#c9a24a", mound: true },
   // Story cast (Phase 3). Poses borrow Rook's rest stance until they get their own moves.
-  dagrun: { poses: ACOLYTE_POSES, scale: 1.3, skirt: 1.35, coat: "#3b404c", trim: "#e6b54e", hairColor: "#5a3d2b", skin: "#e2b894",
-    head: "face", hair: "crop", beard: "#5a3d2b", scarf: true, weapon: "none", shoulders: 1.5, trail: "#e6b54e" },
-  cal: { poses: CAL_POSES, scale: 1.04, skirt: 0.8, coat: "#d9d3c4", trim: "#e6b54e", hairColor: "#2f2a36", skin: "#efd2b8",
-    head: "face", hair: "long", scarf: true, weapon: "sword", trail: "#ffd98a" },
-  corvina: { poses: ACOLYTE_POSES, scale: 1.04, skirt: 1.05, coat: "#f2efe6", trim: "#d4ad4f", hairColor: "#c9d6e8", skin: "#f3dcc8",
-    head: "face", hair: "long", weapon: "none", cape: "#d4ad4f", trail: "#e9f2ff" },
+  dagrun: { poses: ACOLYTE_POSES, scale: 1.3, skirt: 1.35, coat: "#2a3346", trim: "#e6b54e", hairColor: "#5a3d2b", skin: "#e2b894",
+    head: "face", hair: "crop", beard: "#5a3d2b", collar: true, weapon: "none", shoulders: 1.5, eyeColor: "#3a2618", trail: "#e6b54e" },
+  cal: { poses: CAL_POSES, scale: 1.04, skirt: 0.8, coat: "#ece8de", trim: "#e6b54e", hairColor: "#1e1c26", skin: "#efd2b8",
+    head: "face", hair: "long", collar: true, weapon: "sword", eyeColor: "#2a2a3a", trail: "#ffd98a" },
+  corvina: { poses: ACOLYTE_POSES, scale: 1.04, skirt: 1.05, coat: "#f2efe6", trim: "#d4ad4f", hairColor: "#b8d0ec", skin: "#f3dcc8",
+    head: "face", hair: "long", weapon: "none", eyeColor: "#4a6aa0", trail: "#e9f2ff" },
   brannoc: { poses: ACOLYTE_POSES, scale: 1.16, skirt: 1.1, coat: "#6b7280", trim: "#8a3a2a", hairColor: "#9a9a9a", skin: "#d8a888",
-    head: "face", hair: "crop", beard: "#a8a8a8", weapon: "sword", shoulders: 1.35, trail: "#c9d2dc" },
-  ysolde: { poses: ACOLYTE_POSES, scale: 1.0, skirt: 0.95, coat: "#2f6b5a", trim: "#9fe6c8", hairColor: "#c96a3a", skin: "#e8bf9c",
-    head: "face", hair: "sidetail", accent: "#9fe6c8", weapon: "spear", trail: "#9fe6c8" },
-  lio: { poses: ACOLYTE_POSES, scale: 0.97, skirt: 1.15, coat: "#3f4f6e", trim: "#a9b8d8", hairColor: "#d8d0bc", skin: "#efd6c2",
-    head: "face", hair: "crop", weapon: "none", grimoire: true, trail: "#a9b8d8" },
-  tamsin: { poses: ACOLYTE_POSES, scale: 0.95, skirt: 0.95, coat: "#b8503a", trim: "#f0c26a", hairColor: "#e0b050", skin: "#f1d0b4",
-    head: "face", hair: "spiky", scarf: true, weapon: "none", lute: true, trail: "#f0c26a" },
-  mirren: { poses: ACOLYTE_POSES, scale: 0.66, skirt: 0.95, coat: "#9a7a5a", trim: "#c9a26a", hairColor: "#5a3a22", skin: "#f0cfb2",
-    head: "face", hair: "sidetail", accent: "#d9634a", weapon: "none", trail: "#c9a26a" },
-  keeper: { poses: ACOLYTE_POSES, scale: 0.95, skirt: 1.2, coat: "#4a3b5c", trim: "#e6b54e", hairColor: "#e8e2d4", skin: "#e8c4a6",
-    head: "face", hair: "crop", beard: "#e8e2d4", weapon: "none", sash: true, stoop: 0.12, trail: "#e6b54e" },
-  vendor: { poses: ACOLYTE_POSES, scale: 1.0, skirt: 1.15, coat: "#8a5a32", trim: "#e6b54e", hairColor: "#2f2420", skin: "#c88a64",
-    head: "face", hair: "crop", weapon: "none", sash: true, shoulders: 1.15, trail: "#e6b54e" },
-  guard: { poses: ACOLYTE_POSES, scale: 1.06, skirt: 1.0, coat: "#6b7280", trim: "#2b4f8f", hairColor: "#3a2a22", skin: "#e2b894",
-    head: "face", hair: "crop", weapon: "spear", shoulders: 1.2, trail: "#c9d2dc" },
-  gossip: { poses: ACOLYTE_POSES, scale: 0.97, skirt: 1.2, coat: "#7a5a8a", trim: "#d8c8e8", hairColor: "#a0602a", skin: "#f0d0b4",
-    head: "face", hair: "long", weapon: "none", trail: "#d8c8e8" },
-  kid: { poses: ACOLYTE_POSES, scale: 0.62, skirt: 0.9, coat: "#4f81bd", trim: "#e6b54e", hairColor: "#3a2a22", skin: "#e8b894",
-    head: "face", hair: "spiky", weapon: "none", trail: "#e6b54e" },
-  wren: { poses: ACOLYTE_POSES, scale: 0.94, skirt: 1.3, coat: "#6a5a7a", trim: "#f0c8a0", hairColor: "#b8b0a8", skin: "#efcfb4",
-    head: "face", hair: "long", weapon: "none", sash: true, stoop: 0.08, trail: "#f0c8a0" },
-  farmer: { poses: ACOLYTE_POSES, scale: 1.05, skirt: 1.05, coat: "#7a8a4a", trim: "#c9a26a", hairColor: "#8a6a3a", skin: "#d8a07a",
-    head: "face", hair: "crop", beard: "#8a6a3a", weapon: "none", shoulders: 1.2, trail: "#c9d27a" },
-  smith: { poses: ACOLYTE_POSES, scale: 1.14, skirt: 1.1, coat: "#3a3430", trim: "#c0504d", hairColor: "#1f1a18", skin: "#b87a5a",
-    head: "face", hair: "crop", beard: "#1f1a18", weapon: "none", shoulders: 1.4, trail: "#e09a6a" },
-  ness: { poses: ACOLYTE_POSES, scale: 0.98, skirt: 1.2, coat: "#4a6a5a", trim: "#9fc0b0", hairColor: "#d8d4c8", skin: "#d8b494",
-    head: "face", hair: "crop", beard: "#d8d4c8", weapon: "rod", stoop: 0.18, trail: "#9fc0b0" },
-  cook: { poses: ACOLYTE_POSES, scale: 1.04, skirt: 1.3, coat: "#e8e2d4", trim: "#c0504d", hairColor: "#5a3a22", skin: "#d8a07a",
-    head: "face", hair: "crop", beard: "#5a3a22", weapon: "none", shoulders: 1.25, trail: "#ffcf7a" },
-  stranger: { poses: ACOLYTE_POSES, scale: 1.08, skirt: 0.78, coat: "#0d0c12", trim: "#0d0c12", hairColor: "#0d0c12", skin: "#0d0c12",
+    head: "face", hair: "crop", beard: "#a8a8a8", weapon: "sword", shoulders: 1.35, eyeColor: "#3a3a40", trail: "#c9d2dc" },
+  ysolde: { poses: ACOLYTE_POSES, scale: 1.0, skirt: 0.95, coat: "#2f7a4a", trim: "#9fe6c8", hairColor: "#e0702a", skin: "#f0cfb2",
+    head: "face", hair: "long", weapon: "spear", eyeColor: "#8a4a1a", trail: "#9fe6c8" },
+  lio: { poses: ACOLYTE_POSES, scale: 0.97, skirt: 1.15, coat: "#3a5a8a", trim: "#a9b8d8", hairColor: "#e2e2e8", skin: "#f0d8c6",
+    head: "face", hair: "bob", weapon: "none", grimoire: true, holds: "lantern", eyeColor: "#7a808c", trail: "#a9b8d8" },
+  tamsin: { poses: ACOLYTE_POSES, scale: 0.95, skirt: 0.95, coat: "#c0402a", trim: "#f0c26a", hairColor: "#f0c850", skin: "#f1d0b4",
+    head: "face", hair: "spiky", collar: true, weapon: "none", eyeColor: "#2a5ab0", trail: "#f0c26a" },
+  mirren: { poses: ACOLYTE_POSES, scale: 0.66, skirt: 0.95, coat: "#8a6a4a", trim: "#c9a26a", hairColor: "#6a4228", skin: "#f0cfb2",
+    head: "face", hair: "ponytail", accent: "#d9634a", weapon: "none", eyeColor: "#5a3a22", trail: "#c9a26a" },
+  keeper: { poses: ACOLYTE_POSES, scale: 0.95, skirt: 1.2, coat: "#5a3a8a", trim: "#e6c040", hairColor: "#ecebe6", skin: "#f0d0b4",
+    head: "face", hair: "crop", beard: "#ecebe6", weapon: "none", sash: true, stoop: 0.12, eyeColor: "#4a4a5a", trail: "#e6b54e" },
+  vendor: { poses: ACOLYTE_POSES, scale: 1.0, skirt: 1.15, coat: "#9a6232", trim: "#e6c040", hairColor: "#1a1412", skin: "#7a4a2e",
+    head: "face", hair: "crop", weapon: "none", sash: true, shoulders: 1.15, eyeColor: "#2a1a12", trail: "#e6b54e" },
+  guard: { poses: ACOLYTE_POSES, scale: 1.06, skirt: 1.0, coat: "#2b4fa0", trim: "#e6b54e", hairColor: "#4a3020", skin: "#f0d0b4",
+    head: "face", hair: "spiky", weapon: "spear", shoulders: 1.15, eyeColor: "#3a2618", trail: "#c9d2dc" },
+  gossip: { poses: ACOLYTE_POSES, scale: 0.97, skirt: 1.2, coat: "#7a4aa0", trim: "#d8c8e8", hairColor: "#e06a2a", skin: "#f3dcc8",
+    head: "face", hair: "long", weapon: "none", holds: "scroll", eyeColor: "#8a4a2a", trail: "#d8c8e8" },
+  kid: { poses: ACOLYTE_POSES, scale: 0.62, skirt: 0.9, coat: "#4a8ad0", trim: "#e6b54e", hairColor: "#16161c", skin: "#f0d0b4",
+    head: "face", hair: "spiky", weapon: "none", eyeColor: "#2a2a30", trail: "#e6b54e" },
+  wren: { poses: ACOLYTE_POSES, scale: 0.94, skirt: 1.3, coat: "#7a4aa0", trim: "#c9a26a", hairColor: "#e4e4e8", skin: "#f3dcc8",
+    head: "face", hair: "long", weapon: "none", holds: "scroll", stoop: 0.06, eyeColor: "#6a6a7a", trail: "#f0c8a0" },
+  farmer: { poses: ACOLYTE_POSES, scale: 1.05, skirt: 1.05, coat: "#e6dcc0", trim: "#c9a26a", hairColor: "#8a6a3a", skin: "#e2b894",
+    head: "face", hair: "crop", beard: "#8a6a3a", weapon: "none", shield: "kite", shieldColor: "#ecebe6", shoulders: 1.2, eyeColor: "#3a2a1a", trail: "#c9d27a" },
+  smith: { poses: ACOLYTE_POSES, scale: 1.14, skirt: 1.1, coat: "#4a3026", trim: "#c0504d", hairColor: "#2a1e18", skin: "#e2b08a",
+    head: "face", hair: "spiky", beard: "#2a1e18", weapon: "none", shield: "heater", shieldColor: "#6a2a26", shoulders: 1.4, eyeColor: "#2a1a12", trail: "#e09a6a" },
+  ness: { poses: ACOLYTE_POSES, scale: 0.98, skirt: 1.2, coat: "#2f6a4a", trim: "#9fc0b0", hairColor: "#ecebe6", skin: "#f0d0b4",
+    head: "face", hair: "crop", beard: "#ecebe6", weapon: "staff", orb: "#b06aff", stoop: 0.18, eyeColor: "#4a4a5a", trail: "#9fc0b0" },
+  cook: { poses: ACOLYTE_POSES, scale: 1.04, skirt: 1.3, coat: "#ece6d8", trim: "#e6c040", hairColor: "#6a4228", skin: "#e2b894",
+    head: "face", hair: "crop", beard: "#6a4228", weapon: "none", sash: true, shoulders: 1.25, eyeColor: "#3a2618", trail: "#ffcf7a" },
+  // Townsfolk (the sheets' archetypes, for regular NPCs who go about their day).
+  townsman: { poses: ACOLYTE_POSES, scale: 1.0, skirt: 1.0, coat: "#9a6232", trim: "#6a4a2a", hairColor: "#4a3020", skin: "#e2b894",
+    head: "face", hair: "spiky", weapon: "none", eyeColor: "#3a2618", trail: "#c9a26a" },
+  townswoman: { poses: ACOLYTE_POSES, scale: 0.95, skirt: 1.2, coat: "#5a34a0", trim: "#6a4a2a", hairColor: "#b04a26", skin: "#f3dcc8",
+    head: "face", hair: "long", weapon: "none", eyeColor: "#6a2a1a", trail: "#c9a26a" },
+  laborer: { poses: ACOLYTE_POSES, scale: 1.08, skirt: 1.0, coat: "#5a3a2a", trim: "#6a4a2a", hairColor: "#2a1e18", skin: "#c88a64",
+    head: "face", hair: "crop", beard: "#2a1e18", weapon: "none", shoulders: 1.3, eyeColor: "#2a1a12", trail: "#c9a26a" },
+  elder: { poses: ACOLYTE_POSES, scale: 0.92, skirt: 1.2, coat: "#ece6d8", trim: "#e6c040", hairColor: "#e4e4e8", skin: "#f0d0b4",
+    head: "face", hair: "crop", beard: "#e4e4e8", weapon: "none", sash: true, stoop: 0.15, eyeColor: "#4a4a5a", trail: "#c9a26a" },
+  stranger: { poses: ACOLYTE_POSES, scale: 1.08, skirt: 0.78, coat: "#141218", trim: "#141218", hairColor: "#0d0c12", skin: "#0d0c12",
     head: "blank", hair: "crop", weapon: "none", carry: true, trail: "#000000" },
-  severin: { poses: SEVERIN_POSES, scale: 1.02, skirt: 0.9, coat: "#ece8f4", trim: "#d4ad4f", hairColor: "#e6d6a2", skin: "#f2d7c2",
-    head: "face", hair: "swept", scarf: false, weapon: "needle", accent: "#d4ad4f", cape: "#2c3a6e", trail: "#fff1b8" },
-  moss: { poses: ACOLYTE_POSES, scale: 0.9, skirt: 1.1, coat: "#6b5236", trim: "#8f7c58", hairColor: "#cfcbc2", skin: "#e8c8a8",
-    head: "face", hair: "crop", weapon: "broom", accent: "#b89a5a", stoop: 0.22, trail: "#e8d6a0" },
-  herald: { poses: ACOLYTE_POSES, scale: 1.05, skirt: 1.15, coat: "#3b2f62", trim: "#d4ad4f", hairColor: "#3a281e", skin: "#d9a98a",
-    head: "face", hair: "crop", weapon: "none", sash: true, trail: "#d4ad4f" },
-  juno: { poses: JUNO_POSES, scale: 0.93, skirt: 0.9, coat: "#2b3a5c", trim: "#c8414f", hairColor: "#8a3a22", skin: "#f3d5bf",
-    head: "face", hair: "sidetail", scarf: true, weapon: "needle", accent: "#c8414f", trail: "#ff6f86" },
+  severin: { poses: SEVERIN_POSES, scale: 1.02, skirt: 0.9, coat: "#f4f2f8", trim: "#d4ad4f", hairColor: "#ecd890", skin: "#f3dcc8",
+    head: "face", hair: "swept", weapon: "needle", accent: "#d4ad4f", cape: "#2c4aa0", eyeColor: "#3a6ab0", trail: "#fff1b8" },
+  moss: { poses: ACOLYTE_POSES, scale: 0.9, skirt: 1.1, coat: "#6b4a2e", trim: "#8f7c58", hairColor: "#e4e4e8", skin: "#f0d0b4",
+    head: "face", hair: "bun", weapon: "broom", accent: "#b89a5a", stoop: 0.22, eyeColor: "#5a5a6a", trail: "#e8d6a0" },
+  herald: { poses: ACOLYTE_POSES, scale: 1.05, skirt: 1.15, coat: "#5a34a0", trim: "#e6c040", hairColor: "#16141c", skin: "#f0d0b4",
+    head: "face", hair: "bob", weapon: "none", sash: true, eyeColor: "#3a2618", trail: "#d4ad4f" },
+  juno: { poses: JUNO_POSES, scale: 0.93, skirt: 0.9, coat: "#2b3a5c", trim: "#c8414f", hairColor: "#b04a26", skin: "#f3d5bf",
+    head: "face", hair: "sidetail", collar: true, weapon: "needle", accent: "#c8414f", eyeColor: "#6a2a1a", trail: "#ff6f86" },
 };
 
 export class Rig {
@@ -135,14 +165,15 @@ export class Rig {
       // Faces and hair overlap, so their own ink outlines would draw lines across the face (and hide the
       // eyes from the side). Instead one silhouette shell wraps the whole head: an inverted hull that only
       // shows around the outside edge.
-      const face = add(MB.CreateSphere("head", { diameter: 0.46, segments: 12 }, scene), this.head, 0, 0, 0, 0);
-      const shell = add(MB.CreateSphere("headLine", { diameter: 0.6, segments: 14, sideOrientation: BB.Mesh.BACKSIDE }, scene), this.head, 0, 0.04, -0.04, 0);
+      // The face shape from the design sheets: a round cranium tapering to a soft, narrower jaw and chin (anime style).
+      const face = add(animeHead(MB.CreateSphere("head", { diameter: 0.46, segments: 14, updatable: true }, scene), 0.23), this.head, 0, 0, 0, 0);
+      const shell = add(animeHead(MB.CreateSphere("headLine", { diameter: 0.6, segments: 14, sideOrientation: BB.Mesh.BACKSIDE, updatable: true }, scene), 0.3, 0.45), this.head, 0, 0.04, -0.04, 0);
       const lineMat = new BB.StandardMaterial(`${id}-headLine`, scene);
       lineMat.disableLighting = true; lineMat.emissiveColor = lineOf(L.hairColor); lineMat.diffuseColor = BB.Color3.Black(); lineMat.specularColor = BB.Color3.Black();
       shell.material = lineMat; shell.metadata = { noGlow: true }; // ink, not light: keep it out of the glow pass
       if (L.hair === "crop") shell.scaling.set(1.02, 0.92, 1);
       face.material = skin;
-      const eyeMat = toon(scene, `${id}-eye`, "#1a1c26");
+      const eyeMat = toon(scene, `${id}-eye`, L.eyeColor ?? "#1a1c26");
       for (const x of L.head === "blank" ? [] : [-0.085, 0.085]) {
         const eye = add(MB.CreateSphere("eye", { diameter: 0.09, segments: 6 }, scene), this.head, x, 0.03, 0.218, 0);
         eye.scaling.set(0.8, 1.4, 0.85); // must clear the face's ink-outline shell (+0.03) to show
@@ -153,6 +184,18 @@ export class Rig {
         hl.metadata = { noGlow: true }; // a catchlight, not a light: no bloom (and no extra glow-pass draw)
         const hl2 = add(MB.CreateSphere("eyeHi2", { diameter: 0.016, segments: 4 }, scene), this.head, x - 0.014, 0.01, 0.255, 0);
         hl2.material = this.eyeHi; hl2.metadata = { noGlow: true };
+      }
+      if (L.head === "face") { // the rest of the face from the sheets: brows, a small nose, a mouth, ears
+        const brow = M("brow", L.hairColor === "#ecebe6" || L.hairColor === "#e4e4e8" || L.hairColor === "#e2e2e8" ? "#9a9aa4" : L.hairColor);
+        for (const sx of [-1, 1]) {
+          const b = add(MB.CreateBox("brow", { width: 0.085, height: 0.016, depth: 0.02 }, scene), this.head, sx * 0.088, 0.112, 0.2, 0);
+          b.rotation.set(-0.45, 0, sx * -0.12); b.material = brow;
+          const ear = add(MB.CreateSphere("ear", { diameter: 0.075, segments: 5 }, scene), this.head, sx * 0.222, 0.0, -0.01, 0);
+          ear.scaling.set(0.45, 1, 0.7); ear.material = skin;
+        }
+        const nose = add(MB.CreateSphere("nose", { diameter: 0.034, segments: 4 }, scene), this.head, 0, -0.03, 0.226, 0);
+        nose.scaling.set(0.8, 1.1, 0.8); nose.material = M("nose", L.skin);
+        if (!L.beard) { const mouth = add(MB.CreateBox("mouth", { width: 0.05, height: 0.011, depth: 0.012 }, scene), this.head, 0, -0.1, 0.218, 0); mouth.rotation.x = -0.4; mouth.material = M("mouth", "#8a4a42"); }
       }
       // Hair: a full sphere set back and up. The face sphere pokes out of its front, eyes included.
       const cap = add(MB.CreateSphere("hairCap", { diameter: 0.5, segments: 12 }, scene), this.head, 0, 0.06, -0.07, 0);
@@ -176,6 +219,21 @@ export class Rig {
       } else if (L.hair === "crop") {
         cap.scaling.set(1.02, 0.86, 1); // close-cropped and flat on top
         cap.position.y = 0.04;
+        const fr = add(MB.CreateBox("cropFringe", { width: 0.28, height: 0.05, depth: 0.07 }, scene), this.head, 0, 0.2, 0.12, 0); // a short fringe, as on the sheets
+        fr.rotation.x = 0.85; fr.material = dark;
+      } else if (L.hair === "bob") { // chin-length, straight fringe
+        const sides = add(MB.CreateSphere("bob", { diameter: 0.54, segments: 10 }, scene), this.head, 0, -0.02, -0.05, 0);
+        sides.scaling.set(1.05, 0.95, 0.95); sides.material = dark;
+        const fringe = add(MB.CreateBox("bobFringe", { width: 0.36, height: 0.08, depth: 0.1 }, scene), this.head, 0, 0.16, 0.16, 0);
+        fringe.rotation.x = 0.45; fringe.material = dark;
+      } else if (L.hair === "bun") { // pulled back into a bun
+        cap.scaling.set(1.0, 0.9, 1.0);
+        const bun = add(MB.CreateSphere("bun", { diameter: 0.2, segments: 8 }, scene), this.head, 0, 0.12, -0.26, 0); bun.material = dark;
+      } else if (L.hair === "ponytail") { // tied at the back
+        const tie = add(MB.CreateSphere("hairTie", { diameter: 0.08, segments: 6 }, scene), this.head, 0, 0.1, -0.24, 0.015); tie.material = accent;
+        const tail = add(MB.CreateCapsule("ponyTail", { height: 0.4, radius: 0.07, tessellation: 8 }, scene), this.head, 0, -0.06, -0.3, 0.02);
+        tail.rotation.x = 0.35; tail.material = dark; this.hairTail = tail;
+        const bang = add(MB.CreateBox("bangs", { width: 0.34, height: 0.09, depth: 0.1 }, scene), this.head, 0, 0.16, 0.15, 0); bang.rotation.x = 0.5; bang.material = dark;
       } else if (L.hair === "sidetail") {
         const tie = add(MB.CreateSphere("hairTie", { diameter: 0.09, segments: 6 }, scene), this.head, 0.2, 0.08, -0.12, 0.015);
         tie.material = accent;
@@ -187,6 +245,21 @@ export class Rig {
         bang.rotation.set(0.5, 0, -0.12);
         bang.material = dark;
       }
+    } else if (L.head === "helm") { // the Choir's knight helm: closed visor, a plume, cloth hanging behind
+      const steelH = M("helm", L.helm ?? "#b4aec4"), slot = M("visor", "#16141c"), plume = dark;
+      const shellH = add(MB.CreateSphere("helmShell", { diameter: 0.5, segments: 10 }, scene), this.head, 0, 0.02, 0);
+      shellH.scaling.set(1, 1.08, 1.06); shellH.material = steelH;
+      const guard = add(MB.CreateBox("helmJaw", { width: 0.32, height: 0.16, depth: 0.16 }, scene), this.head, 0, -0.14, 0.12); guard.material = steelH;
+      const visor = add(MB.CreateBox("helmVisor", { width: 0.34, height: 0.045, depth: 0.05 }, scene), this.head, 0, 0.0, 0.25, 0); visor.material = slot;
+      const vslot = add(MB.CreateBox("helmSlot", { width: 0.035, height: 0.14, depth: 0.05 }, scene), this.head, 0, -0.08, 0.2, 0); vslot.material = slot;
+      const crest = add(MB.CreateBox("helmCrest", { width: 0.05, height: 0.1, depth: 0.42 }, scene), this.head, 0, 0.29, -0.02); crest.material = steelH;
+      const plumeTop = add(MB.CreateBox("plume", { width: 0.09, height: 0.16, depth: 0.42 }, scene), this.head, 0, 0.36, -0.06, 0.02); plumeTop.material = plume;
+      const plumeBack = add(MB.CreateBox("plumeFall", { width: 0.12, height: 0.42, depth: 0.1 }, scene), this.head, 0, 0.12, -0.3, 0.02); plumeBack.rotation.x = 0.2; plumeBack.material = plume;
+      for (const sx of [-1, 1]) { // side drapes and rivets
+        const drape = add(MB.CreateBox("helmDrape", { width: 0.05, height: 0.36, depth: 0.24 }, scene), this.head, sx * 0.26, -0.12, -0.06, 0.02); drape.material = plume;
+        const rivet = add(MB.CreateSphere("rivet", { diameter: 0.06, segments: 5 }, scene), this.head, sx * 0.25, 0.05, 0.04, 0); rivet.material = M("rivet", "#c9a24a");
+      }
+      const scarfN = add(MB.CreateTorus("neckScarf", { diameter: 0.24, thickness: 0.08, tessellation: 8 }, scene), this.head, 0, -0.27, -0.01, 0.02); scarfN.material = plume;
     } else if (L.head === "lump") { // a mossy brute: no face, just a hunched lump and two glowing eyes
       const lump = add(MB.CreateSphere("head", { diameter: 0.6, segments: 10 }, scene), this.head, 0, -0.08, 0.06);
       lump.scaling.set(1.15, 0.85, 1); lump.material = dark;
@@ -224,16 +297,9 @@ export class Rig {
       back.rotation.z = -0.55;
       sash.material = back.material = trim;
     }
-    if (L.scarf) { // the Lantern Knights' gold scarf, wrapped around the neck below the jaw
-      const scarf = add(MB.CreateTorus("scarf", { diameter: 0.25, thickness: 0.085, tessellation: 10 }, scene), this.body, 0, T + 0.035, -0.005, 0.02);
-      scarf.scaling.z = 0.9;
-      scarf.material = M("scarf", PALETTE.rookTrim);
-      // The tail hangs from the knot at the back of the neck (pivot there), outside the coat so it never cuts into it.
-      const knot = new BB.TransformNode(`${id}-scarfKnot`, scene);
-      knot.parent = this.body; knot.position.set(0.07, T + 0.01, -0.13);
-      const tail = add(MB.CreateBox("scarfTail", { width: 0.12, height: 0.42, depth: 0.035 }, scene), knot, 0, -0.22, -front(this.build.cw) + 0.13, 0.02);
-      tail.material = scarf.material;
-      this.scarfTail = knot;
+    if (L.collar) { // the Lantern Knights' gold stand collar (per the sheets: a band, no hanging tail)
+      const col = add(MB.CreateCylinder("goldCollar", { height: 0.085, diameterTop: 0.2, diameterBottom: 0.24, tessellation: 12 }, scene), this.body, 0, T + 0.035, -0.005, 0.02);
+      col.scaling.z = 0.9; col.material = M("collar", L.collarColor ?? "#e6b54e");
     }
 
     if (L.cape) { // a noble's short cape: a thick half-shell from the shoulders (closed, so the ink line stays on the outside)
@@ -244,7 +310,7 @@ export class Rig {
       this.cape = capeNode;
     }
 
-    if (L.lute) { // Tamsin's lute, slung across the back
+    if (L.lute) { // a lute slung across the back (no one carries one in the current sheets)
       const body = add(MB.CreateSphere("lute", { diameter: 0.42, segments: 8 }, scene), this.body, 0.05, ty(0.25), -front(this.build.cw) - 0.05, 0.02);
       body.scaling.set(1, 1.2, 0.4); body.material = M("lute", "#8a5a32");
       const neck = add(MB.CreateBox("luteNeck", { width: 0.07, height: 0.62, depth: 0.05 }, scene), this.body, 0.2, ty(0.68), -front(this.build.cw) - 0.06, 0.015);
@@ -255,6 +321,28 @@ export class Rig {
       bundle.scaling.set(1.3, 0.8, 0.85); bundle.rotation.z = 0.4; bundle.material = M("bundle", "#e9dfca");
     }
 
+    // Things held in the off hand (from the sheets): a scroll held up to read, a lantern carried low.
+    const hand = this.offElbow, handY = -0.33;
+    if (L.holds === "scroll") {
+      const sc = add(MB.CreateCylinder("scroll", { height: 0.3, diameter: 0.06, tessellation: 8 }, scene), hand, 0.04, handY - 0.02, 0.05, 0.015);
+      sc.rotation.z = Math.PI / 2; sc.material = M("scroll", "#efe6cc");
+      const sheet = add(MB.CreateBox("scrollSheet", { width: 0.26, height: 0.2, depth: 0.012 }, scene), hand, 0.04, handY - 0.12, 0.07, 0.012);
+      sheet.material = sc.material;
+    } else if (L.holds === "lantern") {
+      const frame = add(MB.CreateBox("lanternFrame", { width: 0.13, height: 0.17, depth: 0.13 }, scene), hand, 0, handY - 0.2, 0.02, 0.015);
+      frame.material = M("lanternFrame", "#3a2a22");
+      const handle = add(MB.CreateTorus("lanternHandle", { diameter: 0.08, thickness: 0.012, tessellation: 8 }, scene), hand, 0, handY - 0.08, 0.02, 0); handle.rotation.z = Math.PI / 2; handle.material = frame.material;
+      const light = add(MB.CreateBox("lanternLight", { width: 0.1, height: 0.12, depth: 0.135 }, scene), hand, 0, handY - 0.2, 0.02, 0);
+      light.material = glow(scene, `${id}-lanternGlow`, "#ffcf7a");
+    }
+    if (L.shield === "kite" || L.shield === "heater") { // a shield carried on the off forearm, face forward
+      const sMat = M("shieldFace", L.shieldColor ?? "#ecebe6"), rim = M("shieldRim", "#8a6a3a");
+      const top = add(MB.CreateBox("shieldTop", { width: 0.42, height: L.shield === "kite" ? 0.42 : 0.34, depth: 0.05 }, scene), hand, -0.05, handY + 0.12, 0.13, 0.025);
+      const point = add(MB.CreateBox("shieldPoint", { width: 0.3, height: 0.3, depth: 0.05 }, scene), hand, -0.05, handY - (L.shield === "kite" ? 0.12 : 0.04), 0.13, 0.025);
+      point.rotation.z = Math.PI / 4; point.scaling.y = L.shield === "kite" ? 1.4 : 1; top.material = point.material = sMat;
+      const edge = add(MB.CreateBox("shieldEdge", { width: 0.44, height: 0.04, depth: 0.06 }, scene), hand, -0.05, handY + (L.shield === "kite" ? 0.33 : 0.29), 0.13, 0.015); edge.material = rim;
+      const badge = add(MB.CreateBox("shieldBadge", { width: 0.12, height: 0.16, depth: 0.02 }, scene), hand, -0.05, handY + 0.06, 0.165, 0.01); badge.material = M("shieldBadge", "#d9b04a");
+    }
     // Weapon arm: the shoulder pivot (built with the body) points the arm along +Z; the weapon sits in the hand.
     const weaponStart = this.meshes.length; // everything added from here to the tip is the weapon
     let tipZ = SWORD_TIP, hiltZ = SWORD_HILT + 0.15;
@@ -275,7 +363,7 @@ export class Rig {
         line.material = M("line", "#e8e2d4");
       } else if (L.weapon === "staff") {
         const orb = add(MB.CreateSphere("orb", { diameter: 0.2, segments: 8 }, scene), this.shoulder, 0, 0, 0.64 + len * 0.8, 0);
-        orb.material = glow(scene, `${id}-orb`, "#c9a4ff");
+        orb.material = glow(scene, `${id}-orb`, L.orb ?? "#c9a4ff");
       } else {
         const head = add(MB.CreateCylinder("spearhead", { height: 0.36, diameterTop: 0, diameterBottom: 0.12, tessellation: 4 }, scene), this.shoulder, 0, 0, 0.64 + len * 0.8 + 0.18, 0.015);
         head.rotation.x = Math.PI / 2; head.material = steel;
@@ -313,8 +401,8 @@ export class Rig {
     if (this.weaponKind === "blade" && this.legs) { // the scabbard: long swords across the back, rapiers at the hip
       const needle = L.weapon === "needle", len = (needle ? 1.05 : 1) * (SWORD_TIP - SWORD_HILT);
       const sheath = new BB.TransformNode(`${id}-sheath`, scene);
-      if (needle) { sheath.parent = this.pelvis; sheath.position.set(-(this.build.hw + 0.06), 0.05, 0.04); sheath.rotation.set(0.95, 0, -0.18); }
-      else { sheath.parent = this.body; sheath.position.set(0.04, this.T + 0.06, -(this.build.cw * this.build.depth) - 0.07); sheath.rotation.z = -0.55; }
+      // At the left hip, angled back (as on every sheet), long enough swords tilted further so the tip clears the ground.
+      sheath.parent = this.pelvis; sheath.position.set(-(this.build.hw + 0.06), 0.05, 0.04); sheath.rotation.set(needle ? 0.95 : 1.1, 0, -0.18);
       // Built along −Y from the hilt: the hip one is then swung back by its node.
       const holder = new BB.TransformNode(`${id}-sheathTilt`, scene); holder.parent = sheath;
       const scab = add(MB.CreateBox("scabbard", { width: needle ? 0.05 : 0.08, height: len + 0.04, depth: needle ? 0.04 : 0.05 }, scene), holder, 0, -len / 2 - 0.1, 0, 0.015);
@@ -331,7 +419,7 @@ export class Rig {
     }
 
     const offArm = this.offArm;
-    if (L.shield) { // a tower shield held on the off arm, always toward the front
+    if (L.shield === true) { // a tower shield held on the off arm, always toward the front
       const sh = add(MB.CreateBox("shield", { width: 0.85, height: 1.35, depth: 0.1 }, scene), this.body, -0.18, ty(0.35), front(this.build.cw) + 0.2, 0.03);
       sh.material = accent;
       const boss = add(MB.CreateCylinder("boss", { height: 0.06, diameter: 0.3, tessellation: 10 }, scene), sh, 0, 0.1, 0.07, 0.015);
@@ -580,6 +668,8 @@ export class Rig {
     if (this.skirt && !this.legs) this.skirt.rotation.x = bodyLean * 0.25;
     if (this.scarfTail) this.scarfTail.rotation.x = 0.12 + run * 0.45 + Math.sin(held * 9) * 0.08 * (0.3 + run);
     if (this.offArm && !this.legs) this.offArm.rotation.x = c.blocking || fighter.current?.id === "Guard" ? -0.9 : 0.35 + Math.sin(this.time * 13) * 0.25 * run;
+    if (this.offArm && this.look.holds === "scroll" && !fighter.offPose && !fighter.current) { this.offArm.rotation.set(-0.3, 0, -0.2); this.offElbow.rotation.x = -1.35; } // reading
+    if (this.offArm && this.look.shield && this.look.shield !== true && !fighter.offPose) { this.offArm.rotation.z = -0.28; this.offElbow.rotation.x = Math.min(this.offElbow.rotation.x, -0.5); } // shield held clear of the body
     if (this.offArm && (this.look.carry || fighter.offPose)) {
       const o = fighter.offPose ?? [-1.15, 0, -0.35]; this.offArm.rotation.set(o[0], o[1], o[2]);
       if (this.offElbow) this.offElbow.rotation.x = this.look.carry ? -1.3 : -0.9;

@@ -1950,6 +1950,32 @@ Whatever is decided must stay consistent with §28.1–28.4.
 - **Body reference = proportions.** The supplied reference sets the lower-body silhouette (slim thighs, long slender calves, narrow ankles, proportional feet, smooth joints). It is used for proportion only, never identity, clothing or face.
 - **One model everywhere.** A character is one model (`Rig`): the same one in gameplay, dialogue, cutscenes and fights. Nothing is regenerated per scene. Every scene, script and cutscene keeps its storyboard: same staging, same lines, same shots.
 
+### 29.1b Owner design sheets (`docs/art/character-sheets/`): the current storyboard
+The four sheets in `docs/art/character-sheets/` are the character designs. The game follows them; any difference is listed below.
+- **Faces:** a round cranium tapering to a soft, narrower jaw and chin (`animeHead`), with brows, a small nose, a mouth and ears, and each character's eye color. **The eyes stay the master-prompt eyes**: large dark ovals with two highlights.
+- **The Lanterns** (Rook, Bas, Juno, Cal, Dagrun, Tamsin) wear a **gold stand collar** instead of the old scarf. Swords hang at the left hip. Bas wears steel gauntlets, Dagrun a buttoned navy coat, and Juno a pink baldric.
+- **The Pale Choir** wear closed **knight helms** with purple plumes and side drapes:
+  - **Acolytes and cantors:** white robes with a purple sash, gold-stitched hems and purple boots.
+  - **Bulwarks:** leather armor with a red strap, behind the purple tower shield.
+- **Bandits:** brown hair, leather jerkins with a red baldric, bracers, gloves and pouches.
+- **Clockwork Sentinel:** slim brass; **Bog Beast / Hask:** green armored golems.
+- **Guard:** the city's blue knee-length coat with a gold emblem, gloves, boots and a spear. **Smith:** leather armor, red gloves and a heraldic shield.
+- **Townsfolk:**
+  - **Keeper:** purple robe with a yellow sash.
+  - **Vendor:** brown tunic with a yellow sash.
+  - **Gossip** (orange hair) and **Wren** (white hair): purple dresses, both holding a scroll.
+  - **Cook:** a white robe, yellow sash and red belt.
+  - **Farmer:** a green vest and a kite shield.
+  - **Ness:** a green robe and a staff with a violet orb.
+  - **Kid:** a blue tunic and shorts.
+- **Others:** Lio (white bob, blue dress, satchel, lantern), Tamsin (no lute), Mirren (ponytail, brown dress, red belt), Ysolde (long orange hair, green tunic, spear), Moss (white hair in a bun, brown robe), the Herald (black bob, purple robe, yellow sash), Severin (white uniform, blue cape and boots), Corvina (white gown, gold embroidery), Brannoc (full plate, red belt).
+- **Deliberate differences:**
+  - **The Larkspur stranger** keeps a blank silhouette head and the wrapped infant. The sheet shows a face and a box, but the cold open depends on not seeing who he is. He wears the sheet's black outfit and brown boots.
+  - **Rook keeps the sword** (his whole moveset uses it). The sheet's glowing staff reads as his floating grimoire, which he keeps.
+- **Crowds and regular NPCs:**
+  - **The background crowd** (`runtime/crowd.js`) uses five archetypes from the sheets: villager (tunic and boots), woman in a long dress, elder in a robe with a yellow sash, laborer in leather, and child in tunic and shorts. Every passer-by has the sheets' head shape, the master eyes, a hairstyle (fringe, bob, long or beard), and knees that bend as they walk.
+  - **Regular NPCs** (full models, daily routines, no conversation; `zones.extras`): in Thornwick, a washerwoman at the laundry line, a woodcutter and a water-carrier; in Aurelin, a pilgrim at the chapel.
+
 ### 29.2 Character sheets (`data/sheets.js`)
 Every character has a sheet: **build**, **gait**, **idle**, and **outfit**.
 - **The head height is fixed** (`HEAD_Y`), so each build fits its body under the head: longer legs mean a shorter torso, never a different head.
