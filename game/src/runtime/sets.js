@@ -1052,10 +1052,14 @@ function buildRoom(scene, K, { prefix, half: [hx, hz], height = 4, wall, wainsco
   return {
     keep,
     /** Hide whichever walls stand between the camera and the room. */
-    cutaway(cam) {
+    cutaway(cam, focus) {
       if (!cam) return;
-      const p = cam.position;
-      walls.n.setEnabled(p.z < hz - 0.5); walls.s.setEnabled(p.z > -hz + 0.5); walls.w.setEnabled(p.x > -hx + 0.5); walls.e.setEnabled(p.x < hx - 0.5);
+      const p = cam.position, f = focus ?? { x: 0, z: 0 };
+      // A wall hides when the camera is beyond it, or when the camera sits well over on that wall's side of whoever it's watching.
+      walls.n.setEnabled(p.z < hz - 0.5 && !(p.z > f.z + 1.5 && p.z > hz - 3));
+      walls.s.setEnabled(p.z > -hz + 0.5 && !(p.z < f.z - 1.5 && p.z < -hz + 3));
+      walls.w.setEnabled(p.x > -hx + 0.5 && !(p.x < f.x - 1.5 && p.x < -hx + 3));
+      walls.e.setEnabled(p.x < hx - 0.5 && !(p.x > f.x + 1.5 && p.x > hx - 3));
     },
   };
 }
@@ -1117,7 +1121,7 @@ function buildCafe(scene, mobile) {
   const toonEnv = { lightDir: [-0.3, 1, -0.4], fogColor: "#141218", fogDensity: 0.002, sky: [1.08, 1.0, 0.98], ground: [0.86, 0.78, 0.8], rim: [1.0, 0.85, 0.8] };
   const self = {
     env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true,
-    update(dt, t) { room.cutaway(scene.activeCamera); cat.update(dt, self.mood ?? {}); fire.scaling.y = 0.85 + Math.sin(t * 11) * 0.15; },
+    update(dt, t) { room.cutaway(scene.activeCamera, self.mood?.player); cat.update(dt, self.mood ?? {}); fire.scaling.y = 0.85 + Math.sin(t * 11) * 0.15; },
   };
   return self;
 }
@@ -1144,6 +1148,7 @@ function buildHome(scene, mobile) {
   K.bake(room.keep);
   const env = { clear: "#141218", fog: "#141218", fogDensity: 0.004, hemi: [0.7, "#ffe6c8", "#4a3a30"], sun: [0.5, "#ffd8a8", [0.3, -1, 0.4]], warm: 0 };
   const toonEnv = { lightDir: [-0.3, 1, -0.4], fogColor: "#141218", fogDensity: 0.002, sky: [1.06, 0.98, 0.92], ground: [0.84, 0.76, 0.7], rim: [1.0, 0.82, 0.7] };
-  return { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true,
-    update(dt, t) { room.cutaway(scene.activeCamera); flame.scaling.y = 0.85 + Math.sin(t * 9) * 0.15; warm.intensity = 0.5 + Math.sin(t * 7) * 0.05; } };
+  const self = { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true,
+    update(dt, t) { room.cutaway(scene.activeCamera, self.mood?.player); flame.scaling.y = 0.85 + Math.sin(t * 9) * 0.15; warm.intensity = 0.5 + Math.sin(t * 7) * 0.05; } };
+  return self;
 }

@@ -582,7 +582,8 @@ export class StoryPlayer {
       for (const [id, a, sc] of entries) {
         if (id === "player" && this.stage.playerHidden) continue;
         if (keep.has(id) || a.hiddenActor || !a.pos) continue;
-        let block = Math.hypot(a.pos.x - P.x, a.pos.z - P.z) < 1.7 * sc; // right against the lens: a head filling the frame
+        const near = (this.currentShot.kind === "on" ? 2.4 : 1.7) * sc; // close-ups: nobody else gets that close to the lens
+        let block = Math.hypot(a.pos.x - P.x, a.pos.z - P.z) < near; // right against the lens: a head filling the frame
         for (let i = 0; i <= 10 && !block; i++) {
           const t = i / 11, y = P.y + (Q.y - P.y) * t;
           if (y < (a.pos.y ?? 0) || y > (a.pos.y ?? 0) + 2.05 * sc) continue;
