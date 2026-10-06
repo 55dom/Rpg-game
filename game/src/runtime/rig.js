@@ -22,6 +22,17 @@ const SWORD_TIP = 1.95, SWORD_HILT = 0.72;
  * Reshape a sphere into an anime head (GDD §29.1, the design sheets): the cranium stays round, the lower
  * half narrows toward a soft chin that sits a little lower and forward. `r` is the sphere's radius.
  */
+/**
+ * A rounded "box": an elliptic cylinder with the box's width and depth (no hard corners). Hair locks,
+ * fringes, helm parts and monster skulls use these instead of blocks.
+ */
+function softBox(name, { width = 1, height = 1, depth = 1 }, scene) {
+  const BB = B();
+  const m = BB.MeshBuilder.CreateCylinder(name, { height, diameter: 1, tessellation: 12 }, scene);
+  m.bakeTransformIntoVertices(BB.Matrix.Scaling(width, 1, depth));
+  return m;
+}
+
 export function animeHead(mesh, r, jaw = 0.32) {
   const BB = B(), P = mesh.getVerticesData(BB.VertexBuffer.PositionKind);
   for (let i = 0; i < P.length; i += 3) {
@@ -122,8 +133,8 @@ export const LOOKS = {
     head: "blank", hair: "crop", weapon: "none", carry: true, trail: "#000000" },
   severin: { poses: SEVERIN_POSES, scale: 1.02, skirt: 0.9, coat: "#f4f2f8", trim: "#d4ad4f", hairColor: "#ecd890", skin: "#f3dcc8",
     head: "face", hair: "swept", weapon: "needle", accent: "#d4ad4f", cape: "#2c4aa0", eyeColor: "#3a6ab0", trail: "#fff1b8" },
-  moss: { poses: ACOLYTE_POSES, scale: 0.9, skirt: 1.1, coat: "#6b4a2e", trim: "#8f7c58", hairColor: "#e4e4e8", skin: "#f0d0b4",
-    head: "face", hair: "bun", weapon: "broom", accent: "#b89a5a", stoop: 0.22, eyeColor: "#5a5a6a", trail: "#e8d6a0" },
+  moss: { poses: ACOLYTE_POSES, scale: 1.04, skirt: 1.1, coat: "#6b4a2e", trim: "#8f7c58", hairColor: "#e4e4e8", skin: "#e8c4a6",
+    head: "face", hair: "crop", beard: "#ecebe6", beardLong: true, wrinkles: true, weapon: "branch", accent: "#b89a5a", stoop: 0.24, eyeColor: "#5a5a6a", trail: "#e8d6a0" },
   herald: { poses: ACOLYTE_POSES, scale: 1.05, skirt: 1.15, coat: "#5a34a0", trim: "#e6c040", hairColor: "#16141c", skin: "#f0d0b4",
     head: "face", hair: "bob", weapon: "none", sash: true, eyeColor: "#3a2618", trail: "#d4ad4f" },
   juno: { poses: JUNO_POSES, scale: 0.93, skirt: 0.9, coat: "#2b3a5c", trim: "#c8414f", hairColor: "#b04a26", skin: "#f3d5bf",
@@ -234,14 +245,14 @@ export class Rig {
       } else if (L.hair === "crop") {
         cap.scaling.set(1.02, 0.86, 1); // close-cropped and flat on top
         cap.position.y = 0.04;
-        const fr = add(MB.CreateBox("cropFringe", { width: 0.28, height: 0.05, depth: 0.07 }, scene), this.head, 0, 0.2, 0.12, 0); // a short fringe, as on the sheets
+        const fr = add(softBox("cropFringe", { width: 0.28, height: 0.05, depth: 0.07 }, scene), this.head, 0, 0.2, 0.12, 0); // a short fringe, as on the sheets
         fr.rotation.x = 0.85; fr.material = dark;
       } else if (L.hair === "bob") { // chin-length, straight fringe
         // The back of the bob sits behind the face; two side locks frame the cheeks down to the jaw; the fringe stays above the brows.
         const back = add(MB.CreateSphere("bob", { diameter: 0.52, segments: 10 }, scene), this.head, 0, -0.02, -0.1, 0);
         back.scaling.set(1.06, 0.92, 0.85); back.material = dark;
-        for (const sx of [-1, 1]) { const lock = add(MB.CreateBox("bobLock", { width: 0.07, height: 0.3, depth: 0.2 }, scene), this.head, sx * 0.215, -0.07, 0.03, 0); lock.rotation.z = sx * 0.08; lock.material = dark; }
-        const fringe = add(MB.CreateBox("bobFringe", { width: 0.34, height: 0.06, depth: 0.09 }, scene), this.head, 0, 0.19, 0.15, 0);
+        for (const sx of [-1, 1]) { const lock = add(softBox("bobLock", { width: 0.07, height: 0.3, depth: 0.2 }, scene), this.head, sx * 0.215, -0.07, 0.03, 0); lock.rotation.z = sx * 0.08; lock.material = dark; }
+        const fringe = add(softBox("bobFringe", { width: 0.34, height: 0.06, depth: 0.09 }, scene), this.head, 0, 0.19, 0.15, 0);
         fringe.rotation.x = 0.7; fringe.material = dark;
       } else if (L.hair === "bun") { // pulled back into a bun
         cap.scaling.set(1.0, 0.9, 1.0);
@@ -250,7 +261,7 @@ export class Rig {
         const tie = add(MB.CreateSphere("hairTie", { diameter: 0.08, segments: 6 }, scene), this.head, 0, 0.1, -0.24, 0.015); tie.material = accent;
         const tail = add(MB.CreateCapsule("ponyTail", { height: 0.4, radius: 0.07, tessellation: 8 }, scene), this.head, 0, -0.06, -0.3, 0.02);
         tail.rotation.x = 0.35; tail.material = dark; this.hairTail = tail;
-        const bang = add(MB.CreateBox("bangs", { width: 0.34, height: 0.09, depth: 0.1 }, scene), this.head, 0, 0.16, 0.15, 0); bang.rotation.x = 0.5; bang.material = dark;
+        const bang = add(softBox("bangs", { width: 0.34, height: 0.09, depth: 0.1 }, scene), this.head, 0, 0.16, 0.15, 0); bang.rotation.x = 0.5; bang.material = dark;
       } else if (L.hair === "sidetail") {
         const tie = add(MB.CreateSphere("hairTie", { diameter: 0.09, segments: 6 }, scene), this.head, 0.2, 0.08, -0.12, 0.015);
         tie.material = accent;
@@ -258,7 +269,7 @@ export class Rig {
         tail.rotation.z = -0.25;
         tail.material = dark;
         this.hairTail = tail;
-        const bang = add(MB.CreateBox("bangs", { width: 0.34, height: 0.1, depth: 0.12 }, scene), this.head, 0.02, 0.17, 0.15, 0);
+        const bang = add(softBox("bangs", { width: 0.34, height: 0.1, depth: 0.12 }, scene), this.head, 0.02, 0.17, 0.15, 0);
         bang.rotation.set(0.5, 0, -0.12);
         bang.material = dark;
       }
@@ -271,8 +282,8 @@ export class Rig {
       const steelH = M("helm", L.helm ?? "#b4aec4"), slot = M("visor", "#16141c"), plume = dark;
       const shellH = add(MB.CreateSphere("helmShell", { diameter: 0.5, segments: 10 }, scene), this.head, 0, 0.02, 0);
       shellH.scaling.set(1, 1.08, 1.06); shellH.material = steelH;
-      const guard = add(MB.CreateBox("helmJaw", { width: 0.32, height: 0.16, depth: 0.16 }, scene), this.head, 0, -0.14, 0.12); guard.material = steelH;
-      const visor = add(MB.CreateBox("helmVisor", { width: 0.34, height: 0.045, depth: 0.05 }, scene), this.head, 0, 0.0, 0.25, 0); visor.material = slot;
+      const guard = add(softBox("helmJaw", { width: 0.32, height: 0.16, depth: 0.16 }, scene), this.head, 0, -0.14, 0.12); guard.material = steelH;
+      const visor = add(softBox("helmVisor", { width: 0.34, height: 0.045, depth: 0.05 }, scene), this.head, 0, 0.0, 0.25, 0); visor.material = slot;
       if (L.menace) { // the Choir's fanatics: red light burning through the visor, horns swept back from the helm
         const burn = glow(scene, `${id}-visorGlow`, "#ff2a3a");
         for (const sx of [-1, 1]) {
@@ -281,15 +292,15 @@ export class Rig {
           horn.rotation.set(-1.0, 0, -sx * 0.55); horn.material = M("helmHorn", "#2a2030");
         }
       }
-      const vslot = add(MB.CreateBox("helmSlot", { width: 0.035, height: 0.14, depth: 0.05 }, scene), this.head, 0, -0.08, 0.2, 0); vslot.material = slot;
+      const vslot = add(softBox("helmSlot", { width: 0.035, height: 0.14, depth: 0.05 }, scene), this.head, 0, -0.08, 0.2, 0); vslot.material = slot;
       // A crest of blades along the top, and a plume falling behind in ragged strands (not a solid block).
       for (let i = 0; i < 4; i++) { const b = add(MB.CreateCylinder("crestBlade", { height: 0.16 - i * 0.02, diameterTop: 0, diameterBottom: 0.06, tessellation: 4 }, scene), this.head, 0, 0.29 - i * 0.02, 0.1 - i * 0.1, 0.012); b.rotation.x = -0.5; b.material = steelH; }
       for (let i = 0; i < 5; i++) {
-        const strand = add(MB.CreateBox("plumeStrand", { width: 0.035, height: 0.3 + (i % 3) * 0.08, depth: 0.035 }, scene), this.head, -0.08 + i * 0.04, 0.12 - (i % 2) * 0.04, -0.27, 0.012);
+        const strand = add(softBox("plumeStrand", { width: 0.035, height: 0.3 + (i % 3) * 0.08, depth: 0.035 }, scene), this.head, -0.08 + i * 0.04, 0.12 - (i % 2) * 0.04, -0.27, 0.012);
         strand.rotation.set(0.25, 0, (i - 2) * 0.08); strand.material = plume;
       }
       for (const sx of [-1, 1]) { // side drapes and rivets
-        const drape = add(MB.CreateBox("helmDrape", { width: 0.04, height: 0.3, depth: 0.2 }, scene), this.head, sx * 0.25, -0.12, -0.08, 0.015); drape.material = plume;
+        const drape = add(softBox("helmDrape", { width: 0.04, height: 0.3, depth: 0.2 }, scene), this.head, sx * 0.25, -0.12, -0.08, 0.015); drape.material = plume;
         const rivet = add(MB.CreateSphere("rivet", { diameter: 0.06, segments: 5 }, scene), this.head, sx * 0.25, 0.05, 0.04, 0); rivet.material = M("rivet", "#c9a24a");
       }
       const scarfN = add(MB.CreateTorus("neckScarf", { diameter: 0.24, thickness: 0.08, tessellation: 8 }, scene), this.head, 0, -0.27, -0.01, 0.02); scarfN.material = plume;
@@ -297,8 +308,8 @@ export class Rig {
       const hide = dark, bone = M("fang", "#e8dfc4"), maw = M("maw", "#2a0a0a"), horn = M("horn", "#2a2620");
       const skull = add(MB.CreateSphere("head", { diameter: 0.56, segments: 10 }, scene), this.head, 0, -0.04, 0.06);
       skull.scaling.set(1.15, 0.78, 1.05); skull.material = hide;
-      const brow = add(MB.CreateBox("browRidge", { width: 0.5, height: 0.08, depth: 0.14 }, scene), this.head, 0, 0.06, 0.27); brow.rotation.x = 0.35; brow.material = hide;
-      const jaw = add(MB.CreateBox("jaw", { width: 0.44, height: 0.14, depth: 0.32 }, scene), this.head, 0, -0.22, 0.2); jaw.rotation.x = 0.18; jaw.material = hide;
+      const brow = add(softBox("browRidge", { width: 0.5, height: 0.08, depth: 0.14 }, scene), this.head, 0, 0.06, 0.27); brow.rotation.x = 0.35; brow.material = hide;
+      const jaw = add(softBox("jaw", { width: 0.44, height: 0.14, depth: 0.32 }, scene), this.head, 0, -0.22, 0.2); jaw.rotation.x = 0.18; jaw.material = hide;
       const mouth = add(MB.CreateBox("mawGap", { width: 0.4, height: 0.06, depth: 0.04 }, scene), this.head, 0, -0.15, 0.36, 0); mouth.material = maw;
       for (let i = 0; i < 6; i++) { // upper and lower fangs, the outer ones longest
         const x = -0.16 + i * 0.064, long = i === 0 || i === 5 ? 1.6 : i === 1 || i === 4 ? 1 : 0.7;
@@ -319,16 +330,16 @@ export class Rig {
       }
     } else if (L.head === "skull") { // the Clockwork Sentinel: a brass skull with a hinged jaw, deep red eyes and iron horns
       const brass = dark, iron = M("iron", "#2a2622"), eyeMat = glow(scene, `${id}-eyes`, L.eyes);
-      const cran = add(MB.CreateBox("cranium", { width: 0.4, height: 0.34, depth: 0.42 }, scene), this.head, 0, 0.04, 0); cran.material = brass;
-      const brow = add(MB.CreateBox("browPlate", { width: 0.44, height: 0.07, depth: 0.12 }, scene), this.head, 0, 0.11, 0.18); brow.rotation.x = 0.35; brow.material = iron;
+      const cran = add(softBox("cranium", { width: 0.4, height: 0.34, depth: 0.42 }, scene), this.head, 0, 0.04, 0); cran.material = brass;
+      const brow = add(softBox("browPlate", { width: 0.44, height: 0.07, depth: 0.12 }, scene), this.head, 0, 0.11, 0.18); brow.rotation.x = 0.35; brow.material = iron;
       for (const sx of [-1, 1]) {
-        const sock = add(MB.CreateBox("socket", { width: 0.12, height: 0.07, depth: 0.04 }, scene), this.head, sx * 0.1, 0.02, 0.205, 0); sock.material = iron;
+        const sock = add(softBox("socket", { width: 0.12, height: 0.07, depth: 0.04 }, scene), this.head, sx * 0.1, 0.02, 0.205, 0); sock.material = iron;
         const eye = add(MB.CreateBox("eye", { width: 0.09, height: 0.03, depth: 0.03 }, scene), this.head, sx * 0.1, 0.02, 0.22, 0); eye.rotation.z = sx * 0.3; eye.material = eyeMat;
         const h = add(MB.CreateCylinder("horn", { height: 0.3, diameterTop: 0, diameterBottom: 0.08, tessellation: 5 }, scene), this.head, sx * 0.15, 0.27, -0.04, 0.012);
         h.rotation.z = -sx * 0.35; h.material = iron;
       }
       const spike = add(MB.CreateCylinder("crest", { height: 0.26, diameterTop: 0, diameterBottom: 0.08, tessellation: 5 }, scene), this.head, 0, 0.3, 0.02, 0.012); spike.material = iron;
-      const jaw = add(MB.CreateBox("jaw", { width: 0.32, height: 0.11, depth: 0.3 }, scene), this.head, 0, -0.18, 0.04); jaw.material = brass;
+      const jaw = add(softBox("jaw", { width: 0.32, height: 0.11, depth: 0.3 }, scene), this.head, 0, -0.18, 0.04); jaw.material = brass;
       const grille = add(MB.CreateBox("grille", { width: 0.26, height: 0.06, depth: 0.03 }, scene), this.head, 0, -0.12, 0.215, 0); grille.material = iron;
       for (let i = 0; i < 5; i++) { const t = add(MB.CreateBox("tooth", { width: 0.03, height: 0.06, depth: 0.03 }, scene), this.head, -0.1 + i * 0.05, -0.12, 0.235, 0); t.material = M("toothMetal", "#d9c48a"); }
     } else {
@@ -347,6 +358,17 @@ export class Rig {
     if (L.beard && L.head === "face") { // part of the face: no ink line of its own (it drew a ring under the chin)
       const beard = add(MB.CreateSphere("beard", { diameter: 0.3, segments: 7 }, scene), this.head, 0, -0.12, 0.1, 0);
       beard.scaling.set(1.05, 0.72, 0.75); beard.material = M("beard", L.beard);
+      if (L.beardLong) { // an old man's beard, down to the chest, and a moustache
+        const long = add(MB.CreateCylinder("beardLong", { height: 0.34, diameterTop: 0.24, diameterBottom: 0.06, tessellation: 10 }, scene), this.head, 0, -0.3, 0.13, 0.015);
+        long.rotation.x = 0.25; long.material = beard.material;
+        for (const sx of [-1, 1]) { const mo = add(MB.CreateCylinder("moustache", { height: 0.12, diameterTop: 0.05, diameterBottom: 0.02, tessellation: 6 }, scene), this.head, sx * 0.05, -0.07, 0.215, 0); mo.rotation.z = sx * 1.9; mo.material = beard.material; }
+        for (const sx of [-1, 1]) { const b = add(MB.CreateCylinder("bushyBrow", { height: 0.1, diameter: 0.035, tessellation: 6 }, scene), this.head, sx * 0.088, 0.125, 0.2, 0); b.rotation.z = Math.PI / 2 + sx * 0.25; b.material = beard.material; }
+      }
+    }
+    if (L.wrinkles && L.head === "face") { // age lines under the eyes and across the brow
+      const line = M("wrinkle", "#a07a62");
+      for (const sx of [-1, 1]) { const w = add(MB.CreateCylinder("wrinkle", { height: 0.06, diameter: 0.008, tessellation: 4 }, scene), this.head, sx * 0.09, -0.03, 0.21, 0); w.rotation.z = Math.PI / 2 + sx * 0.3; w.material = line; }
+      const fw = add(MB.CreateCylinder("browLine", { height: 0.12, diameter: 0.007, tessellation: 4 }, scene), this.head, 0, 0.165, 0.19, 0); fw.rotation.set(-0.6, 0, Math.PI / 2); fw.material = line;
     }
     const T = this.T, D = this.build.depth, front = (r) => r * D + 0.02;
     if (L.sash) { // a cloth sash across the chest, lying on the body instead of cutting through it
@@ -440,6 +462,24 @@ export class Rig {
       tipZ = 0.64 + len * 0.8 + 0.3; hiltZ = 0.64 + len * 0.3;
     } else if (L.weapon === "none") {
       tipZ = 0.75; hiltZ = 0.6;
+    } else if (L.weapon === "branch") { // a great gnarled tree-branch staff, taller than its owner, knotted at the top
+      const wood = M("branch", "#5a3e26"), knot = M("branchKnot", "#3e2a1a"), leaf = M("leaf", "#6a8a3a");
+      const segs = [[0.0, 0.5, 0.11, 0.08, 0.06], [0.5, 0.95, 0.09, -0.07, 0.05], [0.95, 1.4, 0.085, 0.06, -0.06], [1.4, 1.8, 0.1, -0.05, 0.04]];
+      let x = 0, y = 0;
+      for (const [z0, z1, d, dx, dy] of segs) { // each length of the branch bends a little
+        const seg = add(MB.CreateCylinder("branchSeg", { height: z1 - z0 + 0.04, diameterTop: d * 0.9, diameterBottom: d, tessellation: 7 }, scene), this.shoulder, x + dx / 2, y + dy / 2, 0.3 + (z0 + z1) / 2, 0.015);
+        seg.rotation.set(Math.PI / 2, 0, 0); seg.rotation.y = dx * 1.5; seg.rotation.z = dy * 1.5; seg.material = wood;
+        x += dx; y += dy;
+        const k = add(MB.CreateSphere("branchKnot", { diameter: d * 1.35, segments: 5 }, scene), this.shoulder, x, y, 0.3 + z1, 0.012); k.material = knot;
+      }
+      // The crown: a gnarled knob with forked twigs and a few leaves still clinging on.
+      const crown = add(MB.CreateSphere("branchCrown", { diameter: 0.2, segments: 6 }, scene), this.shoulder, x, y, 2.18, 0.015); crown.scaling.set(1, 0.8, 1.3); crown.material = knot;
+      for (const [tx, ty, rx, rz] of [[0.08, 0.05, 0.6, -0.5], [-0.08, 0.02, 0.5, 0.6], [0.0, -0.08, 0.9, 0.1]]) {
+        const tw = add(MB.CreateCylinder("twig", { height: 0.3, diameterTop: 0.012, diameterBottom: 0.04, tessellation: 5 }, scene), this.shoulder, x + tx, y + ty, 2.32, 0.01);
+        tw.rotation.set(Math.PI / 2 - rx, 0, rz); tw.material = wood;
+        const lf = add(MB.CreateSphere("leaf", { diameter: 0.08, segments: 4 }, scene), this.shoulder, x + tx * 2.2, y + ty * 2.2, 2.44, 0); lf.scaling.set(1, 0.4, 1.4); lf.material = leaf;
+      }
+      tipZ = 2.4; hiltZ = 0.6;
     } else if (L.weapon === "broom") { // Brother Moss's broom: a plain handle and a straw head
       const shaft = add(MB.CreateCylinder("broom", { height: 1.25, diameter: 0.045, tessellation: 6 }, scene), this.shoulder, 0, 0, 0.72, 0.015);
       shaft.rotation.x = Math.PI / 2; shaft.material = M("broomShaft", "#7a5a38");
@@ -465,7 +505,7 @@ export class Rig {
     for (const m of this.meshes.slice(weaponStart)) if (m.parent === this.shoulder) { m.parent = this.weaponNode; m.position.z -= GRIP; }
     this.tipNode = new BB.TransformNode(`${id}-tip`, scene); this.tipNode.parent = this.weaponNode; this.tipNode.position.z = tipZ - GRIP;
     this.hiltNode = new BB.TransformNode(`${id}-hilt`, scene); this.hiltNode.parent = this.weaponNode; this.hiltNode.position.z = hiltZ - GRIP;
-    this.weaponKind = ["sword", "blade", "needle"].includes(L.weapon) || !L.weapon ? "blade" : ["staff", "spear", "broom", "rod"].includes(L.weapon) ? "pole" : "none";
+    this.weaponKind = ["sword", "blade", "needle"].includes(L.weapon) || !L.weapon ? "blade" : ["staff", "spear", "broom", "rod", "branch"].includes(L.weapon) ? "pole" : "none";
     if (this.weaponKind === "blade" && this.legs) { // the scabbard: long swords across the back, rapiers at the hip
       const needle = L.weapon === "needle", len = (needle ? 1.05 : 1) * (SWORD_TIP - SWORD_HILT);
       const sheath = new BB.TransformNode(`${id}-sheath`, scene);
@@ -860,7 +900,7 @@ export class Rig {
 Rig.view = null;        // the camera's ground position, set by the game each frame
 Rig.outlineRange = 30;  // metres
 
-const RELAXED = [1.45, 0.3, 0.15];
+const RELAXED = [1.5, -0.12, 0.05]; // hanging at the side, a little away from the body (never across the coat)
 const CRADLE = [0.95, -0.55, 0];
 const mix = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k)];
 const lerpAngleSafe = (a, b, t) => a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * t;

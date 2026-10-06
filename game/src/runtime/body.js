@@ -164,7 +164,8 @@ export function buildBody(rig, scene, id, L, kind, add, skin) {
   // ---- arms ----
   const ar = Bd.arm, handS = 0.1 * Bd.hand;
   const sleeve = O.sleeves ?? "long";
-  const upperMat = top, foreMat = sleeve === "long" ? top : skin;
+  // Sleeves are a shade darker than the body of the garment, so an arm in front of the coat never disappears into it.
+  const sleeveMat = M(darken(O.top, 0.8)), upperMat = sleeveMat, foreMat = sleeve === "long" ? sleeveMat : skin;
   const gloveMat = O.gloves ? M(O.gloves) : null;
   // Weapon arm: the shoulder pivot points the arm along +Z (pose data rotates it).
   rig.shoulder = node("shoulder", rig.body, sw - ar * 0.45, T - 0.08, 0.02);

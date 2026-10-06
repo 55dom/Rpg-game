@@ -101,7 +101,7 @@ export const SHEETS = Object.freeze({
   // ---- The Tower ------------------------------------------------------------------------------------
   moss: { build: "frail", gait: "old", idle: "tired",
     outfit: { top: "#6b4a2e", hem: "ankle", sleeves: "long", legs: "#4a3a2a", boots: "shoes", bootColor: "#3a2a1a",
-      belt: "#8f7c58", grime: 0.35, patches: 2 } },
+      belt: "#8f7c58", satchel: "#5a4232", grime: 0.4, patches: 3 } },
   stranger: { build: "slim", gait: "soldier", idle: "still",
     outfit: { top: "#141218", hem: "thigh", sleeves: "long", legs: "#141218", boots: "tall", bootColor: "#5a3a22", belt: "#3a2a1a", grime: 0 } },
   // ---- The Pale Choir ---------------------------------------------------------------------------------
