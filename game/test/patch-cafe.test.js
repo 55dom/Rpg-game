@@ -109,3 +109,11 @@ test("training dummies: endless health, never die, stay on their posts, and ever
   assert.equal(d.combatant.health.current, d.combatant.health.max);
   assert.ok(Math.hypot(d.pos.x, d.pos.z) < 1e-6, "still on its post");
 });
+
+test("every exit can actually be walked into (walls don't stop you short of the door)", () => {
+  for (const z of Object.values(ZONES)) for (const e of z.exits) {
+    const [x0, z0, x1, z1] = e.rect, c = { x: (x0 + x1) / 2, z: (z0 + z1) / 2 };
+    const p = constrain({ ...c }, 0.45, z.bounds);
+    assert.ok(inRect(p, e.rect), `${z.id}: exit ${e.id} can't be reached`);
+  }
+});

@@ -299,7 +299,7 @@ export const ZONES = {
       { id: "cakeCase", x: 3.6, z: 2.1, show: "$Q_CAKE >= 1 and $Q_CAKE < 999 and not $CAKE_CASE", node: "W_CakeCase", label: "Look at the empty cake case" },
     ],
     intro: { node: "W_CafeIntro", when: "not $CAKE_INTRO" },
-    exits: [{ id: "door", rect: [-0.8, -5.75, 0.8, -5.4], to: "aurelin", spawn: "cafe", label: "Back out to the Lowmarket" }],
+    exits: [{ id: "door", rect: [-0.9, -5.75, 0.9, -5.0], to: "aurelin", spawn: "cafe", label: "Back out to the Lowmarket" }],
     arrivals: { aurelin: { x: 0, z: -4.4, yaw: 0 } },
   },
   home: {
@@ -311,7 +311,7 @@ export const ZONES = {
     spawn: { x: 0, z: -2.6, yaw: 0 },
     cast: [{ id: "hetty", look: "hetty", x: 2.2, z: 2.6, yaw: 0, node: "W_Hetty",
       routine: { steps: [{ do: "work", at: [2.3, 2.6], face: 0, anim: "stir", dur: [10, 14] }, { do: "work", at: [-1.2, 3.2], face: 0, anim: "work", dur: [6, 8] }, { do: "work", at: [1.6, -0.5], face: 0, anim: "wipe", dur: [5, 7] }] } }],
-    exits: [{ id: "door", rect: [-0.8, -3.75, 0.8, -3.4], to: "aurelin", spawn: "home", label: "Back out to the street" }],
+    exits: [{ id: "door", rect: [-0.9, -3.75, 0.9, -3.0], to: "aurelin", spawn: "home", label: "Back out to the street" }],
     arrivals: { aurelin: { x: 0, z: -2.6, yaw: 0 } },
   },
 };
