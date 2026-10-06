@@ -330,7 +330,8 @@ export class Rig {
         const h = add(MB.CreateCylinder("horn", { height: 0.34, diameterTop: 0, diameterBottom: 0.1, tessellation: 6 }, scene), this.head, sx * 0.22, 0.2, -0.02, 0.015);
         h.rotation.set(-0.5, 0, -sx * 0.7); h.material = horn;
       }
-      this._drool(scene, id, [[-0.12, -0.2, 0.36], [0.05, -0.21, 0.37], [0.15, -0.19, 0.35]]);
+      this._drool(scene, id, [[-0.12, -0.2, 0.36], [0.05, -0.21, 0.37], [0.15, -0.19, 0.35]], 0.07);
+      this._goo(scene, id);
       for (const [x, z] of [[-0.12, -0.18], [0.14, -0.2], [0, -0.26]]) { // moss on the back of the skull
         const t = add(MB.CreateCylinder("moss", { height: 0.22, diameterTop: 0, diameterBottom: 0.16, tessellation: 5 }, scene), this.head, x, 0.12, z, 0.015);
         t.rotation.x = -0.7; t.material = M("moss", "#4f6a2a");
@@ -349,7 +350,7 @@ export class Rig {
       const jaw = add(softBox("jaw", { width: 0.32, height: 0.11, depth: 0.3 }, scene), this.head, 0, -0.18, 0.04); jaw.material = brass;
       const grille = add(MB.CreateBox("grille", { width: 0.26, height: 0.06, depth: 0.03 }, scene), this.head, 0, -0.12, 0.215, 0); grille.material = iron;
       for (let i = 0; i < 5; i++) { const t = add(MB.CreateBox("tooth", { width: 0.03, height: 0.06, depth: 0.03 }, scene), this.head, -0.1 + i * 0.05, -0.12, 0.235, 0); t.material = M("toothMetal", "#d9c48a"); }
-      this._drool(scene, id, [[-0.07, -0.16, 0.24], [0.06, -0.16, 0.24]]); // oil-black ooze seeping through the teeth
+      this._drool(scene, id, [[-0.07, -0.16, 0.24], [0.06, -0.16, 0.24]], 0.06); // ooze seeping through the teeth
     } else {
       const hood = add(MB.CreateCylinder("hood", { height: 0.7, diameterTop: 0, diameterBottom: 0.62, tessellation: 10 }, scene), this.head, 0, 0.12, -0.04);
       hood.material = dark;
@@ -666,6 +667,7 @@ export class Rig {
     // Tinted outlines: each part's line is its own color, darkened toward blue (not flat black).
     for (const m of this.meshes) if (m.renderOutline && m.material?.toonHex) m.outlineColor = lineOf(m.material.toonHex);
     skinBake(this, scene, id); // every cel-shaded part becomes one skinned mesh (two with the face)
+    if (this.gooPending) this._gooBuild();
     this._bakeParts();          // what's left (glowing bits) merges per node and material
 
     this.flash = 0;
@@ -677,7 +679,7 @@ export class Rig {
    * Drool hanging from a monster's mouth: greenish-brown, glossy strands that stretch, let a drop fall, and
    * snap back, each on its own rhythm. Kept as separate little meshes so they can move.
    */
-  _drool(scene, id, points) {
+  _drool(scene, id, points, maxLen = 0.3) {
     const BB = B(), MB = BB.MeshBuilder;
     const mat = new BB.StandardMaterial(`${id}-drool`, scene);
     mat.diffuseColor = BB.Color3.FromHexString("#5e5a22"); mat.emissiveColor = BB.Color3.FromHexString("#262410");
@@ -690,8 +692,60 @@ export class Rig {
       const dropN = new BB.TransformNode(`${id}-droolDropN${i}`, scene); dropN.parent = n;
       const drop = MB.CreateSphere(`${id}-droolDrop${i}`, { diameter: 0.065, segments: 6 }, scene);
       drop.parent = dropN; drop.scaling.y = 1.4; drop.material = mat; drop.isPickable = false; drop.metadata = { noGlow: true };
-      return { strand, dropN, drop, t: Math.random() * 3, period: 2.2 + Math.random() * 1.4, max: 0.18 + Math.random() * 0.22 };
+      return { strand, dropN, drop, t: Math.random() * 3, period: 2.2 + Math.random() * 1.4, max: maxLen * (0.6 + Math.random() * 0.4) };
     });
+  }
+
+  /**
+   * Saliva running down the body (bog brutes): glossy streaks painted onto the chest surface from the chin
+   * down, following the torso's curve, with blobs of goo sliding down them and a wet shimmer pulsing over
+   * them. It sits on the body, never in the air in front of it.
+   */
+  _goo(scene, id) { this.gooPending = { scene, id }; } // built after the body is baked, so it can sit exactly on the skin
+
+  /** The body's front surface (z) at body-local (x, y), read from the baked body mesh's vertices. */
+  _surfaceZ(x, y) {
+    const core = this.skinned?.find((m) => m.name.endsWith("-body"));
+    if (!core) return null;
+    const P = core.getVerticesData(B().VertexBuffer.PositionKind), hip = this.hipY;
+    let best = null;
+    for (let r = 0.03; r <= 0.12 && best === null; r += 0.03) {
+      for (let i = 0; i < P.length; i += 3) {
+        if (Math.abs(P[i] - x) < r && Math.abs(P[i + 1] - hip - y) < r && P[i + 2] > 0 && (best === null || P[i + 2] > best)) best = P[i + 2];
+      }
+    }
+    return best;
+  }
+
+  _gooBuild() {
+    const { scene, id } = this.gooPending; this.gooPending = null;
+    const BB = B(), MB = BB.MeshBuilder, T = this.T;
+    const mat = new BB.StandardMaterial(`${id}-goo`, scene);
+    mat.diffuseColor = BB.Color3.FromHexString("#6a6424"); mat.emissiveColor = BB.Color3.FromHexString("#2a2810");
+    mat.specularColor = BB.Color3.FromHexString("#eef4c0"); mat.specularPower = 64;
+    this.gooMat = mat;
+    const streaks = [[-0.08, 0.97, 0.5], [0.04, 0.99, 0.4], [0.13, 0.93, 0.6]]; // x, top and bottom as fractions of T
+    this.goo = [];
+    for (const [x, top, bot] of streaks) {
+      const pts = [];
+      for (let i = 0; i <= 8; i++) {
+        const y = T * (top - (top - bot) * (i / 8)), xx = x + Math.sin(i * 1.3 + x * 20) * 0.012;
+        const z = this._surfaceZ(xx, y);
+        if (z !== null) pts.push(new BB.Vector3(xx, y, z + 0.006));
+      }
+      if (pts.length < 3) continue;
+      // A ribbon of goo laid on the skin, thicker where it pools under the jaw.
+      const n = pts.length - 1;
+      const tube = MB.CreateTube(`${id}-gooStreak`, { path: pts, radiusFunction: (i) => 0.028 * (1 - (i / n) * 0.55), tessellation: 8, cap: BB.Mesh.CAP_ALL }, scene);
+      tube.parent = this.body; tube.material = mat; tube.isPickable = false; tube.metadata = { noGlow: true };
+      tube.renderOutline = true; tube.outlineWidth = 0.008; tube.outlineColor = BB.Color3.FromHexString("#1a1a08"); // inked like the rest of the drawing
+      for (let b = 0; b < 2; b++) { // blobs that slide down the streak
+        const bn = new BB.TransformNode(`${id}-gooBlobN`, scene); bn.parent = this.body;
+        const blob = MB.CreateSphere(`${id}-gooBlob`, { diameter: 0.06, segments: 6 }, scene);
+        blob.parent = bn; blob.material = mat; blob.isPickable = false; blob.metadata = { noGlow: true };
+        this.goo.push({ n: bn, blob, pts, t: b * 0.5 + Math.random() * 0.2, speed: 0.22 + Math.random() * 0.15 });
+      }
+    }
   }
 
   /** Pose for the current ability frame (fractional, for smooth motion between logic frames). */
@@ -802,12 +856,23 @@ export class Rig {
     if (this.beastTail) this.beastTail.rotation.x = -2.1 + Math.sin(this.time * 10) * 0.25;
     if (this.beastLegs) for (const hip of this.beastLegs) hip.rotation.x = Math.sin(this.time * 16 + hip.phase) * 0.7 * run;
     if (this.halo) { this.halo.rotation.y += dt * 2; }
+    if (this.goo) { // goo blobs creep down their streaks, swelling as they go, then start again under the jaw
+      for (const g of this.goo) {
+        g.t = (g.t + dt * g.speed) % 1;
+        const f = g.t * (g.pts.length - 1), i = Math.min(g.pts.length - 2, Math.floor(f)), u = f - i;
+        const a = g.pts[i], b = g.pts[i + 1];
+        g.n.position.set(a.x + (b.x - a.x) * u, a.y + (b.y - a.y) * u, a.z + (b.z - a.z) * u + 0.004);
+        const sw = 0.7 + g.t * 0.6; g.blob.scaling.set(sw, sw * 1.6, 0.6);
+      }
+      const pulse = 0.5 + 0.5 * Math.sin(this.time * 3.1);
+      this.gooMat.emissiveColor.set(0.16 + pulse * 0.06, 0.15 + pulse * 0.06, 0.06); // a wet shimmer
+    }
     if (this.drool) for (const d of this.drool) { // stretch… stretch… a drop lets go and falls; the strand snaps back
       d.t = (d.t + dt) % d.period;
       const k = d.t / d.period, grow = Math.min(1, k / 0.75), len = 0.03 + d.max * grow * grow;
       d.strand.scaling.y = len;
       if (k < 0.75) { d.dropN.position.y = -len; d.drop.scaling.setAll(0.6 + grow * 0.6); d.drop.scaling.y *= 1.4; }
-      else { const f = (k - 0.75) / 0.25; d.dropN.position.y = -len - f * f * 1.6; d.drop.scaling.setAll(1.2 * (1 - f * 0.5)); }
+      else { const f = (k - 0.75) / 0.25; d.dropN.position.y = -len - f * f * 0.12; d.drop.scaling.setAll(1.2 * (1 - f)); } // it lands on the chest and joins the goo
       d.drop.setEnabled(fighter.alive || k < 0.75);
     }
     if (this.gear) this.gear.rotation.y += dt * (fighter.current?.id === "Gearspin" ? 9 : 0.8);
