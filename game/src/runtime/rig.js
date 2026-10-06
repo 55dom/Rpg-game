@@ -446,13 +446,25 @@ export class Rig {
     };
     const weaponStart = this.meshes.length; // everything added from here to the tip is the weapon
     let tipZ = SWORD_TIP, hiltZ = SWORD_HILT + 0.15;
-    if (L.weapon === "claw") { // a clawed hand: a knuckled fist and long hooked talons
-      const claw = add(MB.CreateSphere("claw", { diameter: 0.2, segments: 7 }, scene), this.shoulder, 0, 0, 0.64, 0.02);
-      claw.scaling.set(1.1, 0.75, 1.1); claw.material = accent;
-      for (const x of [-0.1, 0, 0.1]) {
-        const talon = add(MB.CreateCylinder("talon", { height: 0.46, diameterTop: 0, diameterBottom: 0.08, tessellation: 5 }, scene), this.shoulder, x, -0.06, 0.98, 0.015);
-        talon.rotation.x = Math.PI / 2 + 0.35; talon.material = M("talon", L.talon ?? "#e7e1cf");
+    // A monster hand to match its feet: a broad palm, webbing between three splayed fingers, hooked claws.
+    // Fingers run along the hand node's +z.
+    const webHand = (parent, x, y, z, rotX, k) => {
+      const hand = new BB.TransformNode(`${id}-webHand`, scene);
+      hand.parent = parent; hand.position.set(x, y, z); hand.rotation.x = rotX; hand.scaling.setAll(k);
+      const skinM = L.gear ? accent : skin, webM = M("handWeb", L.gear ? "#3a3022" : "#55602e"), clawM = M("talon", L.talon ?? "#e7e1cf");
+      const palm = add(MB.CreateSphere("palm", { diameter: 0.2, segments: 7 }, scene), hand, 0, 0, 0, 0.02);
+      palm.scaling.set(1.15, 0.6, 1.05); palm.material = skinM;
+      const web = add(MB.CreateCylinder("handWeb", { height: 0.014, diameter: 0.5, tessellation: 12, arc: 0.36 }, scene), hand, 0, 0, 0.02);
+      web.rotation.y = -Math.PI / 2 - Math.PI * 0.36; web.material = webM;
+      for (const [ang, len] of [[-0.5, 0.2], [0, 0.24], [0.5, 0.2]]) {
+        const f = add(MB.CreateCylinder("finger", { height: len, diameterTop: 0.04, diameterBottom: 0.065, tessellation: 6 }, scene), hand, Math.sin(ang) * (0.06 + len * 0.5), 0, 0.06 + Math.cos(ang) * len * 0.5, 0.012);
+        f.rotation.set(Math.PI / 2, ang, 0); f.material = skinM;
+        const c = add(MB.CreateCylinder("handClaw", { height: 0.13, diameterTop: 0, diameterBottom: 0.045, tessellation: 5 }, scene), hand, Math.sin(ang) * (0.06 + len + 0.05), -0.02, 0.06 + Math.cos(ang) * (len + 0.05), 0.01);
+        c.rotation.set(Math.PI / 2 + 0.55, ang, 0); c.material = clawM;
       }
+    };
+    if (L.weapon === "claw") { // the weapon hand is a webbed claw
+      webHand(this.shoulder, 0, 0, 0.66, 0, 1.15);
       tipZ = 1.25; hiltZ = 0.7;
     } else if (L.weapon === "staff" || L.weapon === "spear" || L.weapon === "rod") {
       const len = L.weapon === "staff" ? 1.7 : L.weapon === "rod" ? 2.3 : 2.1;
@@ -555,9 +567,7 @@ export class Rig {
       this.gear = gear;
     }
     if (L.weapon === "fist") gauntlet(this.offElbow, -1); // a matching gauntlet on the off hand
-    if (L.weapon === "claw") { // the off hand is clawed too
-      for (const x of [-0.07, 0, 0.07]) { const t = add(MB.CreateCylinder("talon2", { height: 0.32, diameterTop: 0, diameterBottom: 0.07, tessellation: 5 }, scene), this.offElbow, x, -0.52, 0.04, 0.012); t.rotation.x = Math.PI + 0.3; t.material = M("talon", L.talon ?? "#e7e1cf"); }
-    }
+    if (L.weapon === "claw") webHand(this.offElbow, 0, -0.44, 0.03, Math.PI / 2, 1); // the off hand is a webbed claw too
 
     // Rook's grimoire floats at his left shoulder: every knight here has one.
     if (L.grimoire) {
