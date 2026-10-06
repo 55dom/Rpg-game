@@ -25,6 +25,10 @@ export const CAST = Object.freeze({
   Kid: { name: "Kid", color: "#9fe6c8", actor: "kid" },
   Crier: { name: "Town Crier", color: "#b9a6ff", actor: "crier" },
   Cook: { name: "Fish Cook", color: "#ffcf7a", actor: "cook" },
+  Wren: { name: "Mother Wren", color: "#f0c8a0", actor: "wren" },
+  Farmer: { name: "Farmer Odo", color: "#c9d27a", actor: "farmer" },
+  Smith: { name: "Thornwick Smith", color: "#e09a6a", actor: "smith" },
+  Ness: { name: "Old Ness", color: "#9fc0b0", actor: "ness" },
   Crowd: { name: "Candidates", color: "#aab4cc", actor: null },
 });
 

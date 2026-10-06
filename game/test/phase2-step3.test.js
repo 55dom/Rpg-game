@@ -13,8 +13,8 @@ const place = (w, kind, x, z, { brain = false, hp } = {}) => {
 };
 const types = (log) => log.map((x) => x.type);
 
-test("five enemy types; spawnWave() walks the wave list", () => {
-  assert.equal(Object.keys(ENEMIES).length, 5);
+test("the five Fens enemy types; spawnWave() walks the wave list", () => {
+  for (const k of ["acolyte", "hound", "cantor", "bulwark", "beast"]) assert.ok(ENEMIES[k], k); // the Fens roster (later regions add more)
   const w = solo();
   for (let i = 0; i < WAVES.length; i++) {
     w.spawnWave(); const ev = w.drainEvents().find((x) => x.type === "wave");

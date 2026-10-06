@@ -386,8 +386,9 @@ export class World {
     this.emit({ type: "summon", fighter: caller, summoned: out });
   }
 
-  /** spawnWave(3) = three acolytes; spawnWave(["hound", ...]) = those kinds; spawnWave() = the next wave in WAVES. */
-  spawnWave(spec) {
+  /** spawnWave(3) = three acolytes; spawnWave(["hound", ...]) = those kinds; spawnWave() = the next wave in WAVES.
+   *  `at` ({x, z, r?}) rings the wave around a point instead of the yard's middle (field encounters). */
+  spawnWave(spec, at = null) {
     this.wave++;
     for (const f of this.enemies) this.emit({ type: "despawn", fighter: f });
     this.fighters = this.fighters.filter((f) => f.team !== Team.Enemy);
@@ -398,6 +399,12 @@ export class World {
     kinds.forEach((kind, i) => {
       if (BOSSES[kind]) { this.spawnBoss(kind, 0, BOSSES[kind].z); return; }
       const a = (i / kinds.length) * Math.PI * 2 + 0.6;
+      if (at) { // around the encounter point, kept out of walls
+        const r = (at.r ?? 5) * (ENEMIES[kind].traits.ranged ? 1.4 : 1);
+        const pos = constrain({ x: at.x + Math.sin(a) * r, z: at.z + Math.cos(a) * r }, ENEMIES[kind].stats.radius, this.bounds);
+        this.spawnEnemy(kind, pos.x, pos.z, i);
+        return;
+      }
       const r = ENEMIES[kind].traits.ranged ? 11 : 8;
       this.spawnEnemy(kind, Math.sin(a) * r, Math.cos(a) * r + 2, i);
     });
@@ -413,6 +420,13 @@ export class World {
       const a = base + (i - (count - 1) / 2) * spread;
       this.fireProjectile(owner, ability, key, speed, { x: Math.sin(a), y: 0, z: Math.cos(a) });
     }
+  }
+
+  /** Remove every enemy and projectile (leaving a field fight, or falling in one). */
+  clearEnemies() {
+    for (const f of this.enemies) this.emit({ type: "despawn", fighter: f });
+    this.fighters = this.fighters.filter((f) => f.team !== Team.Enemy);
+    this.projectiles.length = 0; this.zones.length = 0; this.boss = null; this.lockTarget = null;
   }
 
   /** Back on your feet mid-fight (story duels let you get up). */

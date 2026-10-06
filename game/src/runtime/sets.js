@@ -1,7 +1,7 @@
 // Story sets (Phase 3): each one is built on first use from primitives, carries its own sky, fog,
 // and lighting, and can be swapped in and out. "yard" is the original training yard (arena.js).
 
-import { AURELIN_LAYOUT } from "../data/zones.js";
+import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS } from "../data/zones.js";
 import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } from "./look.js";
 
 const mulberry = (seed) => () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -48,7 +48,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -595,6 +595,13 @@ function buildAurelin(scene, mobile) {
   for (const [x0, x1] of [[-42, -4], [4, 42]]) { const w = add(MB.CreateBox("au-cityWallM", { width: x1 - x0, height: 7, depth: 3 }, scene), 0.05); w.position.set((x0 + x1) / 2, 3.5, -34.5); w.material = wallMat; }
   for (const x of [-5, 5]) { const t = add(MB.CreateCylinder("au-gateTower", { height: 11, diameter: 4, tessellation: 12 }, scene), 0.05); t.position.set(x, 5.5, -34.5); t.material = wallMat; }
   const arch = add(MB.CreateBox("au-gateArch", { width: 8, height: 2, depth: 3 }, scene), 0.05); arch.position.set(0, 8, -34.5); arch.material = wallMat;
+  // The grate down to the Undercroft, in the Lowmarket's back corner.
+  const G = L.grate, iron = toon(scene, "au-iron", "#2a2c30");
+  const pit = add(MB.CreateGround("au-grateHole", { width: 2.4, height: 2.4 }, scene)); pit.position.set(G.x, 0.02, G.z); pit.material = toon(scene, "au-pit", "#0b0c10");
+  for (let i = -2; i <= 2; i++) { const bar = add(MB.CreateBox("au-grateBar", { width: 0.1, height: 0.08, depth: 2.4 }, scene)); bar.position.set(G.x + i * 0.5, 0.06, G.z); bar.material = iron; }
+  const frame = add(MB.CreateTorus("au-grateRing", { diameter: 3.2, thickness: 0.18, tessellation: 4 }, scene), 0.02); frame.position.set(G.x, 0.06, G.z); frame.rotation.y = Math.PI / 4; frame.material = iron;
+  const sign = add(MB.CreateBox("au-graterail", { width: 0.12, height: 1.1, depth: 0.12 }, scene), 0.02); sign.position.set(G.x - 1.6, 0.55, G.z + 1.6); sign.material = iron;
+  const lamp = add(MB.CreateBox("au-grateLamp", { size: 0.3 }, scene)); lamp.position.set(G.x - 1.6, 1.2, G.z + 1.6); lamp.material = glow(scene, "au-grateLampGlow", "#7af0ff");
   // Distant skyline: the palace and towers beyond the hall.
   const far = toon(scene, "au-far", "#b8b0c8");
   for (const [x, z, w, h] of [[0, 70, 26, 30], [-26, 64, 8, 38], [26, 64, 8, 34], [-50, 50, 14, 16], [50, 52, 14, 18]]) { const b = add(MB.CreateBox("au-skyline", { width: w, height: h, depth: 8 }, scene)); b.position.set(x, h / 2, z); b.material = far; }
@@ -643,6 +650,163 @@ function buildAurelin(scene, mobile) {
         w.b.position.set(x, 0.6 + bob, z); w.h.position.set(x, 1.42 + bob, z); w.hr.position.set(x, 1.47 + bob, z);
         w.hr.rotation.set(0, yaw, 0); w.b.rotation.y = yaw;
       }
+    },
+  };
+}
+
+// ---- Thornwick: the home village (green and oak, orphanage, smithy, mill, fields, fence) ------
+function buildThornwick(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, L = THORNWICK_LAYOUT;
+  const rng = mulberry(77);
+  const grass = toon(scene, "tw-grass", "#6a8e4c"), dirt = toon(scene, "tw-dirt", "#a08060"), dirtDark = toon(scene, "tw-dirtDark", "#8a6c4c");
+  const ground = add(MB.CreateGround("tw-ground", { width: 140, height: 140 }, scene)); ground.material = grass;
+  const green = add(MB.CreateDisc("tw-green", { radius: 9, tessellation: 40 }, scene)); green.rotation.x = Math.PI / 2; green.position.y = 0.01; green.material = toon(scene, "tw-greenMat", "#76a052");
+  // Dirt roads: east to the Lighthouse, north-west to the fens, south-east to the mill.
+  for (const [x, z, w, d, rot] of [[19, 0, 22, 3.2, 0], [-12, 17, 3, 26, -0.55], [12, -12, 3, 22, 0.75], [0, 10, 3, 12, 0]]) {
+    const r = add(MB.CreateGround("tw-road", { width: w, height: d }, scene)); r.position.set(x, 0.015, z); r.rotation.y = rot; r.material = dirt;
+  }
+  // The old oak in the middle of the green.
+  const bark = toon(scene, "tw-bark", "#5a4230"), leaves = toon(scene, "tw-leaves", "#4f7a3a"), leaves2 = toon(scene, "tw-leaves2", "#5f8c44");
+  const tree = (x, z, s) => {
+    const t = add(MB.CreateCylinder("tw-trunk", { height: 3.2 * s, diameterTop: 0.5 * s, diameterBottom: 0.9 * s, tessellation: 8 }, scene), 0.04); t.position.set(x, 1.6 * s, z); t.material = bark;
+    for (let k = 0; k < 3; k++) { const c = add(MB.CreateSphere("tw-crown", { diameter: (2.6 - k * 0.4) * s, segments: 8 }, scene), 0.04); c.position.set(x + (k - 1) * 0.7 * s, (3.4 + k * 0.6) * s, z + (k % 2) * 0.5 * s); c.material = k % 2 ? leaves2 : leaves; }
+  };
+  tree(L.oak.x, L.oak.z, 1.6);
+  for (let i = 0; i < 14; i++) { const a = rng() * Math.PI * 2, r = 34 + rng() * 14; tree(Math.sin(a) * r, Math.cos(a) * r, 1 + rng() * 0.6); }
+  // Houses: timber walls, steep thatched roofs, a door facing the green.
+  const wall = toon(scene, "tw-wall", "#e6d6b4"), beam = toon(scene, "tw-beam", "#5a4230"), thatch = toon(scene, "tw-thatch", "#c9a24a"), door = toon(scene, "tw-door", "#6b4a32"), win = toon(scene, "tw-win", "#ffd98a");
+  const house = (x, z, w, d, h, roofCol = thatch) => {
+    const b = add(MB.CreateBox("tw-house", { width: w, height: h, depth: d }, scene), 0.05); b.position.set(x, h / 2, z); b.material = wall;
+    for (const dx of [-w / 2, w / 2]) for (const dz of [-d / 2, d / 2]) { const post = add(MB.CreateBox("tw-post", { width: 0.25, height: h, depth: 0.25 }, scene)); post.position.set(x + dx, h / 2, z + dz); post.material = beam; }
+    const roof = add(MB.CreateCylinder("tw-roof", { height: d + 0.8, diameter: w * 0.9, tessellation: 3 }, scene), 0.05);
+    roof.position.set(x, h + w * 0.2, z); roof.rotation.set(Math.PI / 2, 0, Math.PI / 2); roof.scaling.set(1.5, 1, 0.9); roof.material = roofCol;
+    const tx = Math.abs(x) > Math.abs(z) ? -Math.sign(x) : 0, tz = tx ? 0 : -Math.sign(z || 1); // face the green
+    const dp = add(MB.CreatePlane("tw-doorP", { width: 1.1, height: 2, sideOrientation: BB.Mesh.DOUBLESIDE }, scene));
+    dp.position.set(x + tx * (w / 2 + 0.02), 1, z + tz * (d / 2 + 0.02)); dp.rotation.y = tx ? Math.PI / 2 : 0; dp.material = door;
+    const wp = add(MB.CreatePlane("tw-winP", { width: 0.8, height: 0.7, sideOrientation: BB.Mesh.DOUBLESIDE }, scene));
+    wp.position.set(x + tx * (w / 2 + 0.02) + (tx ? 0 : 1.6), 1.6, z + tz * (d / 2 + 0.02) + (tx ? 1.6 : 0)); wp.rotation.y = dp.rotation.y; wp.material = win;
+  };
+  for (const h of L.houses) house(h.x, h.z, h.w, h.d, 3 + rng() * 0.6);
+  // The orphanage: the biggest building in the village, two floors and a bell.
+  const O = L.orphanage, ow = O.x1 - O.x0, od = O.z1 - O.z0;
+  house((O.x0 + O.x1) / 2, (O.z0 + O.z1) / 2, ow, od, 5.4, toon(scene, "tw-orphRoof", "#8a4a3a"));
+  for (let i = 0; i < 4; i++) { const w = add(MB.CreatePlane("tw-orphWin", { width: 1, height: 0.9, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); w.position.set(O.x0 + 2 + i * ((ow - 4) / 3), 3.9, O.z0 - 0.03); w.material = win; }
+  const bellTower = add(MB.CreateBox("tw-bell", { width: 1.4, height: 1.6, depth: 1.4 }, scene), 0.04); bellTower.position.set(0, 9.2, (O.z0 + O.z1) / 2); bellTower.material = wall;
+  const bell = add(MB.CreateCylinder("tw-bellB", { height: 0.6, diameterTop: 0.3, diameterBottom: 0.7, tessellation: 10 }, scene), 0.02); bell.position.set(0, 9.1, (O.z0 + O.z1) / 2 - 0.71); bell.material = toon(scene, "tw-bronze", "#c9a24a");
+  const sign = add(MB.CreateBox("tw-sign", { width: 2.4, height: 0.6, depth: 0.1 }, scene), 0.02); sign.position.set(0, 3.1, O.z0 - 0.08); sign.material = toon(scene, "tw-signMat", "#e6b54e");
+  // The smithy: open-sided, with a glowing forge and an anvil.
+  const S = L.smithy;
+  const roofS = add(MB.CreateBox("tw-smithRoof", { width: S.w + 0.6, height: 0.3, depth: S.d + 0.6 }, scene), 0.04); roofS.position.set(S.x, 2.9, S.z); roofS.material = toon(scene, "tw-slate", "#4a4a52");
+  for (const dx of [-S.w / 2, S.w / 2]) for (const dz of [-S.d / 2, S.d / 2]) { const p = add(MB.CreateBox("tw-sPost", { width: 0.3, height: 2.9, depth: 0.3 }, scene), 0.02); p.position.set(S.x + dx, 1.45, S.z + dz); p.material = beam; }
+  const forge = add(MB.CreateBox("tw-forge", { width: 1.6, height: 1, depth: 1.4 }, scene), 0.03); forge.position.set(S.x - 1, 0.5, S.z + 0.6); forge.material = toon(scene, "tw-stone", "#7a7466");
+  const coals = add(MB.CreateBox("tw-coals", { width: 1.1, height: 0.1, depth: 0.9 }, scene)); coals.position.set(S.x - 1, 1.02, S.z + 0.6); coals.material = glow(scene, "tw-coalGlow", "#ff7a3a");
+  const chimney = add(MB.CreateBox("tw-chimney", { width: 0.7, height: 4.4, depth: 0.7 }, scene), 0.03); chimney.position.set(S.x - 1.4, 2.2, S.z + 1.2); chimney.material = forge.material;
+  const anvil = add(MB.CreateBox("tw-anvil", { width: 0.9, height: 0.5, depth: 0.4 }, scene), 0.02); anvil.position.set(S.x + 1, 0.6, S.z - 0.4); anvil.material = toon(scene, "tw-anvilMat", "#2f3136");
+  // The mill: a round stone tower with four turning sails.
+  const M = L.mill;
+  const mill = add(MB.CreateCylinder("tw-mill", { height: 8, diameterTop: M.r * 1.6, diameterBottom: M.r * 2, tessellation: 14 }, scene), 0.05); mill.position.set(M.x, 4, M.z); mill.material = toon(scene, "tw-millStone", "#cfc2a8");
+  const cap = add(MB.CreateCylinder("tw-millCap", { height: 2, diameterTop: 0.2, diameterBottom: M.r * 1.9, tessellation: 14 }, scene), 0.05); cap.position.set(M.x, 9, M.z); cap.material = toon(scene, "tw-millCapMat", "#8a4a3a");
+  const hub = new BB.TransformNode("tw-millHub", scene); hub.parent = K.root; hub.position.set(M.x - M.r * 0.9, 7, M.z);
+  const sailMat = toon(scene, "tw-sail", "#f2ead8");
+  for (let i = 0; i < 4; i++) {
+    const arm = new BB.TransformNode(`tw-arm${i}`, scene); arm.parent = hub; arm.rotation.x = (i / 4) * Math.PI * 2;
+    const sl = add(MB.CreateBox("tw-sailB", { width: 0.1, height: 5.6, depth: 1.2 }, scene), 0.02); sl.parent = arm; sl.position.set(0, 3, 0.4); sl.material = sailMat;
+  }
+  // Fields: rows of wheat beyond the mill road.
+  const F = L.fields, wheat = toon(scene, "tw-wheat", "#d8b85a");
+  // Low wheat in short clumps (instanced), so fighters wade through it rather than stand on it.
+  const clump = MB.CreateCylinder("tw-wheatClump", { height: 0.45, diameterTop: 0.5, diameterBottom: 0.25, tessellation: 5 }, scene); clump.material = wheat; clump.parent = K.root; clump.isPickable = false;
+  let nClump = 0;
+  for (let z = F.z0 + 1; z < F.z1; z += 1.6) for (let x = F.x0 + 1.5; x < F.x1 - 1; x += 0.9) {
+    const c = nClump++ ? clump.createInstance(`tw-wc${nClump}`) : clump; c.parent = K.root; c.isPickable = false;
+    c.position.set(x + (rng() - 0.5) * 0.3, 0.22, z + (rng() - 0.5) * 0.3); c.scaling.y = 0.8 + rng() * 0.5;
+  }
+  const furrow = add(MB.CreateGround("tw-furrow", { width: F.x1 - F.x0, height: F.z1 - F.z0 }, scene)); furrow.position.set((F.x0 + F.x1) / 2, 0.012, (F.z0 + F.z1) / 2); furrow.material = dirtDark;
+  // The bandits' camp on the mill road: crates and a cold fire.
+  for (const [x, z] of [[24, -21], [25.2, -21.4], [15, -27]]) { const c = add(MB.CreateBox("tw-crate", { size: 0.9 }, scene), 0.03); c.position.set(x, 0.45, z); c.rotation.y = rng(); c.material = toon(scene, "tw-crateMat", "#8a5a3a"); }
+  // A wooden palisade around the village, with gaps for the roads (instanced posts).
+  const postSrc = MB.CreateCylinder("tw-fence", { height: 2.4, diameter: 0.4, tessellation: 6 }, scene); postSrc.material = beam; postSrc.parent = K.root; postSrc.isPickable = false;
+  const posts = [];
+  for (let i = -31; i <= 31; i += 1) for (const [x, z] of [[i, 31], [i, -31], [31, i], [-31, i]]) {
+    if (x === 31 && Math.abs(z) < 7) continue; if (z === 31 && x > -27 && x < -15) continue;
+    posts.push([x, z]);
+  }
+  postSrc.position.set(posts[0][0], 1.2, posts[0][1]);
+  for (let i = 1; i < posts.length; i++) { const p = postSrc.createInstance(`tw-f${i}`); p.parent = K.root; p.isPickable = false; p.position.set(posts[i][0], 1.1 + (i % 3) * 0.12, posts[i][1]); }
+  // Rolling hills on the horizon.
+  const hill = toon(scene, "tw-hill", "#6a9050");
+  for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2, r = 60; const h = add(MB.CreateSphere("tw-hillS", { diameter: 30 + rng() * 20, segments: 8 }, scene)); h.position.set(Math.sin(a) * r, -6, Math.cos(a) * r); h.scaling.y = 0.5; h.material = hill; }
+  const smoke = new BB.ParticleSystem("tw-smoke", mobile ? 20 : 40, scene);
+  smoke.particleTexture = softTexture(scene); smoke.emitter = new BB.Vector3(S.x - 1.4, 4.5, S.z + 1.2);
+  smoke.color1 = new BB.Color4(0.8, 0.8, 0.8, 0.35); smoke.color2 = new BB.Color4(0.7, 0.7, 0.7, 0.25); smoke.colorDead = new BB.Color4(0.7, 0.7, 0.7, 0);
+  smoke.minSize = 0.6; smoke.maxSize = 1.4; smoke.minLifeTime = 2; smoke.maxLifeTime = 3.5; smoke.emitRate = 8; smoke.gravity = new BB.Vector3(0.2, 0.6, 0);
+  smoke.direction1 = new BB.Vector3(-0.1, 1, -0.1); smoke.direction2 = new BB.Vector3(0.1, 1, 0.1); smoke.minEmitPower = 0.2; smoke.maxEmitPower = 0.4; smoke.blendMode = BB.ParticleSystem.BLENDMODE_STANDARD;
+  K.systems.push(smoke);
+  const env = { clear: "#b4d4ee", fog: "#cfe0ea", fogDensity: 0.009, hemi: [0.62, "#fff4e0", "#6a7a5a"], sun: [0.85, "#fff0c8", [-0.5, -1, 0.35]], warm: 0 };
+  const toonEnv = { lightDir: [0.5, 1, -0.35], fogColor: "#cfe0ea", fogDensity: 0.006, sky: [1.1, 1.08, 1.0], ground: [0.86, 0.9, 0.8], rim: [0.85, 0.85, 0.8] };
+  return {
+    env, toon: toonEnv, show: K.show,
+    update(dt) { hub.rotation.x += dt * 0.5; },
+  };
+}
+
+// ---- The Undercroft: rooms of the old city under Aurelin, joined by narrow passages ---------
+function buildUndercroft(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add;
+  const rng = mulberry(91);
+  const floor = toon(scene, "uc-floor", "#4a4640"), floorDark = toon(scene, "uc-floorDark", "#3a3732"), rock = toon(scene, "uc-rock", "#2e2b29"), rockTop = toon(scene, "uc-rockTop", "#1d1b1a");
+  const brick = toon(scene, "uc-brick", "#5a4a3e"), brass = toon(scene, "uc-brass", "#a07a3a"), torchGlow = glow(scene, "uc-torch", "#ffb35a");
+  const HALF = 14, WALL = 1.3; // low walls: the camera follows from above, so it has to see over them
+  for (const [z0, z1, hw] of UNDERCROFT_BANDS) {
+    const f = add(MB.CreateGround("uc-band", { width: hw * 2, height: z1 - z0 }, scene)); f.position.set(0, 0, (z0 + z1) / 2); f.material = hw > 2 ? floor : floorDark;
+    if (hw >= HALF) continue;
+    for (const side of [-1, 1]) { // rock walls either side, flat-topped so the camera sees over them
+      const w = HALF + 1 - hw;
+      const r = add(MB.CreateBox("uc-wall", { width: w, height: WALL, depth: z1 - z0 }, scene), 0.04); r.position.set(side * (hw + w / 2), WALL / 2, (z0 + z1) / 2); r.material = rock;
+      const top = add(MB.CreateGround("uc-wallTop", { width: w, height: z1 - z0 }, scene)); top.position.set(side * (hw + w / 2), WALL + 0.01, (z0 + z1) / 2); top.material = rockTop;
+      if (hw > 2) for (let z = z0 + 2; z < z1 - 1; z += 5) { // torches along room walls
+        const t = add(MB.CreateBox("uc-torchStick", { width: 0.12, height: 0.7, depth: 0.12 }, scene)); t.position.set(side * (hw + 0.3), WALL + 0.35, z); t.material = brass;
+        const fl = add(MB.CreateSphere("uc-flame", { diameter: 0.3, segments: 6 }, scene)); fl.position.set(side * (hw + 0.3), WALL + 0.8, z); fl.material = torchGlow;
+      }
+    }
+  }
+  // Brick posts either side of each passage; brass pipes along the room walls.
+  for (const z of [-22, -14, 2, 10, 26, 32]) {
+    for (const x of [-2.4, 2.4]) { const p = add(MB.CreateBox("uc-pillar", { width: 0.7, height: WALL + 0.6, depth: 0.7 }, scene), 0.04); p.position.set(x, (WALL + 0.6) / 2, z); p.material = brick; }
+  }
+  for (const [z0, z1, hw] of UNDERCROFT_BANDS) if (hw > 2 && hw < HALF) for (const side of [-1, 1]) {
+    const pipe = add(MB.CreateCylinder("uc-pipe", { height: z1 - z0 - 1, diameter: 0.22, tessellation: 8 }, scene), 0.02); pipe.rotation.x = Math.PI / 2; pipe.position.set(side * (hw - 0.2), 0.3 + rng() * 0.7, (z0 + z1) / 2); pipe.material = brass;
+  }
+  // Rubble, crates and fish bones.
+  for (let i = 0; i < 18; i++) { const [z0, z1, hw] = UNDERCROFT_BANDS[[0, 2, 4, 6][i % 4]]; const s = 0.3 + rng() * 0.5; const r = add(MB.CreateSphere("uc-rubble", { diameter: s, segments: 5 }, scene)); r.position.set((rng() - 0.5) * (hw * 2 - 2), s * 0.3, z0 + 1 + rng() * (z1 - z0 - 2)); r.material = rock; }
+  for (let i = 0; i < 8; i++) { const b = add(MB.CreateBox("uc-bone", { width: 0.4, height: 0.04, depth: 0.08 }, scene)); b.position.set(3.4 + (rng() - 0.5), 0.03, -25 + (rng() - 0.5)); b.rotation.y = rng() * 3; b.material = toon(scene, "uc-boneMat", "#e8e0cc"); }
+  // The stairs up to the Lowmarket.
+  for (let i = 0; i < 5; i++) { const st = add(MB.CreateBox("uc-stair", { width: 5, height: 0.4, depth: 0.8 }, scene), 0.03); st.position.set(0, 0.2 + i * 0.4, -34.4 - i * 0.8); st.material = brick; }
+  const shaft = add(MB.CreateCylinder("uc-shaft", { height: 0.1, diameter: 4, tessellation: 4 }, scene)); shaft.position.set(0, 4, -37); shaft.material = glow(scene, "uc-daylight", "#fff3d0", 0.5, true); K.noGlow(shaft);
+  // The Gear Hall: a huge brass gear turning in the far wall, and pillars.
+  const gearHub = new BB.TransformNode("uc-gearHub", scene); gearHub.parent = K.root; gearHub.position.set(0, 4, 46.4);
+  const big = add(MB.CreateTorus("uc-bigGear", { diameter: 8, thickness: 0.8, tessellation: 24 }, scene), 0.05); big.parent = gearHub; big.position.set(0, 0, 0); big.rotation.x = Math.PI / 2; big.material = brass;
+  for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; const t = add(MB.CreateBox("uc-tooth", { width: 0.7, height: 0.7, depth: 0.5 }, scene)); t.parent = gearHub; t.position.set(Math.sin(a) * 4.4, Math.cos(a) * 4.4, 0); t.rotation.z = -a; t.material = brass; }
+  const core = add(MB.CreateCylinder("uc-gearCore", { height: 0.6, diameter: 1.4, tessellation: 12 }, scene)); core.parent = gearHub; core.rotation.x = Math.PI / 2; core.position.set(0, 0, 0); core.material = glow(scene, "uc-coreGlow", "#7af0ff");
+  const backWall = add(MB.CreateBox("uc-backWall", { width: 30, height: 9, depth: 0.6 }, scene), 0.04); backWall.position.set(0, 4.5, 46.9); backWall.material = brick;
+  for (const x of [-14.6, 14.6]) { const w = add(MB.CreateBox("uc-hallSide", { width: 1.2, height: WALL * 2, depth: 14 }, scene), 0.04); w.position.set(x, WALL, 39); w.material = rock; }
+  for (const x of [-4.5, 4.5]) { const w = add(MB.CreateBox("uc-southWall", { width: 3, height: WALL, depth: 1 }, scene), 0.04); w.position.set(x, WALL / 2, -34.5); w.material = rock; }
+  for (const x of [-9, 9]) for (const z of [36, 42]) { const p = add(MB.CreateCylinder("uc-col", { height: 4.4, diameter: 0.9, tessellation: 10 }, scene), 0.04); p.position.set(x, 2.2, z); p.material = brass; }
+  // Dust drifting in the torchlight.
+  const dust = new BB.ParticleSystem("uc-dust", mobile ? 25 : 50, scene);
+  dust.particleTexture = softTexture(scene); dust.emitter = new BB.Vector3(0, 1, 6);
+  dust.minEmitBox = new BB.Vector3(-10, 0, -38); dust.maxEmitBox = new BB.Vector3(10, 2.5, 38);
+  dust.color1 = new BB.Color4(1, 0.85, 0.6, 0.3); dust.color2 = new BB.Color4(0.8, 0.9, 1, 0.2); dust.colorDead = new BB.Color4(1, 1, 1, 0);
+  dust.minSize = 0.05; dust.maxSize = 0.14; dust.minLifeTime = 4; dust.maxLifeTime = 7; dust.emitRate = mobile ? 5 : 10; dust.gravity = new BB.Vector3(0, 0.02, 0);
+  dust.minEmitPower = 0.02; dust.maxEmitPower = 0.08; dust.blendMode = BB.ParticleSystem.BLENDMODE_ADD;
+  K.systems.push(dust);
+  const env = { clear: "#0a0b0f", fog: "#14151b", fogDensity: 0.028, hemi: [0.5, "#ffd9a8", "#2a2420"], sun: [0.35, "#ffcf9a", [0.2, -1, 0.3]], warm: 0 };
+  const toonEnv = { lightDir: [-0.2, 1, -0.3], fogColor: "#14151b", fogDensity: 0.02, sky: [0.92, 0.84, 0.74], ground: [0.6, 0.56, 0.52], rim: [0.6, 0.85, 1.0] };
+  return {
+    env, toon: toonEnv, show: K.show,
+    update(dt, t) {
+      gearHub.rotation.z += dt * 0.15;
+      torchGlow.alpha = 0.85 + Math.sin(t * 13) * 0.1;
     },
   };
 }

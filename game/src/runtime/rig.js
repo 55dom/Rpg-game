@@ -42,6 +42,11 @@ export const LOOKS = {
     head: "hood", sash: true, weapon: "spear", shield: true, shoulders: 1.2, trail: "#c9b8ff" },
   beast: { poses: ENEMIES.beast.poses, scale: 1.5, skirt: 1.5, coat: "#4e5a37", trim: "#6f5a3a", hairColor: "#3a4129", skin: "#4e5a37",
     head: "lump", weapon: "claw", shoulders: 1.55, accent: "#2f3324", eyes: "#d8ff6a", trail: "#a6c96a" },
+  rat: { poses: ENEMIES.rat.poses, scale: 0.55, form: "beast", fur: "#5a5560", belly: "#8a8290", eyes: "#ff5a4a", trail: "#c9a4a4" },
+  clockwork: { poses: ENEMIES.clockwork.poses, scale: 1.2, skirt: 0.9, coat: "#9a7a3a", trim: "#d9b45a", hairColor: "#4a3a22", skin: "#9a7a3a",
+    head: "lump", weapon: "fist", shoulders: 1.45, accent: "#5a4a2a", eyes: "#7af0ff", gear: true, trail: "#7af0ff" },
+  bandit: { poses: ENEMIES.bandit.poses, scale: 1.0, skirt: 1.0, coat: "#5a4a3a", trim: "#8a3a2a", hairColor: "#2a2220", skin: "#d8a888",
+    head: "face", hair: "crop", sash: true, weapon: "blade", trail: "#ff8a6a" },
   hask: { poses: HASK_POSES, scale: 2.0, skirt: 1.7, coat: "#3d4934", trim: "#5c4a2e", hairColor: "#2c3524", skin: "#3d4934",
     head: "lump", weapon: "claw", shoulders: 1.7, accent: "#262b1d", eyes: "#ffb347", trail: "#c9a24a", mound: true },
   // Story cast (Phase 3). Poses borrow Rook's rest stance until they get their own moves.
@@ -71,6 +76,14 @@ export const LOOKS = {
     head: "face", hair: "long", weapon: "none", trail: "#d8c8e8" },
   kid: { poses: ACOLYTE_POSES, scale: 0.62, skirt: 0.9, coat: "#4f81bd", trim: "#e6b54e", hairColor: "#3a2a22", skin: "#e8b894",
     head: "face", hair: "spiky", weapon: "none", trail: "#e6b54e" },
+  wren: { poses: ACOLYTE_POSES, scale: 0.94, skirt: 1.3, coat: "#6a5a7a", trim: "#f0c8a0", hairColor: "#b8b0a8", skin: "#efcfb4",
+    head: "face", hair: "long", weapon: "none", sash: true, stoop: 0.08, trail: "#f0c8a0" },
+  farmer: { poses: ACOLYTE_POSES, scale: 1.05, skirt: 1.05, coat: "#7a8a4a", trim: "#c9a26a", hairColor: "#8a6a3a", skin: "#d8a07a",
+    head: "face", hair: "crop", beard: "#8a6a3a", weapon: "none", shoulders: 1.2, trail: "#c9d27a" },
+  smith: { poses: ACOLYTE_POSES, scale: 1.14, skirt: 1.1, coat: "#3a3430", trim: "#c0504d", hairColor: "#1f1a18", skin: "#b87a5a",
+    head: "face", hair: "crop", beard: "#1f1a18", weapon: "fist", shoulders: 1.4, trail: "#e09a6a" },
+  ness: { poses: ACOLYTE_POSES, scale: 0.98, skirt: 1.2, coat: "#4a6a5a", trim: "#9fc0b0", hairColor: "#d8d4c8", skin: "#d8b494",
+    head: "face", hair: "crop", beard: "#d8d4c8", weapon: "staff", stoop: 0.18, trail: "#9fc0b0" },
   cook: { poses: ACOLYTE_POSES, scale: 1.04, skirt: 1.3, coat: "#e8e2d4", trim: "#c0504d", hairColor: "#5a3a22", skin: "#d8a07a",
     head: "face", hair: "crop", beard: "#5a3a22", weapon: "none", shoulders: 1.25, trail: "#ffcf7a" },
   stranger: { poses: ACOLYTE_POSES, scale: 1.08, skirt: 0.78, coat: "#0d0c12", trim: "#0d0c12", hairColor: "#0d0c12", skin: "#0d0c12",
@@ -314,6 +327,12 @@ export class Rig {
       halo.material = glow(scene, `${id}-haloMat`, "#c9a4ff"); halo.parent = this.head; halo.position.y = 0.55; halo.isPickable = false;
       this.halo = halo;
     }
+    if (L.gear) { // clockwork: a slowly turning brass gear on its back
+      const gear = add(MB.CreateTorus("gear", { diameter: 0.9, thickness: 0.14, tessellation: 16 }, scene), this.body, 0, 0.55, -0.32, 0.02);
+      gear.rotation.x = Math.PI / 2; gear.material = M("gearMat", L.trim);
+      for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; const t = add(MB.CreateBox("tooth", { width: 0.14, height: 0.14, depth: 0.12 }, scene), gear, Math.sin(a) * 0.5, 0, Math.cos(a) * 0.5); t.material = gear.material; }
+      this.gear = gear;
+    }
     if (L.weapon === "fist" || L.weapon === "claw") { // a second gauntlet on the off hand
       const g2 = add(MB.CreateBox("gauntlet2", { width: 0.28, height: 0.26, depth: 0.3 }, scene), offArm, 0, -0.34, 0, 0.025);
       g2.material = accent;
@@ -514,6 +533,7 @@ export class Rig {
     if (this.beastTail) this.beastTail.rotation.x = -2.1 + Math.sin(this.time * 10) * 0.25;
     if (this.legs) for (const hip of this.legs) hip.rotation.x = Math.sin(this.time * 16 + hip.phase) * 0.7 * run;
     if (this.halo) { this.halo.rotation.y += dt * 2; }
+    if (this.gear) this.gear.rotation.y += dt * (fighter.current?.id === "Gearspin" ? 9 : 0.8);
     if (this.wardRing) { const w = fighter.alive && fighter.tags.has("WARDED"); this.wardRing.setEnabled(w); if (w) this.wardRing.rotation.y -= dt * 2.5; }
     if (this.skirt) this.skirt.rotation.x = bodyLean * 0.25;
     if (this.scarfTail) this.scarfTail.rotation.x = 0.12 + run * 0.45 + Math.sin(this.time * 9) * 0.08 * (0.3 + run);

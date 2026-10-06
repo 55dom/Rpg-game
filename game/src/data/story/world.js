@@ -177,7 +177,25 @@ Crier: All squads to parade! Even, by royal decree, the Lanterns.
 ===
 title: W_Cook
 ---
+<<if $Q_BELOW == 3>>
+    Cook: Well? What's down there?
+    You tell the cook about the rats, the fish bones, and the brass thing that guarded them.
+    Cook: Brass. Guarding rats. In my city. ...I'm going to start frying with the lid on.
+    <<set $BELOW_TOLD to 1>>
+    <<stop>>
+<<endif>>
 Cook: Fried fish! Fried bread! Fried things you don't want to ask about!
+<<if $Q_BELOW == 1 or $Q_BELOW == 2>>
+    Cook: Been down the grate yet? Listen at it. Tick, tick, tick. Rats don't tick.
+<<endif>>
+<<if $Q_FRIED != 1 and not $Q_BELOW>>
+    Cook: Except my fish keeps vanishing. Down the grate by the Lowmarket. Every night, a little less fish.
+    -> "I'll go down and look." #bold
+        Cook: Would you? Take a lantern. Take two. I've heard things down there. Ticking things.
+        <<quest start below>>
+    -> "Have you tried a bigger lid?" #wry
+        Cook: Ha. I have. Something chewed through the lid. If you change your mind, the grate's by the east wall.
+<<endif>>
 <<if $Q_FRIED == 1>>
     -> Buy fried fish for Dagrun (5 marks).
         <<pay 5>>
@@ -191,5 +209,108 @@ Cook: Fried fish! Fried bread! Fried things you don't want to ask about!
 <<else>>
     Cook: Nothing today? Your loss.
 <<endif>>
+===
+
+title: W_Wren
+---
+<<if $MET_WREN>>
+    Wren: Eating properly? You look thin. Knights always look thin. It's all the running at things.
+    <<stop>>
+<<endif>>
+<<set $MET_WREN to 1>>
+Wren: {name}! Look at you. A knight. A real one, with a cloak and everything.
+Wren: The little ones keep asking if you'll visit. I told them knights are very busy.
+-> "I'm never too busy for Thornwick." #earnest
+    Wren: Liar. A sweet liar. Come here.
+    She hugs you like you're still nine.
+-> "Is the roof still leaking?" #wry
+    Wren: Over your old bed, yes. We put a bucket there. We call it {name}'s bucket.
+-> "One page, Wren. They gave me one page." #bold
+    Wren: Then it's a very important page. I've always said so.
+Wren: The ledger's inside the door if you want to see your entry. You always did like reading it.
+===
+
+title: W_Ledger
+---
+The orphan ledger. Thin paper, careful handwriting, sixty years of names.
+You find your line. You know it by heart.
+"Found: one infant, in ash-grey cloth. Unnamed. Night of the ninth of Harrow."
+"Brought in by:" The space after it is blank. It has always been blank.
+<<if $LEDGER_SEEN_LARKSPUR>>
+    Two lines down, in the same hand: "No carts from Larkspur this week. Roads closed? Ask."
+    Nobody ever wrote the answer.
+<<else>>
+    Two lines down, in the same hand: "No carts from Larkspur this week. Roads closed? Ask."
+    Larkspur. The village that burned at the edge of the map. The same night you were found.
+    <<set $LEDGER_SEEN_LARKSPUR to 1>>
+<<endif>>
+===
+
+title: W_Farmer
+---
+<<if $Q_BANDITS == 2>>
+    Farmer: They ran? All of them? Ha! I'll tell the miller. He'll cry. He cries at everything.
+    <<set $BANDITS_TOLD to 1>>
+    <<stop>>
+<<endif>>
+<<if $Q_BANDITS == 1>>
+    Farmer: Mill road, south-east. Three of them, maybe four. Mind the one with the knives. He throws them.
+    <<stop>>
+<<endif>>
+<<if $Q_BANDITS == 999>>
+    Farmer: Road's been quiet since you came through. The miller baked you a loaf. It's terrible. Take it anyway.
+    <<stop>>
+<<endif>>
+Farmer: {name}? The orphanage kid? With the one page? Huh. Good for you.
+Farmer: Listen. Bandits have been sitting on the mill road. Nobody's ground flour in a week.
+-> "I'll clear them out." #bold
+    Farmer: That's the spirit. South-east, past the field. Don't die. Wren would kill me.
+    <<quest start bandits>>
+-> "How many?" #earnest
+    Farmer: Three. Desperate, not clever. Will you go? Wren would never forgive me if I asked anyone else.
+    <<quest start bandits>>
+-> "Not today, Odo."
+    Farmer: Fair. The bandits aren't going anywhere. That's the problem.
+===
+
+title: W_Smith
+---
+Smith: Knight's sword, is it? Squire's blade. Plain. Honest. I could've made you better, if you'd asked.
+<<if $RENOWN_THORNWICK >= 10>>
+    Smith: Heard you cleared the mill road. Thornwick doesn't forget a thing like that.
+<<else>>
+    Smith: Aurelin's Lowmarket sells fancier. Fancier isn't better. Remember that.
+<<endif>>
+===
+
+title: W_Ness
+---
+<<if $NESS_TALKED>>
+    Ness: Still here? The fish don't bite when knights are standing on the bank.
+    <<stop>>
+<<endif>>
+<<set $NESS_TALKED to 1>>
+Ness: Forty years I've fished this water. There used to be a village up the path. I sold them eels.
+Ness: I can't remember a single face. Not one. But I remember the eels.
+<<if $MIRREN_SAVED>>
+    Ness: You're the one who brought the girl out. She was the only voice I heard that night that wasn't singing.
+<<endif>>
+Ness: The hounds come out of the reeds at dusk. And sometimes the robed ones come back. Mind yourself.
+===
+
+title: W_Hymn
+---
+A sheet of paper, nailed to the well post. The ink is fresh. The paper is old.
+"Sing the name, and sing it soft, and sing it once again."
+"Sing until the name is gone. Then nothing has to end."
+The bottom half is torn off. Someone wrote over the tear in charcoal: STOP SINGING.
+<<set $ASKED_HYMN to 1>>
+===
+
+title: W_Bones
+---
+A pile of fish bones at the bottom of the stairs, picked clean. Dozens of them.
+Tiny teeth marks on every one. And something else: a thin brass shaving, curled like a ribbon.
+Rats don't shave brass.
 ===
 `;

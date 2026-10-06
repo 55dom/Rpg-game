@@ -28,5 +28,5 @@ export const SHOPS = Object.freeze({
 });
 
 /** Marks for defeating each enemy kind (GDD §17). */
-export const BOUNTIES = Object.freeze({ acolyte: 6, hound: 4, cantor: 8, bulwark: 10, beast: 22, hask: 80, severin: 0, cal: 0 });
+export const BOUNTIES = Object.freeze({ acolyte: 6, hound: 4, cantor: 8, bulwark: 10, beast: 22, rat: 2, clockwork: 16, bandit: 7, hask: 80, severin: 0, cal: 0 });
 export const EPISODE_REWARD = 40;

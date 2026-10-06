@@ -29,4 +29,23 @@ export const QUESTS = {
     summary: "The kid says your lantern is the second-best lantern. After theirs.",
     reward: { marks: 15, flags: { RENOWN_AURELIN: 6, MERIT: 5 } },
   },
+  bandits: {
+    title: "Bandits on the Mill Road", giver: "Farmer Odo", region: "Thornwick",
+    stages: [
+      { text: "Drive off the bandits on the mill road, south-east of the green.", done: "$BANDITS_CLEARED" },
+      { text: "Tell Farmer Odo the road is safe.", done: "$BANDITS_TOLD" },
+    ],
+    summary: "Odo says Thornwick always knew you'd amount to something. Odo is lying, but kindly.",
+    reward: { marks: 30, flags: { RENOWN_THORNWICK: 10, MERIT: 10 } },
+  },
+  below: {
+    title: "Something Below the Lowmarket", giver: "Fish Cook", region: "Aurelin",
+    stages: [
+      { text: "Go down the grate in the Lowmarket and find what's stealing the cook's fish.", done: "$VISITED_UNDERCROFT" },
+      { text: "Clear the Undercroft down to the Gear Hall.", done: "$UNDERCROFT_CLEARED" },
+      { text: "Tell the cook by the fountain what you found.", done: "$BELOW_TOLD" },
+    ],
+    summary: "Rats took the fish. Something made of brass was guarding the rats. Nobody knows who built it.",
+    reward: { marks: 50, flags: { RENOWN_AURELIN: 8, MERIT: 15 } },
+  },
 };

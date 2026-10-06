@@ -55,6 +55,36 @@ const BEAST_ABILITIES = Object.freeze({
     events: [glint(0), sound(30, "slam"), box(34, "Quake", 6), { frame: 34, type: E.CameraCue, key: "punch" }, { frame: 34, type: E.SpawnVfx, key: "mudwave" }] }),
 });
 
+// ---- Undercroft Rat: weak, fast, comes in swarms -----------------------------------------
+const RAT_ABILITIES = Object.freeze({
+  Nip: defineAbility({ id: "Nip", startup: 8, active: 3, recovery: 16,
+    hit: hitSpec({ damage: 5, posture: 6, hitstop: 2, hitstun: 10, knockback: 0.6 }),
+    events: [sound(6), box(8, "Teeth", 3)] }),
+  Pounce: defineAbility({ id: "Pounce", startup: 14, active: 5, recovery: 24,
+    hit: hitSpec({ damage: 8, posture: 8, hitstop: 3, hitstun: 14, knockback: 1.2 }),
+    events: [sound(10, "dodge"), { frame: 14, type: E.Move, value: 3 }, box(14, "Teeth", 5)] }),
+});
+
+// ---- Clockwork Sentinel: slow brass guardian of the Undercroft ----------------------------
+const CLOCKWORK_ABILITIES = Object.freeze({
+  Piston: defineAbility({ id: "Piston", startup: 20, active: 4, recovery: 26,
+    hit: hitSpec({ damage: 16, posture: 24, hitstop: 6, hitstun: 22, knockback: 5 }),
+    events: [sound(16, "swingHeavy"), { frame: 19, type: E.Move, value: 1 }, box(20, "Fist", 4)] }),
+  // Gearspin: winds up (glint), then spins its arms: hits all around, unblockable. Dodge it.
+  Gearspin: defineAbility({ id: "Gearspin", startup: 32, active: 18, recovery: 36,
+    hit: hitSpec({ damage: 20, posture: 30, hitstop: 5, hitstun: 24, knockback: 6, unblockable: true }),
+    events: [glint(0), sound(28, "slam"), box(32, "Spin", 18), { frame: 32, type: E.CameraCue, key: "punch" }] }),
+});
+
+// ---- Thornwick Bandit: a desperate road thief with a knife --------------------------------
+const BANDIT_ABILITIES = Object.freeze({
+  Hack: defineAbility({ id: "Hack", startup: 12, active: 4, recovery: 20,
+    hit: hitSpec({ damage: 11, posture: 16, hitstop: 4, hitstun: 18, knockback: 2 }),
+    events: [sound(9), box(12, "Knife", 4)] }),
+  KnifeToss: defineAbility({ id: "KnifeToss", startup: 18, active: 2, recovery: 24, tags: ["projectile"],
+    events: [glint(4), sound(16), { frame: 18, type: E.Projectile, key: "Thrown", value: 16 }] }),
+});
+
 export const ENEMIES = Object.freeze({
   acolyte: {
     stats: { ...ACOLYTE_STATS, name: "Choir Acolyte" }, hitboxes: ACOLYTE_HITBOXES, abilities: ACOLYTE_ABILITIES,
@@ -95,6 +125,31 @@ export const ENEMIES = Object.freeze({
     poses: { rest: [0.8, 0.4, 0], Swipe: { from: [-0.8, 1.6, 0], to: [0.6, -1.3, 0], lean: 0.3 }, MudSlam: { from: [-2.6, 0, 0], to: [1.3, 0, 0], lean: 0.6 } },
     options: () => [new AttackOption(BEAST_ABILITIES.Swipe, 0, 2.9, 3, 70), new AttackOption(BEAST_ABILITIES.MudSlam, 0, 3.4, 1, 260)],
     traits: { heavy: true, armoredAttacks: true },
+  },
+  rat: {
+    stats: { name: "Undercroft Rat", maxHealth: 34, maxPosture: 20, runSpeed: 6, circleSpeed: 4.2, turnRate: 0.3, radius: 0.35, height: 0.7 },
+    hitboxes: { Teeth: { center: [0, 0.4, 0.7], size: [1.1, 0.9, 1.3] } },
+    abilities: RAT_ABILITIES,
+    poses: { rest: [0.2, 0, 0], Nip: { from: [-0.5, 0, 0], to: [0.4, 0, 0], lean: 0.3 }, Pounce: { from: [-0.7, 0, 0], to: [0.3, 0, 0], lean: 0.5 } },
+    options: () => [new AttackOption(RAT_ABILITIES.Nip, 0, 1.4, 3, 24), new AttackOption(RAT_ABILITIES.Pounce, 1.8, 4, 2, 90)],
+    traits: {},
+  },
+  clockwork: {
+    stats: { name: "Clockwork Sentinel", maxHealth: 210, maxPosture: 110, runSpeed: 2.6, circleSpeed: 1.2, turnRate: 0.06, radius: 0.6, height: 2.2 },
+    hitboxes: { Fist: { center: [0, 1.1, 1.3], size: [1.6, 1.6, 2.2] }, Spin: { center: [0, 1, 0], size: [4.4, 1.8, 4.4] } },
+    abilities: CLOCKWORK_ABILITIES,
+    poses: { rest: [0.4, 0.5, 0], Piston: { from: [0.3, 0.2, 0], to: [1.4, 0, 0], lean: 0.35 }, Gearspin: { from: [-1.5, 0, 0], to: [-1.5, 0, 0], lean: -0.1 } },
+    options: () => [new AttackOption(CLOCKWORK_ABILITIES.Piston, 0, 2.6, 3, 70), new AttackOption(CLOCKWORK_ABILITIES.Gearspin, 0, 2.4, 1, 280)],
+    traits: { armoredAttacks: true },
+  },
+  bandit: {
+    stats: { name: "Road Bandit", maxHealth: 95, maxPosture: 50, runSpeed: 4.4, circleSpeed: 2.6, turnRate: 0.14, radius: 0.45, height: 1.9 },
+    hitboxes: { Knife: { center: [0, 1, 1.0], size: [1.8, 1.6, 1.7] },
+      Thrown: { center: [0, 0, 0], size: [0.5, 0.5, 0.5], range: 14, hit: hitSpec({ damage: 8, posture: 8, hitstop: 3, hitstun: 12, knockback: 1 }) } },
+    abilities: BANDIT_ABILITIES,
+    poses: { rest: [0.7, 0.35, 0], Hack: { from: [-0.6, 1.8, 0], to: [0.5, -1.4, 0] }, KnifeToss: { from: [-1.2, 0.4, 0], to: [0.6, 0, 0] } },
+    options: () => [new AttackOption(BANDIT_ABILITIES.Hack, 0, 2.2, 3, 40), new AttackOption(BANDIT_ABILITIES.KnifeToss, 4, 11, 2, 160)],
+    traits: {},
   },
 });
 

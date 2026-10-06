@@ -606,7 +606,7 @@ export function boot(doc = document) {
     if (!story.roaming) return;
     sfx.play("ui");
     const list = mapModal.querySelector("[data-map-list]");
-    list.innerHTML = Object.values(ZONES).map((z) => `<button data-zone="${z.id}" ${story.zone?.id === z.id ? "disabled" : ""}><b>${z.name.toUpperCase()}</b><span>${z.region}${story.zone?.id === z.id ? " · You are here" : ""}</span></button>`).join("");
+    list.innerHTML = Object.values(ZONES).filter((z) => !z.dungeon).map((z) => `<button data-zone="${z.id}" ${story.zone?.id === z.id ? "disabled" : ""}><b>${z.name.toUpperCase()}</b><span>${z.region}${story.zone?.id === z.id ? " · You are here" : ""}</span></button>`).join("");
     for (const b of list.querySelectorAll("[data-zone]")) b.addEventListener("click", () => { mapModal.hidden = true; state.modal = false; story.travel(b.dataset.zone); });
     mapModal.hidden = false; state.modal = true;
   };

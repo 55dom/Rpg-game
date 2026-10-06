@@ -662,7 +662,8 @@ export class StoryPlayer {
     p.relaxed = true;
     this.ctx.root.classList.add("exploring");
     this.ctx.camera.release();
-    this.exploring = { beat, talked: new Set(), near: null, busy: false, pickups: this._makePickups(beat.pickups ?? []) };
+    this.exploring = { beat, talked: new Set(), near: null, busy: false, pickups: this._makePickups(beat.pickups ?? []),
+      encounters: (beat.encounters ?? []).map((e) => ({ ...e, cond: compileExpr(e.when ?? "1"), armed: true, done: false })), combat: null };
     this._objective();
     const out = await new Promise((res) => { this.exploring.resolve = res; });
     this._endExplore();
@@ -670,6 +671,7 @@ export class StoryPlayer {
   }
 
   _endExplore() {
+    if (this.exploring?.combat) this._endCombat(false);
     for (const pk of this.exploring?.pickups ?? []) pk.node.dispose(false, true);
     this.exploring = null;
     this.ctx.root.classList.remove("exploring");
@@ -686,7 +688,7 @@ export class StoryPlayer {
       const lamp = MB.CreateBox("pickupLamp", { width: 0.28, height: 0.36, depth: 0.28 }, scene); lamp.parent = node; lamp.position.y = 0.4; lamp.material = glow(scene, `pickup-${p.id}-m`, "#ffd36a");
       const ring = MB.CreateTorus("pickupRing", { diameter: 1, thickness: 0.04, tessellation: 24 }, scene); ring.parent = node; ring.position.y = 0.03; ring.material = lamp.material;
       for (const m of [lamp, ring]) m.isPickable = false;
-      return { ...p, node, lamp, cond: compileExpr(p.show ?? "1") };
+      return { ...p, script: p.node, node, lamp, cond: compileExpr(p.show ?? "1") }; // node = the 3D marker; script = its dialogue
     });
   }
 
@@ -708,6 +710,11 @@ export class StoryPlayer {
     if (!x || x.busy) return;
     if (x.cooldown > 0) x.cooldown -= dt;
     const pp = this.ctx.getWorld().player.pos;
+    if (x.encounters.length && this._encounterTick(x, pp)) { // fighting: no talking, no leaving
+      if (!this.ui.talk.hidden) this.ui.talk.hidden = true;
+      x.near = null;
+      return;
+    }
     for (const e of x.beat.exits ?? []) {
       if (!inRect(pp, e.rect)) continue;
       x.busy = true; x.resolve({ exit: e }); return; // leaving the zone
@@ -747,11 +754,27 @@ export class StoryPlayer {
     const x = this.exploring;
     if (!x || x.busy || !x.near || x.cooldown > 0) return false;
     const c = x.near;
-    if (c.pickup) { // pick it up: set its flag (quests notice), then it disappears
-      this.flags.set(c.pickup.flag, 1);
-      this.ctx.sfx.play("surgeFull");
-      this.ctx.hud.toast(c.pickup.label.replace(/^Pick up /, "").toUpperCase(), "clear");
+    if (c.pickup) { // pick it up (or read it): set its flag (quests notice); most then disappear
+      const pk = c.pickup;
+      if (pk.flag) this.flags.set(pk.flag, 1);
+      if (pk.marks) { this.inventory.earn(pk.marks); this.ctx.hud.banner(`+${pk.marks} MARKS`); }
+      if (pk.script) {
+        x.busy = true; this.ui.talk.hidden = true;
+        this._enterScene(true);
+        const p = this.ctx.getWorld().player;
+        p.vel.x = p.vel.z = 0; p.moveInput.x = p.moveInput.z = 0; p.runner.interrupt();
+        await this.runNode(pk.script);
+        if (!this.exploring) return true;
+        this.skipping = false;
+        this._enterScene(false);
+        this.view.hide();
+        x.busy = false;
+      } else {
+        this.ctx.sfx.play("surgeFull");
+        this.ctx.hud.toast(pk.label.replace(/^(Pick up|Open) (the )?/, "").toUpperCase(), "clear");
+      }
       x.near = null; x.cooldown = 0.6; this._objective();
+      if (this.roaming) this.saveNow();
       return true;
     }
     x.busy = true; this.ui.talk.hidden = true;
@@ -776,6 +799,98 @@ export class StoryPlayer {
     return true;
   }
 
+  // ---- Field and dungeon fights (GDD §13): walk into an encounter's area and it starts ----
+  /** Start encounters the player walks into; while one runs, returns true. */
+  _encounterTick(x, pp) {
+    const c = x.combat;
+    if (c) {
+      // Field fights give up if you run far enough; dungeon rooms are barred shut.
+      if (!c.lock && Math.hypot(pp.x - c.at.x, pp.z - c.at.z) > (c.leash ?? 12)) {
+        this._endCombat(false);
+        this.ctx.hud.toast("GOT AWAY", "afterimage");
+        return false;
+      }
+      return true;
+    }
+    for (const e of x.encounters) {
+      if (e.done || (e.flag && this.flags.get(e.flag)) || !truthy(e.cond(this.flags))) continue;
+      if (!inRect(pp, e.rect)) { e.armed = true; continue; }
+      if (e.armed) { this._startCombat(x, e); return true; }
+    }
+    return false;
+  }
+
+  _startCombat(x, e) {
+    const world = this.ctx.getWorld();
+    x.combat = e; e.armed = false;
+    if (e.lock?.length) { // bar the passages: solid while the fight lasts, with glowing bars to show it
+      this.openBounds = world.bounds;
+      world.bounds = { ...world.bounds, solids: [...(world.bounds.solids ?? []), ...e.lock.map((b) => ({ box: b }))] };
+      const BB = B(), scene = this.ctx.scene, iron = toon2(scene, "enc-iron", "#3a3f48"), lit = glow(scene, "enc-rail", "#3fb8c8");
+      this.bars = e.lock.map(([x0, z0, x1, z1]) => { // iron bars drop across the passage, with a glowing rail on top
+        const node = new BB.TransformNode("enc-gate", scene);
+        node.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2);
+        const w = x1 - x0, d = z1 - z0, along = w >= d, len = along ? w : d;
+        for (let i = 0; i <= 6; i++) {
+          const bar = BB.MeshBuilder.CreateBox("enc-bar", { width: 0.1, height: 1.9, depth: 0.1 }, scene);
+          bar.parent = node; bar.material = iron; bar.isPickable = false;
+          const off = -len / 2 + (i / 6) * len;
+          bar.position.set(along ? off : 0, 0.95, along ? 0 : off);
+        }
+        const rail = BB.MeshBuilder.CreateBox("enc-rail", { width: along ? len + 0.2 : 0.12, height: 0.08, depth: along ? 0.12 : len + 0.2 }, scene);
+        rail.parent = node; rail.position.y = 1.9; rail.material = lit; rail.isPickable = false;
+        return node;
+      });
+      this.ctx.sfx.play("slam");
+    }
+    world.player.relaxed = false;
+    world.spawnWave(e.wave, e.at);
+    this.ctx.onEvents(world.drainEvents());
+    this.ctx.hud.banner(e.label ?? "AMBUSH");
+  }
+
+  /** The fight ends: won (flags, rewards, a breather) or not (escaped or fell: enemies leave). */
+  _endCombat(won) {
+    const x = this.exploring, e = x?.combat;
+    if (!e) return;
+    x.combat = null;
+    const world = this.ctx.getWorld();
+    if (this.openBounds) { world.bounds = this.openBounds; this.openBounds = null; }
+    for (const b of this.bars ?? []) b.dispose(false, true);
+    this.bars = null;
+    if (won) {
+      e.done = true;
+      if (e.flag) this.flags.set(e.flag, 1);
+      const p = world.player.combatant.health;
+      p.add(p.max * 0.3); // catch your breath
+      this.ctx.hud.banner(`${e.label ?? "AMBUSH"} · CLEARED`);
+      this.saveNow();
+    } else {
+      world.clearEnemies();
+      this.ctx.onEvents(world.drainEvents());
+    }
+    world.player.relaxed = true;
+  }
+
+  /** Falling in the field: wake up back at the zone's entrance, enemies gone, nothing lost. */
+  async _fallInField() {
+    const x = this.exploring;
+    await this.sleep(2.2);
+    if (this.exploring !== x || !x.combat) return;
+    this._fade(true, 0.4);
+    await this.sleep(0.5);
+    if (this.exploring !== x) return;
+    const e = x.combat;
+    this._endCombat(false);
+    e.armed = false; // walk out of its area before it can start again
+    const world = this.ctx.getWorld(), p = world.player, at = arrivalPoint(this.zone, this.arrival);
+    world.revivePlayer(1);
+    p.pos.x = p.prev.x = at.x; p.pos.z = p.prev.z = at.z; p.pos.y = p.prev.y = 0; p.yaw = p.prevYaw = at.yaw ?? 0;
+    this.ctx.onEvents(world.drainEvents());
+    this._fade(false, 0.6);
+    this.ctx.hud.banner(`${this.player.name.toUpperCase()} WAKES UP AT THE ${this.zone.dungeon ? "STAIRS" : "ROADSIDE"}`);
+  }
+
   // ---- Free roam: walk between zones (GDD §13) ----
   /** Wander the world from `zoneId`, arriving at `arrival` (a key in the zone's arrivals). Runs until stopped. */
   async roam(zoneId, arrival = null) {
@@ -795,7 +910,9 @@ export class StoryPlayer {
       const at = arrivalPoint(zone, arr);
       this._fade(false, 0.5);
       this.ctx.hud.banner(`${zone.name.toUpperCase()} · ${zone.region.toUpperCase()}`);
-      const out = await this.explore({ id: `zone-${id}`, stage: zone.stage, rook: at, cast: zone.cast, exits: zone.exits, pickups: zone.pickups,
+      this.flags.set(`VISITED_${id.toUpperCase()}`, 1);
+      world.resetPlayer(); // a new zone: back to full health (explore puts Rook at the arrival point)
+      const out = await this.explore({ id: `zone-${id}`, stage: zone.stage, rook: at, cast: zone.cast, exits: zone.exits, pickups: zone.pickups, encounters: zone.encounters,
         objective: zone.exits.map((e) => `<b>Exit:</b> ${e.label}`).join(" · ") });
       if (!this.active) return;
       this._fade(true, 0.35);
@@ -812,7 +929,7 @@ export class StoryPlayer {
   }
 
   /** Map travel: jump to another zone's main arrival point. */
-  travel(zoneId) { if (this.exploring && !this.exploring.busy && ZONES[zoneId]) { this.exploring.busy = true; this.exploring.resolve({ travel: zoneId }); } }
+  travel(zoneId) { if (this.exploring && !this.exploring.busy && !this.exploring.combat && ZONES[zoneId]) { this.exploring.busy = true; this.exploring.resolve({ travel: zoneId }); } }
 
   // ---- Cutscenes (timeline playback) ----
   playCutscene(id) {
@@ -892,6 +1009,12 @@ export class StoryPlayer {
 
   /** World events main.js forwards while a story fight runs. */
   onWorldEvent(ev) {
+    const x = this.exploring;
+    if (x?.combat && !this.fight) {
+      if (ev.type === "waveClear") this._endCombat(true);
+      if (ev.type === "playerDown") this._fallInField();
+      return;
+    }
     const f = this.fight;
     if (!f || f.done) return;
     const hint = f.beat.eventHints?.[ev.type];
