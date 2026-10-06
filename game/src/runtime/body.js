@@ -120,6 +120,17 @@ export function buildBody(rig, scene, id, L, kind, add, skin) {
     const footMat = O.boots === "bare" ? M(O.bootColor) : boot;
     const foot = add(MB.CreateSphere("foot", { diameter: 1, segments: 6 }, scene), ankleN, 0, -0.03, 0.06);
     foot.scaling.set(an * 2.7, 0.075, 0.25); foot.material = footMat; dirty(foot, (O.grime ?? 0) + 0.2);
+    if (O.boots === "bare" && (O.moss || O.machine)) { // monsters: a broad webbed foot, three splayed toes, hooked claws
+      foot.scaling.set(an * 3.6, 0.08, 0.22);
+      const web = add(MB.CreateCylinder("footWeb", { height: 0.012, diameter: 0.42, tessellation: 12, arc: 0.36 }, scene), ankleN, 0, -0.06, 0.08);
+      web.rotation.y = -Math.PI / 2 - Math.PI * 0.36; web.material = M(O.machine ? "#3a3022" : "#55602e"); // the webbing between the toes
+      for (const [ang, len] of [[-0.55, 0.16], [0, 0.2], [0.55, 0.16]]) {
+        const toe = add(MB.CreateCylinder("toe", { height: len, diameterTop: 0.035, diameterBottom: 0.055, tessellation: 6 }, scene), ankleN, Math.sin(ang) * len * 0.6, -0.05, 0.08 + Math.cos(ang) * len * 0.6);
+        toe.rotation.set(Math.PI / 2, ang, 0); toe.material = footMat;
+        const claw = add(MB.CreateCylinder("toeClaw", { height: 0.09, diameterTop: 0, diameterBottom: 0.035, tessellation: 5 }, scene), ankleN, Math.sin(ang) * (len + 0.05), -0.065, 0.08 + Math.cos(ang) * (len + 0.05));
+        claw.rotation.set(Math.PI / 2 + 0.5, ang, 0); claw.material = M(O.machine ? "#2a2622" : "#d8cfb4");
+      }
+    }
     if (O.boots !== "bare") {
       const sole = add(MB.CreateBox("sole", { width: an * 2.5, height: 0.022, depth: 0.24 }, scene), ankleN, 0, -0.064, 0.065); sole.material = M("#1f1814");
       const top0 = { tall: 0.06, ankle: 0.62, shoes: 0.9, waders: -0.1 }[O.boots] ?? 0.9;

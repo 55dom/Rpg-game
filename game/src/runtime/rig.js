@@ -295,12 +295,10 @@ export class Rig {
       shellH.scaling.set(1, 1.08, 1.06); shellH.material = steelH;
       const guard = add(softBox("helmJaw", { width: 0.32, height: 0.16, depth: 0.16 }, scene), this.head, 0, -0.14, 0.12); guard.material = steelH;
       const visor = add(softBox("helmVisor", { width: 0.34, height: 0.045, depth: 0.05 }, scene), this.head, 0, 0.0, 0.25, 0); visor.material = slot;
-      if (L.menace) { // the Choir's fanatics: red light burning through the visor, horns swept back from the helm
+      if (L.menace) { // the Choir's fanatics: red light burning through the visor
         const burn = glow(scene, `${id}-visorGlow`, "#ff2a3a");
         for (const sx of [-1, 1]) {
           const e = add(MB.CreateBox("visorEye", { width: 0.1, height: 0.022, depth: 0.03 }, scene), this.head, sx * 0.075, 0.0, 0.272, 0); e.rotation.z = sx * 0.28; e.material = burn;
-          const horn = add(MB.CreateCylinder("helmHorn", { height: 0.36, diameterTop: 0, diameterBottom: 0.08, tessellation: 6 }, scene), this.head, sx * 0.2, 0.18, -0.06, 0.015);
-          horn.rotation.set(-1.0, 0, -sx * 0.55); horn.material = M("helmHorn", "#2a2030");
         }
       }
       const vslot = add(softBox("helmSlot", { width: 0.035, height: 0.14, depth: 0.05 }, scene), this.head, 0, -0.08, 0.2, 0); vslot.material = slot;
@@ -310,10 +308,7 @@ export class Rig {
         const strand = add(softBox("plumeStrand", { width: 0.035, height: 0.3 + (i % 3) * 0.08, depth: 0.035 }, scene), this.head, -0.08 + i * 0.04, 0.12 - (i % 2) * 0.04, -0.27, 0.012);
         strand.rotation.set(0.25, 0, (i - 2) * 0.08); strand.material = plume;
       }
-      for (const sx of [-1, 1]) { // side drapes and rivets
-        const drape = add(softBox("helmDrape", { width: 0.04, height: 0.3, depth: 0.2 }, scene), this.head, sx * 0.25, -0.12, -0.08, 0.015); drape.material = plume;
-        const rivet = add(MB.CreateSphere("rivet", { diameter: 0.06, segments: 5 }, scene), this.head, sx * 0.25, 0.05, 0.04, 0); rivet.material = M("rivet", "#c9a24a");
-      }
+      // (No side pieces: the helm reads as one clean shape from the front.)
       const scarfN = add(MB.CreateTorus("neckScarf", { diameter: 0.24, thickness: 0.08, tessellation: 8 }, scene), this.head, 0, -0.27, -0.01, 0.02); scarfN.material = plume;
     } else if (L.head === "lump") { // a bog brute: a heavy skull, a brow ridge over slanted eyes, a jaw full of fangs, horns
       const hide = dark, bone = M("fang", "#e8dfc4"), maw = M("maw", "#2a0a0a"), horn = M("horn", "#2a2620");
@@ -335,6 +330,7 @@ export class Rig {
         const h = add(MB.CreateCylinder("horn", { height: 0.34, diameterTop: 0, diameterBottom: 0.1, tessellation: 6 }, scene), this.head, sx * 0.22, 0.2, -0.02, 0.015);
         h.rotation.set(-0.5, 0, -sx * 0.7); h.material = horn;
       }
+      this._drool(scene, id, [[-0.12, -0.2, 0.36], [0.05, -0.21, 0.37], [0.15, -0.19, 0.35]]);
       for (const [x, z] of [[-0.12, -0.18], [0.14, -0.2], [0, -0.26]]) { // moss on the back of the skull
         const t = add(MB.CreateCylinder("moss", { height: 0.22, diameterTop: 0, diameterBottom: 0.16, tessellation: 5 }, scene), this.head, x, 0.12, z, 0.015);
         t.rotation.x = -0.7; t.material = M("moss", "#4f6a2a");
@@ -353,6 +349,7 @@ export class Rig {
       const jaw = add(softBox("jaw", { width: 0.32, height: 0.11, depth: 0.3 }, scene), this.head, 0, -0.18, 0.04); jaw.material = brass;
       const grille = add(MB.CreateBox("grille", { width: 0.26, height: 0.06, depth: 0.03 }, scene), this.head, 0, -0.12, 0.215, 0); grille.material = iron;
       for (let i = 0; i < 5; i++) { const t = add(MB.CreateBox("tooth", { width: 0.03, height: 0.06, depth: 0.03 }, scene), this.head, -0.1 + i * 0.05, -0.12, 0.235, 0); t.material = M("toothMetal", "#d9c48a"); }
+      this._drool(scene, id, [[-0.07, -0.16, 0.24], [0.06, -0.16, 0.24]]); // oil-black ooze seeping through the teeth
     } else {
       const hood = add(MB.CreateCylinder("hood", { height: 0.7, diameterTop: 0, diameterBottom: 0.62, tessellation: 10 }, scene), this.head, 0, 0.12, -0.04);
       hood.material = dark;
@@ -676,6 +673,27 @@ export class Rig {
     this.visibility = 1;
   }
 
+  /**
+   * Drool hanging from a monster's mouth: greenish-brown, glossy strands that stretch, let a drop fall, and
+   * snap back, each on its own rhythm. Kept as separate little meshes so they can move.
+   */
+  _drool(scene, id, points) {
+    const BB = B(), MB = BB.MeshBuilder;
+    const mat = new BB.StandardMaterial(`${id}-drool`, scene);
+    mat.diffuseColor = BB.Color3.FromHexString("#5e5a22"); mat.emissiveColor = BB.Color3.FromHexString("#262410");
+    mat.specularColor = BB.Color3.FromHexString("#d8e0a0"); mat.specularPower = 48; mat.alpha = 0.9;
+    this.drool = points.map(([x, y, z], i) => {
+      const n = new BB.TransformNode(`${id}-droolRoot${i}`, scene); n.parent = this.head; n.position.set(x, y, z);
+      const strand = MB.CreateCylinder(`${id}-droolStrand${i}`, { height: 1, diameterTop: 0.05, diameterBottom: 0.022, tessellation: 6 }, scene);
+      strand.bakeTransformIntoVertices(BB.Matrix.Translation(0, -0.5, 0)); // hangs down from the lip
+      strand.parent = n; strand.material = mat; strand.isPickable = false; strand.metadata = { noGlow: true };
+      const dropN = new BB.TransformNode(`${id}-droolDropN${i}`, scene); dropN.parent = n;
+      const drop = MB.CreateSphere(`${id}-droolDrop${i}`, { diameter: 0.065, segments: 6 }, scene);
+      drop.parent = dropN; drop.scaling.y = 1.4; drop.material = mat; drop.isPickable = false; drop.metadata = { noGlow: true };
+      return { strand, dropN, drop, t: Math.random() * 3, period: 2.2 + Math.random() * 1.4, max: 0.18 + Math.random() * 0.22 };
+    });
+  }
+
   /** Pose for the current ability frame (fractional, for smooth motion between logic frames). */
   armPose(fighter, t) {
     const rest = this.poses.rest;
@@ -784,6 +802,14 @@ export class Rig {
     if (this.beastTail) this.beastTail.rotation.x = -2.1 + Math.sin(this.time * 10) * 0.25;
     if (this.beastLegs) for (const hip of this.beastLegs) hip.rotation.x = Math.sin(this.time * 16 + hip.phase) * 0.7 * run;
     if (this.halo) { this.halo.rotation.y += dt * 2; }
+    if (this.drool) for (const d of this.drool) { // stretch… stretch… a drop lets go and falls; the strand snaps back
+      d.t = (d.t + dt) % d.period;
+      const k = d.t / d.period, grow = Math.min(1, k / 0.75), len = 0.03 + d.max * grow * grow;
+      d.strand.scaling.y = len;
+      if (k < 0.75) { d.dropN.position.y = -len; d.drop.scaling.setAll(0.6 + grow * 0.6); d.drop.scaling.y *= 1.4; }
+      else { const f = (k - 0.75) / 0.25; d.dropN.position.y = -len - f * f * 1.6; d.drop.scaling.setAll(1.2 * (1 - f * 0.5)); }
+      d.drop.setEnabled(fighter.alive || k < 0.75);
+    }
     if (this.gear) this.gear.rotation.y += dt * (fighter.current?.id === "Gearspin" ? 9 : 0.8);
     if (this.wardRing) { const w = fighter.alive && fighter.tags.has("WARDED"); this.wardRing.setEnabled(w); if (w) this.wardRing.rotation.y -= dt * 2.5; }
     if (this.skirt && !this.legs) this.skirt.rotation.x = bodyLean * 0.25;
