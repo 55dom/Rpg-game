@@ -100,8 +100,39 @@ function kit(scene) {
   const glowLayer = scene.effectLayers?.find((l) => l.name === "glow");
   /** Big translucent shapes (light shafts) must stay out of the glow layer or they bloom over everything. */
   const noGlow = (m) => { glowLayer?.addExcludedMesh(m); return m; };
+  const glowless = new Set();
   return {
-    root, add, noGlow, systems, lights,
+    root, add, systems, lights,
+    noGlow: (m) => { glowless.add(m); m.metadata = { ...m.metadata, noGlow: true }; return noGlow(m); },
+    /**
+     * Performance (Phase 4 Step 5): merge the set's static scenery into one mesh per material,
+     * outline width and 24 m cell. Hundreds of props become a few dozen draw calls, while each
+     * cell is still culled on its own. Meshes in `keep` (animated or swapped), instance sources,
+     * instances, disabled, see-through and glow-excluded meshes are left alone.
+     */
+    bake(keep = []) {
+      const skip = new Set(keep), groups = new Map();
+      for (const m of root.getChildMeshes(true)) {
+        if (skip.has(m) || glowless.has(m) || m instanceof BB.InstancedMesh || m.instances?.length || !m.isEnabled(false) || !m.material || m.material.alpha < 1 || !m.getTotalVertices()) continue;
+        m.computeWorldMatrix(true);
+        const c = m.getBoundingInfo().boundingBox.centerWorld, cell = `${Math.floor(c.x / 24)},${Math.floor(c.z / 24)}`;
+        const key = `${m.material.uniqueId}|${m.renderOutline ? m.outlineWidth : 0}|${cell}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(m);
+      }
+      let merged = 0;
+      for (const list of groups.values()) {
+        if (list.length < 2) continue;
+        const outline = list[0].renderOutline ? list[0].outlineWidth : 0;
+        const m = BB.Mesh.MergeMeshes(list, true, true);
+        if (!m) continue;
+        m.parent = root; m.isPickable = false;
+        if (outline) inkOutline(m, outline);
+        m.freezeWorldMatrix();
+        merged += list.length - 1;
+      }
+      return merged;
+    },
     show(on) {
       root.setEnabled(on);
       for (const p of systems) { if (on) p.start(); else p.stop(); }
@@ -447,6 +478,7 @@ function buildLighthouse(scene, mobile) {
   const warm = new BB.PointLight("lh-warm", new BB.Vector3(T.x, 3, T.z), scene); warm.diffuse = color3("#ffb86a").clone(); warm.intensity = 0.4; warm.range = 14; K.lights.push(warm);
   const bulbs = [];
   for (let i = 0; i < 9; i++) { const b = add(MB.CreateSphere("lh-bulb", { diameter: 0.18, segments: 6 }, scene)); b.position.set(T.x - 2 + Math.sin(i * 0.7) * 0.3, 2.8 - Math.sin((i / 8) * Math.PI) * 0.5, T.z - 3 + i * 0.75); b.material = flame; bulbs.push(b); }
+  K.bake([beam, ...lanterns, newLantern]);
   let night = 0, nightTarget = 0;
   const DUSK = { clear: "#8a5f7c", fog: "#c08070", fogDensity: 0.012, hemi: [0.65, "#ffd2b0", "#4a3a5a"], sun: [0.85, "#ffb070", [0.6, -0.55, 0.6]], warm: 0 };
   const DUSK_TOON = { lightDir: [-0.6, 0.6, -0.6], fogColor: "#c08070", fogDensity: 0.008, sky: [1.08, 0.98, 0.95], ground: [0.9, 0.78, 0.82], rim: [1.0, 0.8, 0.6] };
@@ -522,6 +554,7 @@ function buildFens(scene, mobile) {
   bogMat.diffuseColor = color3("#2f3a26"); bogMat.specularColor = color3("#9fb07a"); bogMat.specularPower = 24; bogMat.emissiveColor = color3("#141a10"); bogMat.alpha = 0;
   bog.material = bogMat; bog.setEnabled(false);
   let bogLevel = 0, bogTarget = 0;
+  K.bake([bog]);
   const env = { clear: "#7f8f86", fog: "#8a9a8c", fogDensity: 0.022, hemi: [0.6, "#e0ecd8", "#3a3a2a"], sun: [0.7, "#f0ecd0", [-0.3, -1, 0.4]], warm: 0 };
   const toonEnv = { lightDir: [0.3, 1, -0.4], fogColor: "#8a9a8c", fogDensity: 0.016, sky: [1.0, 1.02, 0.98], ground: [0.78, 0.82, 0.74], rim: [0.8, 0.9, 0.85] };
   return {
@@ -627,6 +660,7 @@ function buildAurelin(scene, mobile) {
     for (const m of [b, h, hr]) { m.parent = K.root; m.isPickable = false; }
     walkers.push({ b, h, hr, path: loops[i % loops.length], t: rng() * 100, speed: 0.6 + rng() * 0.6, side: (rng() - 0.5) * 2.2 });
   }
+  K.bake([]);
   const env = { clear: "#a8cdf0", fog: "#c4dbf2", fogDensity: 0.008, hemi: [0.6, "#fff6e6", "#7a86a8"], sun: [0.8, "#fff1d0", [-0.4, -1, 0.55]], warm: 0 };
   const toonEnv = { lightDir: [0.4, 1, -0.55], fogColor: "#c4dbf2", fogDensity: 0.005, sky: [1.1, 1.08, 1.04], ground: [0.9, 0.88, 0.9], rim: [0.75, 0.85, 1] };
   return {
@@ -742,6 +776,7 @@ function buildThornwick(scene, mobile) {
   smoke.minSize = 0.6; smoke.maxSize = 1.4; smoke.minLifeTime = 2; smoke.maxLifeTime = 3.5; smoke.emitRate = 8; smoke.gravity = new BB.Vector3(0.2, 0.6, 0);
   smoke.direction1 = new BB.Vector3(-0.1, 1, -0.1); smoke.direction2 = new BB.Vector3(0.1, 1, 0.1); smoke.minEmitPower = 0.2; smoke.maxEmitPower = 0.4; smoke.blendMode = BB.ParticleSystem.BLENDMODE_STANDARD;
   K.systems.push(smoke);
+  K.bake([]);
   const env = { clear: "#b4d4ee", fog: "#cfe0ea", fogDensity: 0.009, hemi: [0.62, "#fff4e0", "#6a7a5a"], sun: [0.85, "#fff0c8", [-0.5, -1, 0.35]], warm: 0 };
   const toonEnv = { lightDir: [0.5, 1, -0.35], fogColor: "#cfe0ea", fogDensity: 0.006, sky: [1.1, 1.08, 1.0], ground: [0.86, 0.9, 0.8], rim: [0.85, 0.85, 0.8] };
   return {
@@ -800,6 +835,7 @@ function buildUndercroft(scene, mobile) {
   dust.minSize = 0.05; dust.maxSize = 0.14; dust.minLifeTime = 4; dust.maxLifeTime = 7; dust.emitRate = mobile ? 5 : 10; dust.gravity = new BB.Vector3(0, 0.02, 0);
   dust.minEmitPower = 0.02; dust.maxEmitPower = 0.08; dust.blendMode = BB.ParticleSystem.BLENDMODE_ADD;
   K.systems.push(dust);
+  K.bake([]);
   const env = { clear: "#0a0b0f", fog: "#14151b", fogDensity: 0.028, hemi: [0.5, "#ffd9a8", "#2a2420"], sun: [0.35, "#ffcf9a", [0.2, -1, 0.3]], warm: 0 };
   const toonEnv = { lightDir: [-0.2, 1, -0.3], fogColor: "#14151b", fogDensity: 0.02, sky: [0.92, 0.84, 0.74], ground: [0.6, 0.56, 0.52], rim: [0.6, 0.85, 1.0] };
   return {

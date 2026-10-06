@@ -66,6 +66,19 @@ export function boot(doc = document) {
   const camera = new FollowCamera(scene, { mobile });
   camera.reduceMotion = reduced;
   const gl = new BB.GlowLayer("glow", scene, { mainTextureRatio: mobile ? 0.35 : 0.5, blurKernelSize: mobile ? 24 : 40 });
+  // Performance (Phase 4 Step 5): the glow pass draws only things that glow (unlit or emissive
+  // materials), instead of every mesh in the scene a second time. New meshes are picked up as they appear.
+  Rig.outlineRange = mobile ? 20 : 30; // characters past this lose their ink lines (level of detail)
+  const glowing = new Set();
+  const syncGlow = () => {
+    for (const m of scene.meshes) {
+      if (glowing.has(m.uniqueId) || m.metadata?.noGlow) continue;
+      const mat = m.material, e = mat?.emissiveColor;
+      if (!mat || !(mat.disableLighting || mat.metadata?.glow || (e && e.r + e.g + e.b > 0.25))) continue;
+      glowing.add(m.uniqueId); gl.addIncludedOnlyMesh(m);
+      m.onDisposeObservable.addOnce(() => { glowing.delete(m.uniqueId); gl.removeIncludedOnlyMesh(m); });
+    }
+  };
   gl.intensity = 0.75;
   // Color grade (GDD §19.6.1) lives in the toon shader (saturation, cool shadows) plus a CSS vignette:
   // a full-screen post-process fought the glow layer and washed the picture out.
@@ -476,6 +489,23 @@ export function boot(doc = document) {
 
   const toggleHelp = (on = !state.help) => { state.help = on; root.querySelector("[data-help]").hidden = !on; };
   menu("help", () => toggleHelp());
+  // Performance meter (Phase 4 Step 5): frame rate, draw calls and render scale, against the budget (GDD §23.3).
+  const perfEl = root.querySelector("[data-perf]"), perfBtn = root.querySelector("[data-perf-toggle]");
+  const perf = { on: false, t: 0, frames: 0, draws: 0, si: null };
+  perfBtn?.addEventListener("click", () => {
+    perf.on = !perf.on; perfEl.hidden = !perf.on; sfx.play("ui");
+    perfBtn.textContent = perf.on ? "HIDE PERFORMANCE METER" : "SHOW PERFORMANCE METER";
+    if (perf.on && !perf.si) perf.si = new BB.SceneInstrumentation(scene);
+  });
+  const perfTick = (dt) => {
+    if (!perf.on || !perf.si) return;
+    perf.t += dt; perf.frames++; perf.draws += perf.si.drawCallsCounter.current;
+    if (perf.t < 0.5) return;
+    const fps = perf.frames / perf.t, draws = Math.round(perf.draws / perf.frames), budget = mobile ? 250 : 400;
+    perfEl.textContent = `${Math.round(fps)} FPS · ${draws}/${budget} DRAWS · ${Math.round(scene.getActiveIndices() / 3000)}K TRIS · ${quality.ratio.toFixed(2)}x`;
+    perfEl.classList.toggle("over", fps < 50 || draws > budget);
+    perf.t = 0; perf.frames = 0; perf.draws = 0;
+  };
   menu("frameData", () => { settings.frameData = !settings.frameData; applySettings(); });
   menu("flashes", () => { settings.flashes = !settings.flashes; applySettings(); });
   menu("sound", () => { settings.sound = !settings.sound; applySettings(); });
@@ -902,6 +932,9 @@ export function boot(doc = document) {
 
     if (impactLeft > 0) { impactLeft -= dt; if (impactLeft <= 0) canvas.style.filter = ""; }
     quality.update(dt);
+    if ((state.glowTick = (state.glowTick ?? 0) + 1) % 15 === 1) syncGlow();
+    perfTick(dt);
+    const cp = camera.cam.position; Rig.view = { x: cp.x, z: cp.z };
     if (!state.toonChecked && state.time > 1.5) { state.toonChecked = true; if (toonFallbackIfBroken(scene)) console.warn("toon shader failed; using classic cel shading"); }
     scene.render();
   });

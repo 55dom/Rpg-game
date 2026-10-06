@@ -147,7 +147,7 @@ export class Rig {
       const shell = add(MB.CreateSphere("headLine", { diameter: 0.6, segments: 14, sideOrientation: BB.Mesh.BACKSIDE }, scene), this.head, 0, 0.04, -0.04, 0);
       const lineMat = new BB.StandardMaterial(`${id}-headLine`, scene);
       lineMat.disableLighting = true; lineMat.emissiveColor = lineOf(L.hairColor); lineMat.diffuseColor = BB.Color3.Black(); lineMat.specularColor = BB.Color3.Black();
-      shell.material = lineMat;
+      shell.material = lineMat; shell.metadata = { noGlow: true }; // ink, not light: keep it out of the glow pass
       if (L.hair === "crop") shell.scaling.set(1.02, 0.92, 1);
       face.material = skin;
       const eyeMat = toon(scene, `${id}-eye`, "#1a1c26");
@@ -445,6 +445,7 @@ export class Rig {
 
     // Tinted outlines: each part's line is its own color, darkened toward blue (not flat black).
     for (const m of this.meshes) if (m.renderOutline && m.material?.toonHex) m.outlineColor = lineOf(m.material.toonHex);
+    this._bakeParts();
 
     this.flash = 0;
     this.time = Math.random() * 10;
@@ -485,6 +486,13 @@ export class Rig {
   update(fighter, t, dt) {
     const BB = B();
     this.time += dt;
+    // Level of detail: far from the camera, drop the ink outlines (one extra draw per part, and too thin to see there).
+    const far = Rig.view ? Math.hypot(fighter.pos.x - Rig.view.x, fighter.pos.z - Rig.view.z) > Rig.outlineRange : false;
+    if (far !== this.far) {
+      this.far = far;
+      this.outlined ??= this.meshes.filter((m) => m.renderOutline);
+      for (const m of this.outlined) m.renderOutline = !far;
+    }
     const x = lerp(fighter.prev.x, fighter.pos.x, t);
     const y = lerp(fighter.prev.y, fighter.pos.y, t);
     const z = lerp(fighter.prev.z, fighter.pos.z, t);
@@ -577,6 +585,34 @@ export class Rig {
     this.shadow.visibility = this.visibility;
   }
 
+  /**
+   * Performance (Phase 4 Step 5): parts that move together (same parent node, material and ink line)
+   * become one mesh, so a character costs about a third of the draw calls. Parts the rig animates on
+   * their own (anything kept as a field: skirt, cape, halo, gear…) are left as they are.
+   */
+  _bakeParts() {
+    const BB = B(), keep = new Set(Object.values(this).filter((v) => v instanceof BB.AbstractMesh)), groups = new Map();
+    for (const m of this.meshes) {
+      if (keep.has(m) || !m.parent || !m.isEnabled(false) || !m.material || !m.getTotalVertices()) continue;
+      const key = `${m.parent.uniqueId}|${m.material.uniqueId}|${m.renderOutline ? `${m.outlineWidth}|${m.outlineColor.toHexString()}` : "-"}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(m);
+    }
+    const merged = new Set();
+    for (const list of groups.values()) {
+      if (list.length < 2) continue;
+      const parent = list[0].parent, { renderOutline, outlineWidth, outlineColor } = list[0];
+      for (const m of list) m.parent = null; // their local transforms become the merge space
+      const one = BB.Mesh.MergeMeshes(list, true, true);
+      if (!one) { for (const m of list) m.parent = parent; continue; }
+      one.parent = parent; one.isPickable = false;
+      one.renderOutline = renderOutline; one.outlineWidth = outlineWidth; one.outlineColor = outlineColor.clone();
+      for (const m of list) merged.add(m);
+      this.meshes.push(one);
+    }
+    this.meshes = this.meshes.filter((m) => !merged.has(m));
+  }
+
   /** Hide or show the whole character (cutscenes hide the player). */
   setVisible(on) { this.root.setEnabled(on); this.shadow.setEnabled(on); }
 
@@ -619,6 +655,9 @@ export class Rig {
     this.shadow.dispose(false, true);
   }
 }
+
+Rig.view = null;        // the camera's ground position, set by the game each frame
+Rig.outlineRange = 30;  // metres
 
 const RELAXED = [1.45, 0.3, 0.15];
 const CRADLE = [0.95, -0.55, 0];

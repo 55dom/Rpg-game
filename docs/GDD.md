@@ -1578,7 +1578,35 @@ Estimates assume **1–2 people, part-time-ish**. Every phase ends with a **go/n
 | 2 | **Economy and equipment:**<br>• **Marks:** earned from every defeated enemy (bounties per kind) and when you finish an episode.<br>• **12 curated items** (`data/items.js`) across a weapon, a cloak, and two charms. Each has one clear identity: damage, posture, mana, defense, health, Surge, or speed (no random affixes, §17).<br>• **The Lowmarket stall** in Aurelin sells them, and new gear goes on right away.<br>• **The BAG screen** lets you swap gear anywhere in the story.<br>• **In the fight:** gear changes Rook's stats and damage (`World` mods).<br>• **Saves:** your gear and Marks save with the story | ✅ Done |
 | 3 | **Reputation, merit, and side quests:**<br>• **Quest engine** (`core/quests.js`): each quest's state lives in one flag (`Q_<ID>`), and its stages advance when their flag expression comes true, so dialogue, pickups, and fights can all drive it. Rewards grant Marks, merit, and reputation.<br>• **Three Aurelin side quests** (`data/quests.js`): *Something Fried* (Dagrun's lunch from the fountain cook), *The Village Nobody Remembers* (ask the guard, the crier, and the vendor about the vanished Fens village), and *A Lantern for the Kid* (find a toy by the gate).<br>• **Renown changes the city:** at Aurelin renown 10, the guard salutes and the Lowmarket gives 10% off.<br>• **Squad merit:** the Lanterns start last of seven squads and climb the ranking as merit grows.<br>• **The QUESTS journal** shows reputation, merit, squad rank, and the quest log. The objective tracker shows the active quest | ✅ Done |
 | 4 | **Thornwick, the Fens field, and the Undercroft:**<br>• **Field and dungeon fights** (`runtime/story.js` encounters): walk into an encounter's area and enemies ring the spot (`World.spawnWave(kinds, at)`). Field fights come back each visit and give up if you run about 12 m away. Dungeon rooms bar their passages until they're clear and stay cleared. Falling wakes you at the zone's entrance with nothing lost.<br>• **Thornwick** (home): the green and its oak, the orphanage, the smithy, the mill and fields, and a palisade. Mother Wren, Farmer Odo, and the smith live here. **The orphan ledger** is readable: you were found the night Larkspur burned. **Quest:** *Bandits on the Mill Road*, with the new **Road Bandit** (a knife thrower).<br>• **The Greywater Fens** as a field zone: hounds in the reeds, the Choir back in the empty village, and a bog beast. Old Ness the fisher lives here, and the hymn nailed to the well can be read.<br>• **The Undercroft** (dungeon, down the Lowmarket grate): three barred rooms with the new **Undercroft Rat** (swarms) and **Clockwork Sentinel** (armored attacks; Gearspin is unblockable, so dodge it). The Gear Hall has a strongbox (+60 Marks). **Quest:** *Something Below the Lowmarket* (from the cook).<br>• **Travel:** the Lighthouse's west road leads to Thornwick, and Thornwick's north-west path leads to the Fens. The map lists every overworld zone. Dungeons are entered on foot. Each zone you enter sets `VISITED_<ZONE>` | ✅ Done |
-| 5 | Performance budget in the largest zone (PC and phone), and the gate review | Next |
+| 5 | **Performance budget and the gate:**<br>• **Static scenery is merged** (`kit.bake` in `runtime/sets.js`): one mesh per material, ink line and 24 m cell, so each cell is still culled.<br>• **Characters merge the parts that move together** (`Rig._bakeParts`), and far characters drop their ink lines (level of detail: 30 m on PC, 20 m on phones).<br>• **The glow pass only draws things that glow**, instead of every mesh a second time.<br>• **A performance meter** (**?** → *Show performance meter*) shows FPS, draw calls against the budget, triangles, and render scale.<br>• **Fix:** the top menu no longer runs off narrow phone screens | ✅ Done |
+
+**Performance budget** (measured with Babylon's scene instrumentation at fixed spots in every zone; "before" is the Step 4 build):
+
+| Zone (worst spot) | PC draws: before → after | Phone draws: before → after | Phone triangles |
+|---|---|---|---|
+| Lighthouse | 760 → 377 | 511 → 234 | 55K |
+| **Aurelin** (largest) | 667 → 307 | 434 → 189 | 49K |
+| Thornwick | 384 → 191 | 270 → 122 | 35K |
+| Greywater Fens | 894 → 284 | 413 → 197 | 35K |
+| Undercroft | 318 → 109 | 138 → 81 | 13K |
+
+- **Budget:** at most **400 draw calls on PC** and **250 on phones**, at most **80K triangles on phones**, and a scene CPU time under 8 ms per frame (measured: about 6 ms on PC and 3–3.5 ms on phones).
+- **Every zone is within budget.** The phone figure is the worst view, including the whole crowd in Aurelin.
+- **Adaptive resolution** (0.6×–2×) protects the frame rate on slow GPUs.
+- **Frame rates were not measured on real hardware.** The test browser renders on the CPU, so its frame rates mean nothing. The real check is the meter on the reference phone.
+
+**Phase 4 gate review.** The gate is *"Performance budget met in the largest zone in a PC browser and on the mobile reference phone."*
+- **Built and checked:**
+  - **Five connected zones:** the Lighthouse, Aurelin, Thornwick, the Greywater Fens (a field zone with encounters), and the Undercroft (a dungeon with barred rooms).
+  - **Systems:** free roam, map travel, NPCs with talk nodes that react to the story, the Lowmarket shop, curated equipment, Marks, reputation (squad, Aurelin, Thornwick), squad merit and rank, five side quests with a journal, readable lore, field and dungeon fights, and three new enemy types.
+  - 145 automated tests pass. Every zone was walked, fought, and measured in a desktop browser and an emulated phone.
+- **Your call:**
+  - Open the meter on your phone in Aurelin's plaza. It should stay at 50+ FPS and show draw calls in green.
+  - Say whether exploring feels worth doing: talking, side quests, the Undercroft.
+- **Known gaps carried forward:**
+  - Zones load whole rather than streaming in. Each is small enough that this is fine for now.
+  - Rival squads exist only as a ranking, with no squad-vs-squad events yet.
+  - The world isn't tied into the episodes yet. Free roam is reached from the title screen.
 
 ---
 
@@ -1911,4 +1939,4 @@ The foundation questions from v0.1 are still open:
 3. **Cast & story:** Brannoc's real death, Aurek Valcourt as the red herring, the Palimpsest protagonist. Anything to change?
 4. **Scope calls:** 4 player affinities at launch, AI companions first (tag-swap for Rook, Severin, and Cal later), zones rather than a seamless open world, "Season 1" = Arcs 1–3.
 
-**Phase 1:** complete (§22). **Phase 2:** complete (§23.1): Skyrender, reactions, the squad, the Fens roster, Hask the Bogwarden, page evolution, cel-shading v2, and the Episode 4 combat run. It waits on your gate review ("does it feel anime?"). **Phase 3:** complete (§23.2): Episodes 1–4 playable as story, with dialogue, choices, saves, cutscenes, and hubs. It waits on your gate review. **Phase 4 progress** (§23.3): Steps 1–4 are done (zones, Aurelin, Marks and equipment, reputation, merit, side quests, Thornwick, the Fens field, and the Undercroft dungeon). **Next: Step 5**: the performance budget in the largest zone on PC and phone, and the Phase 4 gate review. **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.
+**Phase 1:** complete (§22). **Phase 2:** complete (§23.1): Skyrender, reactions, the squad, the Fens roster, Hask the Bogwarden, page evolution, cel-shading v2, and the Episode 4 combat run. It waits on your gate review ("does it feel anime?"). **Phase 3:** complete (§23.2): Episodes 1–4 playable as story, with dialogue, choices, saves, cutscenes, and hubs. It waits on your gate review. **Phase 4:** complete (§23.3): five connected zones, shops and equipment, reputation, merit and side quests, field and dungeon fights, and the performance budget (met in every zone). It waits on your gate review: check the performance meter on your phone. **Next: Phase 5 (Full RPG)**, Step 1: character progression (levels, stat growth, and a skill tree for Rook's pages). **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.
