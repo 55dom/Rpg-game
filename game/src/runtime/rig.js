@@ -415,6 +415,18 @@ export class Rig {
           gl.rotation.set(-0.5, 0, -sx * (1.1 + g * 0.25)); gl.material = gillM;
         }
       }
+      // Bat: tall pointed ears with a pink inner membrane, a leaf-nose above the nostrils, two fangs over the lip.
+      const earIn = M("earInner", L.gills), fangM = M("fang", "#f2ead6");
+      for (const sx of [-1, 1]) {
+        const ear = add(MB.CreateCylinder("batEar", { height: 0.42, diameterTop: 0, diameterBottom: 0.24, tessellation: 8 }, scene), this.head, sx * 0.33, 0.3, -0.1, 0.015);
+        ear.scaling.z = 0.4; ear.rotation.set(-0.15, sx * 0.35, -sx * 0.42); ear.material = hide;
+        const inner = add(MB.CreateCylinder("batEarIn", { height: 0.32, diameterTop: 0, diameterBottom: 0.16, tessellation: 8 }, scene), this.head, sx * 0.325, 0.28, -0.07, 0);
+        inner.scaling.z = 0.2; inner.rotation.set(-0.15, sx * 0.35, -sx * 0.42); inner.material = earIn;
+        const fang = add(MB.CreateCylinder("fang", { height: 0.12, diameterTop: 0, diameterBottom: 0.045, tessellation: 5 }, scene), this.head, sx * 0.12, -0.16, 0.355, 0.01);
+        fang.rotation.set(Math.PI + 0.15, 0, 0); fang.material = fangM;
+      }
+      const leaf = add(MB.CreateCylinder("noseLeaf", { height: 0.14, diameterTop: 0, diameterBottom: 0.11, tessellation: 6 }, scene), this.head, 0, 0.07, 0.37, 0.012);
+      leaf.scaling.z = 0.35; leaf.rotation.x = -0.25; leaf.material = hide;
       for (const [x, y, z] of [[-0.25, 0.08, -0.12], [0.18, 0.13, -0.16], [0.02, 0.15, -0.05], [-0.1, 0.14, 0.08], [0.32, 0.03, 0.02], [-0.34, 0.0, 0.0]]) {
         const w = add(MB.CreateSphere("headWart", { diameter: 0.05, segments: 4 }, scene), this.head, x, y, z); w.material = wartM;
       }
@@ -983,6 +995,11 @@ export class Rig {
     if (this.throatSac) { // the throat sac puffs in and out; it balloons before a spit or a tongue
       const charge = fighter.current && (fighter.current.id === "Spit" || fighter.current.id === "Tongue") ? 0.35 : 0;
       const k = 1 + Math.max(0, Math.sin(this.time * 2.2)) * 0.25 + charge; this.throatSac.scaling.set(k, k * 0.85, k);
+    }
+    if (this.wingNodes) { // the wings breathe half-folded; they beat hard through a leap and flare on a roar of a spit
+      const leap = fighter.current?.id === "Flop", spit = fighter.current?.id === "Spit" || fighter.current?.id === "Tongue";
+      const beat = leap ? Math.sin(this.time * 18) * 0.7 : Math.sin(this.time * 1.6) * 0.08;
+      for (const n of this.wingNodes) { n.rotation.y = n.side * ((spit ? 0.05 : leap ? 0.15 : 0.45) + beat); n.rotation.z = n.side * (leap ? -0.2 : 0); }
     }
     if (this.tailNodes) this.tailNodes.forEach((n, i) => { n.rotation.y = Math.sin(this.time * 2.4 - i * 0.7) * (0.18 + i * 0.06) * (1 + run); });
     if (this.gear) this.gear.rotation.y += dt * (fighter.current?.id === "Gearspin" ? 9 : 0.8);

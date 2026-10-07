@@ -194,7 +194,7 @@ export const SHEETS = Object.freeze({
     outfit: { top: "#6a4a3a", hem: "thigh", sleeves: "long", legs: "#4a3a32", boots: "tall", bootColor: "#3a2a22", breastplate: "#8a5a3a", pauldrons: "#7a4a2a",
       bracers: "#8a5a3a", gloves: "#4a3a32", tattered: "#4a3a2a", belt: "#3a2a1a", grime: 0.7 } },
   gullmaw: { build: "squat", gait: "heavy", idle: "still", outfit: { top: "#2f5a4a", hem: null, sleeves: "long", legs: "#2f5a4a", boots: "bare", bootColor: "#2a4a3c",
-    amphibian: true, belly: "#d9c98a", warts: "#d8862a", frill: "#c8506a", web: "#4a8a6a", claw: "#e8dcc0" } },
+    amphibian: true, belly: "#d9c98a", warts: "#d8862a", frill: "#c8506a", web: "#4a8a6a", claw: "#e8dcc0", wings: "#4a2e44" } },
   clockwork: { build: "slim", gait: "machine", idle: "still", outfit: { top: "#a8822e", hem: null, sleeves: "long", legs: "#a8822e", boots: "bare", bootColor: "#6a5222", machine: true } },
 });
 

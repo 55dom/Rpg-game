@@ -110,6 +110,44 @@ export function buildBody(rig, scene, id, L, kind, add, skin) {
       const ray = add(MB.CreateCylinder("frillRay", { height: 0.2, diameterTop: 0, diameterBottom: 0.04, tessellation: 4 }, scene), rig.body, 0, y, -torsoR(y) * depth - 0.04);
       ray.rotation.x = -1.2; ray.material = M(O.warts);
     }
+    if (O.wings) { // bat wings from the shoulder blades: an arm bone, four long fingers, a scalloped membrane, a hooked thumb claw
+      rig.wingNodes = [];
+      const memM = M(O.wings), boneM = top, clawM = M(O.claw ?? "#e8dcc0");
+      for (const sd of [-1, 1]) {
+        const wn = node(`wing${sd}`, rig.body, sd * sw * 0.5, T * 0.88, -cw * depth * 0.75);
+        wn.rotation.set(0.25, sd * 0.45, 0); // swept back, half spread
+        const P = (x, y, z) => new BB.Vector3(sd * x, y, z);
+        const root = P(0, 0, 0), wrist = P(0.55, 0.38, -0.14), low = P(0.16, -0.5, -0.06);
+        const tips = [P(1.2, 0.62, -0.32), P(1.32, 0.12, -0.38), P(1.08, -0.38, -0.3), P(0.62, -0.62, -0.2)];
+        const outline = [root, wrist, tips[0]];
+        for (let i = 0; i < tips.length - 1; i++) { // the edge dips between finger tips: the bat's scallops
+          const a = tips[i], b = tips[i + 1], mid = a.add(b).scale(0.5), dip = mid.add(wrist.subtract(mid).scale(0.22));
+          outline.push(dip, b);
+        }
+        outline.push(low);
+        // Fan the membrane from the wrist; both windings so it shows from either side.
+        const pos = [], idx = [], n = outline.length;
+        for (const v of [...outline, ...outline]) pos.push(v.x, v.y, v.z); // two copies: one per side, each with its own normals
+        const W = 1; // index of the wrist
+        for (let i = 2; i < n - 1; i++) idx.push(W, i, i + 1);
+        idx.push(W, n - 1, 0); idx.push(0, W, 2);
+        const n0 = idx.length; for (let i = 0; i < n0; i += 3) idx.push(idx[i] + n, idx[i + 2] + n, idx[i + 1] + n);
+        const vd = new BB.VertexData(); vd.positions = pos; vd.indices = idx; const nrm = []; BB.VertexData.ComputeNormals(pos, idx, nrm); vd.normals = nrm;
+        const mem = new BB.Mesh(`${id}-wingMembrane`, scene); vd.applyToMesh(mem);
+        add(mem, wn, 0, 0, 0, 0.012); mem.material = memM;
+        const bone = (a, b, r0, r1, name) => { // a tapered bone from a to b
+          const len = BB.Vector3.Distance(a, b), c = add(MB.CreateCylinder(name, { height: len, diameterTop: r1, diameterBottom: r0, tessellation: 6 }, scene), wn, (a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2, 0.012);
+          const d = b.subtract(a).normalize(), axis = BB.Vector3.Cross(BB.Vector3.Up(), d), ang = Math.acos(Math.max(-1, Math.min(1, BB.Vector3.Dot(BB.Vector3.Up(), d))));
+          c.rotationQuaternion = axis.length() < 1e-6 ? BB.Quaternion.Identity() : BB.Quaternion.RotationAxis(axis.normalize(), ang); c.material = boneM; return c;
+        };
+        bone(root, wrist, 0.1, 0.07, "wingArm");
+        for (const t of tips) bone(wrist, t, 0.05, 0.018, "wingFinger");
+        const knuckle = add(MB.CreateSphere("wingWrist", { diameter: 0.11, segments: 6 }, scene), wn, wrist.x, wrist.y, wrist.z, 0.012); knuckle.material = boneM;
+        const thumb = add(MB.CreateCylinder("wingThumb", { height: 0.14, diameterTop: 0, diameterBottom: 0.04, tessellation: 5 }, scene), wn, wrist.x + sd * 0.02, wrist.y + 0.08, wrist.z + 0.04, 0.01);
+        thumb.rotation.set(0.6, 0, -sd * 0.5); thumb.material = clawM;
+        rig.wingNodes.push(Object.assign(wn, { side: sd }));
+      }
+    }
     // The tail: four bones from the base of the spine, each a tapering segment with a fin on top. The rig sways it.
     rig.tailNodes = [];
     let parent = node("tail0", rig.pelvis, 0, -0.02, -hw * depth * 0.85), rad = hw * 0.55;

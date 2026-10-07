@@ -10,6 +10,7 @@ import { WORLD_SCRIPT } from "../src/data/story/world.js";
 import { parseScript, DialogueRunner } from "../src/core/script.js";
 import { FlagStore } from "../src/core/flags.js";
 import { LOOKS } from "../src/runtime/rig.js";
+import { SHEETS } from "../src/data/sheets.js";
 
 const run = (w, n, log = []) => { for (let i = 0; i < n; i++) { w.step(); log.push(...w.drainEvents()); } return log; };
 const boss = (kind, companions = false) => {
@@ -121,4 +122,6 @@ test("Gullmaw's moves: the tongue reels you in, the belly-flop sends out a splas
   b.boss.onCustom("splash", 6, A.Flop);
   assert.ok(w.drainEvents().some((e) => e.type === "wave" && e.wave.kind === "splash"));
   assert.equal(LOOKS.gullmaw.weapon, "claw", "webbed claw hands"); assert.equal(LOOKS.gullmaw.head, "toad");
+  const sheet = SHEETS.gullmaw.outfit;
+  assert.ok(sheet.amphibian && sheet.wings && sheet.web && sheet.boots === "bare", "bat wings on an amphibian, webbed clawed feet");
 });
