@@ -288,3 +288,156 @@ export class SparController {
     this.cooldown = T.evadeCooldown;
   }
 }
+
+// ---- Arc 1–2 bosses (data/bosses2.js) --------------------------------------------------------------
+import { ILSE_ABILITIES, ILSE_PHASES, ILSE_TUNING, ilseOptions, GALEN_ABILITIES, GALEN_PHASES, GALEN_TUNING, galenOptions,
+  MAGISTRATE_ABILITIES, MAGISTRATE_PHASES, MAGISTRATE_TUNING, magistrateOptions } from "../data/bosses2.js";
+
+/** Shared phase plumbing: a new brain per phase, objects to clear when the boss falls. */
+class PhasedBoss {
+  constructor(world, f, phases, options) {
+    this.world = world; this.f = f; this.phases = phases; this.options = options;
+    this.phase = 1; this.objects = []; this.damageFactor = 1; this.postureFactor = 1;
+    this.home = { x: f.pos.x, z: f.pos.z };
+  }
+  get brainActive() { return true; }
+  get untouchable() { return false; }
+  get rules() { return this.phases[this.phase - 1]; }
+  _checkPhase() {
+    const hp = this.f.combatant.health.normalized;
+    const next = this.phases.find((p) => hp > p.above)?.phase ?? this.phases.length;
+    if (next > this.phase) {
+      this.phase = next;
+      this.f.brain = new EnemyBrain(this.f.id, this.f.brain.pool, this.options(next), this.world.rng);
+      this.f.brain.aggroRange = 40;
+      this.world.emit({ type: "bossPhase", fighter: this.f, phase: next });
+      this.enterPhase?.(next);
+    }
+  }
+  _ring(n, r, kind) { // objects in a ring around where the fight started
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + 0.5;
+      out.push(this.world.spawnObject(kind, this.home.x + Math.sin(a) * r, this.home.z + Math.cos(a) * r, this.f));
+    }
+    this.objects.push(...out);
+    return out;
+  }
+  _clearObjects() { for (const o of this.objects) if (o.alive) o.combatant.health.set(0); this.objects = []; }
+  _cogFan(key, count, spread, a) { this.world.fireFan(this.f, a, key, 13, count, spread); }
+  tick() {
+    if (!this.f.alive) { if (this.objects.length) this._clearObjects(); this.world.silenceAll = false; this.world.dodgeHush = 0; return; }
+    this._checkPhase();
+    this.step?.();
+  }
+}
+
+export class IlseController extends PhasedBoss {
+  constructor(world, f) { super(world, f, ILSE_PHASES, ilseOptions); this.hushTimer = ILSE_TUNING.hushEvery; this.warn = 0; this.acolytes = []; }
+  onCustom(key, value, a) {
+    const w = this.world, f = this.f, T = ILSE_TUNING;
+    if (key === "psalm") { this._cogFan("Bolt", value, 0.3, a); return true; }
+    if (key === "hush") { const t = f.target?.alive ? f.target : w.player; w.addSilence(t.pos.x, t.pos.z, T.hushRadius, value); return true; }
+    if (key === "toll") { w.addWave(f, f.pos.x, f.pos.z, { speed: 7, maxR: value + 2, width: T.tollWidth, spec: T.toll, ability: a, kind: "toll" }); return true; }
+    return false;
+  }
+  enterPhase(p) {
+    const w = this.world, f = this.f;
+    if (p === 2) { // two acolytes from the choir pit; she's warded while they stand
+      this.acolytes = [0, 1].map((i) => w.spawnEnemy("acolyte", f.pos.x + (i ? 3 : -3), f.pos.z + 1.5, 70 + i));
+      f.tags.add("WARDED", 99999);
+      w.emit({ type: "summon", fighter: f, summoned: this.acolytes });
+    }
+    if (p === 3) { // the bells: silence everywhere, and she's shielded, until they break
+      f.tags.remove("WARDED");
+      this._ring(3, ILSE_TUNING.bellRadius, "bell");
+      w.silenceAll = true; this.damageFactor = ILSE_TUNING.bellShield; this.postureFactor = ILSE_TUNING.bellShield;
+      w.emit({ type: "bells", fighter: f });
+    }
+  }
+  step() {
+    const w = this.world, f = this.f, T = ILSE_TUNING;
+    if (this.phase === 2 && f.tags.has("WARDED") && this.acolytes.every((e) => !e.alive)) { f.tags.remove("WARDED"); w.emit({ type: "wardBroken", fighter: f }); }
+    if (this.phase >= 3 && w.silenceAll && this.objects.every((o) => !o.alive)) { // the last bell falls silent
+      w.silenceAll = false; this.damageFactor = this.postureFactor = 1; this.objects = [];
+      f.runner.interrupt(); f.combatant.stagger(150);
+      w.emit({ type: "bellsBroken", fighter: f });
+    }
+    if (this.rules.hushDodge) {
+      if (this.warn > 0) { if (--this.warn === 0) { w.dodgeHush = T.hushFrames; w.emit({ type: "hushDodge", fighter: f, frames: T.hushFrames }); } }
+      else if (w.dodgeHush <= 0 && --this.hushTimer <= 0) { this.hushTimer = T.hushEvery; this.warn = T.hushWarn; w.emit({ type: "hushWarn", fighter: f, frames: T.hushWarn }); }
+    }
+  }
+}
+
+export class GalenController extends PhasedBoss {
+  constructor(world, f) { super(world, f, GALEN_PHASES, galenOptions); this.oath = false; this.chargeTimer = 0; }
+  onCustom(key, value, a) {
+    const w = this.world, f = this.f, T = GALEN_TUNING;
+    if (key === "rot") { w.addWave(f, f.pos.x, f.pos.z, { speed: T.rotSpeed, maxR: value, width: T.rotWidth, spec: T.rot, ability: a, kind: "rot" }); return true; }
+    return false;
+  }
+  enterPhase(p) {
+    const w = this.world, f = this.f;
+    if (p === 2) f.traits = { ...f.traits, frontalGuard: false }; // the shield rots through: no more wall in front
+    if (p === 3) { // the Oath: immune to stagger and posture until the vow-seals break
+      this._ring(3, GALEN_TUNING.sealRadius, "seal");
+      this.oath = true; this.postureFactor = 0;
+      w.emit({ type: "oath", fighter: f });
+    }
+    if (p === 4) { this.chargeTimer = 30; w.emit({ type: "desperate", fighter: f }); }
+  }
+  step() {
+    const w = this.world, f = this.f, T = GALEN_TUNING;
+    if (this.oath) {
+      if (this.objects.every((o) => !o.alive)) { // the vow breaks: he reels
+        this.oath = false; this.postureFactor = 1; this.objects = []; f.combatant.superArmor = false;
+        f.runner.interrupt(); f.combatant.stagger(T.sealStagger); f.combatant.takePostureDamage(f.combatant.posture.max);
+        w.emit({ type: "oathBroken", fighter: f, at: { x: f.pos.x, y: 1.4, z: f.pos.z } });
+      }
+    }
+    if (this.rules.desperate && !f.runner.isRunning && f.combatant.canAct && f.grounded && --this.chargeTimer <= 0) {
+      this.chargeTimer = T.chargeEvery;
+      f.yaw = Math.atan2(w.player.pos.x - f.pos.x, w.player.pos.z - f.pos.z);
+      f.controller.startDirect(GALEN_ABILITIES.Charge, w.frame);
+    }
+  }
+}
+
+export class MagistrateController extends PhasedBoss {
+  constructor(world, f) { super(world, f, MAGISTRATE_PHASES, magistrateOptions); this.hand = null; this.started = false; this.sentenced = false; }
+  onCustom(key, value, a) {
+    const w = this.world, f = this.f, T = MAGISTRATE_TUNING;
+    if (key === "cogs") { this._cogFan("Cog", value, 0.22, a); return true; }
+    if (key === "gavel") { const fw = f.forward; w.addWave(f, f.pos.x + fw.x * 1.8, f.pos.z + fw.z * 1.8, { speed: 8, maxR: value + 1, width: 0.7, spec: T.gavelRing, ability: a, kind: "gavel" }); return true; }
+    return false;
+  }
+  enterPhase(p) {
+    const w = this.world, T = MAGISTRATE_TUNING;
+    if (p === 2) { this.hand = { angle: 0, warn: T.handWarn, hitSet: new Map() }; w.emit({ type: "courtInSession", fighter: this.f, hand: this.hand, center: this.home, length: T.handLength }); }
+    if (p === 3 && !this.sentenced) { // the sentence: an ally in a cage, or new turrets if you came alone
+      this.sentenced = true;
+      const ally = w.companions.find((c) => c.alive) ?? null;
+      if (ally) { const cage = w.spawnObject("cage", ally.pos.x, ally.pos.z, this.f); this.objects.push(cage); ally.caged = cage; w.emit({ type: "sentence", fighter: this.f, target: ally, cage }); }
+      else { this._ring(2, T.turretRadius, "turret"); w.emit({ type: "sentence", fighter: this.f, target: null }); }
+    }
+  }
+  step() {
+    const w = this.world, f = this.f, T = MAGISTRATE_TUNING;
+    if (!this.started) { this.started = true; this._ring(this.rules.turrets ?? 2, T.turretRadius, "turret"); }
+    const h = this.hand;
+    if (!h) return;
+    if (h.warn > 0) { h.warn--; return; }
+    h.angle += T.handSpeed * f.timeScale; // the great hand of the clock sweeps the floor
+    const c = this.home, dx = Math.sin(h.angle), dz = Math.cos(h.angle);
+    for (const t of w.fighters) {
+      if (t.team === f.team || !t.alive || t.pos.y > T.handHeight) continue;
+      const rx = t.pos.x - c.x, rz = t.pos.z - c.z, along = rx * dx + rz * dz;
+      if (along < 0 || along > T.handLength) continue;
+      if (Math.abs(rx * dz - rz * dx) > T.handWidth + t.stats.radius) continue;
+      if ((h.hitSet.get(t) ?? -1e9) > w.frame - 60) continue; // once a second at most
+      h.hitSet.set(t, w.frame);
+      w._resolve(f, t, { spec: T.hand, ability: MAGISTRATE_ABILITIES.Sweep, hitSet: new Set(), origin: { x: c.x + dx * along, y: 0.5, z: c.z + dz * along }, projectile: true });
+    }
+  }
+}

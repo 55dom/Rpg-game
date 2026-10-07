@@ -57,4 +57,14 @@ export const QUESTS = {
     summary: "The cake went to the wrong table. Old Fenwick ate two tiers out of politeness. The Countess got a 'brave, minimalist cake'.",
     reward: { marks: 40, xp: 120, flags: { RENOWN_AURELIN: 6, MERIT: 5 }, bond: { juno: 12 } },
   },
+  trail: {
+    title: "The Pale Choir's Trail", giver: "The hymn on the well", region: "The Greywater Fens",
+    stages: [
+      { text: "The Deacon who nailed up the hymn is preaching east of the empty village. Face her.", done: "$ILSE_DEFEATED" },
+      { text: "Something old is waking in the Tower of Choosing (world map). Go and see.", done: "$GALEN_DEFEATED" },
+      { text: "The Undercroft's Gear Hall has become a courtroom. Go down, and bring the squad.", done: "$MAGISTRATE_DEFEATED" },
+    ],
+    summary: "A deacon, a dead knight and a clockwork judge, all working for the same choir. Lio has started a wall of notes.",
+    reward: { marks: 150, xp: 400, flags: { MERIT: 30, REP_SQUAD: 6 }, bond: { bas: 8, juno: 8 } },
+  },
 };

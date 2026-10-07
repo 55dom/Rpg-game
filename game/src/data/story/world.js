@@ -3,6 +3,7 @@
 import { CAFE_SCRIPT } from "./cafe.js";
 import { BOND_SCRIPT } from "../bonds.js";
 import { CRAFT_SCRIPT } from "../crafting.js";
+import { LORE_SCRIPT } from "../lore.js";
 
 const BASE_SCRIPT = `
 title: W_Dagrun
@@ -309,6 +310,10 @@ A sheet of paper, nailed to the well post. The ink is fresh. The paper is old.
 "Sing until the name is gone. Then nothing has to end."
 The bottom half is torn off. Someone wrote over the tear in charcoal: STOP SINGING.
 <<set $ASKED_HYMN to 1>>
+<<if not $Q_TRAIL>>
+    Somewhere east of the village, past the reeds, someone is singing it right now.
+    <<quest start trail>>
+<<endif>>
 ===
 
 title: W_Bones
@@ -330,4 +335,4 @@ Guard2: Watch your purse in the Lowmarket. And don't feed the pigeons. They unio
 `;
 
 /** Every free-roam talk node: the towns, the Gilded Spoon café (data/story/cafe.js), and bonds (data/bonds.js). */
-export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT + CRAFT_SCRIPT;
+export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT + CRAFT_SCRIPT + LORE_SCRIPT;

@@ -761,7 +761,7 @@ export class StoryPlayer {
     const world = this.ctx.getWorld(), p = world.player;
     p.relaxed = true;
     // Episode beats on a zone's set use that zone's walls and buildings, so nothing can be walked through.
-    const zone = beat.zone ?? Object.values(ZONES).find((z) => z.stage === beat.stage);
+    const zone = beat.zone ?? Object.values(ZONES).find((z) => z.stage === beat.stage && !z.roamOnly);
     if (zone && !beat.zone) { world.bounds = zone.bounds; this.ctx.camera.bounds = zone.bounds; }
     // The Lighthouse's straw dummies are real targets: hit them as long as you like.
     const set = this.ctx.sets?.get?.(beat.stage);
@@ -807,6 +807,7 @@ export class StoryPlayer {
       const ring = MB.CreateTorus("pickupRing", { diameter: 1, thickness: 0.04, tessellation: 24 }, scene); ring.parent = node; ring.position.y = 0.03; ring.material = lamp.material;
       for (const m of [lamp, ring]) m.isPickable = false;
       if (p.marker === false) { lamp.setEnabled(false); ring.setEnabled(false); } // furniture: no glowing marker, just the prompt
+      if (p.faint) { lamp.scaling.setAll(0.45); ring.scaling.setAll(0.5); lamp.material = glow(scene, `pickup-${p.id}-faint`, "#bfe8ff"); } // hidden lore: a faint glint
       return { ...p, script: p.node, node, lamp, cond: compileExpr(p.show ?? "1") }; // node = the 3D marker; script = its dialogue
     });
   }
@@ -988,7 +989,7 @@ export class StoryPlayer {
     const c = x.combat;
     if (c) {
       // Field fights give up if you run far enough; dungeon rooms are barred shut.
-      if (!c.lock && Math.hypot(pp.x - c.at.x, pp.z - c.at.z) > (c.leash ?? 12)) {
+      if (!c.lock && !c.boss && Math.hypot(pp.x - c.at.x, pp.z - c.at.z) > (c.leash ?? 12)) { // bosses don't give up
         this._endCombat(false);
         this.ctx.hud.toast("GOT AWAY", "afterimage");
         return false;
@@ -1027,6 +1028,9 @@ export class StoryPlayer {
       this.ctx.sfx.play("slam");
     }
     world.player.relaxed = false;
+    // Boss fights: the squad comes with you (and leaves again after).
+    this.squadIn = [];
+    for (const k of e.squad ?? []) if (!world.companions.some((c) => c.kind === k)) { world.addCompanion(k); this.squadIn.push(k); }
     world.spawnWave(e.wave, e.at);
     this.ctx.onEvents(world.drainEvents());
     this.ctx.hud.banner(e.label ?? "AMBUSH");
@@ -1039,6 +1043,13 @@ export class StoryPlayer {
     x.combat = null;
     const world = this.ctx.getWorld();
     if (this.openBounds) { world.bounds = this.openBounds; this.openBounds = null; }
+    if (this.squadIn?.length) { // the squad heads home; a won boss fight brings everyone closer
+      if (won) for (const k of this.squadIn) this.bondGain(k, BOND_GAIN.fight * 2);
+      for (const c of world.companions.filter((c) => this.squadIn.includes(c.kind))) { world.emit({ type: "despawn", fighter: c }); world.fighters = world.fighters.filter((f) => f !== c); }
+      world.companions = world.companions.filter((c) => !this.squadIn.includes(c.kind));
+      this.squadIn = [];
+      this.ctx.onEvents(world.drainEvents());
+    }
     for (const b of this.bars ?? []) b.dispose(false, true);
     this.bars = null;
     if (won) {

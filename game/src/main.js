@@ -10,6 +10,7 @@ import { PAGES } from "./data/pages.js";
 import { EPISODE_4 } from "./data/run.js";
 import { B, PALETTE, glow, clamp01, toonFallbackIfBroken } from "./runtime/look.js";
 import { Rig, LOOKS } from "./runtime/rig.js";
+import { ObjectView } from "./runtime/objects.js";
 import { WorldClock } from "./sim/weather.js";
 import { LOD } from "./runtime/body.js";
 import { Vfx, Trail } from "./runtime/vfx.js";
@@ -33,6 +34,7 @@ import { Progress, addMods, pageLevel, pageLevelProgress } from "./core/progress
 import { SKILLS, TREE_COLUMNS, XP_BY_KIND, PAGE_ROMAN, MAX_LEVEL } from "./data/skills.js";
 import { BONDS, RANK_POINTS, RANK_UNLOCKS, GIFTS } from "./data/bonds.js";
 import { MATERIALS, HQ, TEMPER } from "./data/crafting.js";
+import { FRAGMENTS, CLAUSE } from "./data/lore.js";
 import { ITEMS, SHOPS, SLOTS, BOUNTIES, slotKind } from "./data/items.js";
 import { squadRank } from "./core/quests.js";
 import { fillText } from "./core/script.js";
@@ -107,6 +109,7 @@ export function boot(doc = document) {
 
   const addView = (f) => {
     if (views.has(f) || f.traits?.dummy) return; // training dummies are part of the set (they rock on their posts)
+    if (LOOKS[f.kind]?.form === "object") { views.set(f, new ObjectView(scene, f.kind, f.id, LOOKS[f.kind])); return; } // bells, seals, turrets, cages
     const rig = new Rig(scene, f.kind, f.id);
     views.set(f, rig);
     trails.set(f, new Trail(scene, `${f.id}-trail`, LOOKS[f.kind]?.trail ?? (f.team === Team.Player ? TRAIL_COLORS.default : TRAIL_COLORS.enemy)));
@@ -279,6 +282,23 @@ export function boot(doc = document) {
           root.classList.toggle("tag-severin", ev.to !== "player");
           break;
         }
+        // ---- Arc 1–2 bosses ----
+        case "silenceZone": silenceFx.add(ev.zone); sfx.play("heal", 0.7); break;
+        case "silenceEnd": silenceFx.remove(ev.zone); break;
+        case "silenced": hud.toast(ev.what === "dodge" ? "DODGE SILENCED · PARRY!" : "SILENCED", "danger"); sfx.play("block", 0.5); break;
+        case "wave": vfx.ring({ x: ev.wave.x, y: 0.08, z: ev.wave.z }, ev.wave.maxR, { toll: "#c9b4ff", rot: "#c86a2a", gavel: "#ffd36a" }[ev.wave.kind] ?? "#ffffff", ev.wave.maxR / ev.wave.speed); sfx.play(ev.wave.kind === "rot" ? "mud" : "slam", 0.7); camera.shake(0.2); break;
+        case "bells": hud.toast("THE BELLS RING", "danger"); hud.banner("NO SPELLS ANYWHERE · BREAK THE THREE BELLS"); silenceFx.all(true); break;
+        case "bellsBroken": hud.toast("SILENCE BROKEN", "break"); silenceFx.all(false); impact(3, true); sfx.play("postureBreak"); break;
+        case "wardBroken": hud.toast("HER WARD FALLS", "break"); break;
+        case "hushWarn": hud.toast("SHE DRAWS BREATH…", "danger"); vfx.warning({ x: world.player.pos.x, y: 0, z: world.player.pos.z }, ev.frames / 60); sfx.play("glint"); break;
+        case "hushDodge": hud.toast("DODGE SILENCED · PARRY!", "danger"); hud.banner("FIVE SECONDS: GUARD AND PARRY"); root.classList.add("hushed"); break;
+        case "hushEnd": root.classList.remove("hushed"); break;
+        case "oath": hud.toast("THE OATH", "danger"); hud.banner("NOTHING STAGGERS HIM · BREAK THE THREE VOW-SEALS"); sfx.play("bossIntro"); break;
+        case "oathBroken": hud.toast("THE VOW BREAKS", "break"); vfx.flash(ev.at, 4, "#ff7a2a", 0.3); impact(4, true); camera.kick(0.8); sfx.play("postureBreak"); break;
+        case "desperate": hud.toast("DESPERATION", "danger"); hud.banner("HE CHARGES THE WHOLE HALL · DODGE"); break;
+        case "courtInSession": hud.toast("COURT IN SESSION", "danger"); hud.banner("THE CLOCK HAND SWEEPS · JUMP IT"); clockHand.start(ev.center, ev.length); sfx.play("ultActivate"); break;
+        case "sentence": hud.toast("SENTENCED", "danger"); hud.banner(ev.target ? `${ev.target.stats.name.toUpperCase()} IS CAGED · BREAK THE CAGE` : "THE TURRETS ARE BACK"); sfx.play("slam"); break;
+        case "freed": hud.toast(`${ev.fighter.stats.name.toUpperCase()} IS FREE`, "clear"); break;
         case "teamAttack": {
           const b = BONDS[ev.kind];
           hud.toast("TEAM ATTACK", "finisher"); hud.banner((b?.team?.name ?? "TEAM ATTACK").toUpperCase());
@@ -337,6 +357,7 @@ export function boot(doc = document) {
           hud.toast("UPROOTED", "afterimage");
           break;
         case "bossPhase":
+          if (BOSS_PHASE_TEXT[ev.fighter.kind]) { const t = BOSS_PHASE_TEXT[ev.fighter.kind][ev.phase]; if (t) { hud.toast(t[0], t[2] ?? "danger"); hud.banner(t[1]); } sfx.play("bossIntro"); camera.shake(0.6); break; }
           if (ev.drained) { setBog(false); hud.toast("THE BOG DRAINS", "clear"); hud.banner("PHASE 3 · EXPOSED"); }
           else if (ev.fighter.kind === "severin") { hud.toast("CONSTELLATION", "afterimage"); hud.banner("PHASE 2 · POLARIS"); }
           else { hud.toast("HASK ENRAGES", "danger"); hud.banner(`PHASE ${ev.phase}`); }
@@ -557,13 +578,15 @@ export function boot(doc = document) {
   applySettings();
 
   /** A fresh world for a new run or sandbox session (views rebuilt, settings kept). */
+  let resetBossFx = null; // set once the boss visuals exist (below)
   const newWorld = (opts = {}) => {
     for (const f of [...views.keys()]) removeView(f);
     walls.clear(); setBog(false, true); constellation.clear(true);
     world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, companions: true, ...opts });
     if (opts.tokens == null) world.tokens.capacity = mobile ? 1 : 2;
     world.pageDefs = PAGES;
-    root.classList.toggle("has-tag", !!world.members.severin); root.classList.remove("tag-severin");
+    root.classList.toggle("has-tag", !!world.members.severin); root.classList.remove("tag-severin", "hushed");
+    resetBossFx?.();
     camera.bounds = null;
     root.classList.toggle("no-ult", !world.ultimate);
     root.classList.toggle("solo", !world.companions.length);
@@ -756,7 +779,7 @@ export function boot(doc = document) {
   /** Who fights beside Rook in a world made with these companion options (the World's default is both). */
   const partyOf = (c) => (c === true || c === undefined ? ["bas", "juno"] : Array.isArray(c) ? c : []);
   const statMods = (party = world?.companions?.map((f) => f.kind) ?? []) =>
-    addMods(addMods(addMods(story.inventory.mods, story.progress.mods), story.bonds.mods(party)), story.crafting.mods(story.day));
+    addMods(addMods(addMods(addMods(story.inventory.mods, story.progress.mods), story.bonds.mods(party)), story.crafting.mods(story.day)), story.flags.get("CLAUSE_1") ? CLAUSE.mods : {});
   /** Gear changes apply to Rook immediately (outside fights the world can be rebuilt cheaply). */
   const applyGear = () => {
     const w = world, old = w.mods, m = statMods(), p = w.player;
@@ -799,6 +822,9 @@ export function boot(doc = document) {
     }).join("");
     const gifts = Object.entries(GIFTS).filter(([g]) => Number(story.flags.get(`GIFT_${g.toUpperCase()}`)) > 0).map(([g, gi]) => `${gi.name} ×${story.flags.get(`GIFT_${g.toUpperCase()}`)}`);
     journal.querySelector("[data-gifts]").textContent = gifts.length ? `Gifts in your bag: ${gifts.join(", ")}.` : "No gifts in your bag. The Gilded Spoon, the Lowmarket stall and the fish cook sell them.";
+    const found = FRAGMENTS.filter((f) => story.flags.get(`FRAG_${f.n}`));
+    journal.querySelector("[data-lore]").innerHTML = `<p class="mats"><b>Page fragments: ${found.length}/${FRAGMENTS.length}</b> · ${story.flags.get("CLAUSE_1") ? `<b>${CLAUSE.name}</b> restored: ${CLAUSE.desc}` : `Find ${CLAUSE.need} to restore a clause of the under-text.`}</p>` +
+      found.map((f) => `<p class="mats"><i>"${f.text}"</i> · ${f.where}</p>`).join("");
     const list = story.quests.entries();
     journal.querySelector("[data-quests]").innerHTML = list.length ? list.map((q) =>
       `<button class="${q.done ? "done" : ""}"><b>${q.done ? "DONE" : "ACTIVE"}</b><span>${q.title}<small>${fillText(q.objective, { ...story.player, flags: story.flags })} · from ${q.giver}, ${q.region}</small></span></button>`).join("")
@@ -807,6 +833,33 @@ export function boot(doc = document) {
   };
   journal.querySelector("[data-journal-close]").addEventListener("click", () => { journal.hidden = true; state.modal = false; sfx.play("ui"); });
   menu("journal", openJournal);
+
+  // Arc 1–2 boss visuals: Ilse's silence zones (violet discs), the Magistrate's clock hand.
+  const BOSS_PHASE_TEXT = {
+    ilse: { 2: ["THE CHOIR PIT", "PHASE 2 · SHE CALLS HER ACOLYTES · WARDED WHILE THEY STAND"], 3: ["THE BELLS", "PHASE 3 · BREAK THE BELLS"], 4: ["HUSH", "PHASE 4 · SHE CAN SILENCE YOUR DODGE"] },
+    galen: { 2: ["ROT", "PHASE 2 · RINGS OF RUST · JUMP THEM"], 3: ["THE OATH", "PHASE 3 · BREAK THE VOW-SEALS"], 4: ["DESPERATION", "PHASE 4 · THE LAST CHARGE"] },
+    magistrate: { 2: ["COURT IN SESSION", "PHASE 2 · THE CLOCK HAND"], 3: ["THE SENTENCE", "PHASE 3 · BREAK THE CAGE"] },
+  };
+  const silenceFx = (() => {
+    const zones = new Map(), mat = glow(scene, "silenceMat", "#9a7aff", 0.28, true), fieldMat = glow(scene, "silenceAllMat", "#5a3a9a", 0.12);
+    let field = null;
+    return {
+      add(z) { const d = BB.MeshBuilder.CreateDisc("silence", { radius: z.r, tessellation: 32 }, scene); d.rotation.x = Math.PI / 2; d.position.set(z.x, 0.04, z.z); d.material = mat; d.isPickable = false; zones.set(z, d); },
+      remove(z) { zones.get(z)?.dispose(); zones.delete(z); },
+      all(on) { if (on && !field) { field = BB.MeshBuilder.CreateDisc("silenceAll", { radius: 18, tessellation: 40 }, scene); field.rotation.x = Math.PI / 2; field.position.set(world.player.pos.x, 0.03, world.player.pos.z); field.material = fieldMat; field.isPickable = false; } if (!on && field) { field.dispose(); field = null; } },
+      clear() { for (const d of zones.values()) d.dispose(); zones.clear(); this.all(false); },
+    };
+  })();
+  const clockHand = (() => {
+    let mesh = null, warnMat = glow(scene, "handWarn", "#ff5a3a", 0.35, true), handMat = glow(scene, "handMat", "#ffd36a", 0.85);
+    return {
+      start(center, length) { this.stop(); mesh = BB.MeshBuilder.CreateBox("clockHand", { width: 0.5, height: 0.25, depth: length }, scene); mesh.setPivotPoint(new BB.Vector3(0, 0, -length / 2)); mesh.position.set(center.x, 0.15, center.z + length / 2); mesh.material = warnMat; mesh.isPickable = false; },
+      update() { const h = world.boss?.boss?.hand; if (!mesh) return; if (!h || !world.boss?.alive) { this.stop(); return; } mesh.material = h.warn > 0 ? warnMat : handMat; mesh.rotation.y = h.angle; },
+      stop() { mesh?.dispose(); mesh = null; },
+    };
+  })();
+
+  resetBossFx = () => { silenceFx.clear(); clockHand.stop(); };
 
   // Squad HQ: the board (rooms to build) and the workbench (tempering gear). One screen, two modes.
   const hqModal = root.querySelector("[data-hq]");
@@ -1073,6 +1126,7 @@ export function boot(doc = document) {
       if (state.ghostTimer <= 0) { const rig = viewFor(world.player); if (rig) vfx.afterimage(rig); state.ghostTimer = 0.09; }
     }
 
+    clockHand.update();
     for (const [f, rig] of views) {
       const t = f.timeScale < 1 ? clamp01(f.timeAcc + alpha * f.timeScale) : alpha;
       rig.update(f, running ? t : 1, dt);

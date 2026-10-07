@@ -1,3 +1,4 @@
+import { BOSS_KINDS } from "../src/sim/world.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ZONES, arrivalPoint } from "../src/data/zones.js";
@@ -48,7 +49,7 @@ test("every zone links up: exits go to real arrivals, talk nodes and pickup node
     for (const c of z.cast) { assert.ok(nodes[c.node], c.node); assert.ok(Object.values(CAST).some((k) => k.actor === c.id), `cast ${c.id}`); }
     for (const p of z.pickups ?? []) { if (p.node) assert.ok(nodes[p.node], p.node); compileExpr(p.show ?? "1"); }
     for (const e of z.encounters ?? []) {
-      for (const k of e.wave) { assert.ok(ENEMIES[k], k); assert.ok(BOUNTIES[k] != null, `bounty ${k}`); }
+      for (const k of e.wave) { assert.ok(ENEMIES[k] || BOSS_KINDS.includes(k), k); assert.ok(BOUNTIES[k] != null, `bounty ${k}`); }
       compileExpr(e.when ?? "1");
     }
   }

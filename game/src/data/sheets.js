@@ -187,6 +187,12 @@ export const SHEETS = Object.freeze({
   // ---- Creatures and constructs (bodies, not clothes) --------------------------------------------------------
   beast: { build: "brute", gait: "heavy", idle: "still", outfit: { top: "#4e5a37", hem: null, sleeves: "long", legs: "#4e5a37", boots: "bare", bootColor: "#3a4129", moss: true } },
   hask: { build: "brute", gait: "heavy", idle: "still", outfit: { top: "#3d4934", hem: null, sleeves: "long", legs: "#3d4934", boots: "bare", bootColor: "#2c3524", moss: true } },
+  ilse: { build: "slim", gait: "graceful", idle: "proud",
+    outfit: { top: "#d8d4e8", hem: "ankle", sleeves: "long", legs: "#3a3448", boots: "shoes", bootColor: "#3a3448", belt: "#8a7ac0", embroidery: "#c9b4ff", stitch: "#6a5a9a", grime: 0.1 } },
+  galen: { build: "broad", gait: "soldier", idle: "still",
+    outfit: { top: "#6a4a3a", hem: "thigh", sleeves: "long", legs: "#4a3a32", boots: "tall", bootColor: "#3a2a22", breastplate: "#8a5a3a", pauldrons: "#7a4a2a",
+      bracers: "#8a5a3a", gloves: "#4a3a32", tattered: "#4a3a2a", belt: "#3a2a1a", grime: 0.7 } },
+  magistrate: { build: "brute", gait: "machine", idle: "still", outfit: { top: "#2a2430", hem: "ankle", sleeves: "long", legs: "#a07a3a", boots: "bare", bootColor: "#6a5222", machine: true, embroidery: "#c9a24a" } },
   clockwork: { build: "slim", gait: "machine", idle: "still", outfit: { top: "#a8822e", hem: null, sleeves: "long", legs: "#a8822e", boots: "bare", bootColor: "#6a5222", machine: true } },
 });
 

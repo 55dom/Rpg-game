@@ -120,6 +120,8 @@ const undercroftSolids = [
   ...[[-9, 36], [9, 36], [-9, 42], [9, 42]].map(([x, z]) => circle(x, z, 0.5)), // the Gear Hall's brass columns
   circle(-9, 39, 0.6), circle(9, 44, 0.6), circle(-6, -31, 0.6),                  // statues
 ];
+/** A page fragment (GDD §8.5): a scrap of the Palimpsest's under-text, hidden somewhere in the world. Five restore a clause. */
+const frag = (n, x, z) => ({ id: `frag${n}`, x, z, show: `not $FRAG_${n}`, flag: `FRAG_${n}`, node: `W_Frag${n}`, faint: true, label: "Pick up the scrap of paper" });
 // A passage gate: bars across a passage at z (closed while a room's fight is on).
 const gate = (z) => [-2, z - 0.3, 2, z + 0.3];
 
@@ -149,6 +151,7 @@ export const ZONES = {
       { id: "squadBoard", x: 1.0, z: 10.9, show: "1", ui: "hq", marker: false, label: "Read the squad board (HQ rooms)" },
       { id: "workbench", x: -9.5, z: 1.7, show: "1", ui: "temper", marker: false, label: "Use the workbench (temper gear)" },
       { id: "meal", x: 5, z: 2.9, show: "$HQ_KITCHEN", node: "W_Meal", marker: false, label: "Sit down for Dagrun's stew" },
+      frag(1, -12.6, 10),
     ],
     exits: [
       { id: "road", rect: [-17, -17, 17, -15.5], to: "aurelin", spawn: "gate", label: "The road to Aurelin" },
@@ -184,7 +187,7 @@ export const ZONES = {
     ],
     // Somewhere dry to stand when it rains: the Hall portico, the market canopies, house doorways.
     shelters: [[0, 25.2], [3.8, 25.2], [18, -6.8], [24, -6.8], [30, -6.8], [-12.3, 4], [-12.3, -8]],
-    pickups: [{ id: "toyLantern", x: -2.6, z: -28.6, show: "$Q_TOY == 1 and not $TOY_FOUND", flag: "TOY_FOUND", label: "Pick up the toy lantern" }],
+    pickups: [{ id: "toyLantern", x: -2.6, z: -28.6, show: "$Q_TOY == 1 and not $TOY_FOUND", flag: "TOY_FOUND", label: "Pick up the toy lantern" }, frag(2, 12.1, 14.2)],
     exits: [
       { id: "gate", rect: [-4, -36, 4, -34.4], to: "lighthouse", spawn: "aurelin", label: "The road home to the Lighthouse" },
       { id: "grate", rect: [A.grate.x - 1.3, A.grate.z - 1.3, A.grate.x + 1.3, A.grate.z + 1.3], to: "undercroft", spawn: "aurelin", label: "The grate down to the Undercroft" },
@@ -193,7 +196,7 @@ export const ZONES = {
       { id: "home", rect: [25.1, 17.2, 26.1, 18.8], to: "home", spawn: "aurelin", label: "The vendor's house" },
     ],
     arrivals: { gate: { x: 0, z: -31, yaw: 0 }, undercroft: { x: A.grate.x, z: A.grate.z + 4, yaw: 0 },
-      cafe: { x: A.cafe.door.x, z: A.cafe.door.z - 1.9, yaw: Math.PI }, home: { x: 24, z: 18, yaw: -Math.PI / 2 } },
+      cafe: { x: A.cafe.door.x, z: A.cafe.door.z - 1.9, yaw: Math.PI }, home: { x: 24, z: 18, yaw: -Math.PI / 2 }, tower: { x: 0, z: 21.5, yaw: Math.PI } },
     crowd: 22,
   },
   thornwick: {
@@ -222,7 +225,7 @@ export const ZONES = {
       { id: "waterman", look: "townsman", x: -3.6, z: -4.2, yaw: -1.6,
         routine: { home: [-15.2, -3], steps: [{ do: "work", at: [-3.7, -3.9], face: -1.9, anim: "work", dur: [6, 9] }, { do: "walk", to: [-13, 2] }, { do: "idle", at: [-13, 2], face: 0, dur: [5, 8] }] } },
     ],
-    pickups: [{ id: "ledger", x: -3, z: 14.6, show: "1", flag: "LEDGER_READ", node: "W_Ledger", label: "Read the orphan ledger" }],
+    pickups: [{ id: "ledger", x: -3, z: 14.6, show: "1", flag: "LEDGER_READ", node: "W_Ledger", label: "Read the orphan ledger" }, frag(3, 0, -2.7)],
     encounters: [
       { id: "bandits", rect: [8, -29, 29, -19], at: { x: 18, z: -24, r: 4 }, wave: ["bandit", "bandit", "bandit"], when: "$Q_BANDITS == 1", flag: "BANDITS_CLEARED", label: "BANDITS ON THE MILL ROAD" },
     ],
@@ -238,12 +241,14 @@ export const ZONES = {
     spawn: { x: 0, z: -25, yaw: 0 },
     cast: [{ id: "ness", look: "ness", x: 12.6, z: -8.6, yaw: 2.36, node: "W_Ness",
       routine: { role: "elder", steps: [{ do: "work", at: [12.6, -8.6], face: 2.36, anim: "fish", dur: [20, 30] }, { do: "idle", at: [10.5, -5.5], face: 2.6, dur: [5, 8] }] } }],
-    pickups: [{ id: "hymn", x: -1.4, z: 15.2, show: "1", flag: "HYMN_READ", node: "W_Hymn", label: "Read the hymn nailed to the well" }],
+    pickups: [{ id: "hymn", x: -1.4, z: 15.2, show: "1", flag: "HYMN_READ", node: "W_Hymn", label: "Read the hymn nailed to the well" }, frag(4, -10.4, 9.5)],
     // Field fights: they come back each visit. Run far enough and they give up the chase.
     encounters: [
       { id: "hounds", rect: [-10, -20, 10, -11], at: { x: 0, z: -14, r: 5 }, wave: ["hound", "hound", "hound"], label: "FEN HOUNDS" },
       { id: "choir", rect: [-9, 4, 10, 20], at: { x: 0, z: 9, r: 5 }, wave: ["acolyte", "acolyte", "cantor"], label: "THE CHOIR CAME BACK" },
       { id: "beast", rect: [-28, -12, -12, -1], at: { x: -20, z: -7, r: 4 }, wave: ["beast", "hound"], label: "BOG BEAST" },
+      // B3: the Deacon whose hymn is nailed to the well. Bas and Juno come with you.
+      { id: "ilse", rect: [8, -6, 22, 4], at: { x: 15, z: -1, r: 5 }, wave: ["ilse"], boss: true, squad: ["bas", "juno"], when: "$HYMN_READ", flag: "ILSE_DEFEATED", label: "THE SILENCE SERMON" },
     ],
     exits: [{ id: "path", rect: [-6, -30, 6, -28.6], to: "thornwick", spawn: "fens", label: "The path south to Thornwick" }],
     arrivals: { thornwick: { x: 0, z: -26, yaw: 0 } },
@@ -256,15 +261,32 @@ export const ZONES = {
     pickups: [
       { id: "fishbones", x: 3.4, z: -25, show: "not $UC_BONES", flag: "UC_BONES", node: "W_Bones", label: "Look at the pile of fish bones" },
       { id: "chest", x: 0, z: 43, show: "$UNDERCROFT_CLEARED and not $UC_CHEST", flag: "UC_CHEST", marks: 60, label: "Open the old strongbox" },
+      frag(5, -4.8, -31),
     ],
     // Dungeon rooms: the passages bar shut until the room is clear, and a cleared room stays clear.
     encounters: [
       { id: "rats", rect: [-10, -11, 10, 2], at: { x: 0, z: -4, r: 5 }, wave: ["rat", "rat", "rat", "rat", "rat"], flag: "UC_ROOM1", lock: [gate(-14), gate(2)], label: "THE NEST" },
       { id: "sentinel", rect: [-12, 13, 12, 26], at: { x: 0, z: 19, r: 4 }, wave: ["clockwork", "rat", "rat", "rat"], flag: "UC_ROOM2", lock: [gate(10), gate(26)], label: "CLOCKWORK SENTINEL" },
       { id: "court", rect: [-14, 35, 14, 46], at: { x: 0, z: 40, r: 5 }, wave: ["clockwork", "clockwork", "rat", "rat"], flag: "UNDERCROFT_CLEARED", lock: [gate(32)], label: "THE GEAR HALL" },
+      // B5: once Galen has fallen, the Gear Hall becomes a courtroom.
+      { id: "magistrate", rect: [-14, 35, 14, 46], at: { x: 0, z: 38, r: 5 }, wave: ["magistrate"], boss: true, squad: ["bas", "juno"], when: "$UNDERCROFT_CLEARED and $GALEN_DEFEATED", flag: "MAGISTRATE_DEFEATED", lock: [gate(32)], label: "THE CLOCKWORK COURT" },
     ],
     exits: [{ id: "stairs", rect: [-3, -34, 3, -33], to: "aurelin", spawn: "undercroft", label: "The stairs up to the Lowmarket" }],
     arrivals: { aurelin: { x: 0, z: -30, yaw: 0 } },
+  },
+  // The Tower of Choosing, its great hall (reached by the world map). Where Galen rises (B4).
+  tower: {
+    id: "tower", name: "The Tower of Choosing", region: "Aurelin Heights", stage: "towerHall", roamOnly: true,
+    bounds: { rect: [-14, -14, 14, 14], solids: [circle(0, 9, 3.6)] },
+    spawn: { x: 0, z: -11, yaw: 0 },
+    cast: [{ id: "moss", look: "moss", x: -4.5, z: -7, yaw: 0.6, node: "W_MossTower",
+      routine: { role: "elder", steps: [{ do: "idle", at: [-4.5, -7], face: 0.6, dur: [10, 14] }, { do: "wander", around: [-3, -5], r: 1.5, dur: [6, 9] }] } }],
+    pickups: [frag(6, 0, 4.7)],
+    encounters: [
+      { id: "galen", rect: [-14, -4, 14, 14], at: { x: 0, z: 1, r: 5 }, wave: ["galen"], boss: true, squad: ["bas", "juno"], when: "$ILSE_DEFEATED", flag: "GALEN_DEFEATED", label: "RUST REMEMBERS" },
+    ],
+    exits: [{ id: "door", rect: [-2.5, -14, 2.5, -13.4], to: "aurelin", spawn: "tower", label: "Down the Tower steps to Aurelin" }],
+    arrivals: { aurelin: { x: 0, z: -11, yaw: 0 } },
   },
   // ---- Interiors ----
   cafe: {

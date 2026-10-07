@@ -10,7 +10,9 @@ import { AttackTokenPool, EnemyBrain, MoveIntent, CompanionBrain, AllyMove, STAN
 import { COMPANIONS } from "../data/companions.js";
 import { ENEMIES, WAVES } from "../data/enemies.js";
 import { HASK_STATS, HASK_HITBOXES, HASK_TUNING, haskOptions } from "../data/hask.js";
-import { HaskController, SeverinController, SparController } from "./boss.js";
+import { HaskController, SeverinController, SparController, IlseController, GalenController, MagistrateController } from "./boss.js";
+import { ILSE_STATS, ILSE_HITBOXES, ilseOptions, GALEN_STATS, GALEN_HITBOXES, galenOptions, MAGISTRATE_STATS, MAGISTRATE_HITBOXES, magistrateOptions,
+  OBJECTS, OBJECT_HITBOXES, GALEN_TUNING } from "../data/bosses2.js";
 import { CAL_STATS, CAL_HITBOXES, calOptions } from "../data/cal.js";
 import { SEVERIN_STATS, SEVERIN_HITBOXES, severinOptions } from "../data/severin.js";
 import { RunDirector } from "./run.js";
@@ -45,7 +47,11 @@ const BOSSES = {
   hask: { stats: HASK_STATS, hitboxes: HASK_HITBOXES, options: haskOptions, traits: { heavy: true, armoredAttacks: true }, Controller: HaskController, z: 7 },
   cal: { stats: CAL_STATS, hitboxes: CAL_HITBOXES, options: calOptions, traits: {}, Controller: SparController, z: 4 },
   severin: { stats: SEVERIN_STATS, hitboxes: SEVERIN_HITBOXES, options: severinOptions, traits: {}, Controller: SeverinController, z: 6 },
+  ilse: { stats: ILSE_STATS, hitboxes: ILSE_HITBOXES, options: ilseOptions, traits: { ranged: true }, Controller: IlseController, z: 6 },
+  galen: { stats: GALEN_STATS, hitboxes: GALEN_HITBOXES, options: galenOptions, traits: { heavy: true, frontalGuard: true }, Controller: GalenController, z: 6 },
+  magistrate: { stats: MAGISTRATE_STATS, hitboxes: MAGISTRATE_HITBOXES, options: magistrateOptions, traits: { heavy: true, armoredAttacks: true }, Controller: MagistrateController, z: 7 },
 };
+export const BOSS_KINDS = Object.freeze(Object.keys(BOSSES));
 
 const AIR = new Set(["AirL1", "AirL2", "AirL3"]);
 const HANG = new Set(["AirL1", "AirL2", "AirL3"]); // started in the air, these hold Rook up (plus anything tagged "hang")
@@ -200,6 +206,7 @@ export class Fighter {
         else if (e.key === "summon") this.world.summon(this, "hound", e.value);
         else if (e.key === "fan") this.world.fireFan(this, a, "Needle", 15, e.value, 0.26);
         else if (e.key === "stars") this.boss?.placeStars?.();
+        else if (this.boss?.onCustom?.(e.key, e.value, a)) { /* handled by the boss's controller */ }
         else if (e.key === "airDash") { this.vel.y = 0; this.hoverFrames = e.value; this.airDashes = 0; }
         else if (e.key === "hover") { this.vel.y = 0; this.hoverFrames = e.value; }
         else if (e.key === "timeStop") this.world.stopFrames = Math.max(this.world.stopFrames, e.value);
@@ -290,6 +297,7 @@ export class World {
       hitboxes: SEVERIN_KIT_HITBOXES, abilities: SEVERIN_KIT, loadout: SEVERIN_KIT_LOADOUT, spells: SEVERIN_KIT_SPELLS, hp: null, mana: null };
     this.swapReadyFrame = 0;
     this.teamHit = null;
+    this.silences = []; this.silenceAll = false; this.dodgeHush = 0; this.waves = [];
     this.companions = [];
     this.projectiles = [];
     if (o.companions) for (const kind of Array.isArray(o.companions) ? o.companions : Object.keys(COMPANIONS)) this.addCompanion(kind);
@@ -456,6 +464,45 @@ export class World {
   }
   get dummies() { return this.fighters.filter((f) => f.traits.dummy); }
 
+  /** Something a boss puts on the field (a bell, a vow-seal, a turret, a cage): immobile, breakable. */
+  spawnObject(kind, x, z, owner = null) {
+    const O = OBJECTS[kind];
+    ({ x, z } = constrain({ x, z }, O.stats.radius + 0.4, this.bounds)); // never inside a wall
+    const brain = O.options ? new EnemyBrain(`${kind}-${this.frame}`, new AttackTokenPool(2), O.options(), this.rng) : null;
+    if (brain) brain.aggroRange = 30;
+    const f = new Fighter(this, { id: `${kind}-${++this._objIds || (this._objIds = 1)}`, kind, team: Team.Enemy, stats: { ...O.stats, object: true },
+      hitboxes: OBJECT_HITBOXES, traits: { object: true, immobile: true }, brain, x, z });
+    f.anchor = { x, z }; f.owner = owner;
+    f.yaw = angleTo(f.pos, this.player.pos);
+    this.emit({ type: "spawn", fighter: f });
+    return this.add(f);
+  }
+
+  /** Silence (Ilse): spells can't be cast inside a zone, or anywhere while the bells ring; dodges, during a hush. */
+  silencedAt(pos) { return this.silenceAll || this.silences.some((z) => Math.hypot(pos.x - z.x, pos.z - z.z) < z.r); }
+  addSilence(x, z, r, frames) { const zn = { x, z, r, frames }; this.silences.push(zn); this.emit({ type: "silenceZone", zone: zn }); return zn; }
+
+  /** An expanding ring along the ground from (x, z): anyone on the ground it crosses is hit once. Jump it or dodge through. */
+  addWave(owner, x, z, { speed = 6, maxR = 9, width = 0.9, spec, ability, kind = "toll" }) {
+    const w = { owner, x, z, r: 0.4, speed, maxR, width, spec, ability, kind, hitSet: new Set() };
+    this.waves.push(w);
+    this.emit({ type: "wave", wave: w });
+    return w;
+  }
+  _stepWaves() {
+    for (const w of this.waves) {
+      w.r += w.speed / 60;
+      for (const t of this.fighters) {
+        if (t.team === w.owner.team || !t.alive || w.hitSet.has(t) || t.pos.y > 0.7 || t.traits.object) continue;
+        const d = Math.hypot(t.pos.x - w.x, t.pos.z - w.z);
+        if (Math.abs(d - w.r) > w.width + t.stats.radius) continue;
+        w.hitSet.add(t);
+        this._resolve(w.owner, t, { spec: w.spec, ability: w.ability, hitSet: w.hitSet, origin: { x: w.x, y: 0.5, z: w.z }, projectile: true });
+      }
+    }
+    this.waves = this.waves.filter((w) => w.r < w.maxR);
+  }
+
   spawnAcolyte(x, z, n = 0) { return this.spawnEnemy("acolyte", x, z, n); }
 
   /** Boss: an enemy with a scripted controller and its own attack token (it never waits in line). */
@@ -498,7 +545,7 @@ export class World {
     const kinds = Array.isArray(spec) ? spec : typeof spec === "number" ? Array(spec).fill("acolyte") : WAVES[(this.wave - 1) % WAVES.length];
     this.boss = null;
     kinds.forEach((kind, i) => {
-      if (BOSSES[kind]) { this.spawnBoss(kind, 0, BOSSES[kind].z); return; }
+      if (BOSSES[kind]) { if (at) this.spawnBoss(kind, at.x, at.z + 2); else this.spawnBoss(kind, 0, BOSSES[kind].z); return; }
       const a = (i / kinds.length) * Math.PI * 2 + 0.6;
       if (at) { // around the encounter point, kept out of walls
         const r = (at.r ?? 5) * (ENEMIES[kind].traits.ranged ? 1.4 : 1);
@@ -693,7 +740,16 @@ export class World {
     return best;
   }
 
-  press(intent) { if (this.player.alive) this.player.buffer.push(intent, this.frame + 1); }
+  press(intent) {
+    const p = this.player;
+    if (!p.alive) return;
+    const spell = intent >= Intent.Spell1 && intent <= Intent.Spell4;
+    if ((spell && this.silencedAt(p.pos)) || (intent === Intent.Dodge && this.dodgeHush > 0)) { // silenced: nothing happens
+      if (this.frame - (this._silencedMsg ?? -99) > 30) { this._silencedMsg = this.frame; this.emit({ type: "silenced", what: spell ? "spell" : "dodge" }); }
+      return;
+    }
+    p.buffer.push(intent, this.frame + 1);
+  }
 
   nearestEnemy(range = 20, except = null) {
     const p = this.player;
@@ -864,7 +920,7 @@ export class World {
         if (f.mana) f.mana.add(f.stats.manaRegenPerSecond * SECONDS_PER_TICK);
       }
       f.controller.tick(frame);
-      c.superArmor = (f.traits.armoredAttacks && f.runner.isRunning) || f.tags.has("WARDED");
+      c.superArmor = (f.traits.armoredAttacks && f.runner.isRunning) || f.tags.has("WARDED") || !!f.boss?.oath; // Galen's Oath: nothing staggers him
       if (f === this.player) {
         c.blocking = f.holdBlock && !f.runner.isRunning && f.grounded && c.canAct;
       }
@@ -950,6 +1006,8 @@ export class World {
     if (pd && pd !== 1) spec = { ...spec, damage: spec.damage * pd };
     if (att === this.player && (this.mods.attack || this.mods.posture)) spec = { ...spec, damage: spec.damage * (1 + this.mods.attack), posture: spec.posture * (1 + this.mods.posture) };
     if (def === this.player && this.mods.defense) spec = { ...spec, damage: spec.damage * (1 - this.mods.defense) };
+    if (def.tags.has("RUSTED")) spec = { ...spec, damage: spec.damage * GALEN_TUNING.rustFactor }; // Galen's rot eats your guard
+    if (def.boss && ((def.boss.damageFactor ?? 1) !== 1 || (def.boss.postureFactor ?? 1) !== 1)) spec = { ...spec, damage: spec.damage * (def.boss.damageFactor ?? 1), posture: spec.posture * (def.boss.postureFactor ?? 1) }; // shields and oaths
     if (def.tags.has("EXPOSED")) { // Hask's soft underside, once the bog drains
       spec = { ...spec, damage: spec.damage * HASK_TUNING.exposedFactor, posture: spec.posture * HASK_TUNING.exposedFactor };
     }
@@ -1109,6 +1167,11 @@ export class World {
   _move(f) {
     const dt = SECONDS_PER_TICK;
     const busy = f.runner.isRunning;
+    if (f.traits.immobile) { // bells, seals, turrets, cages: turn to aim, never walk (their brains can ask for odd moves)
+      f.moveInput.x = f.moveInput.z = 0; f.vel.x = f.vel.z = 0; f.knock.x = f.knock.z = 0;
+      if (f.alive && f.target?.alive && f.stats.turnRate) f.yaw = turn(f.yaw, angleTo(f.pos, f.target.pos), f.stats.turnRate);
+      return;
+    }
     const canSteer = f.combatant.canAct && f.alive && (!busy || !f.grounded) && !f.tags.has("BOUND"); // threads hold you in place
     if (f.dash.frames > 0) {
       f.vel.x = f.dash.x; f.vel.z = f.dash.z; f.dash.frames--;
@@ -1188,6 +1251,17 @@ export class World {
       }
     }
     if (this._fallSwap) { this._fallSwap = false; this.tagSwap(true); }
+    if (this.silences.length) { for (const z of this.silences) z.frames--; const gone = this.silences.filter((z) => z.frames <= 0); if (gone.length) { this.silences = this.silences.filter((z) => z.frames > 0); for (const z of gone) this.emit({ type: "silenceEnd", zone: z }); } }
+    if (this.dodgeHush > 0 && --this.dodgeHush === 0) this.emit({ type: "hushEnd" });
+    if (this.waves.length) this._stepWaves();
+    for (const f of this.fighters) { // bells, seals, turrets and cages don't move; a caged ally can't act
+      if (f.traits.immobile && f.anchor) { f.pos.x = f.prev.x = f.anchor.x; f.pos.z = f.prev.z = f.anchor.z; f.pos.y = f.prev.y = 0; f.grounded = true; if (f.vel) { f.vel.x = f.vel.y = f.vel.z = 0; } if (f.knock) { f.knock.x = f.knock.z = 0; } }
+      if (f.caged) {
+        if (!f.caged.alive) { f.caged = null; this.emit({ type: "freed", fighter: f }); continue; }
+        f.pos.x = f.prev.x = f.caged.pos.x; f.pos.z = f.prev.z = f.caged.pos.z; f.combatant.invulnerableFrames = Math.max(f.combatant.invulnerableFrames, 2);
+        f.runner.interrupt(); f.moveInput.x = f.moveInput.z = 0;
+      }
+    }
     for (const [id, m] of Object.entries(this.members)) { // the one on the bench gets a little breath back
       if (id === this.active || !m || m.hp == null || m.hp <= 0) continue;
       m.hp = Math.min(m.stats.maxHealth, m.hp + (m.stats.maxHealth * 0.004) / 60); // 0.4% a second

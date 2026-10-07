@@ -9,6 +9,7 @@ import { ENEMIES } from "../data/enemies.js";
 import { HASK_POSES } from "../data/hask.js";
 import { SEVERIN_POSES } from "../data/severin.js";
 import { SEVERIN_KIT_POSES } from "../data/severinKit.js";
+import { ILSE_POSES, GALEN_POSES, MAGISTRATE_POSES } from "../data/bosses2.js";
 import { CAL_POSES } from "../data/cal.js";
 import { EventType } from "../core/abilities.js";
 import { buildBody, skinBake } from "./body.js";
@@ -80,6 +81,16 @@ export const LOOKS = {
   rat: { poses: ENEMIES.rat.poses, scale: 0.55, form: "beast", fur: "#5a5560", belly: "#8a8290", eyes: "#ff5a4a", trail: "#c9a4a4" },
   clockwork: { poses: ENEMIES.clockwork.poses, scale: 1.25, skirt: 0.9, coat: "#8a6a26", trim: "#d9b45a", hairColor: "#8a6a26", skin: "#8a6a26",
     head: "skull", weapon: "claw", accent: "#2a2622", talon: "#5a5e66", shoulders: 1.3, eyes: "#ff2a1a", gear: true, stoop: 0.12, trail: "#ff5a3a" },
+  // Arc 1–2 bosses (data/bosses2.js).
+  ilse: { poses: ILSE_POSES, scale: 1.02, skirt: 1.35, coat: "#d8d4e8", trim: "#8a7ac0", hairColor: "#e8e4f0", skin: "#f0dcd0",
+    head: "face", hair: "long", hood: "#b8b0d0", angry: true, weapon: "staff", orb: "#c9b4ff", sash: true, eyeColor: "#6a5a9a", trail: "#c9b4ff" },
+  galen: { poses: GALEN_POSES, scale: 1.18, skirt: 1.0, coat: "#6a4a3a", trim: "#9a5a32", hairColor: "#3a2a22", skin: PALETTE.mask,
+    head: "helm", helm: "#8a5a3a", menace: true, weapon: "spear", shield: "heater", shieldColor: "#7a4a2a", shoulders: 1.4, trail: "#c86a2a" },
+  magistrate: { poses: MAGISTRATE_POSES, scale: 1.6, skirt: 1.3, coat: "#2a2430", trim: "#c9a24a", hairColor: "#c9a24a", skin: "#a07a3a",
+    head: "skull", weapon: "staff", orb: "#ffd36a", accent: "#2a2622", shoulders: 1.4, eyes: "#ffd36a", gear: true, trail: "#ffd36a" },
+  // Things bosses put on the field: drawn by ObjectView (runtime/objects.js).
+  bell: { form: "object", shape: "bell", trail: "#c9b4ff" }, seal: { form: "object", shape: "seal", trail: "#ff7a2a" },
+  turret: { form: "object", shape: "turret", trail: "#ffd36a" }, cage: { form: "object", shape: "cage", trail: "#c9ccd2" },
   bandit: { poses: ENEMIES.bandit.poses, scale: 1.02, skirt: 1.0, coat: "#4a3022", trim: "#8a2a2a", hairColor: "#3a2618", skin: "#d8a888",
     head: "face", hair: "spiky", hood: "#2e221c", mask: "#6a1e1e", angry: true, weapon: "blade", eyeColor: "#2a1a10", stoop: 0.06, trail: "#ff8a6a" },
   hask: { poses: HASK_POSES, scale: 2.0, skirt: 1.7, coat: "#2f3a26", trim: "#5c4a2e", hairColor: "#222a1a", skin: "#2f3a26",
