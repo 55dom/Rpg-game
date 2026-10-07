@@ -1203,15 +1203,20 @@ function buildHall(scene, mobile) {
     const base = add(MB.CreateBox("hl-colBase", { width: 0.95, height: 0.3, depth: 0.95 }, scene), 0.02); base.position.set(x, 0.15, z); base.material = P("#b8ad98");
   }
   const wood = P("#4a3222"), frameM = P("#2a2a33"), flameM = glow(scene, "hl-flame", "#ffcf6a"), ashM = P("#8a8a8a"), wickM = P("#1a1a1a");
-  // One frame and one flame, instanced everywhere: ~120 lanterns for a handful of draw calls.
-  const frameSrc = MB.CreateBox("hl-lanternSrc", { width: 0.22, height: 0.3, depth: 0.22 }, scene); frameSrc.material = frameM; frameSrc.isPickable = false; add(frameSrc, 0.012); frameSrc.setEnabled(false);
-  const flameSrc = MB.CreateBox("hl-flameSrc", { width: 0.12, height: 0.18, depth: 0.12 }, scene); flameSrc.material = flameM; flameSrc.isPickable = false; add(flameSrc); flameSrc.setEnabled(false);
-  const ashSrc = MB.CreateCylinder("hl-ashSrc", { height: 0.035, diameterTop: 0.04, diameterBottom: 0.12, tessellation: 6 }, scene); ashSrc.material = ashM; ashSrc.isPickable = false; add(ashSrc); ashSrc.setEnabled(false);
+  // An open lantern: a dark cap and base, two thin back posts, and between them either a glowing pane (lit)
+  // or nothing but what's left of the wick (dark, or ash). Instanced everywhere: ~120 lanterns, a few draw calls.
+  const src = (name, mesh, mat) => { mesh.material = mat; mesh.isPickable = false; add(mesh); mesh.setEnabled(false); return mesh; };
+  const capSrc = src("hl-capSrc", MB.CreateBox("hl-capSrc", { width: 0.24, height: 0.05, depth: 0.24 }, scene), frameM);
+  const postSrc = src("hl-postSrc", MB.CreateBox("hl-postSrc", { width: 0.025, height: 0.26, depth: 0.025 }, scene), frameM);
+  const flameSrc = src("hl-flameSrc", MB.CreateBox("hl-flameSrc", { width: 0.17, height: 0.22, depth: 0.17 }, scene), flameM);
+  const ashSrc = src("hl-ashSrc", MB.CreateCylinder("hl-ashSrc", { height: 0.035, diameterTop: 0.04, diameterBottom: 0.12, tessellation: 6 }, scene), ashM);
   const flames = [];
-  const lantern = (parent, x, y, z, state) => { // state: "lit" | "ash" | "none" (just the frame, its contents dressed by a condition)
-    const f = frameSrc.createInstance("hl-lantern"); f.parent = parent; f.position.set(x, y, z); f.isPickable = false;
-    if (state === "lit") { const fl = flameSrc.createInstance("hl-lflame"); fl.parent = parent; fl.position.set(x, y, z); fl.isPickable = false; flames.push(fl); }
-    if (state === "ash") { const a = ashSrc.createInstance("hl-ash"); a.parent = parent; a.position.set(x, y - 0.13, z); a.isPickable = false; }
+  const inst = (s0, parent, x, y, z) => { const m = s0.createInstance(s0.name); m.parent = parent; m.position.set(x, y, z); m.isPickable = false; return m; };
+  const lantern = (parent, x, y, z, state) => { // state: "lit" | "ash" | "none" (its contents dressed by a condition)
+    inst(capSrc, parent, x, y + 0.155, z); inst(capSrc, parent, x, y - 0.155, z);
+    for (const dx of [-0.1, 0.1]) inst(postSrc, parent, x + dx, y, z + 0.1);
+    if (state === "lit") flames.push(inst(flameSrc, parent, x, y, z));
+    if (state === "ash") inst(ashSrc, parent, x, y - 0.115, z);
   };
   let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   for (const q of H.squads) {
@@ -1246,15 +1251,15 @@ function buildHall(scene, mobile) {
   const calX = H.lanternX(H.lanterns.indexOf("cal"));
   { const fl = flameSrc.createInstance("hl-calFlame"); fl.parent = calLit; fl.position.set(calX, rowY, rowZ); flames.push(fl); }
   // Dark, but the wick still stands: not ash. (Look at the shelf above to see what ash looks like.)
-  { const wk = add(MB.CreateCylinder("hl-calWick", { height: 0.14, diameter: 0.025, tessellation: 5 }, scene)); wk.parent = calDark; wk.position.set(calX, rowY - 0.06, rowZ); wk.material = wickM; }
+  { const wk = add(MB.CreateCylinder("hl-calWick", { height: 0.14, diameter: 0.025, tessellation: 5 }, scene)); wk.parent = calDark; wk.position.set(calX, rowY - 0.06, rowZ); wk.material = wickM; } // stands up from the base: whole
   const meLit = K.when("$LANTERN_LIT"), myX = H.lanternX(H.lanterns.indexOf("rook"));
   { const fl = flameSrc.createInstance("hl-myFlame"); fl.parent = meLit; fl.position.set(myX, rowY, rowZ); flames.push(fl); }
   // Brannoc's lantern: a captain's, bigger, at the front of the Wardens' shelf. Lit (its ash comes later in the story).
   const BY = 1.32 + 0.2; // the Wardens' middle tier
-  const bigFrame = add(MB.CreateBox("hl-brannocLantern", { width: 0.3, height: 0.4, depth: 0.3 }, scene), 0.015); bigFrame.parent = K.root; bigFrame.position.set(-hx + 0.55, BY, H.brannoc.z); bigFrame.material = P("#5a5e66");
+  lantern(K.root, -hx + 0.55, BY, H.brannoc.z, "none"); // the captain's: its flame (or its ash) follows the story
   const bLit = K.when("not $BRANNOC_DEAD"), bAsh = K.when("$BRANNOC_DEAD");
-  { const fl = flameSrc.createInstance("hl-brannocFlame"); fl.parent = bLit; fl.position.set(-hx + 0.55, BY, H.brannoc.z); fl.scaling.setAll(1.3); flames.push(fl); }
-  { const a = ashSrc.createInstance("hl-brannocAsh"); a.parent = bAsh; a.position.set(-hx + 0.55, BY - 0.17, H.brannoc.z); a.scaling.setAll(1.3); }
+  { const fl = flameSrc.createInstance("hl-brannocFlame"); fl.parent = bLit; fl.position.set(-hx + 0.55, BY, H.brannoc.z); fl.scaling.setAll(1.15); flames.push(fl); }
+  { const a = ashSrc.createInstance("hl-brannocAsh"); a.parent = bAsh; a.position.set(-hx + 0.55, BY - 0.115, H.brannoc.z); }
   // Light: warm from the lanterns, cool from high windows (glow strips), a great lantern hung over the aisle.
   const high = glow(scene, "hl-window", "#b8c8e8");
   for (const z of [-6, 0, 6]) for (const x of [-hx + 0.14, hx - 0.14]) { const w = add(MB.CreateBox("hl-win", { width: 0.04, height: 1.6, depth: 1.1 }, scene)); w.position.set(x, 4.9, z + 2.5); w.material = high; }
@@ -1269,7 +1274,7 @@ function buildHall(scene, mobile) {
   const self = { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true,
     update(dt, t) {
       room.cutaway(scene.activeCamera, self.mood?.player);
-      for (let i = 0; i < flames.length; i++) flames[i].scaling.y = (flames[i].name === "hl-brannocFlame" ? 1.3 : 1) * (0.88 + Math.sin(t * 8 + i * 1.7) * 0.12);
+      for (let i = 0; i < flames.length; i++) flames[i].scaling.y = (flames[i].name === "hl-brannocFlame" ? 1.15 : 1) * (0.88 + Math.sin(t * 8 + i * 1.7) * 0.12);
       warm.intensity = 0.56 + Math.sin(t * 5) * 0.04;
     } };
   return self;
