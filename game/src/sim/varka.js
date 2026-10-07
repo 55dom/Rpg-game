@@ -3,7 +3,7 @@
 
 import { PhasedBoss } from "./boss.js";
 import { constrain } from "./bounds.js";
-import { VARKA_PHASES, VARKA_TUNING, FINAL_VOW, varkaOptions } from "../data/ashfall.js";
+import { VARKA_PHASES, VARKA_TUNING, FINAL_VOW, ENGINE_RAM, WRECKAGE, varkaOptions } from "../data/ashfall.js";
 
 /** A spar (Brannoc in Ep 21): a boss with no phases and no tricks. */
 export class SparBoss {
@@ -85,7 +85,7 @@ export class VarkaController extends PhasedBoss {
       if (t.team === f.team || !t.alive || R.hit.has(t) || t.traits.object) continue;
       if (Math.hypot(t.pos.x - e.anchor.x, t.pos.z - e.anchor.z) > e.stats.radius + T.laneHalf * 0.6 + t.stats.radius) continue;
       R.hit.add(t);
-      w._resolve(e, t, { spec: T.roll, ability: FINAL_VOW, hitSet: new Set(), origin: { x: e.anchor.x, y: 1, z: e.anchor.z }, projectile: true });
+      w._resolve(e, t, { spec: T.roll, ability: ENGINE_RAM, hitSet: new Set(), origin: { x: e.anchor.x, y: 1, z: e.anchor.z }, projectile: true });
     }
     if (k >= 1) { this.roll = null; w.emit({ type: "engineStop", fighter: f, engine: e }); }
   }
@@ -94,7 +94,7 @@ export class VarkaController extends PhasedBoss {
     if (--this.debrisTimer > 0) return;
     this.debrisTimer = this.rules.railgun ? T.debrisEvery * 1.6 : T.debrisEvery;
     const c = this.home, a = w.rng() * Math.PI * 2, r = 2 + w.rng() * 9, p = w.player;
-    w.addStrike(this.f, c.x + Math.sin(a) * r, c.z + Math.cos(a) * r, { delay: T.debrisDelay, r: T.debrisRadius, spec: T.debris, ability: FINAL_VOW, kind: "debris" });
-    w.addStrike(this.f, p.pos.x + (w.rng() - 0.5) * 3, p.pos.z + (w.rng() - 0.5) * 3, { delay: T.debrisDelay, r: T.debrisRadius, spec: T.debris, ability: FINAL_VOW, kind: "debris" });
+    w.addStrike(this.f, c.x + Math.sin(a) * r, c.z + Math.cos(a) * r, { delay: T.debrisDelay, r: T.debrisRadius, spec: T.debris, ability: WRECKAGE, kind: "debris" });
+    w.addStrike(this.f, p.pos.x + (w.rng() - 0.5) * 3, p.pos.z + (w.rng() - 0.5) * 3, { delay: T.debrisDelay, r: T.debrisRadius, spec: T.debris, ability: WRECKAGE, kind: "debris" });
   }
 }

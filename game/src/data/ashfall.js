@@ -162,6 +162,9 @@ export const VARKA_TUNING = Object.freeze({
   shock: hitSpec({ damage: 10, posture: 12, hitstop: 3, hitstun: 16, knockback: 3, unblockable: true, applyTags: [CHARGE] }),
   thunder: THUNDER,
 });
+// What the engine's ram and the falling wreckage are called when they hit (no moves of their own: the controller fires them).
+export const ENGINE_RAM = defineAbility({ id: "EngineRam", startup: 1, active: 1, recovery: 1, hit: VARKA_TUNING.roll, events: [] });
+export const WRECKAGE = defineAbility({ id: "Wreckage", startup: 1, active: 1, recovery: 1, hit: VARKA_TUNING.debris, events: [] });
 
 // ---- The siege engine (an object: immobile unless the controller drives it) ------------------------
 export const ENGINE_ABILITIES = Object.freeze({
