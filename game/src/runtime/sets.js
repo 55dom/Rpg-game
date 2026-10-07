@@ -1,7 +1,7 @@
 // Story sets (Phase 3): each one is built on first use from primitives, carries its own sky, fog,
 // and lighting, and can be swapped in and out. "yard" is the original training yard (arena.js).
 
-import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT } from "../data/zones.js";
+import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT } from "../data/zones.js";
 import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } from "./look.js";
 import { buildCrowd } from "./crowd.js";
 import { buildCritters } from "./critters.js";
@@ -51,7 +51,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -487,6 +487,11 @@ function buildLighthouse(scene, mobile) {
     lanterns.push(f);
   }
   const newLantern = lanterns[7]; newLantern.setEnabled(false); // the newest Lantern's, lit at dinner
+  // Later in the story the rack follows the flags: yours stays lit; Cal's (the second) goes dark, wick still standing.
+  const myLit = K.when("$LANTERN_LIT"), calLitN = K.when("not $CAL_STATE"), calDarkN = K.when("$CAL_STATE");
+  { const f = add(MB.CreateBox("lh-myflame", { width: 0.22, height: 0.32, depth: 0.22 }, scene)); f.parent = myLit; f.position.copyFrom(newLantern.position); f.material = flame; lanterns.push(f); }
+  lanterns[1].parent = calLitN;
+  { const wk = add(MB.CreateCylinder("lh-calWick", { height: 0.16, diameter: 0.03, tessellation: 5 }, scene)); wk.parent = calDarkN; wk.position.set(lanterns[1].position.x, 1.88, LIGHTHOUSE.lanterns.z); wk.material = toon(scene, "lh-wick", "#1a1a1a"); }
   // The long table for dinner, with benches and bowls.
   const T = LIGHTHOUSE.table, wood = toon(scene, "lh-table", "#8a5a3a");
   const top = add(MB.CreateBox("lh-tableTop", { width: 1.6, height: 0.12, depth: 5 }, scene), 0.03); top.position.set(T.x, 0.85, T.z); top.material = wood;
@@ -1178,5 +1183,94 @@ function buildHome(scene, mobile) {
   const toonEnv = { lightDir: [-0.3, 1, -0.4], fogColor: "#141218", fogDensity: 0.002, sky: [1.06, 0.98, 0.92], ground: [0.84, 0.76, 0.7], rim: [1.0, 0.82, 0.7] };
   const self = { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true,
     update(dt, t) { room.cutaway(scene.activeCamera, self.mood?.player); flame.scaling.y = 0.85 + Math.sin(t * 9) * 0.15; warm.intensity = 0.5 + Math.sin(t * 7) * 0.05; } };
+  return self;
+}
+
+/**
+ * The Hall of Lanterns (inside): a long stone hall, a red runner down the aisle between two rows of columns,
+ * and a shelf of lanterns for each of the seven squads under its banner. Most flames burn; the fallen's wicks
+ * are a little heap of ash. The Lanterns' shelf on the far wall follows the story (conditional dressing).
+ */
+function buildHall(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, H = HALL_LAYOUT;
+  const P = palette(scene, "hl");
+  const room = buildRoom(scene, K, { prefix: "hl", half: H.half, height: 6, wall: "#d8d0c0", wainscot: "#6a5a4a", floorA: "#b8ad98", floorB: "#a39882", door: H.door,
+    windows: [] });
+  const [hx, hz] = H.half;
+  const runner = add(MB.CreateGround("hl-runner", { width: 2.2, height: hz * 2 - 1 }, scene)); runner.position.set(0, 0.012, 0); runner.material = P("#8a2a2a");
+  for (const z of [-6, -2, 2, 6]) for (const x of [-2.6, 2.6]) {
+    const c = add(MB.CreateCylinder("hl-col", { height: 6, diameter: 0.7, tessellation: 10 }, scene), 0.03); c.position.set(x, 3, z); c.material = P("#e8e0cf");
+    const base = add(MB.CreateBox("hl-colBase", { width: 0.95, height: 0.3, depth: 0.95 }, scene), 0.02); base.position.set(x, 0.15, z); base.material = P("#b8ad98");
+  }
+  const wood = P("#4a3222"), frameM = P("#2a2a33"), flameM = glow(scene, "hl-flame", "#ffcf6a"), ashM = P("#8a8a8a"), wickM = P("#1a1a1a");
+  // One frame and one flame, instanced everywhere: ~120 lanterns for a handful of draw calls.
+  const frameSrc = MB.CreateBox("hl-lanternSrc", { width: 0.22, height: 0.3, depth: 0.22 }, scene); frameSrc.material = frameM; frameSrc.isPickable = false; add(frameSrc, 0.012); frameSrc.setEnabled(false);
+  const flameSrc = MB.CreateBox("hl-flameSrc", { width: 0.12, height: 0.18, depth: 0.12 }, scene); flameSrc.material = flameM; flameSrc.isPickable = false; add(flameSrc); flameSrc.setEnabled(false);
+  const ashSrc = MB.CreateCylinder("hl-ashSrc", { height: 0.035, diameterTop: 0.04, diameterBottom: 0.12, tessellation: 6 }, scene); ashSrc.material = ashM; ashSrc.isPickable = false; add(ashSrc); ashSrc.setEnabled(false);
+  const flames = [];
+  const lantern = (parent, x, y, z, state) => { // state: "lit" | "ash" | "none" (just the frame, its contents dressed by a condition)
+    const f = frameSrc.createInstance("hl-lantern"); f.parent = parent; f.position.set(x, y, z); f.isPickable = false;
+    if (state === "lit") { const fl = flameSrc.createInstance("hl-lflame"); fl.parent = parent; fl.position.set(x, y, z); fl.isPickable = false; flames.push(fl); }
+    if (state === "ash") { const a = ashSrc.createInstance("hl-ash"); a.parent = parent; a.position.set(x, y - 0.13, z); a.isPickable = false; }
+  };
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (const q of H.squads) {
+    const n = new BB.TransformNode(`hl-shelf-${q.id}`, scene); n.parent = K.root;
+    // Local +z points at the wall the shelf stands against; local +x runs left to right as you face it.
+    if (q.wall === "n") { n.position.set(q.x, 0, hz - 0.55); n.rotation.y = 0; }
+    else if (q.wall === "w") { n.position.set(-hx + 0.55, 0, q.z); n.rotation.y = -Math.PI / 2; }
+    else { n.position.set(hx - 0.55, 0, q.z); n.rotation.y = Math.PI / 2; }
+    const w = q.wall === "n" ? 5.2 : 3.2;
+    const back = add(MB.CreateBox("hl-shelfBack", { width: w, height: 2.8, depth: 0.08 }, scene), 0.02); back.parent = n; back.position.set(0, 1.4, 0.22); back.material = wood;
+    for (const sx of [-w / 2, w / 2]) { const side = add(MB.CreateBox("hl-shelfSide", { width: 0.1, height: 2.8, depth: H.shelfDepth }, scene), 0.02); side.parent = n; side.position.set(sx, 1.4, 0); side.material = wood; }
+    const tiers = q.wall === "n" ? [0.62, 1.32, 2.2] : [0.55, 1.32, 2.1];
+    for (const y of tiers) { const t = add(MB.CreateBox("hl-tier", { width: w, height: 0.06, depth: H.shelfDepth }, scene), 0.012); t.parent = n; t.position.set(0, y, 0); t.material = wood; }
+    const banner = add(MB.CreateBox("hl-banner", { width: w * 0.6, height: 1.4, depth: 0.04 }, scene), 0.015); banner.parent = n; banner.position.set(0, 3.7, 0.16); banner.material = P(q.color);
+    const crest = add(MB.CreateBox("hl-crest", { width: 0.42, height: 0.42, depth: 0.05 }, scene), 0.01); crest.parent = n; crest.position.set(0, 3.8, 0.12); crest.rotation.z = Math.PI / 4; crest.material = P("#f2efe6");
+    // Rows of lanterns: most burn; a few of the fallen are ash. The Lanterns' eye-height row is placed below.
+    for (const y of tiers) {
+      if (q.id === "lanterns" && y === tiers[1]) continue;
+      const count = q.wall === "n" ? 7 : 5;
+      for (let i = 0; i < count; i++) {
+        const x = -w / 2 + 0.45 + i * ((w - 0.9) / (count - 1));
+        if (q.id === "wardens" && y === tiers[1] && i === 2) continue; // Brannoc's place, dressed below
+        lantern(n, x, y + 0.18, 0, rnd() < (q.id === "lanterns" ? 0.3 : 0.16) ? "ash" : "lit");
+      }
+    }
+  }
+  // The Lanterns' row at eye height (on the far wall, facing the hall): Dagrun, Cal, Juno, Bas, Tamsin, Lio, you.
+  const row = new BB.TransformNode("hl-lanternsRow", scene); row.parent = K.root;
+  const rowZ = hz - 0.55, rowY = H.lanternY;
+  H.lanterns.forEach((who, i) => lantern(row, H.lanternX(i), rowY, rowZ, who === "cal" || who === "rook" ? "none" : "lit"));
+  const calLit = K.when("not $CAL_STATE"), calDark = K.when("$CAL_STATE");
+  const calX = H.lanternX(H.lanterns.indexOf("cal"));
+  { const fl = flameSrc.createInstance("hl-calFlame"); fl.parent = calLit; fl.position.set(calX, rowY, rowZ); flames.push(fl); }
+  // Dark, but the wick still stands: not ash. (Look at the shelf above to see what ash looks like.)
+  { const wk = add(MB.CreateCylinder("hl-calWick", { height: 0.14, diameter: 0.025, tessellation: 5 }, scene)); wk.parent = calDark; wk.position.set(calX, rowY - 0.06, rowZ); wk.material = wickM; }
+  const meLit = K.when("$LANTERN_LIT"), myX = H.lanternX(H.lanterns.indexOf("rook"));
+  { const fl = flameSrc.createInstance("hl-myFlame"); fl.parent = meLit; fl.position.set(myX, rowY, rowZ); flames.push(fl); }
+  // Brannoc's lantern: a captain's, bigger, at the front of the Wardens' shelf. Lit (its ash comes later in the story).
+  const BY = 1.32 + 0.2; // the Wardens' middle tier
+  const bigFrame = add(MB.CreateBox("hl-brannocLantern", { width: 0.3, height: 0.4, depth: 0.3 }, scene), 0.015); bigFrame.parent = K.root; bigFrame.position.set(-hx + 0.55, BY, H.brannoc.z); bigFrame.material = P("#5a5e66");
+  const bLit = K.when("not $BRANNOC_DEAD"), bAsh = K.when("$BRANNOC_DEAD");
+  { const fl = flameSrc.createInstance("hl-brannocFlame"); fl.parent = bLit; fl.position.set(-hx + 0.55, BY, H.brannoc.z); fl.scaling.setAll(1.3); flames.push(fl); }
+  { const a = ashSrc.createInstance("hl-brannocAsh"); a.parent = bAsh; a.position.set(-hx + 0.55, BY - 0.17, H.brannoc.z); a.scaling.setAll(1.3); }
+  // Light: warm from the lanterns, cool from high windows (glow strips), a great lantern hung over the aisle.
+  const high = glow(scene, "hl-window", "#b8c8e8");
+  for (const z of [-6, 0, 6]) for (const x of [-hx + 0.14, hx - 0.14]) { const w = add(MB.CreateBox("hl-win", { width: 0.04, height: 1.6, depth: 1.1 }, scene)); w.position.set(x, 4.9, z + 2.5); w.material = high; }
+  const great = add(MB.CreateBox("hl-greatLantern", { width: 0.8, height: 1.1, depth: 0.8 }, scene), 0.03); great.position.set(0, 4.6, 0); great.material = glow(scene, "hl-great", "#ffd36a");
+  const chain = add(MB.CreateCylinder("hl-chain", { height: 1.4, diameter: 0.05, tessellation: 4 }, scene)); chain.position.set(0, 5.8, 0); chain.material = frameM;
+  const warm = new BB.PointLight("hl-warm", new BB.Vector3(0, 4.2, 0), scene); warm.diffuse = color3("#ffc070").clone(); warm.intensity = 0.6; warm.range = 22; K.lights.push(warm);
+  // Shelves, tiers and banners are static: lift them out of their shelf nodes so the bake can merge them.
+  for (const q of H.squads) for (const m of scene.getTransformNodeByName(`hl-shelf-${q.id}`).getChildMeshes(true)) if (!(m instanceof BB.InstancedMesh)) m.setParent(K.root);
+  K.bake([...room.keep, great]);
+  const env = { clear: "#18151c", fog: "#18151c", fogDensity: 0.004, hemi: [0.62, "#ffe6c8", "#3a3040"], sun: [0.45, "#ffd8a8", [0.2, -1, 0.5]], warm: 0 };
+  const toonEnv = { lightDir: [-0.2, 1, -0.5], fogColor: "#18151c", fogDensity: 0.002, sky: [1.04, 0.98, 0.94], ground: [0.8, 0.74, 0.72], rim: [1.0, 0.84, 0.7] };
+  const self = { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true,
+    update(dt, t) {
+      room.cutaway(scene.activeCamera, self.mood?.player);
+      for (let i = 0; i < flames.length; i++) flames[i].scaling.y = (flames[i].name === "hl-brannocFlame" ? 1.3 : 1) * (0.88 + Math.sin(t * 8 + i * 1.7) * 0.12);
+      warm.intensity = 0.56 + Math.sin(t * 5) * 0.04;
+    } };
   return self;
 }

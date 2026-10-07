@@ -406,6 +406,8 @@ export class StoryPlayer {
     const ep = this.episodeById(episodeId);
     this.ep = ep;
     this.active = true;
+    // Starting a later chapter directly: what the earlier story would have left behind (never overwrites what it did).
+    for (const [k, v] of Object.entries(ep.setup ?? {})) if (!this.flags.has(k)) this.flags.set(k, v);
     this.ctx.makeWorld({ ...ep.world });
     this.director = new EpisodeDirector(ep, this.flags, { onBeat: () => this.autosave() });
     let beat = this.director.start(beatIndex);
@@ -946,8 +948,10 @@ export class StoryPlayer {
         this.ctx.sfx.play("surgeFull");
         this.ctx.hud.toast(pk.label.replace(/^(Pick up|Open) (the )?/, "").toUpperCase(), "clear");
       }
+      x.talked.add(pk.id); // reading something can be part of a beat's goal, like talking to someone
       x.near = null; x.cooldown = 0.6; this._objective();
       if (this.roaming) this.saveNow();
+      if (x.beat.required?.length && x.beat.required.every((id) => x.talked.has(id))) x.resolve();
       return true;
     }
     x.busy = true; this.ui.talk.hidden = true;
@@ -1111,7 +1115,7 @@ export class StoryPlayer {
       this.clock.setClimate(id);
       this.skyLabel = null; this.atmoT = 0;
       world.resetPlayer(); // a new zone: back to full health (explore puts Rook at the arrival point)
-      const out = await this.explore({ id: `zone-${id}`, zone, stage: zone.stage, rook: at, cast: [...zone.cast, ...(zone.extras ?? [])], exits: zone.exits, pickups: zone.pickups, encounters: zone.encounters,
+      const out = await this.explore({ id: `zone-${id}`, zone, stage: zone.stage, rook: at, cast: [...zone.cast, ...(zone.extras ?? [])].filter((c) => !c.when || truthy(compileExpr(c.when)(this.flags))), // who is here depends on the story exits: zone.exits, pickups: zone.pickups, encounters: zone.encounters,
         objective: zone.exits.map((e) => `<b>Exit:</b> ${e.label}`).join(" · ") });
       if (!this.active) return;
       this._fade(true, 0.35);

@@ -27,6 +27,8 @@ import { EPISODE_1, EP1_SCRIPT } from "./data/story/ep1.js";
 import { EPISODE_2, EP2_SCRIPT } from "./data/story/ep2.js";
 import { EPISODE_3, EP3_SCRIPT } from "./data/story/ep3.js";
 import { EPISODE_4_STORY, EP4_SCRIPT } from "./data/story/ep4.js";
+import { EPISODE_19, EP19_SCRIPT } from "./data/story/ep19.js";
+import { keyItemsHeld } from "./data/keyItems.js";
 import { WORLD_SCRIPT } from "./data/story/world.js";
 import { ZONES } from "./data/zones.js";
 import { Inventory } from "./core/inventory.js";
@@ -669,7 +671,7 @@ export function boot(doc = document) {
       refreshGrimDot();
     },
     onEvents: (evs) => onEvents(evs),
-  }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }, { episode: EPISODE_3, script: EP3_SCRIPT }, { episode: EPISODE_4_STORY, script: EP4_SCRIPT }], [WORLD_SCRIPT]);
+  }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }, { episode: EPISODE_3, script: EP3_SCRIPT }, { episode: EPISODE_4_STORY, script: EP4_SCRIPT }, { episode: EPISODE_19, script: EP19_SCRIPT }], [WORLD_SCRIPT]);
   const playerName = root.querySelector(".player-card .name");
   const showName = (n) => { if (playerName?.firstChild) playerName.firstChild.textContent = `${n.toUpperCase()} `; };
   const backToTitle = () => {
@@ -779,6 +781,10 @@ export function boot(doc = document) {
     });
     const total = inv.mods;
     shopModal.querySelector("[data-total]").textContent = modsText(Object.fromEntries(Object.entries(total).filter(([, v]) => v)));
+    // Key items: story objects you carry (only in the Bag, not at a shop counter).
+    const keys = shopId ? [] : keyItemsHeld(story.flags, story.zone?.id ?? null), keyList = shopModal.querySelector("[data-keyitems]");
+    keyList.hidden = shopModal.querySelector("[data-keyitems-h]").hidden = !keys.length;
+    keyList.innerHTML = keys.map((k) => `<p><b>${k.name}</b>${k.text}</p>`).join("");
   };
   /** Rook's stat mods: equipment plus level growth and Margin skills. */
   /** Who fights beside Rook in a world made with these companion options (the World's default is both). */
@@ -1063,7 +1069,7 @@ export function boot(doc = document) {
     slotsModal.querySelector("[data-slots-sub]").textContent = saving ? "CHOOSE A SLOT" : "LOAD A SAVE";
     const reached = saves.reached;
     epList.innerHTML = story.episodes.map(({ episode: e }) =>
-      `<button data-ep="${e.id}" ${e.number > reached ? "disabled" : ""}><b>EP ${e.number}</b><span>${e.number > reached ? "Locked" : e.title}<small>${e.arc ?? ""}</small></span></button>`).join("");
+      `<button data-ep="${e.id}" ${(e.unlockAt ?? e.number) > reached ? "disabled" : ""}><b>EP ${e.number}</b><span>${(e.unlockAt ?? e.number) > reached ? "Locked" : e.title}<small>${e.arc ?? ""}</small></span></button>`).join("");
     for (const b of epList.querySelectorAll("[data-ep]")) b.addEventListener("click", () => {
       const last = saves.latest()?.save;
       closeSlots();

@@ -50,6 +50,26 @@ export const CAFE_LAYOUT = {
   cakeCase: { x: 3.6, z: 3.1 },
   door: { x: 0, z: -6 },
 };
+/**
+ * The Hall of Lanterns (inside): a long stone hall with a shelf of lanterns for each of the seven squads.
+ * The Lanterns' shelf is on the far wall, "the fourth shelf, near the end". Each squad: [name, banner color, wall, along].
+ * Lantern order on the Lanterns' shelf (left to right as you face it): Dagrun, Cal, Juno, Bas, Tamsin, Lio, you.
+ */
+export const HALL_LAYOUT = {
+  half: [6, 10], door: { x: 0, z: -10 },
+  squads: [
+    { id: "lances", name: "Gilded Lances", color: "#d9b44a", wall: "w", z: -5 },
+    { id: "wardens", name: "Iron Wardens", color: "#7a828c", wall: "w", z: 0 },
+    { id: "oath", name: "Verdant Oath", color: "#5aa05a", wall: "w", z: 5 },
+    { id: "lanterns", name: "Last Lanterns", color: "#e6b54e", wall: "n", x: 0 },
+    { id: "riders", name: "Tempest Riders", color: "#5a9ad8", wall: "e", z: 5 },
+    { id: "quill", name: "Silent Quill", color: "#3a3a48", wall: "e", z: 0 },
+    { id: "bell", name: "Crimson Bell", color: "#a02a2a", wall: "e", z: -5 },
+  ],
+  lanterns: ["dagrun", "cal", "juno", "bas", "tamsin", "lio", "rook"], // the Lanterns' shelf, at eye height
+  lanternX: (i) => -2.1 + i * 0.7, lanternY: 1.5, shelfDepth: 0.55,
+  brannoc: { z: 0 }, // Brannoc's lantern: the captain's, at the front of the Wardens' shelf (eye height)
+};
 export const HOME_LAYOUT = { half: [5, 4], door: { x: 0, z: -4 }, table: { x: 1.6, z: 0.4 }, bed: { x0: -4.9, z0: 1, x1: -2.4, z1: 3.9 }, hearth: { x0: 1.2, z0: 3.3, x1: 3.4, z1: 4 } };
 
 // ---- Thornwick, the home village ------------------------------------------------------------
@@ -73,7 +93,7 @@ export const THORNWICK_LAYOUT = {
 export const UNDERCROFT_BANDS = [[-34, -22, 6], [-22, -14, 2], [-14, 2, 10], [2, 10, 2], [10, 26, 12], [26, 32, 2], [32, 46, 14]];
 const UC_HALF = 14;
 
-const A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT;
+const A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT;
 const aurelinSolids = [
   ...A.houses.map((h) => box(h.x - h.w / 2, h.z - h.d / 2, h.x + h.w / 2, h.z + h.d / 2)),
   ...A.stalls.map((s) => box(s.x - 1.4, s.z - 1, s.x + 1.4, s.z + 1)),
@@ -139,7 +159,7 @@ export const ZONES = {
         routine: { steps: [{ do: "work", at: [-5.3, -3.4], face: -1.75, anim: "punch", dur: [10, 14] }, { do: "idle", at: [-4.2, -1.6], face: 0.8, dur: [4, 6] }] } },
       { id: "tamsin", look: "tamsin", x: 6.4, z: 7.2, yaw: -1.6, node: "W_Tamsin",
         routine: { steps: [{ do: "work", at: [6.4, 7.2], face: -1.6, anim: "strum", dur: [12, 18] }, { do: "idle", at: [2.5, 10.9], face: 0, dur: [5, 7] }] } },
-      { id: "cal", look: "cal", x: 1.6, z: -3.4, yaw: -0.6, node: "W_Cal",
+      { id: "cal", look: "cal", x: 1.6, z: -3.4, yaw: -0.6, node: "W_Cal", when: "not $CAL_STATE", // gone after Ep 18
         routine: { steps: [{ do: "idle", at: [1.6, -3.4], face: -0.6, dur: [8, 12] }, { do: "work", at: [0.4, -6.2], face: Math.PI, anim: "practice", dur: [7, 10] },
           { do: "idle", at: [-1.2, 3.2], face: Math.PI * 0.8, dur: [5, 8] }] } },
       { id: "lio", look: "lio", x: -2.6, z: 9.6, yaw: Math.PI * 0.9, node: "W_Lio",
@@ -194,9 +214,10 @@ export const ZONES = {
       // Doors you can walk through: the café, and the vendor's home on the east street.
       { id: "cafe", rect: [A.cafe.door.x - 0.8, A.cafe.door.z - 0.9, A.cafe.door.x + 0.8, A.cafe.door.z + 0.1], to: "cafe", spawn: "aurelin", label: "The Gilded Spoon" },
       { id: "home", rect: [25.1, 17.2, 26.1, 18.8], to: "home", spawn: "aurelin", label: "The vendor's house" },
+      { id: "hall", rect: [A.hall.door.x - 1.4, A.hall.door.z - 0.9, A.hall.door.x + 1.4, A.hall.door.z + 0.4], to: "hall", spawn: "aurelin", label: "The Hall of Lanterns" },
     ],
     arrivals: { gate: { x: 0, z: -31, yaw: 0 }, undercroft: { x: A.grate.x, z: A.grate.z + 4, yaw: 0 },
-      cafe: { x: A.cafe.door.x, z: A.cafe.door.z - 1.9, yaw: Math.PI }, home: { x: 24, z: 18, yaw: -Math.PI / 2 }, tower: { x: 0, z: 21.5, yaw: Math.PI } },
+      cafe: { x: A.cafe.door.x, z: A.cafe.door.z - 1.9, yaw: Math.PI }, home: { x: 24, z: 18, yaw: -Math.PI / 2 }, tower: { x: 0, z: 21.5, yaw: Math.PI }, hall: { x: 0, z: 23.4, yaw: Math.PI } },
     crowd: 22,
   },
   thornwick: {
@@ -342,6 +363,24 @@ export const ZONES = {
       routine: { steps: [{ do: "work", at: [2.3, 2.6], face: 0, anim: "stir", dur: [10, 14] }, { do: "work", at: [-1.2, 3.2], face: 0, anim: "work", dur: [6, 8] }, { do: "work", at: [1.6, -0.5], face: 0, anim: "wipe", dur: [5, 7] }] } }],
     exits: [{ id: "door", rect: [-0.9, -3.75, 0.9, -3.0], to: "aurelin", spawn: "home", label: "Back out to the street" }],
     arrivals: { aurelin: { x: 0, z: -2.6, yaw: 0 } },
+  },
+  hall: {
+    id: "hall", name: "The Hall of Lanterns", region: "Aurelin", stage: "hall", interior: true,
+    bounds: { rect: [-HL.half[0] + 0.25, -HL.half[1] + 0.25, HL.half[0] - 0.25, HL.half[1] - 0.25], solids: [
+      ...HL.squads.map((q) => q.wall === "n" ? box(-2.7, HL.half[1] - 0.95, 2.7, HL.half[1]) : q.wall === "w" ? box(-HL.half[0], q.z - 1.7, -HL.half[0] + 0.9, q.z + 1.7) : box(HL.half[0] - 0.9, q.z - 1.7, HL.half[0], q.z + 1.7)),
+      ...[-6, -2, 2, 6].flatMap((z) => [circle(-2.6, z, 0.4), circle(2.6, z, 0.4)]), // two rows of columns down the aisle
+    ] },
+    spawn: { x: 0, z: -8.6, yaw: 0 },
+    cast: [{ id: "keeper", look: "keeper", x: 1.6, z: -7.4, yaw: -2.6, node: "W_HallKeeperIn",
+      routine: { role: "elder", steps: [{ do: "idle", at: [1.6, -7.4], face: -2.6, dur: [10, 14] }, { do: "work", at: [-4.2, 2.2], face: -Math.PI / 2, anim: "light", dur: [6, 8] }, { do: "work", at: [4.2, -2.2], face: Math.PI / 2, anim: "light", dur: [6, 8] }] } }],
+    pickups: [
+      { id: "calLantern", x: HL.lanternX(1), z: HL.half[1] - 1.7, marker: false, node: "W_Hall_CalLantern", label: "Cal's lantern" },
+      { id: "myLantern", x: HL.lanternX(6), z: HL.half[1] - 1.7, marker: false, node: "W_Hall_MyLantern", label: "Your lantern" },
+      { id: "brannocLantern", x: -HL.half[0] + 1.9, z: HL.brannoc.z, marker: false, node: "W_Hall_Brannoc", label: "The Iron Wardens' shelf" },
+      { id: "fallenShelf", x: HL.half[0] - 1.9, z: -5, marker: false, node: "W_Hall_Fallen", label: "The Crimson Bell's shelf" },
+    ],
+    exits: [{ id: "door", rect: [-0.9, -HL.half[1], 0.9, -HL.half[1] + 0.75], to: "aurelin", spawn: "hall", label: "Out to the plaza" }],
+    arrivals: { aurelin: { x: 0, z: -8.6, yaw: 0 } },
   },
 };
 

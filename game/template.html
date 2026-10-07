@@ -325,6 +325,9 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .shop-card .marks { font: 600 13px/1 var(--font-mono); letter-spacing: 0.2em; color: var(--lantern); margin: -6px 0 6px; }
 .shop-card em { font: 600 10px/1 var(--font-mono); letter-spacing: 0.16em; color: var(--muted); text-transform: uppercase; font-style: normal; margin-left: 6px; }
 .shop-card .total { font-size: 12px; color: var(--gale); text-align: left; margin: 8px 2px 0; }
+.keyitems { display: grid; gap: 6px; text-align: left; }
+.keyitems p { margin: 0; padding: 8px 10px; border: 1px solid rgba(230, 181, 78, 0.35); border-radius: 8px; font-size: 12px; line-height: 1.4; color: var(--text); }
+.keyitems b { display: block; font-size: 13px; color: var(--gale); margin-bottom: 2px; }
 .slot-list button.done { opacity: 0.6; }
 .slot-list button.done b { color: var(--gale); }
 .stats.rep { max-width: 460px; grid-template-columns: 210px 1fr; }
@@ -662,6 +665,8 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <h3>EQUIPPED · TAP A SLOT TO SWAP</h3>
       <div class="slot-list" data-slots-eq></div>
       <p class="total" data-total></p>
+      <h3 data-keyitems-h hidden>KEY ITEMS</h3>
+      <div class="keyitems" data-keyitems hidden></div>
       <div class="start-buttons"><button class="go alt" data-shop-close>DONE</button></div>
     </div>
   </div>
