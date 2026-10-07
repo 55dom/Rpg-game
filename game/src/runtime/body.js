@@ -95,7 +95,7 @@ export function buildBody(rig, scene, id, L, kind, add, skin) {
     t.rotation.set(-0.3, 0, -s * 0.5); t.material = M("#6f8a3a");
   }
 
-  if (O.amphibian) { // the cistern toad: a pale belly, warts down the back, a fin-frill along the spine, a newt's tail
+  if (O.amphibian) { // the cistern toad: a pale belly, warts down the back, a fin-frill along the spine (no tail)
     const belly = add(MB.CreateSphere("belly", { diameter: 1, segments: 10 }, scene), rig.body, 0, 0.42 * T, torsoR(0.42 * T) * depth - 0.07);
     belly.scaling.set(ww * 1.55, T * 0.78, 0.2); belly.material = M(O.belly);
     for (let i = 0; i < 16; i++) { // warts: on the back and shoulders, never on the belly
@@ -115,7 +115,7 @@ export function buildBody(rig, scene, id, L, kind, add, skin) {
       const memM = M(O.wings), boneM = top, clawM = M(O.claw ?? "#e8dcc0");
       for (const sd of [-1, 1]) {
         const wn = node(`wing${sd}`, rig.body, sd * sw * 0.5, T * 0.88, -cw * depth * 0.75);
-        wn.rotation.set(0.25, sd * 0.45, 0); // swept back, half spread
+        wn.rotation.set(0.25, sd * 0.45, 0); wn.scaling.setAll(1.3); // swept back, half spread; big enough to read from across the arena
         const P = (x, y, z) => new BB.Vector3(sd * x, y, z);
         const root = P(0, 0, 0), wrist = P(0.55, 0.38, -0.14), low = P(0.16, -0.5, -0.06);
         const tips = [P(1.2, 0.62, -0.32), P(1.32, 0.12, -0.38), P(1.08, -0.38, -0.3), P(0.62, -0.62, -0.2)];
@@ -147,19 +147,6 @@ export function buildBody(rig, scene, id, L, kind, add, skin) {
         thumb.rotation.set(0.6, 0, -sd * 0.5); thumb.material = clawM;
         rig.wingNodes.push(Object.assign(wn, { side: sd }));
       }
-    }
-    // The tail: four bones from the base of the spine, each a tapering segment with a fin on top. The rig sways it.
-    rig.tailNodes = [];
-    let parent = node("tail0", rig.pelvis, 0, -0.02, -hw * depth * 0.85), rad = hw * 0.55;
-    parent.rotation.x = -0.75; // droops down and back to the floor
-    for (let i = 0; i < 4; i++) {
-      const len = 0.36 - i * 0.03, r1 = rad * 0.72;
-      const seg = add(MB.CreateCylinder("tailSeg", { height: len + 0.04, diameterTop: rad * 2, diameterBottom: r1 * 2, tessellation: 9 }, scene), parent, 0, 0, -len / 2);
-      seg.rotation.x = -Math.PI / 2; seg.scaling.x = 1.15; seg.material = top;
-      const fin = add(MB.CreateSphere("tailFin", { diameter: 1, segments: 6 }, scene), parent, 0, rad * 0.9, -len / 2);
-      fin.scaling.set(0.02, rad * 0.8, len * 1.0); fin.material = M(O.frill);
-      rig.tailNodes.push(parent);
-      const next = node(`tail${i + 1}`, parent, 0, 0, -len); next.rotation.x = 0.16; // curling up along the floor parent = next; rad = r1;
     }
   }
 

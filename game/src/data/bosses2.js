@@ -127,18 +127,28 @@ export const GULLMAW_ABILITIES = Object.freeze({
       sound(30, "slam"), box(34, "Flop", 6), custom(34, "splash", 6), { frame: 34, type: E.SpawnVfx, key: "mudwave" }, { frame: 34, type: E.CameraCue, key: "punch" }] }),
   Spit: defineAbility({ id: "Spit", startup: 22, active: 2, recovery: 26, tags: ["projectile"],
     events: [sound(18, "mud"), custom(22, "bile", 5)] }),
+  // Lily Pad Leap: seven lily-pad magic circles light up (a centre and six around it, joined by lines). Its wings
+  // beat, then it hops pad to pad on its frog legs, fast, smashing each one, and ends on the centre. Each pad
+  // flashes before it lands there: don't stand on a pad that's lit.
+  LilyLeap: defineAbility({ id: "LilyLeap", startup: 36, active: 2, recovery: 8,
+    hit: hitSpec({ damage: 18, posture: 22, hitstop: 6, hitstun: 22, knockback: 6, unblockable: true }),
+    events: [{ frame: 0, type: E.SpawnVfx, key: "glint" }, custom(0, "padsMark", 0), sound(6, "dodge"), sound(18, "dodge"), sound(30, "dodge"),
+      custom(36, "lilyLeap", 0), { frame: 36, type: E.CameraCue, key: "punch" }] }),
 });
 export const GULLMAW_POSES = Object.freeze({
   rest: [0.7, 0.5, 0], Slap: { from: [-0.9, 1.6, 0], to: [0.7, -1.4, 0], lean: 0.4 }, Tongue: { from: [0.2, 0.2, 0], to: [-0.2, 0.1, 0], lean: 0.45 },
-  Flop: { from: [-2.4, 0, 0], to: [1.2, 0, 0], lean: 0.7 }, Spit: { from: [0.3, 0.4, 0], to: [0.2, 0.3, 0], lean: -0.3 },
+  Flop: { from: [-2.4, 0, 0], to: [1.2, 0, 0], lean: 0.7 }, LilyLeap: { from: [-2.6, 0.3, 0], to: [-2.2, 0.2, 0], lean: -0.2 }, Spit: { from: [0.3, 0.4, 0], to: [0.2, 0.3, 0], lean: -0.3 },
 });
 export const gullmawOptions = (phase) => {
   const A = GULLMAW_ABILITIES;
   return [new AttackOption(A.Slap, 0, 3, 3, 70), new AttackOption(A.Tongue, 3, 7.5, 2, 150), new AttackOption(A.Flop, 0, 8, 2, phase >= 2 ? 160 : 220),
-    new AttackOption(A.Spit, 4, 15, phase >= 2 ? 3 : 2, 150)];
+    new AttackOption(A.Spit, 4, 15, phase >= 2 ? 3 : 2, 150), new AttackOption(A.LilyLeap, 0, 16, phase >= 2 ? 3 : 2, phase >= 2 ? 420 : 600)];
 };
 export const GULLMAW_PHASES = Object.freeze([{ phase: 1, above: 0.7, sacs: 2 }, { phase: 2, above: 0.4, jet: true }, { phase: 3, above: 0, swallow: true }]);
 export const GULLMAW_TUNING = Object.freeze({
+  padRadius: 6, padHop: 18, padHeight: 2.6, padSmash: 2.4, padFlash: 12, // Lily Pad Leap: ring size, frames per hop (fast), hop height, smash radius
+  pad: hitSpec({ damage: 18, posture: 22, hitstop: 6, hitstun: 22, knockback: 6, unblockable: true }),
+  padFinal: hitSpec({ damage: 26, posture: 32, hitstop: 9, hitstun: 30, knockback: 8, unblockable: true }),
   sacRadius: 7, jetLength: 12, jetSpeed: 0.011, jetWidth: 0.5, jetHeight: 0.75, jetWarn: 90,
   jet: hitSpec({ damage: 14, posture: 16, hitstop: 4, hitstun: 20, knockback: 3, unblockable: true }),
   splash: hitSpec({ damage: 10, posture: 12, hitstop: 3, hitstun: 16, knockback: 3, unblockable: true, applyTags: [["WEIGHTED", 180]] }),

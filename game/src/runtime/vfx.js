@@ -286,9 +286,9 @@ export class Vfx {
     this.ring({ x: at.x, y: 0.06, z: at.z }, 3.5, "#c9b28a", 0.35);
   }
 
-  afterimage(rig) {
-    const parts = rig.snapshot(this.ghostMat);
-    this.ghosts.push({ parts, life: 0.55, max: 0.55 });
+  afterimage(rig, material = this.ghostMat, life = 0.55) {
+    const parts = rig.snapshot(material);
+    this.ghosts.push({ parts, life, max: life });
   }
 
   update(dt, camera, engine) {

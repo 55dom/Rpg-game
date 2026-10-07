@@ -996,12 +996,12 @@ export class Rig {
       const charge = fighter.current && (fighter.current.id === "Spit" || fighter.current.id === "Tongue") ? 0.35 : 0;
       const k = 1 + Math.max(0, Math.sin(this.time * 2.2)) * 0.25 + charge; this.throatSac.scaling.set(k, k * 0.85, k);
     }
-    if (this.wingNodes) { // the wings breathe half-folded; they beat hard through a leap and flare on a roar of a spit
-      const leap = fighter.current?.id === "Flop", spit = fighter.current?.id === "Spit" || fighter.current?.id === "Tongue";
-      const beat = leap ? Math.sin(this.time * 18) * 0.7 : Math.sin(this.time * 1.6) * 0.08;
+    if (this.wingNodes) { // the wings breathe half-folded; they beat hard before and through a leap and fold for a spit
+      const id = fighter.current?.id, hopping = !!fighter.boss?.leap, windup = id === "LilyLeap";
+      const leap = id === "Flop" || hopping || windup, spit = id === "Spit" || id === "Tongue";
+      const beat = windup ? Math.sin(this.time * 26) * 0.9 : leap ? Math.sin(this.time * 20) * 0.7 : Math.sin(this.time * 1.6) * 0.08;
       for (const n of this.wingNodes) { n.rotation.y = n.side * ((spit ? 0.05 : leap ? 0.15 : 0.45) + beat); n.rotation.z = n.side * (leap ? -0.2 : 0); }
     }
-    if (this.tailNodes) this.tailNodes.forEach((n, i) => { n.rotation.y = Math.sin(this.time * 2.4 - i * 0.7) * (0.18 + i * 0.06) * (1 + run); });
     if (this.gear) this.gear.rotation.y += dt * (fighter.current?.id === "Gearspin" ? 9 : 0.8);
     if (this.wardRing) { const w = fighter.alive && fighter.tags.has("WARDED"); this.wardRing.setEnabled(w); if (w) this.wardRing.rotation.y -= dt * 2.5; }
     if (this.skirt && !this.legs) this.skirt.rotation.x = bodyLean * 0.25;

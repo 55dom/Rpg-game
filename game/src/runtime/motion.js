@@ -30,7 +30,7 @@ export function animateHumanoid(rig, f, dt, pose) {
   const raw = Math.hypot(fwd, side) / scale;
   const turn = Math.abs(wrap(yaw - mo.lastYaw)) / Math.max(dt, 1e-3);
   mo.lastYaw = yaw;
-  const grounded = f.grounded !== false;
+  const grounded = f.grounded !== false && !f.hopAir; // hopAir: a boss mid-hop that the controller carries (Gullmaw's lily pads)
   mo.speed = lerp(mo.speed, raw, clamp(dt * 10, 0, 1));
   const spd = grounded ? mo.speed : 0;
   const runK = clamp((spd - 2.6) / 1.8, 0, 1);
@@ -84,7 +84,7 @@ export function animateHumanoid(rig, f, dt, pose) {
     const s = leg.side, lead = s < 0; // the off side leads in a fighting stance
     let tx, tz, ty;
     if (!grounded) { // jump: tuck going up, reach for the ground coming down
-      const up = f.vel.y > 0;
+      const up = f.hopAir ? f.hopUp : f.vel.y > 0;
       tz = lead ? (up ? 0.16 : 0.12) : (up ? -0.18 : -0.06);
       ty = hipH - (up ? (lead ? 0.55 : 0.68) : 0.86) * (a + b);
       tx = leg.x;

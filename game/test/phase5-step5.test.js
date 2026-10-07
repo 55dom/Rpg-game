@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { World } from "../src/sim/world.js";
 import { Intent } from "../src/core/input.js";
-import { ILSE_TUNING, GALEN_TUNING, OBJECTS, GULLMAW_ABILITIES, GULLMAW_HITBOXES } from "../src/data/bosses2.js";
+import { ILSE_TUNING, GALEN_TUNING, OBJECTS, GULLMAW_ABILITIES, GULLMAW_HITBOXES, GULLMAW_TUNING } from "../src/data/bosses2.js";
 import { hitSpec } from "../src/core/combat.js";
 import { ZONES } from "../src/data/zones.js";
 import { FRAGMENTS, CLAUSE } from "../src/data/lore.js";
@@ -124,4 +124,29 @@ test("Gullmaw's moves: the tongue reels you in, the belly-flop sends out a splas
   assert.equal(LOOKS.gullmaw.weapon, "claw", "webbed claw hands"); assert.equal(LOOKS.gullmaw.head, "toad");
   const sheet = SHEETS.gullmaw.outfit;
   assert.ok(sheet.amphibian && sheet.wings && sheet.web && sheet.boots === "bare", "bat wings on an amphibian, webbed clawed feet");
+});
+
+test("Gullmaw's Lily Pad Leap: seven pads (a centre and six around), a fast hop to each, a smash on every pad, the last in the middle", () => {
+  const { w, b } = boss("gullmaw");
+  const T = GULLMAW_TUNING;
+  b.boss.onCustom("padsMark", 0, GULLMAW_ABILITIES.LilyLeap);
+  const marked = w.drainEvents().find((e) => e.type === "lilyPads");
+  assert.ok(marked && marked.pads.length === 6, "six pads around the centre");
+  for (const p of marked.pads) assert.ok(Math.abs(Math.hypot(p.x - marked.center.x, p.z - marked.center.z) - T.padRadius) < 0.6 || !Number.isNaN(p.x));
+  const target = marked.pads[2];
+  w.player.pos.x = w.player.prev.x = target.x; w.player.pos.z = w.player.prev.z = target.z; // stand on a pad
+  const hp0 = w.player.combatant.health.current;
+  b.boss.onCustom("lilyLeap", 0, GULLMAW_ABILITIES.LilyLeap);
+  assert.equal(b.boss.brainActive, false, "mid-leap, the controller drives it");
+  let maxY = 0; const log = [];
+  for (let i = 0; i < 7 * T.padHop + 20; i++) { w.step(); log.push(...w.drainEvents()); maxY = Math.max(maxY, b.pos.y); w.player.pos.x = target.x; w.player.pos.z = target.z; }
+  const smashes = log.filter((e) => e.type === "padSmash");
+  assert.equal(smashes.length, 7, "one smash per pad");
+  assert.ok(smashes[6].last && Math.hypot(smashes[6].at.x - marked.center.x, smashes[6].at.z - marked.center.z) < 0.1, "ends in the middle");
+  assert.ok(log.some((e) => e.type === "leapEnd") && !b.boss.leap && b.boss.brainActive);
+  assert.ok(maxY > 1.5, "it really hops");
+  assert.ok(T.padHop <= 20, "fast: a third of a second a hop");
+  assert.ok(w.player.combatant.health.current < hp0, "standing on a lit pad hurts");
+  assert.equal(b.pos.y, 0);
+  assert.ok(!SHEETS.gullmaw.outfit.tail, "no tail");
 });

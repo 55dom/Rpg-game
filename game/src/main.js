@@ -8,7 +8,7 @@ import { ACOLYTE_ABILITIES } from "./data/acolyte.js";
 import { ROOK_ABILITIES, ROOK_STATS } from "./data/rook.js";
 import { PAGES } from "./data/pages.js";
 import { EPISODE_4 } from "./data/run.js";
-import { B, PALETTE, glow, clamp01, toonFallbackIfBroken } from "./runtime/look.js";
+import { B, PALETTE, glow, toon, clamp01, toonFallbackIfBroken } from "./runtime/look.js";
 import { Rig, LOOKS } from "./runtime/rig.js";
 import { ObjectView } from "./runtime/objects.js";
 import { WorldClock } from "./sim/weather.js";
@@ -297,6 +297,11 @@ export function boot(doc = document) {
         case "oathBroken": hud.toast("THE VOW BREAKS", "break"); vfx.flash(ev.at, 4, "#ff7a2a", 0.3); impact(4, true); camera.kick(0.8); sfx.play("postureBreak"); break;
         case "desperate": hud.toast("DESPERATION", "danger"); hud.banner("HE CHARGES THE WHOLE HALL · DODGE"); break;
         case "flood": hud.toast("THE CISTERN FLOODS", "danger"); hud.banner("THE WATER JET SWEEPS · JUMP IT"); waterJet.start(ev.center, ev.length); sfx.play("ultActivate"); break;
+        case "lilyPads": hud.toast("LILY PAD LEAP", "danger"); hud.banner("IT'S GOING TO HOP · STAY OFF THE LIT PADS"); lilyFx.mark(ev.center, ev.pads); sfx.play("heal", 0.6); break;
+        case "padHop": lilyFx.target(ev.to); root.classList.add("leaping"); sfx.play("dodge", 0.9); state.hopGhost = 0; break;
+        case "padSmash": lilyFx.smash(ev.at, ev.last); sfx.play("slam", ev.last ? 1 : 0.75); camera.shake(ev.last ? 0.45 : 0.25); impact(ev.last ? 3 : 2, ev.last);
+          if (settings.flashes) { root.classList.add("hopblur"); setTimeout(() => root.classList.remove("hopblur"), 70); } break;
+        case "leapEnd": root.classList.remove("leaping"); setTimeout(() => { if (!world.boss?.boss?.leap) lilyFx.clear(); }, 450); break;
         case "swallowed": hud.toast("SWALLOWED!", "danger"); hud.banner(ev.target ? `${ev.target.stats.name.toUpperCase()} IS STUCK IN A SLIME BUBBLE · BURST IT` : "MORE EGG SACS"); sfx.play("mud"); break;
         case "freed": hud.toast(`${ev.fighter.stats.name.toUpperCase()} IS FREE`, "clear"); break;
         case "teamAttack": {
@@ -871,7 +876,59 @@ export function boot(doc = document) {
     };
   })();
 
-  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); };
+  // Gullmaw's Lily Pad Leap: lily pads afloat on magic circles, lines from the centre pad to each of the six around it.
+  const lilyFx = (() => {
+    let pads = [], lines = [], t = 0;
+    const MB = () => BB.MeshBuilder;
+    const leafMat = toon(scene, "lilyLeaf", "#3f8a3a"), circleMat = glow(scene, "lilyCircle", "#7dffb0", 0.85), runeMat = glow(scene, "lilyRune", "#c8ffd8", 0.6, true),
+      warnMat = glow(scene, "lilyWarn", "#ff3a3a", 0.0, true), lineMat = glow(scene, "lilyLine", "#7dffb0", 0.55, true), flowerMat = glow(scene, "lilyFlower", "#ff9ad0", 0.9);
+    warnMat.alpha = 0.35;
+    const pad = (at, big) => {
+      const node = new BB.TransformNode("lilyPad", scene); node.position.set(at.x, 0.04, at.z);
+      const r = big ? 1.9 : 1.5;
+      const leaf = MB().CreateDisc("lilyLeaf", { radius: r * 0.82, tessellation: 24, arc: 0.92 }, scene); leaf.rotation.x = Math.PI / 2; leaf.parent = node; leaf.material = leafMat; leaf.position.y = 0.02;
+      const ring = MB().CreateTorus("lilyRing", { diameter: r * 2, thickness: 0.07, tessellation: 32 }, scene); ring.parent = node; ring.material = circleMat;
+      const rune = MB().CreateTorus("lilyRune", { diameter: r * 1.55, thickness: 0.035, tessellation: 6 }, scene); rune.parent = node; rune.material = runeMat; rune.position.y = 0.03; // a hexagram-ish inner ring
+      const rune2 = MB().CreateTorus("lilyRune2", { diameter: r * 1.55, thickness: 0.035, tessellation: 6 }, scene); rune2.parent = node; rune2.material = runeMat; rune2.position.y = 0.03; rune2.rotation.y = Math.PI / 6;
+      const flower = MB().CreateSphere("lilyFlower", { diameter: 0.32, segments: 6 }, scene); flower.parent = node; flower.material = flowerMat; flower.position.set(r * 0.35, 0.12, -r * 0.3); flower.scaling.y = 0.6;
+      const warn = MB().CreateDisc("lilyWarn", { radius: r, tessellation: 28 }, scene); warn.rotation.x = Math.PI / 2; warn.parent = node; warn.material = warnMat; warn.position.y = 0.05; warn.setEnabled(false);
+      for (const m of [leaf, ring, rune, rune2, flower, warn]) m.isPickable = false;
+      return { node, ring, rune, rune2, warn, at, big, hot: 0, done: false };
+    };
+    return {
+      mark(center, outer) {
+        this.clear();
+        pads = [pad(center, true), ...outer.map((o) => pad(o, false))];
+        for (const o of outer) { // the web: a glowing line from the centre to each pad
+          const dx = o.x - center.x, dz = o.z - center.z, len = Math.hypot(dx, dz);
+          const l = MB().CreateBox("lilyLine", { width: 0.09, height: 0.02, depth: Math.max(0.1, len - 3.2) }, scene);
+          l.position.set((o.x + center.x) / 2, 0.05, (o.z + center.z) / 2); l.rotation.y = Math.atan2(dx, dz); l.material = lineMat; l.isPickable = false; lines.push(l);
+        }
+        for (const p of pads) { vfx.ring({ x: p.at.x, y: 0.08, z: p.at.z }, p.big ? 4 : 3.2, "#7dffb0", 0.5, true); vfx.sparksAt({ x: p.at.x, y: 0.3, z: p.at.z }, 6, "mint", 5, 4); }
+      },
+      target(to) { const p = pads.find((q) => !q.done && Math.hypot(q.at.x - to.x, q.at.z - to.z) < 0.3); if (p) { p.hot = 1; p.warn.setEnabled(true); } },
+      smash(at, last) {
+        const p = pads.find((q) => !q.done && Math.hypot(q.at.x - at.x, q.at.z - at.z) < 0.3);
+        if (p) { p.done = true; p.warn.setEnabled(false); p.node.scaling.setAll(1.25); }
+        const g = { x: at.x, y: 0.1, z: at.z };
+        vfx.ring(g, last ? 7 : 5, "#7dffb0", 0.4); vfx.ring(g, last ? 4.5 : 3, "#ffffff", 0.22);
+        vfx.flash({ x: at.x, y: 0.6, z: at.z }, last ? 3.4 : 2.4, "#c8ffe0", 0.14);
+        vfx.sparksAt({ x: at.x, y: 0.3, z: at.z }, last ? 22 : 12, "mint", last ? 11 : 8, 5); vfx.sparksAt({ x: at.x, y: 0.3, z: at.z }, 8, "white", 7, 6);
+      },
+      update(dt) {
+        if (!pads.length) return;
+        t += dt;
+        for (const p of pads) {
+          p.rune.rotation.y += dt * 1.2; p.rune2.rotation.y -= dt * 0.9; p.ring.scaling.setAll(1 + Math.sin(t * 5 + p.at.x) * 0.03);
+          if (p.done) { p.node.scaling.scaleInPlace(Math.max(0, 1 - dt * 3)); }
+          if (p.hot > 0) { warnMat.alpha = 0.25 + Math.abs(Math.sin(t * 30)) * 0.4; }
+        }
+      },
+      clear() { for (const p of pads) p.node.dispose(); for (const l of lines) l.dispose(); pads = []; lines = []; },
+    };
+  })();
+  const hopGhostMat = glow(scene, "hopGhost", "#8affc8", 0.3, true);
+  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); lilyFx.clear(); root.classList.remove("leaping", "hopblur"); };
 
   // Squad HQ: the board (rooms to build) and the workbench (tempering gear). One screen, two modes.
   const hqModal = root.querySelector("[data-hq]");
@@ -1138,7 +1195,11 @@ export function boot(doc = document) {
       if (state.ghostTimer <= 0) { const rig = viewFor(world.player); if (rig) vfx.afterimage(rig); state.ghostTimer = 0.09; }
     }
 
-    waterJet.update();
+    waterJet.update(); lilyFx.update(dt);
+    if (world.boss?.boss?.leap) { // motion blur on the hops: a trail of fading ghosts of Gullmaw
+      state.hopGhost = (state.hopGhost ?? 0) - dt;
+      if (state.hopGhost <= 0) { const rig = viewFor(world.boss); if (rig?.snapshot) vfx.afterimage(rig, hopGhostMat, 0.22); state.hopGhost = 0.035; }
+    }
     for (const [f, rig] of views) {
       const t = f.timeScale < 1 ? clamp01(f.timeAcc + alpha * f.timeScale) : alpha;
       rig.update(f, running ? t : 1, dt);

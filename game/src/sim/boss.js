@@ -2,6 +2,7 @@
 // The brain still picks Hask's surfaced attacks; this decides when it dives, burrows, erupts,
 // calls the pack, and when the bog drains.
 
+import { constrain } from "./bounds.js";
 import { EnemyBrain } from "../core/ai.js";
 import { EventType } from "../core/abilities.js";
 import { HASK_ABILITIES, HASK_PHASES, HASK_TUNING, haskOptions } from "../data/hask.js";
@@ -405,9 +406,48 @@ export class GalenController extends PhasedBoss {
 }
 
 export class GullmawController extends PhasedBoss {
-  constructor(world, f) { super(world, f, GULLMAW_PHASES, gullmawOptions); this.jet = null; this.started = false; this.swallowed = false; }
+  constructor(world, f) { super(world, f, GULLMAW_PHASES, gullmawOptions); this.jet = null; this.started = false; this.swallowed = false; this.pads = null; this.leap = null; }
+  get brainActive() { return !this.leap; } // mid-leap, the hops are the controller's
+  /** The seven lily pads: the arena's centre and six around it (a hexagon), kept inside the walls. */
+  _markPads() {
+    const w = this.world, T = GULLMAW_TUNING, c = this.home;
+    const at = (x, z) => constrain({ x, z }, T.padSmash * 0.6, w.bounds);
+    const outer = [30, 90, 150, 210, 270, 330].map((deg) => { const a = (deg * Math.PI) / 180; return at(c.x + Math.sin(a) * T.padRadius, c.z + Math.cos(a) * T.padRadius); });
+    this.pads = { center: at(c.x, c.z), outer };
+    w.emit({ type: "lilyPads", fighter: this.f, center: this.pads.center, pads: outer });
+  }
+  _startLeap() {
+    if (!this.pads) this._markPads();
+    const order = [...this.pads.outer];
+    for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(this.world.rng() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+    order.push(this.pads.center); // it ends with a big one in the middle
+    this.leap = { order, i: 0, t: 0, from: { x: this.f.pos.x, z: this.f.pos.z } };
+    this.world.emit({ type: "padHop", fighter: this.f, from: this.leap.from, to: order[0], index: 0, count: order.length });
+  }
+  _stepLeap() {
+    const w = this.world, f = this.f, T = GULLMAW_TUNING, L = this.leap;
+    L.t += f.timeScale;
+    const to = L.order[L.i], k = Math.min(1, L.t / T.padHop), e = k * k * (3 - 2 * k); // ease in and out: a snap of a hop
+    f.pos.x = L.from.x + (to.x - L.from.x) * e; f.pos.z = L.from.z + (to.z - L.from.z) * e;
+    f.pos.y = 4 * T.padHeight * k * (1 - k); f.grounded = true; f.hopAir = k > 0.06 && k < 0.97; f.hopUp = k < 0.5; f.vel.x = f.vel.z = f.vel.y = 0; f.moveInput.x = f.moveInput.z = 0;
+    if (Math.hypot(to.x - L.from.x, to.z - L.from.z) > 0.1) f.yaw = Math.atan2(to.x - L.from.x, to.z - L.from.z);
+    if (k < 1) return;
+    f.pos.y = 0; f.hopAir = false;
+    const last = L.i === L.order.length - 1, spec = last ? T.padFinal : T.pad, r = T.padSmash * (last ? 1.35 : 1);
+    for (const t of w.fighters) { // the smash: everyone on (or next to) the pad
+      if (t.team === f.team || !t.alive || t.traits.object || t.pos.y > 1.2) continue;
+      if (Math.hypot(t.pos.x - to.x, t.pos.z - to.z) > r + t.stats.radius) continue;
+      w._resolve(f, t, { spec, ability: GULLMAW_ABILITIES.LilyLeap, hitSet: new Set(), origin: { x: to.x, y: 0.4, z: to.z }, projectile: true });
+    }
+    w.emit({ type: "padSmash", fighter: f, at: { x: to.x, z: to.z }, index: L.i, last });
+    L.i++; L.from = { x: to.x, z: to.z }; L.t = 0;
+    if (L.i >= L.order.length) { this.leap = null; this.pads = null; w.emit({ type: "leapEnd", fighter: f }); return; }
+    w.emit({ type: "padHop", fighter: f, from: L.from, to: L.order[L.i], index: L.i, count: L.order.length });
+  }
   onCustom(key, value, a) {
     const w = this.world, f = this.f, T = GULLMAW_TUNING;
+    if (key === "padsMark") { this._markPads(); return true; }
+    if (key === "lilyLeap") { this._startLeap(); return true; }
     if (key === "bile") { this._cogFan("Bile", value, 0.22, a); return true; }
     if (key === "splash") { w.addWave(f, f.pos.x, f.pos.z, { speed: 8, maxR: value + 1, width: 0.7, spec: T.splash, ability: a, kind: "splash" }); return true; }
     return false;
@@ -425,6 +465,7 @@ export class GullmawController extends PhasedBoss {
   step() {
     const w = this.world, f = this.f, T = GULLMAW_TUNING;
     if (!this.started) { this.started = true; this._ring(this.rules.sacs ?? 2, T.sacRadius, "eggsac"); }
+    if (this.leap) { if (f.alive && !f.combatant.isStaggered) this._stepLeap(); else { this.leap = null; this.pads = null; f.pos.y = 0; f.hopAir = false; w.emit({ type: "leapEnd", fighter: f }); } }
     const h = this.jet;
     if (!h) return;
     if (h.warn > 0) { h.warn--; return; }
