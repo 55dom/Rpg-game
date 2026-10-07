@@ -192,7 +192,7 @@ export const SHEETS = Object.freeze({
 
 /** The sheet for a look, with sensible defaults for anything new. */
 export function sheetFor(kind, look = {}) {
-  const s = SHEETS[kind];
+  const s = SHEETS[kind] ?? SHEETS[{ severinAlly: "severin", junoMaid: "junoMaid" }[kind]];
   if (s) return s;
   return { build: "athletic", gait: "confident", idle: "relaxed",
     outfit: { top: look.coat ?? "#6a6a6a", hem: "thigh", sleeves: "long", legs: "#3a3a40", boots: "ankle", bootColor: "#3a2a22", belt: look.trim ?? "#5a3a22" } };

@@ -45,6 +45,7 @@ export class Controls {
       if (e.code === "Digit3") this.commands.push("stance");
       if (e.code === "KeyB") this.commands.push("boss");
       if (e.code === "KeyP") this.commands.push("pages");
+      if (e.code === "KeyT") this.commands.push("tag");
       if (e.code === "Enter") this.commands.push("confirm");
       if (e.code === "ArrowUp" || e.code === "KeyW") this.commands.push("navUp");     // menus and dialogue choices
       if (e.code === "ArrowDown" || e.code === "KeyS") this.commands.push("navDown");

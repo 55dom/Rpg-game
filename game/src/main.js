@@ -267,6 +267,17 @@ export function boot(doc = document) {
           if (a.id === "PillarUppercut") { vfx.pillar(t.pos); sfx.play("stone"); camera.shake(0.35); }
           break;
         }
+        case "tagSwap": { // the partner comes in: a new body on the field, a shockwave, a cut-in
+          const f = world.player;
+          removeView(f); addView(f);
+          const name = ev.to === "player" ? (state.mode === "story" ? story.player.name : "Rook") : ev.name;
+          showName(name);
+          hud.cutIn(name, ev.forced ? "TAGS IN TO COVER YOU" : "TAG IN", ev.to === "player" ? "player" : "severin");
+          vfx.ring({ x: f.pos.x, y: 0.05, z: f.pos.z }, 5, LOOKS[f.kind]?.trail ?? "#ffffff", 0.45); vfx.flash(chest(f), 3, "#fff1b8", 0.2);
+          sfx.play("assist"); camera.shake(0.25);
+          root.classList.toggle("tag-severin", ev.to !== "player");
+          break;
+        }
         case "teamAttack": {
           const b = BONDS[ev.kind];
           hud.toast("TEAM ATTACK", "finisher"); hud.banner((b?.team?.name ?? "TEAM ATTACK").toUpperCase());
@@ -550,6 +561,7 @@ export function boot(doc = document) {
     world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, companions: true, ...opts });
     if (opts.tokens == null) world.tokens.capacity = mobile ? 1 : 2;
     world.pageDefs = PAGES;
+    root.classList.toggle("has-tag", !!world.members.severin); root.classList.remove("tag-severin");
     camera.bounds = null;
     root.classList.toggle("no-ult", !world.ultimate);
     root.classList.toggle("solo", !world.companions.length);
@@ -569,7 +581,8 @@ export function boot(doc = document) {
     root.classList.toggle("story-mode", mode === "story");
     if (mode === "story") refreshGrimDot();
     if (mode === "story") return; // the story player drives the world
-    if (world.ultimate === false || !world.companions.length) newWorld();
+    if (mode === "yard") newWorld({ party: ["severin"] }); // the practice yard: Severin can tag in (T)
+    else if (world.ultimate === false || !world.companions.length || world.members.severin) newWorld();
     if (mode === "run") world.startRun(EPISODE_4); else world.spawnWave();
     onEvents(world.drainEvents());
   };
@@ -978,6 +991,7 @@ export function boot(doc = document) {
         onEvents(world.drainEvents());
       }
       if (cmd === "stance" && running) { world.cycleStance(); onEvents(world.drainEvents()); }
+      if (cmd === "tag" && running) { if (!world.tagSwap()) { if (world.bench) hud.pushLog("Tag-swap is recovering"); } onEvents(world.drainEvents()); }
       if (cmd === "boss" && running) { // sandbox shortcut: straight to the boss
         world.resetPlayer(); setBog(false, true); world.wave = 6; world.spawnWave(); onEvents(world.drainEvents());
       }

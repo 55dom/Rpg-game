@@ -8,6 +8,7 @@ import { BAS_POSES, JUNO_POSES } from "../data/companions.js";
 import { ENEMIES } from "../data/enemies.js";
 import { HASK_POSES } from "../data/hask.js";
 import { SEVERIN_POSES } from "../data/severin.js";
+import { SEVERIN_KIT_POSES } from "../data/severinKit.js";
 import { CAL_POSES } from "../data/cal.js";
 import { EventType } from "../core/abilities.js";
 import { buildBody, skinBake } from "./body.js";
@@ -132,6 +133,9 @@ export const LOOKS = {
   stranger: { poses: ACOLYTE_POSES, scale: 1.08, skirt: 0.78, coat: "#141218", trim: "#141218", hairColor: "#0d0c12", skin: "#0d0c12",
     head: "blank", hair: "crop", weapon: "none", carry: true, trail: "#000000" },
   severin: { poses: SEVERIN_POSES, scale: 1.02, skirt: 0.9, coat: "#f4f2f8", trim: "#d4ad4f", hairColor: "#ecd890", skin: "#f3dcc8",
+    head: "face", hair: "swept", weapon: "needle", accent: "#d4ad4f", cape: "#2c4aa0", eyeColor: "#3a6ab0", trail: "#fff1b8" },
+  // Severin tagged in as your partner: the same look, moving with Rook's frame data (data/severinKit.js).
+  severinAlly: { poses: SEVERIN_KIT_POSES, scale: 1.02, skirt: 0.9, coat: "#f4f2f8", trim: "#d4ad4f", hairColor: "#ecd890", skin: "#f3dcc8",
     head: "face", hair: "swept", weapon: "needle", accent: "#d4ad4f", cape: "#2c4aa0", eyeColor: "#3a6ab0", trail: "#fff1b8" },
   moss: { poses: ACOLYTE_POSES, scale: 1.04, skirt: 1.1, coat: "#6b4a2e", trim: "#8f7c58", hairColor: "#e4e4e8", skin: "#e8c4a6",
     head: "face", hair: "crop", beard: "#ecebe6", beardLong: true, wrinkles: true, weapon: "branch", accent: "#b89a5a", stoop: 0.24, eyeColor: "#5a5a6a", trail: "#e8d6a0" },

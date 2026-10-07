@@ -152,6 +152,18 @@ export class Hud {
     this.set("surge", e.surge, "width", pct(p.surge.normalized));
     this.spells.forEach((sp, i) => {
       const el = this.spellEls[i];
+      const alt = world.altSpells; // someone else tagged in: their own spells on the buttons
+      if (alt) {
+        const ab2 = world.activeLoadout[sp.slot];
+        this.set(`sph${i}`, el, "hidden", !ab2);
+        if (!ab2) return;
+        this.set(`sp${i}`, el, "class", `spell${p.mana.current >= ab2.manaCost ? "" : " low"} evolved`);
+        this.set(`spk${i}`, el.firstChild, "text", this.label(device, sp.slot));
+        this.set(`spn${i}`, el.children[1], "text", alt[sp.slot] ?? ab2.id);
+        this.set(`spc${i}`, el.children[2], "text", String(ab2.manaCost));
+        this.set(`spx${i}`, el.querySelector("u"), "width", "100%");
+        return;
+      }
       const ab = world.loadout[sp.slot], page = world.pages[sp.slot], def = world.pageDefs[sp.slot];
       this.set(`sph${i}`, el, "hidden", !ab); // a locked page has no chip
       if (!ab) return;

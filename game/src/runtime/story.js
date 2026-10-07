@@ -1061,7 +1061,8 @@ export class StoryPlayer {
     this.active = true;
     this.roaming = true;
     this.ep = null; this.director = null;
-    this.ctx.makeWorld({ companions: false, ultimate: true, pages: true });
+    // Free roam: once the Knight Exam is behind you, Severin can tag in during field fights (T / TAG).
+    this.ctx.makeWorld({ companions: false, ultimate: true, pages: true, party: this.flags.get("EP2_PAID") ? ["severin"] : [] });
     let id = zoneId, arr = arrival;
     while (this.active) {
       const zone = ZONES[id];

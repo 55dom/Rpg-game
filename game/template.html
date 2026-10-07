@@ -138,6 +138,8 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .pad .b-bas, .pad .b-juno, .pad .b-stance { width: 44px; height: 44px; font-size: 9px; }
 .pad .b-bas { right: 186px; bottom: 196px; border-color: #e8b46a; }
 .pad .b-juno { right: 138px; bottom: 196px; border-color: #ff8fa3; }
+.pad .b-tag { right: 234px; bottom: 196px; width: 44px; height: 44px; font-size: 9px; border-color: #fff1b8; }
+.b-tag { display: none; } .has-tag .b-tag { display: block; }
 .pad .b-stance { right: 196px; bottom: 76px; }
 .spells { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; font: 400 10px/1 var(--font-mono); color: var(--gale); }
 .spell { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; padding: 3px 5px; border: 1px solid rgba(120, 212, 178, 0.35); border-radius: 4px; }
@@ -523,6 +525,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <button class="b-bas" data-intent="cmd:assist:bas">BAS</button>
       <button class="b-juno" data-intent="cmd:assist:juno">JUNO</button>
       <button class="b-stance" data-intent="cmd:stance">STNC</button>
+      <button class="b-tag" data-intent="cmd:tag">TAG</button>
       <button class="b-wall" data-intent="Spell4">WALL</button>
       <button class="b-page" data-intent="cmd:pages">PAGE</button>
       <button class="b-lock" data-intent="Lock">LOCK</button>

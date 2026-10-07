@@ -21,6 +21,7 @@ import { REACTIONS } from "../data/reactions.js";
 import { ROOK_STATS, ROOK_ABILITIES, ROOK_HITBOXES, buildRookGraph, defaultLoadout } from "../data/rook.js";
 import { PAGES, PAGE_HITBOXES } from "../data/pages.js";
 import { pageLevel } from "../core/progress.js";
+import { SEVERIN_KIT, SEVERIN_KIT_STATS, SEVERIN_KIT_HITBOXES, SEVERIN_KIT_LOADOUT, SEVERIN_KIT_SPELLS } from "../data/severinKit.js";
 import { hitSpec } from "../core/combat.js";
 import { YARD, constrain, outOfBounds } from "./bounds.js";
 
@@ -53,7 +54,10 @@ const WALL = Object.freeze({ center: [0, 1.4, 0], size: [5.2, 3.4, 1.4] });
 /** Team Attacks (bond rank 5): the companion's move, then the two of you strike together. */
 export const TEAM_ATTACK = defineAbility({ id: "TeamAttack", startup: 1, active: 1, recovery: 1, tags: ["team", "heavy"],
   hit: hitSpec({ damage: 48, posture: 55, hitstop: 12, hitstun: 50, launch: 10 }) });
-export const TEAM_SURGE = 50; // Surge spent on a Team Attack
+export const TEAM_SURGE = 50;
+/** The tag-in strike: a shockwave around whoever comes in. */
+export const TAG_STRIKE = defineAbility({ id: "TagStrike", startup: 1, active: 1, recovery: 1, tags: ["tag"],
+  hit: hitSpec({ damage: 10, posture: 18, hitstop: 6, hitstun: 26, knockback: 4 }) }); // Surge spent on a Team Attack
 const TEAM_DELAY = 24;        // frames after the companion's move starts
 
 const WALL_HIT = hitSpec({ damage: 4, posture: 10, hitstop: 3, hitstun: 16, knockback: 3 });
@@ -144,7 +148,7 @@ export class Fighter {
     this.hitboxes.length = 0;
     this.dash.frames = 0;
     this.slamming = false;
-    if (this.kind === "player") {
+    if (this === this.world.player) {
       if (MOBILITY.has(a.id)) {
         const i = this.moveInput;
         if ((a.id === "Dodge" || a.id === "AirDash") && Math.hypot(i.x, i.z) > 0.2) this.yaw = Math.atan2(i.x, i.z);
@@ -277,6 +281,13 @@ export class World {
     }));
     this.assist = !!o.assist;
     this.teamAttacks = new Set(o.teamAttacks ?? []); // companions with a Team Attack unlocked (bond rank 5)
+    // Tag-swap party (GDD §10): Rook plus whoever can tag in. Only one is on the field; the other waits
+    // off-screen, keeps their own health and mana, and recovers a little while out.
+    this.active = "player";
+    this.members = { player: null };
+    for (const kind of o.party ?? []) if (kind === "severin") this.members.severin = { kind: "severinAlly", name: "Severin", stats: { ...SEVERIN_KIT_STATS, maxHealth: SEVERIN_KIT_STATS.maxHealth + (o.mods?.health ?? 0) * 0.8, maxMana: SEVERIN_KIT_STATS.maxMana + (o.mods?.mana ?? 0) },
+      hitboxes: SEVERIN_KIT_HITBOXES, abilities: SEVERIN_KIT, loadout: SEVERIN_KIT_LOADOUT, spells: SEVERIN_KIT_SPELLS, hp: null, mana: null };
+    this.swapReadyFrame = 0;
     this.teamHit = null;
     this.companions = [];
     this.projectiles = [];
@@ -312,6 +323,55 @@ export class World {
     best.combatant.health.add(amount);
     best.tags.remove("WEIGHTED"); // stitching also cuts away the mud
     this.emit({ type: "heal", fighter: healer, target: best, amount });
+  }
+
+  /** Who can tag in right now (alive, rested), or null. */
+  get bench() {
+    const id = Object.keys(this.members).find((k) => k !== this.active);
+    const m = id && this.members[id];
+    if (!m) return null;
+    const hp = m.hp ?? (m === this.members.player ? this.playerStats.maxHealth : m.stats.maxHealth);
+    return hp > 0 ? id : null;
+  }
+  /** Spell names on the buttons when someone other than Rook is in (null = Rook's pages). */
+  get altSpells() { return this.active === "player" ? null : this.members[this.active].spells; }
+  get activeLoadout() { return this.active === "player" ? this.loadout : this.members[this.active].loadout; }
+
+  /**
+   * Tag-swap: the waiting partner comes in where Rook (or whoever) stood, with a tag strike around them
+   * and a moment of invulnerability. Their own health and mana come with them.
+   * @param {boolean} forced the one on the field just fell: no cooldown, and the fall doesn't count
+   */
+  tagSwap(forced = false) {
+    const p = this.player, to = this.bench;
+    if (!to || (!forced && (!p.alive || this.frame < this.swapReadyFrame || this.stopFrames > 0))) return false;
+    const from = this.active, out = this.members[from] ?? (this.members.player = {});
+    // Bank the one leaving: their health and mana.
+    out.hp = forced ? 0 : p.combatant.health.current; out.mana = p.mana?.current ?? 0;
+    if (from === "player") { out.kind = "player"; out.stats = this.playerStats; out.hitboxes = p.hitboxDefs; }
+    const m = this.members[to];
+    if (to === "player" && !m.stats) { m.kind = "player"; m.stats = this.playerStats; }
+    // Bring in the new one: kit, stats, health, mana, combo graph.
+    p.kind = m.kind; p.stats = m.stats; p.hitboxDefs = m.hitboxes ?? { ...ROOK_HITBOXES, ...PAGE_HITBOXES };
+    if (forced) p.combatant.reset();
+    p.combatant.health.max = m.stats.maxHealth; p.combatant.health.set(m.hp ?? m.stats.maxHealth);
+    if (p.mana) { p.mana.max = m.stats.maxMana; p.mana.set(m.mana ?? m.stats.maxMana); }
+    p.runner.interrupt(); p.buffer.clear(); p.hitboxes = [];
+    this.active = to;
+    const graph = to === "player"
+      ? buildRookGraph(() => p.context(), ROOK_ABILITIES, this.loadout, { ultimate: this.ultimate })
+      : buildRookGraph(() => p.context(), m.abilities, m.loadout, { ultimate: false });
+    graph.runner = p.runner; p.controller.resolver = graph;
+    if (to === "player" && this._rookDirty) { this._rookDirty = false; this.applyLoadout(); }
+    p.combatant.invulnerableFrames = Math.max(p.combatant.invulnerableFrames, 24);
+    this.swapReadyFrame = this.frame + 150;
+    // The tag strike: anyone close is knocked back and staggered.
+    for (const e of this.liveEnemies) {
+      if (flatDistance(e.pos, p.pos) > 2.8) continue;
+      this._resolve(p, e, { spec: TAG_STRIKE.hit, ability: TAG_STRIKE, hitSet: new Set(), origin: { x: p.pos.x, y: 1, z: p.pos.z } });
+    }
+    this.emit({ type: "tagSwap", from, to, name: to === "player" ? null : m.name, forced });
+    return true;
   }
 
   /** The player calls a companion's signature move (GDD §10 Assist Call). */
@@ -453,8 +513,9 @@ export class World {
 
   /** A fan of `count` projectiles aimed at the owner's target, `spread` radians apart. */
   fireFan(owner, ability, key, speed, count, spread) {
-    const t = owner.target?.alive ? owner.target : this.player;
-    const base = angleTo(owner.pos, t.pos);
+    // Enemies aim at their target (Rook by default); Rook's side aims at the lock-on, the nearest foe, or straight ahead.
+    const t = owner === this.player ? (this.lockTarget?.alive ? this.lockTarget : this.nearestEnemy(16)) : owner.target?.alive ? owner.target : this.player;
+    const base = t && t !== owner ? angleTo(owner.pos, t.pos) : owner.yaw;
     owner.yaw = base;
     for (let i = 0; i < count; i++) {
       const a = base + (i - (count - 1) / 2) * spread;
@@ -513,6 +574,7 @@ export class World {
   /** Swap the spell on a button and rebuild Rook's combo graph. */
   applyLoadout() {
     this._fitLoadout();
+    if (this.active && this.active !== "player") { this._rookDirty = true; return; } // Rook's on the bench: rebuild when he's back
     const p = this.player;
     const g = buildRookGraph(() => p.context(), ROOK_ABILITIES, this.loadout, { ultimate: this.ultimate });
     g.runner = p.runner;
@@ -533,7 +595,7 @@ export class World {
 
   /** A spell hit grants its page experience: levels I–V, and at III it's ready to evolve. */
   _pageXp(ability) {
-    if (!this.pageGrowth) return;
+    if (!this.pageGrowth || this.active !== "player") return;
     for (const [slot, ab] of Object.entries(this.loadout)) {
       if (ab?.id !== ability.id || !PAGES[slot]) continue;
       const page = this.pages[slot], before = pageLevel(slot, page.xp);
@@ -792,7 +854,7 @@ export class World {
       if (!live(f)) continue;
       const c = f.combatant;
       f.controller.locked = !c.canAct;
-      if (f.kind === "player") {
+      if (f === this.player) {
         let o = 0;
         if (f.counterFrames > 0) o |= mask(Intent.Light);
         if (f.grounded && this.brokenTarget(f)) o |= mask(Intent.Heavy);
@@ -802,7 +864,7 @@ export class World {
       }
       f.controller.tick(frame);
       c.superArmor = (f.traits.armoredAttacks && f.runner.isRunning) || f.tags.has("WARDED");
-      if (f.kind === "player") {
+      if (f === this.player) {
         c.blocking = f.holdBlock && !f.runner.isRunning && f.grounded && c.canAct;
       }
       // AI fighters track their target through the wind-up, then commit.
@@ -942,7 +1004,7 @@ export class World {
           this.emit({ type: "kill", ...base });
           if (this.lockTarget === def) this.lockTarget = this.nearestEnemy(20, def); // the lock moves on
         }
-        if (r.killed && def === this.player) this.emit({ type: "playerDown" });
+        if (r.killed && def === this.player) { if (this.bench) this._fallSwap = true; else this.emit({ type: "playerDown" }); } // a partner tags in instead
         if (r.killed && def.companion) this.emit({ type: "allyDown", fighter: def });
         break;
       }
@@ -1055,7 +1117,7 @@ export class World {
       f.vel.x += (f.moveInput.x * speed - f.vel.x) * k;
       f.vel.z += (f.moveInput.z * speed - f.vel.z) * k;
       const mag = Math.hypot(f.moveInput.x, f.moveInput.z);
-      if (f.kind === "player" && mag > 0.15 && !busy) f.yaw = turn(f.yaw, Math.atan2(f.moveInput.x, f.moveInput.z), f.stats.turnRate);
+      if (f === this.player && mag > 0.15 && !busy) f.yaw = turn(f.yaw, Math.atan2(f.moveInput.x, f.moveInput.z), f.stats.turnRate);
       if (f.brain && f.alive) {
         if (f.faceMove && mag > 0.15) f.yaw = turn(f.yaw, Math.atan2(f.moveInput.x, f.moveInput.z), f.stats.turnRate);
         else if (f.target?.alive) f.yaw = turn(f.yaw, angleTo(f.pos, f.target.pos), f.stats.turnRate);
@@ -1123,6 +1185,11 @@ export class World {
         this._resolve(this.player, t, { spec: TEAM_ATTACK.hit, ability: TEAM_ATTACK, hitSet: new Set(), origin: at, team: true });
         this.emit({ type: "teamStrike", target: t, at });
       }
+    }
+    if (this._fallSwap) { this._fallSwap = false; this.tagSwap(true); }
+    for (const [id, m] of Object.entries(this.members)) { // the one on the bench gets a little breath back
+      if (id === this.active || !m || m.hp == null || m.hp <= 0) continue;
+      m.hp = Math.min(m.stats.maxHealth, m.hp + (m.stats.maxHealth * 0.004) / 60); // 0.4% a second
     }
     for (const f of this.fighters) { // training dummies stay on their posts with endless health
       if (!f.traits.dummy) continue;
