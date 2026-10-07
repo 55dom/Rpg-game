@@ -280,7 +280,7 @@ export const EPISODE_19 = {
         { id: "warden", look: "guard", x: 0.2, z: -8.6, yaw: 0 },
       ],
       set: { EP19_DONE: 1 } },
-    { id: "preview", type: "preview", next: "Episode 20 · The Iron Front",
+    { id: "preview", type: "preview", next: "Episode 20 · The Iron Front", nextEpisode: "ep20",
       lines: [
         "Next time on UNWRITTEN:",
         "The Ashfall Dominion is over the border, and Ironhold's wall is the only thing in the way.",

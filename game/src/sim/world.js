@@ -12,7 +12,10 @@ import { ENEMIES, WAVES } from "../data/enemies.js";
 import { HASK_STATS, HASK_HITBOXES, HASK_TUNING, haskOptions } from "../data/hask.js";
 import { HaskController, SeverinController, SparController, IlseController, GalenController, GullmawController } from "./boss.js";
 import { ILSE_STATS, ILSE_HITBOXES, ilseOptions, GALEN_STATS, GALEN_HITBOXES, galenOptions, GULLMAW_STATS, GULLMAW_HITBOXES, gullmawOptions,
-  OBJECTS, OBJECT_HITBOXES, GALEN_TUNING } from "../data/bosses2.js";
+  OBJECTS as OBJECTS2, OBJECT_HITBOXES as OBJECT_HITBOXES2, GALEN_TUNING } from "../data/bosses2.js";
+import { VARKA_STATS, VARKA_HITBOXES, varkaOptions, ASH_OBJECTS, ASH_OBJECT_HITBOXES, THUNDER, BRANNOC_SPAR_STATS, BRANNOC_HITBOXES, brannocSparOptions } from "../data/ashfall.js";
+import { VarkaController, SparBoss } from "./varka.js";
+const OBJECTS = { ...OBJECTS2, ...ASH_OBJECTS }, OBJECT_HITBOXES = { ...OBJECT_HITBOXES2, ...ASH_OBJECT_HITBOXES };
 import { CAL_STATS, CAL_HITBOXES, calOptions } from "../data/cal.js";
 import { SEVERIN_STATS, SEVERIN_HITBOXES, severinOptions } from "../data/severin.js";
 import { RunDirector } from "./run.js";
@@ -49,6 +52,8 @@ const BOSSES = {
   severin: { stats: SEVERIN_STATS, hitboxes: SEVERIN_HITBOXES, options: severinOptions, traits: {}, Controller: SeverinController, z: 6 },
   ilse: { stats: ILSE_STATS, hitboxes: ILSE_HITBOXES, options: ilseOptions, traits: { ranged: true }, Controller: IlseController, z: 6 },
   galen: { stats: GALEN_STATS, hitboxes: GALEN_HITBOXES, options: galenOptions, traits: { heavy: true, frontalGuard: true }, Controller: GalenController, z: 6 },
+  brannocSpar: { stats: BRANNOC_SPAR_STATS, hitboxes: BRANNOC_HITBOXES, options: brannocSparOptions, traits: {}, Controller: SparBoss, z: 4 },
+  varka: { stats: VARKA_STATS, hitboxes: VARKA_HITBOXES, options: varkaOptions, traits: { heavy: true, armoredAttacks: true }, Controller: VarkaController, z: 6 },
   gullmaw: { stats: GULLMAW_STATS, hitboxes: GULLMAW_HITBOXES, options: gullmawOptions, traits: { heavy: true, armoredAttacks: true }, Controller: GullmawController, z: 7 },
 };
 export const BOSS_KINDS = Object.freeze(Object.keys(BOSSES));
@@ -205,6 +210,7 @@ export class Fighter {
         else if (e.key === "submerge") this.boss?.submerge();
         else if (e.key === "summon") this.world.summon(this, "hound", e.value);
         else if (e.key === "fan") this.world.fireFan(this, a, "Needle", 15, e.value, 0.26);
+        else if (e.key === "thunderhead") { const t = this.target?.alive ? this.target : this.world.player; this.world.addStrike(this, t.pos.x, t.pos.z, { delay: e.value, r: 1.6, spec: THUNDER, ability: a, kind: "thunder" }); }
         else if (e.key === "stars") this.boss?.placeStars?.();
         else if (this.boss?.onCustom?.(e.key, e.value, a)) { /* handled by the boss's controller */ }
         else if (e.key === "airDash") { this.vel.y = 0; this.hoverFrames = e.value; this.airDashes = 0; }
@@ -297,10 +303,10 @@ export class World {
       hitboxes: SEVERIN_KIT_HITBOXES, abilities: SEVERIN_KIT, loadout: SEVERIN_KIT_LOADOUT, spells: SEVERIN_KIT_SPELLS, hp: null, mana: null };
     this.swapReadyFrame = 0;
     this.teamHit = null;
-    this.silences = []; this.silenceAll = false; this.dodgeHush = 0; this.waves = [];
+    this.silences = []; this.silenceAll = false; this.dodgeHush = 0; this.waves = []; this.strikes = [];
     this.companions = [];
     this.projectiles = [];
-    if (o.companions) for (const kind of Array.isArray(o.companions) ? o.companions : Object.keys(COMPANIONS)) this.addCompanion(kind);
+    if (o.companions) for (const kind of Array.isArray(o.companions) ? o.companions : ["bas", "juno"]) this.addCompanion(kind); // the squad by default; guests (Brannoc) by name
   }
 
   addCompanion(kind) {
@@ -488,6 +494,29 @@ export class World {
     this.waves.push(w);
     this.emit({ type: "wave", wave: w });
     return w;
+  }
+  /**
+   * A strike from above (Thunderheads, falling wreckage): a ring on the ground now, the hit after `delay` frames.
+   * Anyone of the other side inside the ring when it lands is hit. Step out of it.
+   */
+  addStrike(owner, x, z, { delay = 60, r = 1.7, spec, ability, kind = "thunder" }) {
+    ({ x, z } = constrain({ x, z }, 0.3, this.bounds));
+    const s = { owner, x, z, r, t: delay, delay, spec, ability, kind };
+    this.strikes.push(s);
+    this.emit({ type: "strikeWarn", strike: s });
+    return s;
+  }
+  _stepStrikes() {
+    for (const s of this.strikes) {
+      if (--s.t > 0) continue;
+      for (const t of this.fighters) {
+        if (t.team === s.owner.team || !t.alive || t.traits.object || t.pos.y > 2.2) continue;
+        if (Math.hypot(t.pos.x - s.x, t.pos.z - s.z) > s.r + t.stats.radius * 0.5) continue;
+        this._resolve(s.owner, t, { spec: s.spec, ability: s.ability, hitSet: new Set(), origin: { x: s.x, y: 0.5, z: s.z }, projectile: true });
+      }
+      this.emit({ type: "strike", strike: s });
+    }
+    this.strikes = this.strikes.filter((s) => s.t > 0);
   }
   _stepWaves() {
     for (const w of this.waves) {
@@ -1254,6 +1283,11 @@ export class World {
     if (this.silences.length) { for (const z of this.silences) z.frames--; const gone = this.silences.filter((z) => z.frames <= 0); if (gone.length) { this.silences = this.silences.filter((z) => z.frames > 0); for (const z of gone) this.emit({ type: "silenceEnd", zone: z }); } }
     if (this.dodgeHush > 0 && --this.dodgeHush === 0) this.emit({ type: "hushEnd" });
     if (this.waves.length) this._stepWaves();
+    if (this.strikes.length) this._stepStrikes();
+    if (this.frame % 30 === 0) for (const f of this.fighters) { // SCORCHED: a slow burn, never the finishing blow
+      if (!f.alive || !f.tags.has("SCORCHED") || f.traits.object) continue;
+      const hp = f.combatant.health; if (hp.current > 1) { hp.set(Math.max(1, hp.current - 2)); this.emit({ type: "burn", fighter: f }); }
+    }
     for (const f of this.fighters) { // bells, seals, egg sacs and bubbles don't move; a trapped ally can't act
       if (f.traits.immobile && f.anchor) { f.pos.x = f.prev.x = f.anchor.x; f.pos.z = f.prev.z = f.anchor.z; f.pos.y = f.prev.y = 0; f.grounded = true; if (f.vel) { f.vel.x = f.vel.y = f.vel.z = 0; } if (f.knock) { f.knock.x = f.knock.z = 0; } }
       if (f.caged) {

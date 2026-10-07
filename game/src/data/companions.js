@@ -5,6 +5,7 @@
 import { hitSpec } from "../core/combat.js";
 import { defineAbility, EventType as E } from "../core/abilities.js";
 import { AttackOption } from "../core/ai.js";
+import { BRANNOC_COMPANION } from "./ashfall.js";
 
 const swing = (frame, key = "swing") => ({ frame, type: E.PlaySound, key });
 
@@ -90,5 +91,6 @@ export const junoSupports = () => [{ ability: JUNO_ABILITIES.Stitch, kind: "heal
 /** Party roster: how each companion is built and which move their Assist call performs. */
 export const COMPANIONS = Object.freeze({
   bas: { stats: BAS_STATS, hitboxes: BAS_HITBOXES, options: basOptions, supports: basSupports, assist: BAS_ABILITIES.PillarUppercut, slot: [1.8, -1.4] },
+  brannoc: BRANNOC_COMPANION, // fights beside the Lanterns on the Iron Front (Eps 20–22)
   juno: { stats: JUNO_STATS, hitboxes: JUNO_HITBOXES, options: junoOptions, supports: junoSupports, assist: JUNO_ABILITIES.SnareLine, slot: [-1.8, -1.4] },
 });

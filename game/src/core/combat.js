@@ -109,7 +109,8 @@ export class Combatant {
     }
   }
 
-  takeDamage(amount) { this.health.add(-amount); }
+  /** Health can't go below `floor` (bosses whose last blow belongs to the story set it). */
+  takeDamage(amount) { this.health.add(-amount); if (this.floor > 0 && this.health.current < this.floor) this.health.set(this.floor); }
 
   /** Returns true if this broke posture. */
   takePostureDamage(amount) {

@@ -17,6 +17,7 @@ export const POINTS_PER_LEVEL = 1;
 export const XP_BY_KIND = Object.freeze({
   acolyte: 14, hound: 9, cantor: 16, bulwark: 20, beast: 50, rat: 4, clockwork: 34, bandit: 15, hask: 220, severin: 160, cal: 60,
   ilse: 300, galen: 380, gullmaw: 450, bell: 6, seal: 6, eggsac: 8, bubble: 0,
+  ashLegion: 22, ashMage: 20, varka: 520, engine: 30, brannocSpar: 80,
 });
 export const EPISODE_XP = 120;
 export const QUEST_XP = 60; // when a quest's reward doesn't say otherwise

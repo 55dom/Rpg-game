@@ -295,7 +295,7 @@ import { ILSE_ABILITIES, ILSE_PHASES, ILSE_TUNING, ilseOptions, GALEN_ABILITIES,
   GULLMAW_ABILITIES, GULLMAW_PHASES, GULLMAW_TUNING, gullmawOptions } from "../data/bosses2.js";
 
 /** Shared phase plumbing: a new brain per phase, objects to clear when the boss falls. */
-class PhasedBoss {
+export class PhasedBoss {
   constructor(world, f, phases, options) {
     this.world = world; this.f = f; this.phases = phases; this.options = options;
     this.phase = 1; this.objects = []; this.damageFactor = 1; this.postureFactor = 1;

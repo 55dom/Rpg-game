@@ -1,7 +1,7 @@
 // Story sets (Phase 3): each one is built on first use from primitives, carries its own sky, fog,
 // and lighting, and can be swapped in and out. "yard" is the original training yard (arena.js).
 
-import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT } from "../data/zones.js";
+import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT } from "../data/zones.js";
 import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } from "./look.js";
 import { buildCrowd } from "./crowd.js";
 import { buildCritters } from "./critters.js";
@@ -51,7 +51,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, ironhold: buildIronhold }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -1278,4 +1278,90 @@ function buildHall(scene, mobile) {
       warm.intensity = 0.56 + Math.sin(t * 5) * 0.04;
     } };
   return self;
+}
+
+/**
+ * Ironhold, the eastern border: the Iron Wardens' grey wall with its gatehouse, the camp of tents and braziers
+ * behind it, and the scorched field in front where the Ashfall Dominion comes on. Smoke and red banners on the
+ * horizon are the enemy camp (out of reach).
+ */
+function buildIronhold(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, L = IRONHOLD_LAYOUT;
+  const rng = mulberry(77), P = palette(scene, "ih"), PR = props(scene, K, P);
+  const ground = add(MB.CreateGround("ih-ground", { width: 160, height: 160 }, scene)); ground.position.set(0, 0, -10); ground.material = toon(scene, "ih-earth", "#8a7a5e");
+  const campGround = add(MB.CreateGround("ih-camp", { width: 60, height: 24 }, scene)); campGround.position.set(0, 0.008, -33); campGround.material = toon(scene, "ih-campEarth", "#7a6e58");
+  // The field: scorch marks, craters, spent arrows and broken spears.
+  const scorch = toon(scene, "ih-scorch", "#3a3028"), crater = toon(scene, "ih-crater", "#4a3e30");
+  for (let i = 0; i < 26; i++) { const x = (rng() - 0.5) * 56, z = -16 + rng() * 38; const d = add(MB.CreateDisc("ih-scorch", { radius: 0.8 + rng() * 2.2, tessellation: 14 }, scene)); d.rotation.x = Math.PI / 2; d.position.set(x, 0.012 + i * 0.0004, z); d.material = scorch; }
+  for (let i = 0; i < 8; i++) { const x = (rng() - 0.5) * 44, z = -12 + rng() * 32; const c = add(MB.CreateCylinder("ih-crater", { height: 0.25, diameterTop: 2.8, diameterBottom: 1.6, tessellation: 12 }, scene), 0.02); c.position.set(x, 0.0, z); c.material = crater; }
+  const shaft = P("#5a4a32");
+  for (let i = 0; i < 30; i++) { const x = (rng() - 0.5) * 40, z = -14 + rng() * 34; const a = add(MB.CreateCylinder("ih-arrow", { height: 0.9, diameter: 0.03, tessellation: 4 }, scene)); a.position.set(x, 0.35, z); a.rotation.set(rng() * 0.6 - 0.3, 0, rng() * 0.6 - 0.3); a.material = shaft; }
+  for (let i = 0; i < 6; i++) PR.droppedBlade((rng() - 0.5) * 30, -10 + rng() * 26, { ry: rng() * 6 });
+  // Barricades of crossed stakes along the far edge.
+  const stake = P("#6a5236");
+  for (const [x, z, ry] of L.barricades) {
+    const n = new BB.TransformNode("ih-barricade", scene); n.parent = K.root; n.position.set(x, 0, z); n.rotation.y = ry;
+    for (let k = -2; k <= 2; k++) for (const sgn of [-1, 1]) { const st = add(MB.CreateCylinder("ih-stake", { height: 2.4, diameterTop: 0.02, diameterBottom: 0.16, tessellation: 5 }, scene), 0.015); st.parent = n; st.position.set(k * 0.6, 0.8, 0); st.rotation.set(sgn * 0.7, 0, 0); st.material = stake; }
+    const beam = add(MB.CreateCylinder("ih-beam", { height: 3.2, diameter: 0.18, tessellation: 6 }, scene), 0.015); beam.parent = n; beam.position.set(0, 0.5, 0); beam.rotation.z = Math.PI / 2; beam.material = stake;
+  }
+  // The wall: grey stone, crenellated, with a gatehouse and the gate standing open.
+  const stone = toon(scene, "ih-stone", "#9a9690"), dark = toon(scene, "ih-stoneDark", "#7a7670");
+  const [x0, , x1] = L.rect, z = L.wallZ, H = 6;
+  for (const [a, b] of [[x0 - 20, -L.gateHalf], [L.gateHalf, x1 + 20]]) {
+    const w = add(MB.CreateBox("ih-wall", { width: b - a, height: H, depth: 1.8 }, scene), 0.05); w.position.set((a + b) / 2, H / 2, z); w.material = stone;
+    for (let x = a + 0.8; x < b - 0.4; x += 1.6) { const m = add(MB.CreateBox("ih-merlon", { width: 0.8, height: 0.8, depth: 1.8 }, scene), 0.02); m.position.set(x, H + 0.4, z); m.material = dark; }
+  }
+  for (const sx of [-1, 1]) {
+    const t = add(MB.CreateCylinder("ih-tower", { height: H + 3, diameter: 3.6, tessellation: 12 }, scene), 0.05); t.position.set(sx * (L.gateHalf + 1.6), (H + 3) / 2, z); t.material = stone;
+    const cap = add(MB.CreateCylinder("ih-towerCap", { height: 2.2, diameterTop: 0, diameterBottom: 4.2, tessellation: 12 }, scene), 0.04); cap.position.set(sx * (L.gateHalf + 1.6), H + 4.1, z); cap.material = toon(scene, "ih-slate", "#4a5260");
+    const door = add(MB.CreateBox("ih-gateDoor", { width: L.gateHalf, height: 4.6, depth: 0.25 }, scene), 0.03); door.position.set(sx * (L.gateHalf + 0.2), 2.3, z + 1.6); door.rotation.y = sx * -1.25; door.material = P("#4a3222");
+  }
+  const lintel = add(MB.CreateBox("ih-lintel", { width: L.gateHalf * 2 + 0.4, height: 1.6, depth: 1.8 }, scene), 0.04); lintel.position.set(0, H - 0.8, z); lintel.material = stone;
+  // Iron Wardens banners on the wall: grey and white.
+  for (const x of [-16, -8, 8, 16]) { const b = add(MB.CreateBox("ih-banner", { width: 1.4, height: 3, depth: 0.05 }, scene), 0.02); b.position.set(x, H - 1.9, z + 0.95); b.material = P("#6a7280");
+    const s = add(MB.CreateBox("ih-bannerMark", { width: 0.5, height: 0.5, depth: 0.06 }, scene)); s.position.set(x, H - 1.6, z + 0.97); s.rotation.z = Math.PI / 4; s.material = P("#f2efe6"); }
+  // The camp: canvas tents, the command tent, braziers, weapon racks, carts, a training ring.
+  const canvas = toon(scene, "ih-canvas", "#c8bca0"), canvasDark = toon(scene, "ih-canvasDark", "#9a8e74");
+  for (const [x, tz] of L.tents) { const t = add(MB.CreateCylinder("ih-tent", { height: 4, diameter: 3.4, tessellation: 3 }, scene), 0.03); t.position.set(x, 1.1, tz); t.rotation.set(0, 0, Math.PI / 2); t.rotation.x = Math.PI / 2; t.scaling.set(1, 1, 0.9); t.material = rng() < 0.5 ? canvas : canvasDark; }
+  const C = L.command;
+  const cmd = add(MB.CreateBox("ih-command", { width: 6, height: 2.6, depth: 4.4 }, scene), 0.04); cmd.position.set(C.x, 1.3, C.z); cmd.material = canvas;
+  const cmdRoof = add(MB.CreateCylinder("ih-commandRoof", { height: 6.4, diameter: 4.6, tessellation: 3 }, scene), 0.04); cmdRoof.position.set(C.x, 3.1, C.z); cmdRoof.rotation.set(0, Math.PI / 2, Math.PI / 2); cmdRoof.scaling.set(1, 1, 0.55); cmdRoof.material = P("#6a7280");
+  const pole = add(MB.CreateCylinder("ih-pole", { height: 6, diameter: 0.12, tessellation: 6 }, scene), 0.015); pole.position.set(C.x + 3.6, 3, C.z - 2.6); pole.material = P("#5a4a32");
+  const flag = add(MB.CreateBox("ih-flag", { width: 1.6, height: 1, depth: 0.04 }, scene), 0.015); flag.position.set(C.x + 4.4, 5.4, C.z - 2.6); flag.material = P("#6a7280");
+  const fires = [];
+  for (const [x, bz] of L.braziers) {
+    const bowl = add(MB.CreateCylinder("ih-brazier", { height: 0.5, diameterTop: 0.9, diameterBottom: 0.4, tessellation: 10 }, scene), 0.02); bowl.position.set(x, 1.05, bz); bowl.material = P("#3a3a40");
+    const leg = add(MB.CreateCylinder("ih-brazierLeg", { height: 0.85, diameter: 0.12, tessellation: 5 }, scene), 0.01); leg.position.set(x, 0.42, bz); leg.material = bowl.material;
+    const f = add(MB.CreateCylinder("ih-fire", { height: 0.8, diameterTop: 0, diameterBottom: 0.6, tessellation: 7 }, scene)); f.position.set(x, 1.6, bz); f.material = glow(scene, "ih-fireGlow", "#ff9a3a"); fires.push(f);
+  }
+  for (const [x, rz] of [[-6, -27], [6, -27]]) { const r = add(MB.CreateBox("ih-rack", { width: 2.2, height: 0.12, depth: 0.12 }, scene), 0.015); r.position.set(x, 1.3, rz); r.material = P("#5a4a32");
+    for (let k = 0; k < 4; k++) { const sp = add(MB.CreateCylinder("ih-rackSpear", { height: 2.6, diameter: 0.05, tessellation: 4 }, scene)); sp.position.set(x - 0.9 + k * 0.6, 1.3, rz); sp.rotation.x = 0.15; sp.material = P("#7a6a52"); } }
+  PR.cart(14, -24, { ry: 0.4 }); PR.cart(-15, -25, { ry: -0.6, load: true }); PR.barrel(-7, -38); PR.barrel(-6.2, -38.4, { tipped: true }); PR.crate(7, -39, { ry: 0.3 }); PR.crate(7.8, -38.2, { s: 0.6 }); PR.woodpile(16, -38);
+  PR.fence(L.ring.x - 3, L.ring.z - 3, L.ring.x + 3, L.ring.z - 3); PR.fence(L.ring.x - 3, L.ring.z + 3, L.ring.x + 3, L.ring.z + 3);
+  // The memorial (after Ep 22): Brannoc's sword planted point-down at the command tent, a grey cloak over the hilt.
+  const mem = K.when("$BRANNOC_DEAD");
+  { const blade = add(MB.CreateBox("ih-memBlade", { width: 0.1, height: 1.4, depth: 0.04 }, scene), 0.012); blade.parent = mem; blade.position.set(C.x, 0.7, C.z + 3.1); blade.material = P("#9aa2ae");
+    const guard = add(MB.CreateBox("ih-memGuard", { width: 0.5, height: 0.08, depth: 0.08 }, scene), 0.01); guard.parent = mem; guard.position.set(C.x, 1.42, C.z + 3.1); guard.material = P("#5a2a2a");
+    const cloak = add(MB.CreateBox("ih-memCloak", { width: 0.5, height: 0.6, depth: 0.12 }, scene), 0.012); cloak.parent = mem; cloak.position.set(C.x, 1.25, C.z + 3.15); cloak.material = P("#6a7280");
+    for (const dx of [-0.6, 0.6]) { const c = add(MB.CreateCylinder("ih-memCandle", { height: 0.25, diameter: 0.1, tessellation: 6 }, scene)); c.parent = mem; c.position.set(C.x + dx, 0.12, C.z + 3.3); c.material = glow(scene, "ih-candle", "#ffd36a"); } }
+  // The enemy on the horizon: red banners, siege towers and smoke over the Ashfall camp.
+  const red = P("#a02a2a");
+  for (let i = 0; i < 9; i++) { const x = -40 + i * 10 + (rng() - 0.5) * 4, hz = 52 + rng() * 6;
+    const p2 = add(MB.CreateCylinder("ih-farPole", { height: 7, diameter: 0.2, tessellation: 4 }, scene)); p2.position.set(x, 3.5, hz); p2.material = P("#3a2a22");
+    const b = add(MB.CreateBox("ih-farBanner", { width: 1.6, height: 2.6, depth: 0.05 }, scene)); b.position.set(x + 0.9, 5.4, hz); b.material = red; }
+  for (const [x, hz] of [[-24, 60], [10, 64], [30, 58]]) { const t = add(MB.CreateBox("ih-farTower", { width: 3, height: 10, depth: 3 }, scene), 0.04); t.position.set(x, 5, hz); t.material = P("#4a3a2a"); }
+  const smoke = new BB.ParticleSystem("ih-smoke", mobile ? 40 : 90, scene);
+  smoke.particleTexture = softTexture(scene); smoke.emitter = new BB.Vector3(0, 2, 58);
+  smoke.minEmitBox = new BB.Vector3(-40, 0, -4); smoke.maxEmitBox = new BB.Vector3(40, 2, 6);
+  smoke.color1 = new BB.Color4(0.35, 0.3, 0.28, 0.35); smoke.color2 = new BB.Color4(0.25, 0.22, 0.22, 0.25); smoke.colorDead = new BB.Color4(0.2, 0.2, 0.2, 0);
+  smoke.minSize = 6; smoke.maxSize = 12; smoke.minLifeTime = 8; smoke.maxLifeTime = 14; smoke.emitRate = mobile ? 4 : 8;
+  smoke.blendMode = BB.ParticleSystem.BLENDMODE_STANDARD; smoke.gravity = new BB.Vector3(0.3, 0.6, 0); smoke.minEmitPower = 0.2; smoke.maxEmitPower = 0.6;
+  K.systems.push(smoke);
+  K.bake([...fires]);
+  const env = { clear: "#b08a6a", fog: "#a8846a", fogDensity: 0.012, hemi: [0.66, "#ffe0c0", "#4a3a30"], sun: [0.8, "#ffc890", [0.5, -0.7, 0.5]], warm: 0 };
+  const toonEnv = { lightDir: [-0.5, 0.8, -0.5], fogColor: "#a8846a", fogDensity: 0.009, sky: [1.08, 0.98, 0.92], ground: [0.88, 0.78, 0.7], rim: [1.0, 0.82, 0.62] };
+  return {
+    env, toon: toonEnv, outdoor: true, windows: K.windows, lamps: K.lamps, conditions: K.conditions, show: K.show,
+    update(dt, t) { for (let i = 0; i < fires.length; i++) fires[i].scaling.set(1, 0.85 + Math.sin(t * 9 + i * 1.3) * 0.15, 1); },
+  };
 }

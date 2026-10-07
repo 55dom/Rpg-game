@@ -28,8 +28,12 @@ import { EPISODE_2, EP2_SCRIPT } from "./data/story/ep2.js";
 import { EPISODE_3, EP3_SCRIPT } from "./data/story/ep3.js";
 import { EPISODE_4_STORY, EP4_SCRIPT } from "./data/story/ep4.js";
 import { EPISODE_19, EP19_SCRIPT } from "./data/story/ep19.js";
+import { EPISODE_20, EP20_SCRIPT } from "./data/story/ep20.js";
+import { EPISODE_21, EP21_SCRIPT } from "./data/story/ep21.js";
+import { EPISODE_22, EP22_SCRIPT } from "./data/story/ep22.js";
 import { keyItemsHeld } from "./data/keyItems.js";
 import { WORLD_SCRIPT } from "./data/story/world.js";
+import { compileExpr, truthy } from "./core/flags.js";
 import { ZONES } from "./data/zones.js";
 import { Inventory } from "./core/inventory.js";
 import { Progress, addMods, pageLevel, pageLevelProgress } from "./core/progress.js";
@@ -288,7 +292,7 @@ export function boot(doc = document) {
         case "silenceZone": silenceFx.add(ev.zone); sfx.play("heal", 0.7); break;
         case "silenceEnd": silenceFx.remove(ev.zone); break;
         case "silenced": hud.toast(ev.what === "dodge" ? "DODGE SILENCED · PARRY!" : "SILENCED", "danger"); sfx.play("block", 0.5); break;
-        case "wave": vfx.ring({ x: ev.wave.x, y: 0.08, z: ev.wave.z }, ev.wave.maxR, { toll: "#c9b4ff", rot: "#c86a2a", splash: "#6ac8d8" }[ev.wave.kind] ?? "#ffffff", ev.wave.maxR / ev.wave.speed); sfx.play(ev.wave.kind === "rot" ? "mud" : "slam", 0.7); camera.shake(0.2); break;
+        case "wave": vfx.ring({ x: ev.wave.x, y: 0.08, z: ev.wave.z }, ev.wave.maxR, { toll: "#c9b4ff", rot: "#c86a2a", splash: "#6ac8d8", shock: "#9ad8ff" }[ev.wave.kind] ?? "#ffffff", ev.wave.maxR / ev.wave.speed); sfx.play(ev.wave.kind === "rot" ? "mud" : "slam", 0.7); camera.shake(0.2); break;
         case "bells": hud.toast("THE BELLS RING", "danger"); hud.banner("NO SPELLS ANYWHERE · BREAK THE THREE BELLS"); silenceFx.all(true); break;
         case "bellsBroken": hud.toast("SILENCE BROKEN", "break"); silenceFx.all(false); impact(3, true); sfx.play("postureBreak"); break;
         case "wardBroken": hud.toast("HER WARD FALLS", "break"); break;
@@ -299,6 +303,22 @@ export function boot(doc = document) {
         case "oathBroken": hud.toast("THE VOW BREAKS", "break"); vfx.flash(ev.at, 4, "#ff7a2a", 0.3); impact(4, true); camera.kick(0.8); sfx.play("postureBreak"); break;
         case "desperate": hud.toast("DESPERATION", "danger"); hud.banner("HE CHARGES THE WHOLE HALL · DODGE"); break;
         case "flood": hud.toast("THE CISTERN FLOODS", "danger"); hud.banner("THE WATER JET SWEEPS · JUMP IT"); waterJet.start(ev.center, ev.length); sfx.play("ultActivate"); break;
+        case "strikeWarn": groundFx.warn(ev.strike); break;
+        case "strike": groundFx.hit(ev.strike); break;
+        case "burn": if (ev.fighter === world.player) vfx.sparksAt({ x: ev.fighter.pos.x, y: 1, z: ev.fighter.pos.z }, 3, "red", 3, 3); break;
+        case "engineRoll": groundFx.lane(ev.from, ev.to, ev.half * 1.6); hud.toast("THE IRONSONG CHARGES", "danger"); sfx.play("bossIntro", 0.6); break;
+        case "engineStop": groundFx.clearLanes(); camera.shake(0.3); sfx.play("slam"); break;
+        case "engineBreaks": groundFx.clearLanes(); vfx.ring({ x: ev.at.x, y: 0.1, z: ev.at.z }, 9, "#ff7a3a", 0.6); vfx.flash({ x: ev.at.x, y: 2.5, z: ev.at.z }, 6, "#ffb070", 0.2); vfx.sparksAt({ x: ev.at.x, y: 2, z: ev.at.z }, 30, "gold", 12, 9); impact(3, true); sfx.play("postureBreak"); camera.shake(0.9); break;
+        case "magnet": hud.toast("MAGNET", "danger"); vfx.ring({ x: ev.fighter.pos.x, y: 1, z: ev.fighter.pos.z }, 8, "#9ad8ff", 0.4, true); break;
+        case "railgun": vfx.flash({ x: ev.fighter.pos.x, y: 1.4, z: ev.fighter.pos.z }, 3, "#9ad8ff", 0.2); break;
+        case "finalVow": {
+          const by = ev.by, name = by === world.player ? "" : "BRANNOC";
+          if (name) hud.cutIn("Captain Brannoc", "FINAL VOW", "brannoc");
+          hud.toast("FINAL VOW", "break"); hud.banner("\"THE WALL DOES NOT MOVE.\"");
+          vfx.pillar({ x: ev.at.x, y: 0, z: ev.at.z }, 14, 1.6); vfx.ring({ x: ev.at.x, y: 0.1, z: ev.at.z }, 12, "#ffffff", 0.7); vfx.flash(ev.at, 7, "#fff4d0", 0.35);
+          vfx.sparksAt(ev.at, 40, "gold", 14, 10); impact(6, true); sfx.play("ultActivate"); camera.shake(1.2);
+          groundFx.clear(); break;
+        }
         case "lilyPads": hud.toast("LILY PAD LEAP", "danger"); hud.banner("IT'S GOING TO HOP · STAY OFF THE LIT PADS"); lilyFx.mark(ev.center, ev.pads); sfx.play("heal", 0.6); break;
         case "padHop": lilyFx.target(ev.to); root.classList.add("leaping"); sfx.play("dodge", 0.9); state.hopGhost = 0; break;
         case "padSmash": lilyFx.smash(ev.at, ev.last); sfx.play("slam", ev.last ? 1 : 0.75); camera.shake(ev.last ? 0.45 : 0.25); impact(ev.last ? 3 : 2, ev.last);
@@ -671,7 +691,8 @@ export function boot(doc = document) {
       refreshGrimDot();
     },
     onEvents: (evs) => onEvents(evs),
-  }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }, { episode: EPISODE_3, script: EP3_SCRIPT }, { episode: EPISODE_4_STORY, script: EP4_SCRIPT }, { episode: EPISODE_19, script: EP19_SCRIPT }], [WORLD_SCRIPT]);
+  }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }, { episode: EPISODE_3, script: EP3_SCRIPT }, { episode: EPISODE_4_STORY, script: EP4_SCRIPT }, { episode: EPISODE_19, script: EP19_SCRIPT }, { episode: EPISODE_20, script: EP20_SCRIPT },
+    { episode: EPISODE_21, script: EP21_SCRIPT }, { episode: EPISODE_22, script: EP22_SCRIPT }], [WORLD_SCRIPT]);
   const playerName = root.querySelector(".player-card .name");
   const showName = (n) => { if (playerName?.firstChild) playerName.firstChild.textContent = `${n.toUpperCase()} `; };
   const backToTitle = () => {
@@ -734,7 +755,7 @@ export function boot(doc = document) {
     if (!story.roaming) return;
     sfx.play("ui");
     const list = mapModal.querySelector("[data-map-list]");
-    list.innerHTML = Object.values(ZONES).filter((z) => !z.dungeon && !z.interior).map((z) => `<button data-zone="${z.id}" ${story.zone?.id === z.id ? "disabled" : ""}><b>${z.name.toUpperCase()}</b><span>${z.region}${story.zone?.id === z.id ? " · You are here" : ""}</span></button>`).join("");
+    list.innerHTML = Object.values(ZONES).filter((z) => !z.dungeon && !z.interior && (!z.mapWhen || truthy(compileExpr(z.mapWhen)(story.flags)))).map((z) => `<button data-zone="${z.id}" ${story.zone?.id === z.id ? "disabled" : ""}><b>${z.name.toUpperCase()}</b><span>${z.region}${story.zone?.id === z.id ? " · You are here" : ""}</span></button>`).join("");
     for (const b of list.querySelectorAll("[data-zone]")) b.addEventListener("click", () => { mapModal.hidden = true; state.modal = false; story.travel(b.dataset.zone); });
     mapModal.hidden = false; state.modal = true;
   };
@@ -850,7 +871,34 @@ export function boot(doc = document) {
     ilse: { 2: ["THE CHOIR PIT", "PHASE 2 · SHE CALLS HER ACOLYTES · WARDED WHILE THEY STAND"], 3: ["THE BELLS", "PHASE 3 · BREAK THE BELLS"], 4: ["HUSH", "PHASE 4 · SHE CAN SILENCE YOUR DODGE"] },
     galen: { 2: ["ROT", "PHASE 2 · RINGS OF RUST · JUMP THEM"], 3: ["THE OATH", "PHASE 3 · BREAK THE VOW-SEALS"], 4: ["DESPERATION", "PHASE 4 · THE LAST CHARGE"] },
     gullmaw: { 2: ["THE FLOOD", "PHASE 2 · THE WATER JET · JUMP IT"], 3: ["SWALLOWED", "PHASE 3 · BURST THE SLIME BUBBLE"] },
+    varka: { 2: ["THE IRONSONG ROLLS", "PHASE 2 · THE ENGINE CHARGES DOWN A LANE · GET OUT OF IT"], 3: ["THE ENGINE BREAKS", "PHASE 3 · FALLING WRECKAGE · WATCH THE RINGS"],
+      4: ["RAILGUN", "PHASE 4 · SHE FIRES HERSELF DOWN THE FIELD · DODGE"] },
   };
+  // Strikes from above (Thunderheads, falling wreckage) and the siege engine's lane: warnings on the ground first.
+  const groundFx = (() => {
+    const strikes = new Map(), lanes = [];
+    const thunderMat = glow(scene, "strikeThunder", "#9ad8ff", 0.28, true), debrisMat = glow(scene, "strikeDebris", "#ff7a3a", 0.3, true), laneMat = glow(scene, "laneMat", "#ff3a2a", 0.22, true);
+    return {
+      warn(s) {
+        const d = BB.MeshBuilder.CreateDisc("strikeWarn", { radius: s.r, tessellation: 28 }, scene); d.rotation.x = Math.PI / 2; d.position.set(s.x, 0.05, s.z);
+        d.material = s.kind === "debris" ? debrisMat : thunderMat; d.isPickable = false; d.scaling.setAll(0.2); strikes.set(s, d);
+      },
+      hit(s) {
+        strikes.get(s)?.dispose(); strikes.delete(s);
+        const at = { x: s.x, y: 0.1, z: s.z };
+        if (s.kind === "debris") { vfx.ring(at, s.r * 2.2, "#ff9a5a", 0.3); vfx.sparksAt({ x: s.x, y: 0.4, z: s.z }, 10, "gold", 8, 6); vfx.flash({ x: s.x, y: 0.8, z: s.z }, 2.2, "#ffb070", 0.12); sfx.play("slam", 0.55); }
+        else { vfx.pillar(at, 6, 0.35); vfx.flash({ x: s.x, y: 1.4, z: s.z }, 2.6, "#cfeaff", 0.1); vfx.sparksAt({ x: s.x, y: 0.5, z: s.z }, 10, "white", 9, 5); sfx.play("ultActivate", 0.5); }
+        camera.shake(0.18);
+      },
+      lane(from, to, half) {
+        const len = Math.hypot(to.x - from.x, to.z - from.z), m = BB.MeshBuilder.CreateBox("engineLane", { width: half * 2, height: 0.04, depth: len + 3 }, scene);
+        m.position.set((from.x + to.x) / 2, 0.05, (from.z + to.z) / 2); m.rotation.y = Math.atan2(to.x - from.x, to.z - from.z); m.material = laneMat; m.isPickable = false; lanes.push(m);
+      },
+      clearLanes() { for (const m of lanes) m.dispose(); lanes.length = 0; },
+      update(dt) { for (const [s, d] of strikes) { const k = 1 - s.t / s.delay; d.scaling.setAll(0.2 + 0.8 * Math.min(1, k * 1.3)); d.material.alpha = 0.18 + 0.25 * k; } },
+      clear() { for (const d of strikes.values()) d.dispose(); strikes.clear(); this.clearLanes(); },
+    };
+  })();
   const silenceFx = (() => {
     const zones = new Map(), mat = glow(scene, "silenceMat", "#9a7aff", 0.28, true), fieldMat = glow(scene, "silenceAllMat", "#5a3a9a", 0.12);
     let field = null;
@@ -934,7 +982,7 @@ export function boot(doc = document) {
     };
   })();
   const hopGhostMat = glow(scene, "hopGhost", "#8affc8", 0.3, true);
-  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); lilyFx.clear(); root.classList.remove("leaping", "hopblur"); };
+  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); lilyFx.clear(); groundFx.clear(); root.classList.remove("leaping", "hopblur"); };
 
   // Squad HQ: the board (rooms to build) and the workbench (tempering gear). One screen, two modes.
   const hqModal = root.querySelector("[data-hq]");
@@ -1201,7 +1249,7 @@ export function boot(doc = document) {
       if (state.ghostTimer <= 0) { const rig = viewFor(world.player); if (rig) vfx.afterimage(rig); state.ghostTimer = 0.09; }
     }
 
-    waterJet.update(); lilyFx.update(dt);
+    waterJet.update(); lilyFx.update(dt); groundFx.update(dt);
     if (world.boss?.boss?.leap) { // motion blur on the hops: a trail of fading ghosts of Gullmaw
       state.hopGhost = (state.hopGhost ?? 0) - dt;
       if (state.hopGhost <= 0) { const rig = viewFor(world.boss); if (rig?.snapshot) vfx.afterimage(rig, hopGhostMat, 0.22); state.hopGhost = 0.035; }

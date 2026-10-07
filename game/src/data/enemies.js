@@ -8,6 +8,7 @@ import { hitSpec } from "../core/combat.js";
 import { defineAbility, EventType as E } from "../core/abilities.js";
 import { AttackOption } from "../core/ai.js";
 import { ACOLYTE_STATS, ACOLYTE_HITBOXES, ACOLYTE_ABILITIES, ACOLYTE_POSES, acolyteOptions } from "./acolyte.js";
+import { ASHFALL_ENEMIES } from "./ashfall.js";
 
 const sound = (frame, key = "swing") => ({ frame, type: E.PlaySound, key });
 const box = (frame, key, frames) => ({ frame, type: E.SpawnHitbox, key, value: frames });
@@ -86,6 +87,7 @@ const BANDIT_ABILITIES = Object.freeze({
 });
 
 export const ENEMIES = Object.freeze({
+  ...ASHFALL_ENEMIES, // the Iron Front (Arc 3)
   acolyte: {
     stats: { ...ACOLYTE_STATS, name: "Choir Acolyte" }, hitboxes: ACOLYTE_HITBOXES, abilities: ACOLYTE_ABILITIES,
     poses: ACOLYTE_POSES, options: acolyteOptions, traits: {},

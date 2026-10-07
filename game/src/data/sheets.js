@@ -90,6 +90,14 @@ export const SHEETS = Object.freeze({
   corvina: { build: "lithe", gait: "graceful", idle: "proud",
     outfit: { top: "#f4f0e6", hem: "ankle", sleeves: "long", legs: "#e8e2d4", boots: "shoes", bootColor: "#d4ad4f",
       belt: "#d4ad4f", stitch: "#d4ad4f", embroidery: "#d4ad4f", collar: true, grime: 0 } },
+  ashLegion: { build: "broad", gait: "soldier", idle: "still",
+    outfit: { top: "#3a2626", hem: "thigh", sleeves: "long", legs: "#2a2224", boots: "tall", bootColor: "#2a2224", breastplate: "#5a3a32", pauldrons: "#6a3a2a",
+      bracers: "#5a3a32", gloves: "#2a2224", belt: "#c8502a", grime: 0.5 } },
+  ashMage: { build: "slim", gait: "soldier", idle: "still",
+    outfit: { top: "#4a3a52", hem: "ankle", sleeves: "long", legs: "#2a2430", boots: "shoes", bootColor: "#2a2430", belt: "#ffd36a", embroidery: "#9ad8ff", grime: 0.3 } },
+  varka: { build: "athletic", gait: "soldier", idle: "proud",
+    outfit: { top: "#3a4252", hem: "thigh", sleeves: "long", legs: "#2a3040", boots: "tall", bootColor: "#5a6272", breastplate: "#6a7282", pauldrons: "#d9b45a",
+      bracers: "#6a7282", gloves: "#2a3040", belt: "#d9b45a", tattered: "#2a3040", grime: 0.35 } },
   brannoc: { build: "broad", gait: "soldier", idle: "still",
     outfit: { top: "#6b7280", hem: "thigh", sleeves: "long", legs: "#3a3e48", boots: "tall", bootColor: "#8a929e",
       breastplate: "#9aa2ae", pauldrons: "#9aa2ae", belt: "#8a2a2a", gloves: "#5a2a2a", grime: 0.25 } },
@@ -200,7 +208,7 @@ export const SHEETS = Object.freeze({
 
 /** The sheet for a look, with sensible defaults for anything new. */
 export function sheetFor(kind, look = {}) {
-  const s = SHEETS[kind] ?? SHEETS[{ severinAlly: "severin", junoMaid: "junoMaid" }[kind]];
+  const s = SHEETS[kind] ?? SHEETS[{ severinAlly: "severin", junoMaid: "junoMaid", brannocSpar: "brannoc" }[kind]];
   if (s) return s;
   return { build: "athletic", gait: "confident", idle: "relaxed",
     outfit: { top: look.coat ?? "#6a6a6a", hem: "thigh", sleeves: "long", legs: "#3a3a40", boots: "ankle", bootColor: "#3a2a22", belt: look.trim ?? "#5a3a22" } };

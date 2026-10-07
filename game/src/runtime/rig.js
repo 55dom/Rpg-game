@@ -11,6 +11,7 @@ import { SEVERIN_POSES } from "../data/severin.js";
 import { SEVERIN_KIT_POSES } from "../data/severinKit.js";
 import { ILSE_POSES, GALEN_POSES, GULLMAW_POSES } from "../data/bosses2.js";
 import { CAL_POSES } from "../data/cal.js";
+import { BRANNOC_POSES, VARKA_POSES } from "../data/ashfall.js";
 import { EventType } from "../core/abilities.js";
 import { buildBody, skinBake } from "./body.js";
 import { animateHumanoid } from "./motion.js";
@@ -89,6 +90,15 @@ export const LOOKS = {
   gullmaw: { poses: GULLMAW_POSES, scale: 1.55, skirt: 1.0, coat: "#2f5a4a", trim: "#2a4a3c", hairColor: "#2f5a4a", skin: "#3a6a56",
     head: "toad", weapon: "claw", shoulders: 1.5, eyes: "#ffcf3a", belly: "#d9c98a", warts: "#d8862a", gills: "#c8506a", web: "#4a8a6a",
     talon: "#e8dcc0", sac: "#e8b878", stoop: 0.22, trail: "#6ac8d8" },
+  // The Iron Front (Arc 3): the Ashfall Dominion's soldiers and General Varka Ironsong.
+  ashLegion: { poses: ENEMIES.ashLegion.poses, scale: 1.1, skirt: 1.05, coat: "#3a2626", trim: "#c8502a", hairColor: "#2a1a18", skin: PALETTE.mask,
+    head: "helm", helm: "#4a3a36", menace: true, weapon: "spear", shoulders: 1.3, stoop: 0.05, trail: "#ff7a3a" },
+  ashMage: { poses: ENEMIES.ashMage.poses, scale: 1.02, skirt: 1.25, coat: "#4a3a52", trim: "#ffd36a", hairColor: "#2a2430", skin: "#c8b8a8",
+    head: "hood", weapon: "staff", orb: "#9ad8ff", sash: true, trail: "#9ad8ff" },
+  varka: { poses: VARKA_POSES, scale: 1.14, skirt: 1.0, coat: "#3a4252", trim: "#d9b45a", hairColor: "#e8e4f0", skin: "#e8c0a0",
+    head: "face", hair: "long", angry: true, weapon: "staff", orb: "#9ad8ff", shoulders: 1.3, eyeColor: "#3a6aa0", trail: "#9ad8ff" },
+  engine: { form: "object", shape: "engine", trail: "#ffd36a" },
+  get brannocSpar() { return this.brannoc; }, // Brannoc in the training ring: same man
   // Things bosses put on the field: drawn by ObjectView (runtime/objects.js).
   bell: { form: "object", shape: "bell", trail: "#c9b4ff" }, seal: { form: "object", shape: "seal", trail: "#ff7a2a" },
   eggsac: { form: "object", shape: "eggsac", trail: "#b8d86a" }, bubble: { form: "object", shape: "bubble", trail: "#8ae0d0" },
@@ -103,7 +113,7 @@ export const LOOKS = {
     head: "face", hair: "loose", jaw: 0.18, collar: true, weapon: "sword", eyeColor: "#2a2a3a", trail: "#ffd98a" },
   corvina: { poses: ACOLYTE_POSES, scale: 1.04, skirt: 1.05, coat: "#f2efe6", trim: "#d4ad4f", hairColor: "#b8d0ec", skin: "#f3dcc8",
     head: "face", hair: "long", weapon: "none", eyeColor: "#4a6aa0", trail: "#e9f2ff" },
-  brannoc: { poses: ACOLYTE_POSES, scale: 1.16, skirt: 1.1, coat: "#6b7280", trim: "#8a3a2a", hairColor: "#9a9a9a", skin: "#d8a888",
+  brannoc: { poses: BRANNOC_POSES, scale: 1.16, skirt: 1.1, coat: "#6b7280", trim: "#8a3a2a", hairColor: "#9a9a9a", skin: "#d8a888",
     head: "face", hair: "crop", beard: "#a8a8a8", weapon: "sword", shoulders: 1.35, eyeColor: "#3a3a40", trail: "#c9d2dc" },
   ysolde: { poses: ACOLYTE_POSES, scale: 1.0, skirt: 0.95, coat: "#2f7a4a", trim: "#9fe6c8", hairColor: "#e0702a", skin: "#f0cfb2",
     head: "face", hair: "long", weapon: "spear", eyeColor: "#8a4a1a", trail: "#9fe6c8" },

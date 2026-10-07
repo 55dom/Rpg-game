@@ -70,6 +70,17 @@ export const HALL_LAYOUT = {
   lanternX: (i) => -2.1 + i * 0.7, lanternY: 1.5, shelfDepth: 0.55,
   brannoc: { z: 0 }, // Brannoc's lantern: the captain's, at the front of the Wardens' shelf (eye height)
 };
+/**
+ * Ironhold, the eastern border (Arc 3): the Iron Wardens' fortress wall with the camp behind it (south) and the
+ * battlefield in front (north). Story fights use the round arena at the origin, so the field there stays clear.
+ */
+export const IRONHOLD_LAYOUT = {
+  wallZ: -21, gateHalf: 3, rect: [-30, -44, 30, 24],
+  tents: [[-11, -27], [-11, -34], [-11, -41], [11, -27], [11, -34], [11, -41], [-20, -30], [20, -30]],
+  command: { x: 0, z: -35 }, ring: { x: -20, z: -39 },
+  braziers: [[-4.5, -24.5], [4.5, -24.5], [-6, -33], [6, -33], [-8.5, -23.5]],
+  barricades: [[-14, 18, 0.2], [-5, 20, -0.1], [6, 19.5, 0.15], [15, 17, -0.25], [-22, 10, 0.9], [22, 8, -0.9]],
+};
 export const HOME_LAYOUT = { half: [5, 4], door: { x: 0, z: -4 }, table: { x: 1.6, z: 0.4 }, bed: { x0: -4.9, z0: 1, x1: -2.4, z1: 3.9 }, hearth: { x0: 1.2, z0: 3.3, x1: 3.4, z1: 4 } };
 
 // ---- Thornwick, the home village ------------------------------------------------------------
@@ -93,7 +104,7 @@ export const THORNWICK_LAYOUT = {
 export const UNDERCROFT_BANDS = [[-34, -22, 6], [-22, -14, 2], [-14, 2, 10], [2, 10, 2], [10, 26, 12], [26, 32, 2], [32, 46, 14]];
 const UC_HALF = 14;
 
-const A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT;
+const A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT, IH = IRONHOLD_LAYOUT;
 const aurelinSolids = [
   ...A.houses.map((h) => box(h.x - h.w / 2, h.z - h.d / 2, h.x + h.w / 2, h.z + h.d / 2)),
   ...A.stalls.map((s) => box(s.x - 1.4, s.z - 1, s.x + 1.4, s.z + 1)),
@@ -363,6 +374,31 @@ export const ZONES = {
       routine: { steps: [{ do: "work", at: [2.3, 2.6], face: 0, anim: "stir", dur: [10, 14] }, { do: "work", at: [-1.2, 3.2], face: 0, anim: "work", dur: [6, 8] }, { do: "work", at: [1.6, -0.5], face: 0, anim: "wipe", dur: [5, 7] }] } }],
     exits: [{ id: "door", rect: [-0.9, -3.75, 0.9, -3.0], to: "aurelin", spawn: "home", label: "Back out to the street" }],
     arrivals: { aurelin: { x: 0, z: -2.6, yaw: 0 } },
+  },
+  ironhold: {
+    id: "ironhold", name: "Ironhold", region: "The Eastern Border", stage: "ironhold", mapWhen: "$HAS_SUMMONS",
+    bounds: { rect: IH.rect, solids: [
+      box(IH.rect[0], IH.wallZ - 0.9, -IH.gateHalf, IH.wallZ + 0.9), box(IH.gateHalf, IH.wallZ - 0.9, IH.rect[2], IH.wallZ + 0.9), // the wall, with its gate
+      circle(-IH.gateHalf - 1.6, IH.wallZ, 1.7), circle(IH.gateHalf + 1.6, IH.wallZ, 1.7), // gatehouse towers
+      ...IH.tents.map(([x, z]) => box(x - 2.1, z - 1.6, x + 2.1, z + 1.6)), box(IH.command.x - 3.2, IH.command.z - 2.4, IH.command.x + 3.2, IH.command.z + 2.4),
+      ...IH.braziers.map(([x, z]) => circle(x, z, 0.45)),
+      ...IH.barricades.map(([x, z]) => circle(x, z, 1.4)),
+    ] },
+    spawn: { x: 0, z: -29, yaw: Math.PI },
+    cast: [
+      { id: "brannoc", look: "brannoc", x: 0, z: -31.6, yaw: Math.PI, node: "W_Brannoc", when: "not $BRANNOC_DEAD",
+        routine: { steps: [{ do: "idle", at: [0, -31.6], face: Math.PI, dur: [10, 14] }, { do: "walk", to: [0, -23.5] }, { do: "idle", at: [0, -23.5], face: 0, dur: [6, 9] }] } },
+      { id: "warden", look: "guard", x: -2.2, z: -23.2, yaw: 0, node: "W_Warden",
+        routine: { role: "guard", steps: [{ do: "idle", at: [-2.2, -23.2], face: 0, dur: [8, 12] }, { do: "idle", at: [2.2, -23.2], face: 0, dur: [8, 12] }] } },
+    ],
+    pickups: [
+      { id: "ironMemorial", x: IH.command.x, z: IH.command.z + 3.1, show: "$BRANNOC_DEAD", node: "W_IronMemorial", marker: false, label: "Brannoc's sword, planted at the command tent" },
+    ],
+    encounters: [
+      { id: "patrol", rect: [-17, -4, 17, 16], at: { x: 0, z: 6, r: 5 }, wave: ["ashLegion", "ashLegion", "ashMage"], when: "$EP20_DONE", flag: "IRON_PATROL", label: "AN ASHFALL PATROL" },
+    ],
+    exits: [{ id: "road", rect: [-4, IH.rect[1], 4, IH.rect[1] + 1.2], to: "aurelin", spawn: "gate", label: "The road west to Aurelin" }],
+    arrivals: { aurelin: { x: 0, z: -41, yaw: 0 } },
   },
   hall: {
     id: "hall", name: "The Hall of Lanterns", region: "Aurelin", stage: "hall", interior: true,
