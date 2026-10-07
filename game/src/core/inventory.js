@@ -1,6 +1,7 @@
 // Marks, owned items, and what's equipped. Pure data plus rules, saved with the story.
 
 import { ITEMS, SLOTS, slotKind } from "../data/items.js";
+import { temperedMods } from "./crafting.js";
 
 const STARTER = { weapon: "squireBlade", cloak: "lanternCloak", charm1: null, charm2: null };
 
@@ -9,10 +10,12 @@ export class Inventory {
     this.marks = Math.max(0, Math.floor(data.marks ?? 30));
     this.owned = new Set((data.owned ?? ["squireBlade", "lanternCloak"]).filter((id) => ITEMS[id]));
     this.equipped = { ...STARTER };
+    this.temper = Object.fromEntries(Object.entries(data.temper ?? {}).filter(([id, n]) => ITEMS[id] && n > 0).map(([id, n]) => [id, Math.min(2, Math.floor(n))]));
     for (const s of SLOTS) if (data.equipped?.[s] !== undefined && (data.equipped[s] === null || this.owned.has(data.equipped[s]))) this.equipped[s] = data.equipped[s];
   }
 
-  toJSON() { return { marks: this.marks, owned: [...this.owned], equipped: { ...this.equipped } }; }
+  toJSON() { return { marks: this.marks, owned: [...this.owned], equipped: { ...this.equipped }, temper: { ...this.temper } }; }
+  temperOf(id) { return this.temper[id] ?? 0; }
 
   earn(n) { this.marks += Math.max(0, Math.floor(n)); return this.marks; }
 
@@ -46,7 +49,7 @@ export class Inventory {
     for (const s of SLOTS) {
       const id = this.equipped[s];
       if (!id) continue;
-      for (const [k, v] of Object.entries(ITEMS[id].mods)) m[k] += v;
+      for (const [k, v] of Object.entries(temperedMods(id, this.temperOf(id)))) m[k] += v;
     }
     m.defense = Math.min(0.5, m.defense); // never more than half off
     return m;

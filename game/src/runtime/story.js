@@ -14,6 +14,7 @@ import { ZONES, arrivalPoint } from "../data/zones.js";
 import { Inventory } from "../core/inventory.js";
 import { Progress } from "../core/progress.js";
 import { Bonds } from "../core/bonds.js";
+import { Crafting } from "../core/crafting.js";
 import { BONDS, BOND_GAIN } from "../data/bonds.js";
 import { EPISODE_XP, QUEST_XP } from "../data/skills.js";
 import { EPISODE_REWARD } from "../data/items.js";
@@ -428,6 +429,8 @@ export class StoryPlayer {
     return r;
   }
   get day() { return this.clock?.day ?? 1; }
+  /** Materials, tempering and HQ rooms (follows the current inventory, which is replaced on load). */
+  get crafting() { if (this._crafting?.inventory !== this.inventory) this._crafting = new Crafting(this.flags, this.inventory); return this._crafting; }
 
   /** Rook earns XP (fights, quests, episodes); the host shows level-ups. */
   gainXp(n, at = null) {
@@ -667,6 +670,12 @@ export class StoryPlayer {
         if (r.react >= 0) this.ctx.onBond?.(args[0], { ...r, gift: args[1] });
         break;
       }
+      case "meal": { // the Lighthouse kitchen: one bowl a day, a buff until midnight
+        const ok = this.crafting.eat(this.day);
+        this.flags.set("MEAL_OK", ok ? 1 : 0);
+        if (ok) { this.ctx.onMeal?.(); }
+        break;
+      }
       case "heal": { // a good meal: full health and mana
         const p = this.ctx.getWorld().player; p.combatant.health.fill(); p.mana?.fill();
         this.ctx.hud.toast(args[0] ? args.join(" ").toUpperCase() : "WARM AND FULL", "clear"); this.ctx.sfx.play("heal"); break;
@@ -903,6 +912,16 @@ export class StoryPlayer {
     const c = x.near;
     if (c.pickup) { // pick it up (or read it): set its flag (quests notice); most then disappear
       const pk = c.pickup;
+      if (pk.ui) { // a screen rather than a conversation: the squad board, the workbench
+        x.busy = true; this.ui.talk.hidden = true;
+        const p = this.ctx.getWorld().player; p.vel.x = p.vel.z = 0; p.moveInput.x = p.moveInput.z = 0;
+        await this.ctx.openUI?.(pk.ui);
+        if (!this.exploring) return true;
+        this._refreshSet();
+        x.busy = false; x.near = null; x.cooldown = 0.6; this._objective();
+        if (this.roaming) this.saveNow();
+        return true;
+      }
       if (pk.flag) this.flags.set(pk.flag, 1);
       if (pk.marks) { this.inventory.earn(pk.marks); this.ctx.hud.banner(`+${pk.marks} MARKS`); }
       if (pk.script) {

@@ -32,6 +32,7 @@ import { Inventory } from "./core/inventory.js";
 import { Progress, addMods, pageLevel, pageLevelProgress } from "./core/progress.js";
 import { SKILLS, TREE_COLUMNS, XP_BY_KIND, PAGE_ROMAN, MAX_LEVEL } from "./data/skills.js";
 import { BONDS, RANK_POINTS, RANK_UNLOCKS, GIFTS } from "./data/bonds.js";
+import { MATERIALS, HQ, TEMPER } from "./data/crafting.js";
 import { ITEMS, SHOPS, SLOTS, BOUNTIES, slotKind } from "./data/items.js";
 import { squadRank } from "./core/quests.js";
 import { fillText } from "./core/script.js";
@@ -366,9 +367,10 @@ export function boot(doc = document) {
         }
         case "kill":
           if (state.mode === "story" && ev.defender.team === Team.Enemy && XP_BY_KIND[ev.defender.kind]) {
-            const n = XP_BY_KIND[ev.defender.kind];
+            const n = Math.round(XP_BY_KIND[ev.defender.kind] * (1 + story.crafting.xpBonus));
             vfx.number({ x: ev.defender.pos.x, y: ev.defender.pos.y + 2.9, z: ev.defender.pos.z }, `+${n} XP`, "text");
             story.gainXp(n);
+            for (const d of story.crafting.drop(ev.defender.kind)) vfx.number({ x: ev.defender.pos.x + 0.4, y: ev.defender.pos.y + 3.3, z: ev.defender.pos.z }, `+${d.n} ${MATERIALS[d.id].name.toUpperCase()}`, "text marks");
           }
           if (state.mode === "story" && ev.defender.team === Team.Enemy && BOUNTIES[ev.defender.kind]) {
             const n = BOUNTIES[ev.defender.kind];
@@ -605,7 +607,9 @@ export function boot(doc = document) {
     setPlayerVisible: (on) => views.get(world.player)?.setVisible(on),
     setSquadVisible: (on) => { for (const c of world.companions) views.get(c)?.setVisible(on); },
     getWorld: () => world,
-    makeWorld: (opts) => newWorld({ ...opts, mods: statMods(partyOf(opts.companions)), progress: story.progress, teamAttacks: story.bonds.teamAttacks() }),
+    makeWorld: (opts) => newWorld({ ...opts, mods: statMods(partyOf(opts.companions)), progress: story.progress, teamAttacks: story.bonds.teamAttacks(), pageXpBonus: story.crafting.pageXpBonus }),
+    openUI: (kind) => openHQ(kind),
+    onMeal: () => { hud.toast("WARM AND FULL", "clear"); hud.banner("+20 HEALTH · +5% DAMAGE UNTIL MIDNIGHT"); sfx.play("heal"); applyGear(); const p = world.player; p.combatant.health.fill(); },
     openShop: (id) => openShop(id),
     onQuest: (e) => {
       if (e.type === "questStart") { hud.toast("NEW QUEST", "afterimage"); hud.banner(e.quest.title.toUpperCase()); sfx.play("surgeFull"); }
@@ -751,7 +755,8 @@ export function boot(doc = document) {
   /** Rook's stat mods: equipment plus level growth and Margin skills. */
   /** Who fights beside Rook in a world made with these companion options (the World's default is both). */
   const partyOf = (c) => (c === true || c === undefined ? ["bas", "juno"] : Array.isArray(c) ? c : []);
-  const statMods = (party = world?.companions?.map((f) => f.kind) ?? []) => addMods(addMods(story.inventory.mods, story.progress.mods), story.bonds.mods(party));
+  const statMods = (party = world?.companions?.map((f) => f.kind) ?? []) =>
+    addMods(addMods(addMods(story.inventory.mods, story.progress.mods), story.bonds.mods(party)), story.crafting.mods(story.day));
   /** Gear changes apply to Rook immediately (outside fights the world can be rebuilt cheaply). */
   const applyGear = () => {
     const w = world, old = w.mods, m = statMods(), p = w.player;
@@ -802,6 +807,38 @@ export function boot(doc = document) {
   };
   journal.querySelector("[data-journal-close]").addEventListener("click", () => { journal.hidden = true; state.modal = false; sfx.play("ui"); });
   menu("journal", openJournal);
+
+  // Squad HQ: the board (rooms to build) and the workbench (tempering gear). One screen, two modes.
+  const hqModal = root.querySelector("[data-hq]");
+  let hqDone = null, hqKind = "hq";
+  const costText = (marks, mats) => [`${marks} Marks`, ...Object.entries(mats ?? {}).map(([id, n]) => `${n} ${MATERIALS[id].name}`)].join(" · ");
+  const renderHQ = () => {
+    const cr = story.crafting, inv = story.inventory;
+    hqModal.querySelector("[data-hq-mats]").innerHTML = Object.entries(MATERIALS).map(([id, m]) => `<b>${m.name}</b> ×${cr.count(id)}`).join(" · ") + ` · <b>Marks</b> ${inv.marks}`;
+    const list = hqModal.querySelector("[data-hq-list]");
+    if (hqKind === "hq") {
+      hqModal.querySelector("[data-hq-title]").textContent = "SQUAD BOARD · HQ ROOMS";
+      hqModal.querySelector("[data-hq-sub]").textContent = `Squad Merit: ${story.flags.get("MERIT") || 0}. Rooms need the squad's standing (Merit is never spent), plus Marks and materials.`;
+      list.innerHTML = Object.entries(HQ).map(([id, r]) => {
+        const why = cr.buildBlocker(id), built = why === "built";
+        return `<div class="row${built ? " built" : ""}"><b>${built ? "✓" : r.merit}</b><span>${r.name}<small>${r.desc}</small><small>${built ? "Built" : `Needs ${r.merit} Merit · ${costText(r.marks, r.mats)}`}</small></span>
+          <span class="act">${built ? "" : `<button class="go" data-build="${id}" ${why ? "disabled" : ""} title="${why ?? ""}">${why ? why.toUpperCase() : "BUILD"}</button>`}</span></div>`;
+      }).join("");
+    } else {
+      hqModal.querySelector("[data-hq-title]").textContent = "WORKBENCH · TEMPER YOUR GEAR";
+      hqModal.querySelector("[data-hq-sub]").textContent = `Weapons cut deeper, cloaks grow tougher, charms get stronger. ${cr.built("forge") ? "The Forge allows +2." : "+1 for now: build the Forge for +2."}`;
+      list.innerHTML = [...inv.owned].map((id) => {
+        const it = ITEMS[id], lv = inv.temperOf(id), c = cr.temperCost(id), why = cr.temperBlocker(id);
+        const what = TEMPER[it.kind].per ? Object.entries(TEMPER[it.kind].per).map(([k, v]) => `+${k === "health" ? v : `${Math.round(v * 100)}%`} ${k}`).join(", ") : "+30% of its effect";
+        return `<div class="row"><b>+${lv}</b><span>${it.name} <em>${it.kind}</em><small>Each level: ${what}.</small><small>${c ? `Next: ${costText(c.marks, c.mats)}` : "Fully tempered"}</small></span>
+          <span class="act">${c ? `<button class="go" data-temper="${id}" ${why ? "disabled" : ""}>${why ? why.toUpperCase() : `TEMPER +${lv + 1}`}</button>` : ""}</span></div>`;
+      }).join("");
+    }
+    for (const b of list.querySelectorAll("[data-build]")) b.addEventListener("click", () => { if (story.crafting.build(b.dataset.build)) { sfx.play("ultActivate"); hud.toast(`${HQ[b.dataset.build].name.toUpperCase()} BUILT`, "finisher"); story._refreshSet?.(); applyGear(); story.saveNow(); } renderHQ(); });
+    for (const b of list.querySelectorAll("[data-temper]")) b.addEventListener("click", () => { if (story.crafting.temper(b.dataset.temper)) { sfx.play("stone"); hud.toast(`${ITEMS[b.dataset.temper].name.toUpperCase()} +${story.inventory.temperOf(b.dataset.temper)}`, "finisher"); applyGear(); story.saveNow(); } renderHQ(); });
+  };
+  const openHQ = (kind = "hq") => new Promise((res) => { hqKind = kind; hqDone = res; sfx.play("ui"); renderHQ(); hqModal.hidden = false; state.modal = true; });
+  hqModal.querySelector("[data-hq-close]").addEventListener("click", () => { hqModal.hidden = true; state.modal = false; sfx.play("ui"); const r = hqDone; hqDone = null; r?.(); });
 
   // Grimoire: level and stats, page mastery (and evolution), and the Grimoire Tree.
   const grim = root.querySelector("[data-grimoire]"), grimDot = root.querySelector("[data-grim-dot]");

@@ -265,6 +265,7 @@ export class World {
     this.comboTimer = 0;
     this.ultimate = o.ultimate ?? true;
     this.pageGrowth = o.pages ?? true; // pages earn XP and evolve
+    this.pageXpMult = 1 + (o.pageXpBonus ?? 0); // the HQ library: mastery comes faster
     // Page mastery: shared with the story's Progress (core/progress.js) when there is one, so it carries over.
     this.progress = o.progress ?? null;
     this.pages = this.progress?.pages ?? Object.fromEntries(Object.keys(PAGES).map((slot) => [slot, { xp: 0, ready: false, branch: null }]));
@@ -600,7 +601,7 @@ export class World {
       if (ab?.id !== ability.id || !PAGES[slot]) continue;
       const page = this.pages[slot], before = pageLevel(slot, page.xp);
       if (before >= 5) return;
-      page.xp++;
+      page.xp += this.pageXpMult;
       const lv = pageLevel(slot, page.xp);
       if (lv > before) {
         this.emit({ type: "pageLevel", slot, level: lv, page: PAGES[slot] });

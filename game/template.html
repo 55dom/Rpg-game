@@ -326,6 +326,11 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .roaming .save-btn { display: none; }
 .map-card .ep-list button span { font-size: 13px; color: var(--muted); }
 .grim-card { width: min(860px, 100%); }
+.mats { text-align: left; font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0; }
+.mats b { color: var(--text); font-weight: 600; }
+.slot-list .row .act { flex: 0 0 auto; }
+.slot-list .row .act .go { padding: 7px 14px; font-size: 12px; margin: 0; }
+.slot-list .row.built > b { color: var(--gale); }
 .bonds { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: left; }
 .bond { background: #1d2131; border: 1px solid #343a50; border-radius: 10px; padding: 10px 12px; display: grid; gap: 6px; }
 .bond-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
@@ -663,6 +668,16 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <div class="tree" data-grim-tree></div>
       <p class="hint">Level-ups give skill points. A page's last skill needs that page at level III.</p>
       <div class="start-buttons"><button class="go alt" data-grim-close>BACK</button></div>
+    </div>
+  </div>
+  <div class="modal" data-hq hidden>
+    <div class="modal-card slots-card grim-card">
+      <h2 data-hq-title>SQUAD BOARD</h2>
+      <p class="hint" data-hq-sub></p>
+      <div class="slot-list" data-hq-list></div>
+      <h3>MATERIALS</h3>
+      <p class="mats" data-hq-mats></p>
+      <div class="start-buttons"><button class="go alt" data-hq-close>BACK</button></div>
     </div>
   </div>
   <div class="modal" data-journal hidden>

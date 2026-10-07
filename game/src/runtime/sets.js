@@ -527,6 +527,34 @@ function buildLighthouse(scene, mobile) {
   const P = palette(scene, "lh"), PR = props(scene, K, P);
   PR.crate(-8.4, 13.6, { ry: 0.3 }); PR.crate(-8.5, 14.6, { ry: 1.1, s: 0.6 }); PR.barrel(-8.6, 12.3); PR.woodpile(-0.2, 16.6, { ry: 0 });
   const cat = buildCritters(scene, K, [{ kind: "cat", n: 1, area: { x: -3.2, z: 9.7, r: 0.01 }, still: true }], rng);
+  // The Squad HQ (data/crafting.js): a notice board, the workbench, and each room once it's built.
+  const board = add(MB.CreateBox("lh-squadBoard", { width: 1.4, height: 1.1, depth: 0.1 }, scene), 0.02); board.position.set(1.0, 1.4, 11.6); board.material = toon(scene, "lh-boardMat", "#7a5232");
+  for (const [x, y, hex] of [[0.6, 1.6, "#f2efe6"], [1.25, 1.55, "#e6c890"], [0.9, 1.2, "#f2efe6"], [1.35, 1.2, "#c8607a"]]) { const n = add(MB.CreatePlane("lh-note", { width: 0.32, height: 0.36 }, scene)); n.position.set(x, y, 11.54); n.rotation.y = Math.PI; n.material = P(hex); }
+  for (const x of [0.4, 1.6]) { const leg = add(MB.CreateBox("lh-boardLeg", { width: 0.08, height: 1.0, depth: 0.08 }, scene)); leg.position.set(x, 0.5, 11.6); leg.material = rack.material; }
+  const bench = add(MB.CreateBox("lh-workbench", { width: 1.8, height: 0.9, depth: 0.8 }, scene), 0.03); bench.position.set(-9.5, 0.45, 2.5); bench.material = rack.material;
+  for (const [dx, hex] of [[-0.5, "#8a8a90"], [0.2, "#5a5e66"], [0.6, "#c9a24a"]]) { const t = add(MB.CreateBox("lh-tool", { width: 0.25, height: 0.06, depth: 0.12 }, scene)); t.position.set(-9.5 + dx, 0.93, 2.5); t.rotation.y = dx; t.material = P(hex); }
+  const forge = K.when("$HQ_FORGE");
+  const anvil = add(MB.CreateBox("lh-anvil", { width: 0.7, height: 0.45, depth: 0.35 }, scene), 0.02); anvil.parent = forge; anvil.position.set(-10.6, 0.55, 0.8); anvil.material = P("#3a3a42");
+  const anvilBase = add(MB.CreateCylinder("lh-anvilBase", { height: 0.35, diameter: 0.4, tessellation: 8 }, scene), 0.015); anvilBase.parent = forge; anvilBase.position.set(-10.6, 0.17, 0.8); anvilBase.material = P("#5a3a22");
+  const hearth = add(MB.CreateBox("lh-forgeHearth", { width: 1.2, height: 1.0, depth: 1.0 }, scene), 0.03); hearth.parent = forge; hearth.position.set(-11.6, 0.5, 2.6); hearth.material = P("#6a625a");
+  const coals = add(MB.CreateBox("lh-coals", { width: 0.8, height: 0.12, depth: 0.6 }, scene)); coals.parent = forge; coals.position.set(-11.6, 1.04, 2.6); coals.material = glow(scene, "lh-coalGlow", "#ff7a2a");
+  const kitchen = K.when("$HQ_KITCHEN");
+  const stove = add(MB.CreateBox("lh-stove", { width: 1.0, height: 0.9, depth: 0.8 }, scene), 0.03); stove.parent = kitchen; stove.position.set(8.2, 0.45, 8.2); stove.material = P("#2a2a30");
+  const stew = add(MB.CreateCylinder("lh-stewPot", { height: 0.45, diameter: 0.6, tessellation: 12 }, scene), 0.02); stew.parent = kitchen; stew.position.set(8.2, 1.12, 8.2); stew.material = P("#5a5e66");
+  const steam = add(MB.CreateSphere("lh-steam", { diameter: 0.35, segments: 6 }, scene)); steam.parent = kitchen; steam.position.set(8.2, 1.55, 8.2); steam.material = glow(scene, "lh-steamMat", "#f2efe6", 0.35, true);
+  const ring2 = K.when("$HQ_RING");
+  for (const [x, z] of [[-4.6, -8.2], [4.6, -8.2], [-4.6, 0.2], [4.6, 0.2]]) {
+    const pole = add(MB.CreateCylinder("lh-ringPole", { height: 2.6, diameter: 0.1, tessellation: 6 }, scene), 0.015); pole.parent = ring2; pole.position.set(x, 1.3, z); pole.material = rack.material;
+    const flag = add(MB.CreateBox("lh-ringFlag", { width: 0.5, height: 0.35, depth: 0.02 }, scene), 0.01); flag.parent = ring2; flag.position.set(x + 0.27, 2.35, z); flag.material = P("#e6b54e");
+  }
+  const weaponRack = add(MB.CreateBox("lh-weaponRack", { width: 1.6, height: 1.3, depth: 0.2 }, scene), 0.02); weaponRack.parent = ring2; weaponRack.position.set(0, 0.65, -9.2); weaponRack.material = rack.material;
+  const library = K.when("$HQ_LIBRARY");
+  const shelf = add(MB.CreateBox("lh-bookshelf", { width: 1.6, height: 2.0, depth: 0.45 }, scene), 0.03); shelf.parent = library; shelf.position.set(-1.6, 1.0, 10.15); shelf.material = rack.material;
+  for (let k = 0; k < 12; k++) { const b = add(MB.CreateBox("lh-book", { width: 0.1, height: 0.32, depth: 0.3 }, scene)); b.parent = library; b.position.set(-2.2 + (k % 6) * 0.22, 0.75 + Math.floor(k / 6) * 0.6, 9.95); b.material = P(["#c8607a", "#6a8acb", "#7ac06a", "#e6b54e"][k % 4]); }
+  const infirmary = K.when("$HQ_INFIRMARY");
+  const tent = add(MB.CreateCylinder("lh-tent", { height: 2.4, diameterTop: 0, diameterBottom: 3.0, tessellation: 6 }, scene), 0.04); tent.parent = infirmary; tent.position.set(10.5, 1.2, 12); tent.material = P("#ece6d8");
+  const cross = add(MB.CreateBox("lh-tentMark", { width: 0.5, height: 0.14, depth: 0.02 }, scene)); cross.parent = infirmary; cross.position.set(10.5, 1.3, 10.72); cross.material = P("#c8414f");
+  const cot = add(MB.CreateBox("lh-cot", { width: 0.8, height: 0.4, depth: 1.8 }, scene), 0.02); cot.parent = infirmary; cot.position.set(8.4, 0.2, 12.4); cot.material = P("#f2efe6");
   K.bake([beam, ...lanterns, newLantern, ...dummies.flatMap((d) => d.keep)]);
   let night = 0, nightTarget = 0;
   const DUSK = { clear: "#8a5f7c", fog: "#c08070", fogDensity: 0.012, hemi: [0.65, "#ffd2b0", "#4a3a5a"], sun: [0.85, "#ffb070", [0.6, -0.55, 0.6]], warm: 0 };
@@ -540,7 +568,7 @@ function buildLighthouse(scene, mobile) {
       if (name === "dusk") nightTarget = 0;
       if (name === "lantern") newLantern.setEnabled(true);
     },
-    outdoor: true,
+    outdoor: true, conditions: K.conditions,
     dummies: LIGHTHOUSE.dummies,
     /** A training dummy takes a hit: it rocks on its post, away from the blow. */
     hitDummy(x, z, from, strength = 1) {

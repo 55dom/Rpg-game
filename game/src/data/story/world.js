@@ -2,6 +2,7 @@
 
 import { CAFE_SCRIPT } from "./cafe.js";
 import { BOND_SCRIPT } from "../bonds.js";
+import { CRAFT_SCRIPT } from "../crafting.js";
 
 const BASE_SCRIPT = `
 title: W_Dagrun
@@ -329,4 +330,4 @@ Guard2: Watch your purse in the Lowmarket. And don't feed the pigeons. They unio
 `;
 
 /** Every free-roam talk node: the towns, the Gilded Spoon café (data/story/cafe.js), and bonds (data/bonds.js). */
-export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT;
+export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT + CRAFT_SCRIPT;

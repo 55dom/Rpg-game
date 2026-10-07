@@ -126,7 +126,8 @@ const gate = (z) => [-2, z - 0.3, 2, z + 0.3];
 export const ZONES = {
   lighthouse: {
     id: "lighthouse", name: "The Lantern Lighthouse", region: "Dry Sea of Marrow", stage: "lighthouse",
-    bounds: { rect: [-17, -17, 17, 17], solids: [circle(-9, 9, 2.6), box(-7.6, 10.6, -0.4, 15.6), box(4.1, 3.4, 5.9, 8.6)] },
+    bounds: { rect: [-17, -17, 17, 17], solids: [circle(-9, 9, 2.6), box(-7.6, 10.6, -0.4, 15.6), box(4.1, 3.4, 5.9, 8.6),
+      box(-10.45, 2.05, -8.55, 2.95), box(0.25, 11.5, 1.75, 11.7)] }, // + the workbench and the squad board
     spawn: { x: 0, z: 2, yaw: 0 },
     cast: [
       { id: "dagrun", look: "dagrun", x: -7, z: 5.6, yaw: 0.8, node: "W_Dagrun" }, // asleep in his chair: no routine
@@ -143,6 +144,12 @@ export const ZONES = {
         routine: { role: "civilian", steps: [{ do: "work", at: [-2.6, 9.6], face: Math.PI * 0.9, anim: "read", dur: [14, 20] }, { do: "idle", at: [1.6, 10.9], face: 0, dur: [4, 6] }] } },
     ],
     shelters: [[-5, 9.6], [-3, 9.6], [-1.8, 9.8]], // under the keeper's house eaves
+    // The Squad HQ: the board (rooms), the workbench (tempering) and, once there's a kitchen, the day's meal.
+    pickups: [
+      { id: "squadBoard", x: 1.0, z: 10.9, show: "1", ui: "hq", marker: false, label: "Read the squad board (HQ rooms)" },
+      { id: "workbench", x: -9.5, z: 1.7, show: "1", ui: "temper", marker: false, label: "Use the workbench (temper gear)" },
+      { id: "meal", x: 5, z: 2.9, show: "$HQ_KITCHEN", node: "W_Meal", marker: false, label: "Sit down for Dagrun's stew" },
+    ],
     exits: [
       { id: "road", rect: [-17, -17, 17, -15.5], to: "aurelin", spawn: "gate", label: "The road to Aurelin" },
       { id: "west", rect: [-17, -12, -15.5, 4], to: "thornwick", spawn: "lighthouse", label: "West across the Dry Sea to Thornwick" },
