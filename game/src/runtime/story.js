@@ -564,7 +564,7 @@ export class StoryPlayer {
     this.talker = cast?.actor ? this.stage.get(cast.actor) : null;
     if (cast?.actor) { // turn first, then frame, so close-ups catch the face
       const cur = this.currentShot;
-      const other = cur.kind === "two" && cur.ids.includes(cast.actor) ? cur.ids.find((i) => i !== cast.actor) : null;
+      const other = cur?.kind === "two" && cur.ids.includes(cast.actor) ? cur.ids.find((i) => i !== cast.actor) : null; // no shot yet: a voice through a door
       this.stage.lookAt(cast.actor, other);
     }
     if (s.speaker) this._autoFrame(cast?.actor);
@@ -576,6 +576,7 @@ export class StoryPlayer {
   _autoFrame(actorId) {
     if (!actorId || this.stage.get(actorId) == null) return;
     const cur = this.currentShot;
+    if (!cur) { this._shot("on", [actorId]); return; }
     if (cur.kind === "two" && cur.ids[1] === actorId) { this._shot("two", [cur.ids[1], cur.ids[0]]); return; } // reverse angle
     if (cur.kind === "on" && cur.ids[0] === actorId) { // re-aim if they turned since the shot was set
       const a = this.stage.get(actorId), yaw = a.targetYaw ?? a.yaw;
