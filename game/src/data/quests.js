@@ -64,7 +64,7 @@ export const QUESTS = {
       { text: "Something old is waking in the Tower of Choosing (world map). Go and see.", done: "$GALEN_DEFEATED" },
       { text: "Something huge croaks in the flooded cistern under the Undercroft. Go down, and bring the squad.", done: "$GULLMAW_DEFEATED" },
     ],
-    summary: "A deacon, a dead knight and a clockwork judge, all working for the same choir. Lio has started a wall of notes.",
+    summary: "A deacon, a dead knight and a winged thing from the cistern, all working for the same choir. Lio has started a wall of notes.",
     reward: { marks: 150, xp: 400, flags: { MERIT: 30, REP_SQUAD: 6 }, bond: { bas: 8, juno: 8 } },
   },
 };
