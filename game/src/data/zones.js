@@ -269,7 +269,7 @@ export const ZONES = {
       { id: "sentinel", rect: [-12, 13, 12, 26], at: { x: 0, z: 19, r: 4 }, wave: ["clockwork", "rat", "rat", "rat"], flag: "UC_ROOM2", lock: [gate(10), gate(26)], label: "CLOCKWORK SENTINEL" },
       { id: "court", rect: [-14, 35, 14, 46], at: { x: 0, z: 40, r: 5 }, wave: ["clockwork", "clockwork", "rat", "rat"], flag: "UNDERCROFT_CLEARED", lock: [gate(32)], label: "THE GEAR HALL" },
       // B5: once Galen has fallen, the Gear Hall becomes a courtroom.
-      { id: "magistrate", rect: [-14, 35, 14, 46], at: { x: 0, z: 38, r: 5 }, wave: ["magistrate"], boss: true, squad: ["bas", "juno"], when: "$UNDERCROFT_CLEARED and $GALEN_DEFEATED", flag: "MAGISTRATE_DEFEATED", lock: [gate(32)], label: "THE CLOCKWORK COURT" },
+      { id: "gullmaw", rect: [-14, 35, 14, 46], at: { x: 0, z: 38, r: 5 }, wave: ["gullmaw"], boss: true, squad: ["bas", "juno"], when: "$UNDERCROFT_CLEARED and $GALEN_DEFEATED", flag: "GULLMAW_DEFEATED", lock: [gate(32)], label: "THE DROWNED CISTERN" },
     ],
     exits: [{ id: "stairs", rect: [-3, -34, 3, -33], to: "aurelin", spawn: "undercroft", label: "The stairs up to the Lowmarket" }],
     arrivals: { aurelin: { x: 0, z: -30, yaw: 0 } },

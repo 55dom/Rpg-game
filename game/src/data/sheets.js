@@ -23,6 +23,7 @@ export const BUILDS = Object.freeze({
   stocky:   { hip: 0.9,  sw: 0.33, cw: 0.29, ww: 0.27, hw: 0.26, depth: 0.78, thigh: 0.112, knee: 0.066, calf: 0.076, ankle: 0.042, arm: 0.068, hand: 1.12 },
   frail:    { hip: 0.95, sw: 0.24, cw: 0.19, ww: 0.17, hw: 0.185, depth: 0.68, thigh: 0.074, knee: 0.05, calf: 0.052, ankle: 0.032, arm: 0.045, hand: 0.95 },
   child:    { hip: 0.9,  sw: 0.23, cw: 0.2, ww: 0.18, hw: 0.19, depth: 0.74, thigh: 0.088, knee: 0.056, calf: 0.064, ankle: 0.04, arm: 0.054, hand: 1.05 },
+  squat:    { hip: 0.74, sw: 0.46, cw: 0.4, ww: 0.44, hw: 0.4, depth: 0.9, thigh: 0.17, knee: 0.1, calf: 0.12, ankle: 0.07, arm: 0.1, hand: 1.4 }, // a toad: all belly
   brute:    { hip: 0.86, sw: 0.42, cw: 0.36, ww: 0.3, hw: 0.3, depth: 0.82, thigh: 0.14, knee: 0.085, calf: 0.1, ankle: 0.06, arm: 0.09, hand: 1.35 },
 });
 
@@ -192,7 +193,8 @@ export const SHEETS = Object.freeze({
   galen: { build: "broad", gait: "soldier", idle: "still",
     outfit: { top: "#6a4a3a", hem: "thigh", sleeves: "long", legs: "#4a3a32", boots: "tall", bootColor: "#3a2a22", breastplate: "#8a5a3a", pauldrons: "#7a4a2a",
       bracers: "#8a5a3a", gloves: "#4a3a32", tattered: "#4a3a2a", belt: "#3a2a1a", grime: 0.7 } },
-  magistrate: { build: "brute", gait: "machine", idle: "still", outfit: { top: "#2a2430", hem: "ankle", sleeves: "long", legs: "#a07a3a", boots: "bare", bootColor: "#6a5222", machine: true, embroidery: "#c9a24a" } },
+  gullmaw: { build: "squat", gait: "heavy", idle: "still", outfit: { top: "#2f5a4a", hem: null, sleeves: "long", legs: "#2f5a4a", boots: "bare", bootColor: "#2a4a3c",
+    amphibian: true, belly: "#d9c98a", warts: "#d8862a", frill: "#c8506a", web: "#4a8a6a", claw: "#e8dcc0" } },
   clockwork: { build: "slim", gait: "machine", idle: "still", outfit: { top: "#a8822e", hem: null, sleeves: "long", legs: "#a8822e", boots: "bare", bootColor: "#6a5222", machine: true } },
 });
 

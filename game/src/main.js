@@ -109,7 +109,7 @@ export function boot(doc = document) {
 
   const addView = (f) => {
     if (views.has(f) || f.traits?.dummy) return; // training dummies are part of the set (they rock on their posts)
-    if (LOOKS[f.kind]?.form === "object") { views.set(f, new ObjectView(scene, f.kind, f.id, LOOKS[f.kind])); return; } // bells, seals, turrets, cages
+    if (LOOKS[f.kind]?.form === "object") { views.set(f, new ObjectView(scene, f.kind, f.id, LOOKS[f.kind])); return; } // bells, seals, egg sacs, bubbles
     const rig = new Rig(scene, f.kind, f.id);
     views.set(f, rig);
     trails.set(f, new Trail(scene, `${f.id}-trail`, LOOKS[f.kind]?.trail ?? (f.team === Team.Player ? TRAIL_COLORS.default : TRAIL_COLORS.enemy)));
@@ -286,7 +286,7 @@ export function boot(doc = document) {
         case "silenceZone": silenceFx.add(ev.zone); sfx.play("heal", 0.7); break;
         case "silenceEnd": silenceFx.remove(ev.zone); break;
         case "silenced": hud.toast(ev.what === "dodge" ? "DODGE SILENCED · PARRY!" : "SILENCED", "danger"); sfx.play("block", 0.5); break;
-        case "wave": vfx.ring({ x: ev.wave.x, y: 0.08, z: ev.wave.z }, ev.wave.maxR, { toll: "#c9b4ff", rot: "#c86a2a", gavel: "#ffd36a" }[ev.wave.kind] ?? "#ffffff", ev.wave.maxR / ev.wave.speed); sfx.play(ev.wave.kind === "rot" ? "mud" : "slam", 0.7); camera.shake(0.2); break;
+        case "wave": vfx.ring({ x: ev.wave.x, y: 0.08, z: ev.wave.z }, ev.wave.maxR, { toll: "#c9b4ff", rot: "#c86a2a", splash: "#6ac8d8" }[ev.wave.kind] ?? "#ffffff", ev.wave.maxR / ev.wave.speed); sfx.play(ev.wave.kind === "rot" ? "mud" : "slam", 0.7); camera.shake(0.2); break;
         case "bells": hud.toast("THE BELLS RING", "danger"); hud.banner("NO SPELLS ANYWHERE · BREAK THE THREE BELLS"); silenceFx.all(true); break;
         case "bellsBroken": hud.toast("SILENCE BROKEN", "break"); silenceFx.all(false); impact(3, true); sfx.play("postureBreak"); break;
         case "wardBroken": hud.toast("HER WARD FALLS", "break"); break;
@@ -296,8 +296,8 @@ export function boot(doc = document) {
         case "oath": hud.toast("THE OATH", "danger"); hud.banner("NOTHING STAGGERS HIM · BREAK THE THREE VOW-SEALS"); sfx.play("bossIntro"); break;
         case "oathBroken": hud.toast("THE VOW BREAKS", "break"); vfx.flash(ev.at, 4, "#ff7a2a", 0.3); impact(4, true); camera.kick(0.8); sfx.play("postureBreak"); break;
         case "desperate": hud.toast("DESPERATION", "danger"); hud.banner("HE CHARGES THE WHOLE HALL · DODGE"); break;
-        case "courtInSession": hud.toast("COURT IN SESSION", "danger"); hud.banner("THE CLOCK HAND SWEEPS · JUMP IT"); clockHand.start(ev.center, ev.length); sfx.play("ultActivate"); break;
-        case "sentence": hud.toast("SENTENCED", "danger"); hud.banner(ev.target ? `${ev.target.stats.name.toUpperCase()} IS CAGED · BREAK THE CAGE` : "THE TURRETS ARE BACK"); sfx.play("slam"); break;
+        case "flood": hud.toast("THE CISTERN FLOODS", "danger"); hud.banner("THE WATER JET SWEEPS · JUMP IT"); waterJet.start(ev.center, ev.length); sfx.play("ultActivate"); break;
+        case "swallowed": hud.toast("SWALLOWED!", "danger"); hud.banner(ev.target ? `${ev.target.stats.name.toUpperCase()} IS STUCK IN A SLIME BUBBLE · BURST IT` : "MORE EGG SACS"); sfx.play("mud"); break;
         case "freed": hud.toast(`${ev.fighter.stats.name.toUpperCase()} IS FREE`, "clear"); break;
         case "teamAttack": {
           const b = BONDS[ev.kind];
@@ -834,11 +834,11 @@ export function boot(doc = document) {
   journal.querySelector("[data-journal-close]").addEventListener("click", () => { journal.hidden = true; state.modal = false; sfx.play("ui"); });
   menu("journal", openJournal);
 
-  // Arc 1–2 boss visuals: Ilse's silence zones (violet discs), the Magistrate's clock hand.
+  // Arc 1–2 boss visuals: Ilse's silence zones (violet discs), Gullmaw's water jet.
   const BOSS_PHASE_TEXT = {
     ilse: { 2: ["THE CHOIR PIT", "PHASE 2 · SHE CALLS HER ACOLYTES · WARDED WHILE THEY STAND"], 3: ["THE BELLS", "PHASE 3 · BREAK THE BELLS"], 4: ["HUSH", "PHASE 4 · SHE CAN SILENCE YOUR DODGE"] },
     galen: { 2: ["ROT", "PHASE 2 · RINGS OF RUST · JUMP THEM"], 3: ["THE OATH", "PHASE 3 · BREAK THE VOW-SEALS"], 4: ["DESPERATION", "PHASE 4 · THE LAST CHARGE"] },
-    magistrate: { 2: ["COURT IN SESSION", "PHASE 2 · THE CLOCK HAND"], 3: ["THE SENTENCE", "PHASE 3 · BREAK THE CAGE"] },
+    gullmaw: { 2: ["THE FLOOD", "PHASE 2 · THE WATER JET · JUMP IT"], 3: ["SWALLOWED", "PHASE 3 · BURST THE SLIME BUBBLE"] },
   };
   const silenceFx = (() => {
     const zones = new Map(), mat = glow(scene, "silenceMat", "#9a7aff", 0.28, true), fieldMat = glow(scene, "silenceAllMat", "#5a3a9a", 0.12);
@@ -850,16 +850,28 @@ export function boot(doc = document) {
       clear() { for (const d of zones.values()) d.dispose(); zones.clear(); this.all(false); },
     };
   })();
-  const clockHand = (() => {
-    let mesh = null, warnMat = glow(scene, "handWarn", "#ff5a3a", 0.35, true), handMat = glow(scene, "handMat", "#ffd36a", 0.85);
+  const waterJet = (() => { // a hose of cistern water from Gullmaw's spot, sweeping the floor; a faint ripple line while it warns
+    let node = null, beam = null, foam = null;
+    const warnMat = glow(scene, "jetWarn", "#6ac8d8", 0.25, true), jetMat = glow(scene, "jetMat", "#8ae0f0", 0.75), foamMat = glow(scene, "jetFoam", "#e8fbff", 0.55, true);
     return {
-      start(center, length) { this.stop(); mesh = BB.MeshBuilder.CreateBox("clockHand", { width: 0.5, height: 0.25, depth: length }, scene); mesh.setPivotPoint(new BB.Vector3(0, 0, -length / 2)); mesh.position.set(center.x, 0.15, center.z + length / 2); mesh.material = warnMat; mesh.isPickable = false; },
-      update() { const h = world.boss?.boss?.hand; if (!mesh) return; if (!h || !world.boss?.alive) { this.stop(); return; } mesh.material = h.warn > 0 ? warnMat : handMat; mesh.rotation.y = h.angle; },
-      stop() { mesh?.dispose(); mesh = null; },
+      start(center, length) {
+        this.stop(); const MB = BB.MeshBuilder;
+        node = new BB.TransformNode("waterJet", scene); node.position.set(center.x, 0, center.z);
+        beam = MB.CreateCylinder("jetBeam", { height: length, diameterTop: 0.7, diameterBottom: 0.35, tessellation: 10 }, scene);
+        beam.rotation.x = Math.PI / 2; beam.position.set(0, 0.35, length / 2); beam.parent = node; beam.material = warnMat; beam.isPickable = false;
+        foam = MB.CreateDisc("jetFoam", { radius: 0.9, tessellation: 14 }, scene);
+        foam.rotation.x = Math.PI / 2; foam.position.set(0, 0.05, length); foam.parent = node; foam.material = foamMat; foam.isPickable = false;
+      },
+      update() {
+        const h = world.boss?.boss?.jet; if (!node) return; if (!h || !world.boss?.alive) { this.stop(); return; }
+        beam.material = h.warn > 0 ? warnMat : jetMat; beam.scaling.x = beam.scaling.z = h.warn > 0 ? 0.4 : 1 + Math.sin(performance.now() / 60) * 0.08;
+        foam.setEnabled(h.warn <= 0); node.rotation.y = h.angle;
+      },
+      stop() { node?.dispose(); node = beam = foam = null; },
     };
   })();
 
-  resetBossFx = () => { silenceFx.clear(); clockHand.stop(); };
+  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); };
 
   // Squad HQ: the board (rooms to build) and the workbench (tempering gear). One screen, two modes.
   const hqModal = root.querySelector("[data-hq]");
@@ -1126,7 +1138,7 @@ export function boot(doc = document) {
       if (state.ghostTimer <= 0) { const rig = viewFor(world.player); if (rig) vfx.afterimage(rig); state.ghostTimer = 0.09; }
     }
 
-    clockHand.update();
+    waterJet.update();
     for (const [f, rig] of views) {
       const t = f.timeScale < 1 ? clamp01(f.timeAcc + alpha * f.timeScale) : alpha;
       rig.update(f, running ? t : 1, dt);

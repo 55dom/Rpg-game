@@ -10,8 +10,8 @@ import { AttackTokenPool, EnemyBrain, MoveIntent, CompanionBrain, AllyMove, STAN
 import { COMPANIONS } from "../data/companions.js";
 import { ENEMIES, WAVES } from "../data/enemies.js";
 import { HASK_STATS, HASK_HITBOXES, HASK_TUNING, haskOptions } from "../data/hask.js";
-import { HaskController, SeverinController, SparController, IlseController, GalenController, MagistrateController } from "./boss.js";
-import { ILSE_STATS, ILSE_HITBOXES, ilseOptions, GALEN_STATS, GALEN_HITBOXES, galenOptions, MAGISTRATE_STATS, MAGISTRATE_HITBOXES, magistrateOptions,
+import { HaskController, SeverinController, SparController, IlseController, GalenController, GullmawController } from "./boss.js";
+import { ILSE_STATS, ILSE_HITBOXES, ilseOptions, GALEN_STATS, GALEN_HITBOXES, galenOptions, GULLMAW_STATS, GULLMAW_HITBOXES, gullmawOptions,
   OBJECTS, OBJECT_HITBOXES, GALEN_TUNING } from "../data/bosses2.js";
 import { CAL_STATS, CAL_HITBOXES, calOptions } from "../data/cal.js";
 import { SEVERIN_STATS, SEVERIN_HITBOXES, severinOptions } from "../data/severin.js";
@@ -49,7 +49,7 @@ const BOSSES = {
   severin: { stats: SEVERIN_STATS, hitboxes: SEVERIN_HITBOXES, options: severinOptions, traits: {}, Controller: SeverinController, z: 6 },
   ilse: { stats: ILSE_STATS, hitboxes: ILSE_HITBOXES, options: ilseOptions, traits: { ranged: true }, Controller: IlseController, z: 6 },
   galen: { stats: GALEN_STATS, hitboxes: GALEN_HITBOXES, options: galenOptions, traits: { heavy: true, frontalGuard: true }, Controller: GalenController, z: 6 },
-  magistrate: { stats: MAGISTRATE_STATS, hitboxes: MAGISTRATE_HITBOXES, options: magistrateOptions, traits: { heavy: true, armoredAttacks: true }, Controller: MagistrateController, z: 7 },
+  gullmaw: { stats: GULLMAW_STATS, hitboxes: GULLMAW_HITBOXES, options: gullmawOptions, traits: { heavy: true, armoredAttacks: true }, Controller: GullmawController, z: 7 },
 };
 export const BOSS_KINDS = Object.freeze(Object.keys(BOSSES));
 
@@ -464,7 +464,7 @@ export class World {
   }
   get dummies() { return this.fighters.filter((f) => f.traits.dummy); }
 
-  /** Something a boss puts on the field (a bell, a vow-seal, a turret, a cage): immobile, breakable. */
+  /** Something a boss puts on the field (a bell, a vow-seal, an egg sac, a slime bubble): immobile, breakable. */
   spawnObject(kind, x, z, owner = null) {
     const O = OBJECTS[kind];
     ({ x, z } = constrain({ x, z }, O.stats.radius + 0.4, this.bounds)); // never inside a wall
@@ -1167,7 +1167,7 @@ export class World {
   _move(f) {
     const dt = SECONDS_PER_TICK;
     const busy = f.runner.isRunning;
-    if (f.traits.immobile) { // bells, seals, turrets, cages: turn to aim, never walk (their brains can ask for odd moves)
+    if (f.traits.immobile) { // bells, seals, egg sacs, bubbles: turn to aim, never walk (their brains can ask for odd moves)
       f.moveInput.x = f.moveInput.z = 0; f.vel.x = f.vel.z = 0; f.knock.x = f.knock.z = 0;
       if (f.alive && f.target?.alive && f.stats.turnRate) f.yaw = turn(f.yaw, angleTo(f.pos, f.target.pos), f.stats.turnRate);
       return;
@@ -1254,7 +1254,7 @@ export class World {
     if (this.silences.length) { for (const z of this.silences) z.frames--; const gone = this.silences.filter((z) => z.frames <= 0); if (gone.length) { this.silences = this.silences.filter((z) => z.frames > 0); for (const z of gone) this.emit({ type: "silenceEnd", zone: z }); } }
     if (this.dodgeHush > 0 && --this.dodgeHush === 0) this.emit({ type: "hushEnd" });
     if (this.waves.length) this._stepWaves();
-    for (const f of this.fighters) { // bells, seals, turrets and cages don't move; a caged ally can't act
+    for (const f of this.fighters) { // bells, seals, egg sacs and bubbles don't move; a trapped ally can't act
       if (f.traits.immobile && f.anchor) { f.pos.x = f.prev.x = f.anchor.x; f.pos.z = f.prev.z = f.anchor.z; f.pos.y = f.prev.y = 0; f.grounded = true; if (f.vel) { f.vel.x = f.vel.y = f.vel.z = 0; } if (f.knock) { f.knock.x = f.knock.z = 0; } }
       if (f.caged) {
         if (!f.caged.alive) { f.caged = null; this.emit({ type: "freed", fighter: f }); continue; }

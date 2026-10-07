@@ -1,5 +1,5 @@
-// Things bosses put on the field (data/bosses2.js OBJECTS): a silence bell, a rusted vow-seal, a court
-// turret, a sentence cage. Not characters, so not Rigs: a few cel-shaded parts that shake when hit,
+// Things bosses put on the field (data/bosses2.js OBJECTS): a silence bell, a rusted vow-seal, a bile
+// egg sac, a slime bubble. Not characters, so not Rigs: a few cel-shaded parts that shake when hit,
 // glow while they work, and crumble when broken. Same interface the render loop uses for Rigs.
 
 import { B, toon, glow, inkOutline } from "./look.js";
@@ -32,18 +32,24 @@ export class ObjectView {
         this.glowPart = part(MB.CreateBox("rune", { width: 0.4, height: 0.5, depth: 0.04 }), "#ff7a2a", 0, 1.05, 0.27, 0, true);
         break;
       }
-      case "turret": { // a brass cannon on a tripod that turns to aim
-        for (let i = 0; i < 3; i++) { const a = (i / 3) * Math.PI * 2; const leg = part(MB.CreateCylinder("leg", { height: 1.0, diameter: 0.08, tessellation: 5 }), "#3a3a42", Math.sin(a) * 0.3, 0.45, Math.cos(a) * 0.3, 0.01); leg.rotation.set(Math.cos(a) * 0.4, 0, -Math.sin(a) * 0.4); }
-        this.head = new BB.TransformNode(`${id}-head`, scene); this.head.parent = this.root; this.head.position.y = 1.05;
-        const body = part(MB.CreateSphere("drum", { diameter: 0.6, segments: 8 }), "#a07a3a", 0, 0, 0); body.parent = this.head;
-        const barrel = part(MB.CreateCylinder("barrel", { height: 0.7, diameter: 0.18, tessellation: 8 }), "#6a5222", 0, 0, 0.4); barrel.rotation.x = Math.PI / 2; barrel.parent = this.head;
-        this.glowPart = part(MB.CreateSphere("eye", { diameter: 0.16, segments: 6 }), "#ffd36a", 0, 0.12, 0.28, 0, true); this.glowPart.parent = this.head;
+      case "eggsac": { // a clutch of Gullmaw's eggs on a slime mound: glowing green spheres with dark yolks, one big spitting sac
+        part(MB.CreateSphere("mound", { diameter: 1.4, segments: 10 }, scene), "#3a5a3a", 0, 0.05, 0).scaling.set(1, 0.35, 1);
+        const egg = (x, y, z, d) => { part(MB.CreateSphere("egg", { diameter: d, segments: 8 }, scene), "#a8d86a", x, y, z, 0.012); part(MB.CreateSphere("yolk", { diameter: d * 0.4, segments: 6 }, scene), "#1a2a14", x, y + d * 0.05, z + d * 0.32, 0); };
+        for (const [x, z, d] of [[-0.4, 0.2, 0.32], [0.38, 0.25, 0.3], [-0.25, -0.35, 0.28], [0.3, -0.3, 0.34]]) egg(x, 0.28, z, d);
+        this.head = new BB.TransformNode(`${id}-head`, scene); this.head.parent = this.root; this.head.position.y = 0.7;
+        const sac = part(MB.CreateSphere("sac", { diameter: 0.75, segments: 10 }, scene), "#7ab84a", 0, 0, 0); sac.parent = this.head; sac.scaling.set(1, 1.15, 1);
+        this.glowPart = part(MB.CreateSphere("vent", { diameter: 0.2, segments: 6 }, scene), "#d8ff6a", 0, 0.05, 0.33, 0, true); this.glowPart.parent = this.head;
         break;
       }
-      case "cage": { // iron bars around a sentenced ally
-        for (let i = 0; i < 10; i++) { const a = (i / 10) * Math.PI * 2; part(MB.CreateCylinder("bar", { height: 2.4, diameter: 0.07, tessellation: 5 }), "#3a3f48", Math.sin(a) * 0.75, 1.2, Math.cos(a) * 0.75, 0.01); }
-        for (const y of [0.05, 2.4]) part(MB.CreateTorus("hoop", { diameter: 1.5, thickness: 0.08, tessellation: 18 }), "#3a3f48", 0, y, 0, 0.01);
-        this.glowPart = part(MB.CreateTorus("lock", { diameter: 0.3, thickness: 0.05, tessellation: 10 }), "#ffd36a", 0, 1.3, 0.78, 0, true);
+      case "bubble": { // a slime bubble around a swallowed ally: a wobbling translucent shell
+        const shell = MB.CreateSphere("bubble", { diameter: 2.0, segments: 16 }, scene);
+        shell.parent = this.root; shell.position.set(0, 1.0, 0); shell.isPickable = false;
+        const m = new BB.StandardMaterial(`${id}-bubbleMat`, scene);
+        m.diffuseColor = BB.Color3.FromHexString("#6ac8a8"); m.emissiveColor = BB.Color3.FromHexString("#1a4a3a");
+        m.specularColor = BB.Color3.FromHexString("#ffffff"); m.specularPower = 64; m.alpha = 0.42; m.backFaceCulling = false;
+        shell.material = m; this.meshes.push(shell); this.bubble = shell;
+        part(MB.CreateSphere("slime", { diameter: 1.6, segments: 8 }, scene), "#4a8a6a", 0, 0.02, 0, 0).scaling.set(1, 0.12, 1);
+        this.glowPart = part(MB.CreateTorus("ring", { diameter: 1.9, thickness: 0.05, tessellation: 20 }, scene), "#8ae0d0", 0, 1.0, 0, 0, true);
         break;
       }
       default: part(MB.CreateBox("thing", { size: 1 }), "#888888", 0, 0.5, 0);
@@ -59,6 +65,7 @@ export class ObjectView {
     if (this.swing) this.swing.rotation.z = Math.sin(this.time * 3) * 0.12 + shake * 2;
     else this.root.position.x += shake;
     if (this.glowPart) this.glowPart.scaling.setAll(1 + Math.sin(this.time * 6) * 0.1);
+    if (this.bubble) { const w = Math.sin(this.time * 4) * 0.05; this.bubble.scaling.set(1 + w, 1 - w, 1 + w); }
     if (!f.alive) { // crumble and sink
       this.dead = Math.min(1, this.dead + dt * 1.2);
       this.root.position.y = -this.dead * 2.6;

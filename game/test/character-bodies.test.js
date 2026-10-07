@@ -58,7 +58,7 @@ test("every character sheet is complete: a known build, gait, idle and an outfit
 test("bodies are fitted under the head: long slender legs, a torso that reaches the shoulders, no two builds alike", () => {
   for (const [k, b] of Object.entries(BUILDS)) {
     const legs = b.hip, torso = HEAD_Y - 0.32 - b.hip;
-    if (k !== "brute") assert.ok(legs > torso * 1.3, `${k}: legs longer than the torso (anime proportions)`); // brutes are squat on purpose
+    if (k !== "brute" && k !== "squat") assert.ok(legs > torso * 1.3, `${k}: legs longer than the torso (anime proportions)`); // monsters are squat on purpose
     assert.ok(b.ankle < b.calf && b.calf < b.thigh, `${k}: thigh > calf > ankle`);
     assert.ok(torso > 0.45, `${k}: room for a chest`);
   }

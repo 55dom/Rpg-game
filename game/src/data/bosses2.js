@@ -1,6 +1,6 @@
 // Arc 1–2 bosses (GDD §16 B3–B5), on the template: P1 learn → P2 strategy shift → P3 arena changes
 // → P4 hidden ability. Controllers live in sim/boss.js; the objects they summon (bells, vow-seals,
-// turrets, cages) are immobile fighters you break (data/enemies.js OBJECTS).
+// egg sacs, slime bubbles) are immobile fighters you break (data/enemies.js OBJECTS).
 
 import { hitSpec } from "../core/combat.js";
 import { defineAbility, EventType as E } from "../core/abilities.js";
@@ -94,55 +94,68 @@ export const GALEN_TUNING = Object.freeze({
   rot: hitSpec({ damage: 10, posture: 10, hitstop: 3, hitstun: 14, knockback: 2, applyTags: [["RUSTED", 360]] }),
 });
 
-// ---- B5 · The Clockwork Magistrate (Ep 12, the Undercroft, "The Clockwork Court") ---------------------
-// P1 gavel slams (an unblockable shockwave) and two turrets that fire cogs. P2 (70%) court in session:
-// a great hand of the clock sweeps the floor: jump it. P3 (40%) the sentence: it cages an ally (or, with
-// none beside you, rebuilds its turrets). Break the cage. Heavy: no launch until its posture breaks.
-export const MAGISTRATE_STATS = Object.freeze({
-  name: "The Clockwork Magistrate", maxHealth: 1600, maxPosture: 300, runSpeed: 2.4, circleSpeed: 1.2, turnRate: 0.08, radius: 0.9, height: 3.0,
-  boss: true, bossTitle: "BOSS 5 · THE CLOCKWORK COURT", defeatText: "COURT ADJOURNED", phaseMarks: [0.7, 0.4],
+// ---- B5 · Gullmaw, the Cistern Toad (Ep 12, the Undercroft, "The Drowned Cistern") -------------------
+// A toad-newt the size of a cart that the Choir fed ink to in the flooded cistern under Aurelin. Webbed
+// claws, a tongue that reels you in, a belly-flop that sends a splash ring out (jump it).
+// P1 two egg sacs on the cistern floor spit bile (it weighs you down). P2 (70%) the flood: it sprays a
+// high-pressure jet that sweeps the floor in a circle: jump it. P3 (40%) swallowed: it gulps an ally and
+// spits them out in a slime bubble (or, with none beside you, lays new egg sacs). Burst the bubble.
+// Heavy: no launch until its posture breaks.
+export const GULLMAW_STATS = Object.freeze({
+  name: "Gullmaw, the Cistern Toad", maxHealth: 1600, maxPosture: 300, runSpeed: 2.8, circleSpeed: 1.4, turnRate: 0.09, radius: 1.0, height: 2.6,
+  boss: true, bossTitle: "BOSS 5 · THE DROWNED CISTERN", defeatText: "THE CISTERN GOES STILL", phaseMarks: [0.7, 0.4],
 });
-export const MAGISTRATE_HITBOXES = Object.freeze({
-  Gavel: { center: [0, 1.0, 1.8], size: [2.4, 2.0, 2.4] },
-  Sweep: { center: [0, 1.0, 1.6], size: [4.4, 1.6, 2.6] },
-  Cog: { center: [0, 0, 0], size: [0.6, 0.6, 0.6], range: 16, hit: hitSpec({ damage: 9, posture: 10, hitstop: 3, hitstun: 14, knockback: 1.5 }) },
+const BILE = hitSpec({ damage: 9, posture: 10, hitstop: 3, hitstun: 14, knockback: 1.5, applyTags: [["WEIGHTED", 180]] });
+export const GULLMAW_HITBOXES = Object.freeze({
+  Slap: { center: [0, 1.0, 1.6], size: [3.6, 1.8, 2.4] },
+  Tongue: { center: [0, 1.1, 3.4], size: [0.8, 0.8, 5.2] },
+  Flop: { center: [0, 0.6, 0.4], size: [5.0, 1.8, 5.0] },
+  Bile: { center: [0, 0, 0], size: [0.7, 0.7, 0.7], range: 16, hit: BILE },
 });
-export const MAGISTRATE_ABILITIES = Object.freeze({
-  Gavel: defineAbility({ id: "Gavel", startup: 30, active: 4, recovery: 30,
-    hit: hitSpec({ damage: 24, posture: 28, hitstop: 9, hitstun: 26, knockback: 4, unblockable: true }),
-    events: [{ frame: 0, type: E.SpawnVfx, key: "glint" }, sound(26, "slam"), box(30, "Gavel", 4), custom(30, "gavel", 5), { frame: 30, type: E.CameraCue, key: "punch" }] }),
-  Sweep: defineAbility({ id: "Sweep", startup: 22, active: 6, recovery: 26,
-    hit: hitSpec({ damage: 16, posture: 18, hitstop: 6, hitstun: 20, knockback: 4 }), events: [sound(18, "swingHeavy"), box(22, "Sweep", 6)] }),
-  Verdict: defineAbility({ id: "Verdict", startup: 22, active: 2, recovery: 26, tags: ["projectile"],
-    events: [{ frame: 4, type: E.SpawnVfx, key: "starcharge" }, sound(18, "glint"), custom(22, "cogs", 5)] }),
+export const GULLMAW_ABILITIES = Object.freeze({
+  // Both webbed claws, a wide swipe.
+  Slap: defineAbility({ id: "Slap", startup: 18, active: 6, recovery: 24,
+    hit: hitSpec({ damage: 16, posture: 18, hitstop: 6, hitstun: 20, knockback: 4 }), events: [sound(14, "swingHeavy"), box(18, "Slap", 6)] }),
+  // The tongue shoots out and reels you in, right in front of its mouth.
+  Tongue: defineAbility({ id: "Tongue", startup: 22, active: 4, recovery: 26,
+    hit: hitSpec({ damage: 10, posture: 14, hitstop: 5, hitstun: 24, pull: 4.5 }),
+    events: [{ frame: 0, type: E.SpawnVfx, key: "glint" }, sound(18, "vacuum"), box(22, "Tongue", 4)] }),
+  // Leaps at you and lands on its belly: unblockable, and a splash ring rolls out. Jump it.
+  Flop: defineAbility({ id: "Flop", startup: 34, active: 6, recovery: 36,
+    hit: hitSpec({ damage: 24, posture: 28, hitstop: 9, hitstun: 26, knockback: 5, unblockable: true }),
+    events: [{ frame: 0, type: E.SpawnVfx, key: "glint" }, { frame: 10, type: E.Custom, key: "jump", value: 8 }, { frame: 10, type: E.Move, key: "toTarget", value: 6 },
+      sound(30, "slam"), box(34, "Flop", 6), custom(34, "splash", 6), { frame: 34, type: E.SpawnVfx, key: "mudwave" }, { frame: 34, type: E.CameraCue, key: "punch" }] }),
+  Spit: defineAbility({ id: "Spit", startup: 22, active: 2, recovery: 26, tags: ["projectile"],
+    events: [sound(18, "mud"), custom(22, "bile", 5)] }),
 });
-export const MAGISTRATE_POSES = Object.freeze({
-  rest: [0.4, 0.3, 0], Gavel: { from: [-2.6, 0.1, 0], to: [1.4, 0, 0], lean: 0.5 }, Sweep: { from: [-0.3, 1.5, 0], to: [0.2, -1.4, 0], lean: 0.3 },
-  Verdict: { from: [-1.4, 0.3, 0], to: [-0.4, 0.2, 0], lean: -0.1 },
+export const GULLMAW_POSES = Object.freeze({
+  rest: [0.7, 0.5, 0], Slap: { from: [-0.9, 1.6, 0], to: [0.7, -1.4, 0], lean: 0.4 }, Tongue: { from: [0.2, 0.2, 0], to: [-0.2, 0.1, 0], lean: 0.45 },
+  Flop: { from: [-2.4, 0, 0], to: [1.2, 0, 0], lean: 0.7 }, Spit: { from: [0.3, 0.4, 0], to: [0.2, 0.3, 0], lean: -0.3 },
 });
-export const magistrateOptions = (phase) => {
-  const A = MAGISTRATE_ABILITIES;
-  return [new AttackOption(A.Gavel, 0, 3.2, 3, 110), new AttackOption(A.Sweep, 0, 3, 2, 70), new AttackOption(A.Verdict, 4, 15, phase >= 2 ? 3 : 2, 150)];
+export const gullmawOptions = (phase) => {
+  const A = GULLMAW_ABILITIES;
+  return [new AttackOption(A.Slap, 0, 3, 3, 70), new AttackOption(A.Tongue, 3, 7.5, 2, 150), new AttackOption(A.Flop, 0, 8, 2, phase >= 2 ? 160 : 220),
+    new AttackOption(A.Spit, 4, 15, phase >= 2 ? 3 : 2, 150)];
 };
-export const MAGISTRATE_PHASES = Object.freeze([{ phase: 1, above: 0.7, turrets: 2 }, { phase: 2, above: 0.4, hand: true }, { phase: 3, above: 0, sentence: true }]);
-export const MAGISTRATE_TUNING = Object.freeze({
-  turretRadius: 7, handLength: 12, handSpeed: 0.011, handWidth: 0.5, handHeight: 0.75, handWarn: 90,
-  hand: hitSpec({ damage: 14, posture: 16, hitstop: 4, hitstun: 20, knockback: 3, unblockable: true }),
-  gavelRing: hitSpec({ damage: 10, posture: 12, hitstop: 3, hitstun: 16, knockback: 3, unblockable: true }),
+export const GULLMAW_PHASES = Object.freeze([{ phase: 1, above: 0.7, sacs: 2 }, { phase: 2, above: 0.4, jet: true }, { phase: 3, above: 0, swallow: true }]);
+export const GULLMAW_TUNING = Object.freeze({
+  sacRadius: 7, jetLength: 12, jetSpeed: 0.011, jetWidth: 0.5, jetHeight: 0.75, jetWarn: 90,
+  jet: hitSpec({ damage: 14, posture: 16, hitstop: 4, hitstun: 20, knockback: 3, unblockable: true }),
+  splash: hitSpec({ damage: 10, posture: 12, hitstop: 3, hitstun: 16, knockback: 3, unblockable: true, applyTags: [["WEIGHTED", 180]] }),
 });
 
 // ---- The things bosses put on the field: immobile, breakable ----------------------------------------
 export const OBJECT_HITBOXES = Object.freeze({
-  Cog: MAGISTRATE_HITBOXES.Cog,
+  Bile: GULLMAW_HITBOXES.Bile,
 });
-export const TURRET_ABILITIES = Object.freeze({
-  Fire: defineAbility({ id: "Fire", startup: 30, active: 2, recovery: 40, tags: ["projectile"],
-    events: [sound(26, "glint"), { frame: 30, type: E.Projectile, key: "Cog", value: 12 }] }),
+export const EGGSAC_ABILITIES = Object.freeze({
+  Spit: defineAbility({ id: "SacSpit", startup: 30, active: 2, recovery: 40, tags: ["projectile"],
+    events: [sound(26, "mud"), { frame: 30, type: E.Projectile, key: "Bile", value: 12 }] }),
 });
 export const OBJECTS = Object.freeze({
   bell: { stats: { name: "Silence Bell", maxHealth: 140, maxPosture: 999, runSpeed: 0, circleSpeed: 0, turnRate: 0, radius: 0.6, height: 2.4 }, shape: "bell" },
   seal: { stats: { name: "Rusted Vow-Seal", maxHealth: 160, maxPosture: 999, runSpeed: 0, circleSpeed: 0, turnRate: 0, radius: 0.55, height: 1.8 }, shape: "seal" },
-  turret: { stats: { name: "Court Turret", maxHealth: 120, maxPosture: 999, runSpeed: 0, circleSpeed: 0, turnRate: 0.2, radius: 0.5, height: 1.4 }, shape: "turret",
-    options: () => [new AttackOption(TURRET_ABILITIES.Fire, 0, 18, 1, 100)] },
-  cage: { stats: { name: "Sentence Cage", maxHealth: 180, maxPosture: 999, runSpeed: 0, circleSpeed: 0, turnRate: 0, radius: 0.7, height: 2.4 }, shape: "cage" },
+  eggsac: { stats: { name: "Bile Egg Sac", maxHealth: 120, maxPosture: 999, runSpeed: 0, circleSpeed: 0, turnRate: 0.2, radius: 0.6, height: 1.3 }, shape: "eggsac",
+    options: () => [new AttackOption(EGGSAC_ABILITIES.Spit, 0, 18, 1, 100)] },
+  bubble: { stats: { name: "Slime Bubble", maxHealth: 180, maxPosture: 999, runSpeed: 0, circleSpeed: 0, turnRate: 0, radius: 0.8, height: 2.2 }, shape: "bubble" },
 });

@@ -62,7 +62,7 @@ export const QUESTS = {
     stages: [
       { text: "The Deacon who nailed up the hymn is preaching east of the empty village. Face her.", done: "$ILSE_DEFEATED" },
       { text: "Something old is waking in the Tower of Choosing (world map). Go and see.", done: "$GALEN_DEFEATED" },
-      { text: "The Undercroft's Gear Hall has become a courtroom. Go down, and bring the squad.", done: "$MAGISTRATE_DEFEATED" },
+      { text: "Something huge croaks in the flooded cistern under the Undercroft. Go down, and bring the squad.", done: "$GULLMAW_DEFEATED" },
     ],
     summary: "A deacon, a dead knight and a clockwork judge, all working for the same choir. Lio has started a wall of notes.",
     reward: { marks: 150, xp: 400, flags: { MERIT: 30, REP_SQUAD: 6 }, bond: { bas: 8, juno: 8 } },

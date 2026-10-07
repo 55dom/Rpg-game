@@ -95,6 +95,36 @@ export function buildBody(rig, scene, id, L, kind, add, skin) {
     t.rotation.set(-0.3, 0, -s * 0.5); t.material = M("#6f8a3a");
   }
 
+  if (O.amphibian) { // the cistern toad: a pale belly, warts down the back, a fin-frill along the spine, a newt's tail
+    const belly = add(MB.CreateSphere("belly", { diameter: 1, segments: 10 }, scene), rig.body, 0, 0.42 * T, torsoR(0.42 * T) * depth - 0.07);
+    belly.scaling.set(ww * 1.55, T * 0.78, 0.2); belly.material = M(O.belly);
+    for (let i = 0; i < 16; i++) { // warts: on the back and shoulders, never on the belly
+      const y = T * (0.18 + r() * 0.78), a = Math.PI * (0.55 + r() * 0.9), rr = torsoR(y);
+      const wart = add(MB.CreateSphere("wart", { diameter: 0.05 + r() * 0.05, segments: 4 }, scene), rig.body, Math.sin(a) * rr, y, Math.cos(a) * rr * depth);
+      wart.material = M(O.warts);
+    }
+    const frill = add(MB.CreateSphere("frill", { diameter: 1, segments: 8 }, scene), rig.body, 0, 0.55 * T, -torsoR(0.55 * T) * depth - 0.05);
+    frill.scaling.set(0.025, T * 0.85, 0.16); frill.material = M(O.frill);
+    for (let i = 0; i < 5; i++) { // bony rays through the frill
+      const y = T * (0.95 - i * 0.18);
+      const ray = add(MB.CreateCylinder("frillRay", { height: 0.2, diameterTop: 0, diameterBottom: 0.04, tessellation: 4 }, scene), rig.body, 0, y, -torsoR(y) * depth - 0.04);
+      ray.rotation.x = -1.2; ray.material = M(O.warts);
+    }
+    // The tail: four bones from the base of the spine, each a tapering segment with a fin on top. The rig sways it.
+    rig.tailNodes = [];
+    let parent = node("tail0", rig.pelvis, 0, -0.02, -hw * depth * 0.85), rad = hw * 0.55;
+    parent.rotation.x = -0.75; // droops down and back to the floor
+    for (let i = 0; i < 4; i++) {
+      const len = 0.36 - i * 0.03, r1 = rad * 0.72;
+      const seg = add(MB.CreateCylinder("tailSeg", { height: len + 0.04, diameterTop: rad * 2, diameterBottom: r1 * 2, tessellation: 9 }, scene), parent, 0, 0, -len / 2);
+      seg.rotation.x = -Math.PI / 2; seg.scaling.x = 1.15; seg.material = top;
+      const fin = add(MB.CreateSphere("tailFin", { diameter: 1, segments: 6 }, scene), parent, 0, rad * 0.9, -len / 2);
+      fin.scaling.set(0.02, rad * 0.8, len * 1.0); fin.material = M(O.frill);
+      rig.tailNodes.push(parent);
+      const next = node(`tail${i + 1}`, parent, 0, 0, -len); next.rotation.x = 0.16; // curling up along the floor parent = next; rad = r1;
+    }
+  }
+
   // ---- legs ----
   rig.legs = [];
   const hx = hw * 0.55 * (S.gait === "heavy" ? 1.1 : 1);
@@ -120,15 +150,15 @@ export function buildBody(rig, scene, id, L, kind, add, skin) {
     const footMat = O.boots === "bare" ? M(O.bootColor) : boot;
     const foot = add(MB.CreateSphere("foot", { diameter: 1, segments: 6 }, scene), ankleN, 0, -0.03, 0.06);
     foot.scaling.set(an * 2.7, 0.075, 0.25); foot.material = footMat; dirty(foot, (O.grime ?? 0) + 0.2);
-    if (O.boots === "bare" && (O.moss || O.machine)) { // monsters: a broad webbed foot, three splayed toes, hooked claws
+    if (O.boots === "bare" && (O.moss || O.machine || O.amphibian)) { // monsters: a broad webbed foot, three splayed toes, hooked claws
       foot.scaling.set(an * 3.6, 0.08, 0.22);
       const web = add(MB.CreateCylinder("footWeb", { height: 0.012, diameter: 0.42, tessellation: 12, arc: 0.36 }, scene), ankleN, 0, -0.06, 0.08);
-      web.rotation.y = -Math.PI / 2 - Math.PI * 0.36; web.material = M(O.machine ? "#3a3022" : "#55602e"); // the webbing between the toes
+      web.rotation.y = -Math.PI / 2 - Math.PI * 0.36; web.material = M(O.web ?? (O.machine ? "#3a3022" : "#55602e")); // the webbing between the toes
       for (const [ang, len] of [[-0.55, 0.16], [0, 0.2], [0.55, 0.16]]) {
         const toe = add(MB.CreateCylinder("toe", { height: len, diameterTop: 0.035, diameterBottom: 0.055, tessellation: 6 }, scene), ankleN, Math.sin(ang) * len * 0.6, -0.05, 0.08 + Math.cos(ang) * len * 0.6);
         toe.rotation.set(Math.PI / 2, ang, 0); toe.material = footMat;
         const claw = add(MB.CreateCylinder("toeClaw", { height: 0.09, diameterTop: 0, diameterBottom: 0.035, tessellation: 5 }, scene), ankleN, Math.sin(ang) * (len + 0.05), -0.065, 0.08 + Math.cos(ang) * (len + 0.05));
-        claw.rotation.set(Math.PI / 2 + 0.5, ang, 0); claw.material = M(O.machine ? "#2a2622" : "#d8cfb4");
+        claw.rotation.set(Math.PI / 2 + 0.5, ang, 0); claw.material = M(O.claw ?? (O.machine ? "#2a2622" : "#d8cfb4"));
       }
     }
     if (O.boots !== "bare") {

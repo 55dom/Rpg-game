@@ -9,7 +9,7 @@ import { ENEMIES } from "../data/enemies.js";
 import { HASK_POSES } from "../data/hask.js";
 import { SEVERIN_POSES } from "../data/severin.js";
 import { SEVERIN_KIT_POSES } from "../data/severinKit.js";
-import { ILSE_POSES, GALEN_POSES, MAGISTRATE_POSES } from "../data/bosses2.js";
+import { ILSE_POSES, GALEN_POSES, GULLMAW_POSES } from "../data/bosses2.js";
 import { CAL_POSES } from "../data/cal.js";
 import { EventType } from "../core/abilities.js";
 import { buildBody, skinBake } from "./body.js";
@@ -86,11 +86,12 @@ export const LOOKS = {
     head: "face", hair: "long", hood: "#b8b0d0", angry: true, weapon: "staff", orb: "#c9b4ff", sash: true, eyeColor: "#6a5a9a", trail: "#c9b4ff" },
   galen: { poses: GALEN_POSES, scale: 1.18, skirt: 1.0, coat: "#6a4a3a", trim: "#9a5a32", hairColor: "#3a2a22", skin: PALETTE.mask,
     head: "helm", helm: "#8a5a3a", menace: true, weapon: "spear", shield: "heater", shieldColor: "#7a4a2a", shoulders: 1.4, trail: "#c86a2a" },
-  magistrate: { poses: MAGISTRATE_POSES, scale: 1.6, skirt: 1.3, coat: "#2a2430", trim: "#c9a24a", hairColor: "#c9a24a", skin: "#a07a3a",
-    head: "skull", weapon: "staff", orb: "#ffd36a", accent: "#2a2622", shoulders: 1.4, eyes: "#ffd36a", gear: true, trail: "#ffd36a" },
+  gullmaw: { poses: GULLMAW_POSES, scale: 1.55, skirt: 1.0, coat: "#2f5a4a", trim: "#2a4a3c", hairColor: "#2f5a4a", skin: "#3a6a56",
+    head: "toad", weapon: "claw", shoulders: 1.5, eyes: "#ffcf3a", belly: "#d9c98a", warts: "#d8862a", gills: "#c8506a", web: "#4a8a6a",
+    talon: "#e8dcc0", sac: "#e8b878", stoop: 0.22, trail: "#6ac8d8" },
   // Things bosses put on the field: drawn by ObjectView (runtime/objects.js).
   bell: { form: "object", shape: "bell", trail: "#c9b4ff" }, seal: { form: "object", shape: "seal", trail: "#ff7a2a" },
-  turret: { form: "object", shape: "turret", trail: "#ffd36a" }, cage: { form: "object", shape: "cage", trail: "#c9ccd2" },
+  eggsac: { form: "object", shape: "eggsac", trail: "#b8d86a" }, bubble: { form: "object", shape: "bubble", trail: "#8ae0d0" },
   bandit: { poses: ENEMIES.bandit.poses, scale: 1.02, skirt: 1.0, coat: "#4a3022", trim: "#8a2a2a", hairColor: "#3a2618", skin: "#d8a888",
     head: "face", hair: "spiky", hood: "#2e221c", mask: "#6a1e1e", angry: true, weapon: "blade", eyeColor: "#2a1a10", stoop: 0.06, trail: "#ff8a6a" },
   hask: { poses: HASK_POSES, scale: 2.0, skirt: 1.7, coat: "#2f3a26", trim: "#5c4a2e", hairColor: "#222a1a", skin: "#2f3a26",
@@ -392,6 +393,34 @@ export class Rig {
         const t = add(MB.CreateCylinder("moss", { height: 0.22, diameterTop: 0, diameterBottom: 0.16, tessellation: 5 }, scene), this.head, x, 0.12, z, 0.015);
         t.rotation.x = -0.7; t.material = M("moss", "#4f6a2a");
       }
+    } else if (L.head === "toad") { // Gullmaw: a broad flat toad's head, a mouth from ear to ear, bulging eyes on top, a throat sac, axolotl gills
+      const hide = dark, belly = M("jaw", L.belly), maw = M("maw", "#1a0a0e"), wartM = M("headWart", L.warts), gillM = M("gill", L.gills);
+      const skull = add(MB.CreateSphere("head", { diameter: 0.6, segments: 12 }, scene), this.head, 0, -0.02, 0.04);
+      skull.scaling.set(1.5, 0.62, 1.15); skull.material = hide;
+      this.head.position.y -= 0.15; this.head.position.z += 0.05; // no neck: the head sits down in the shoulders
+      const jaw = add(MB.CreateSphere("jaw", { diameter: 0.56, segments: 10 }, scene), this.head, 0, -0.15, 0.1);
+      jaw.scaling.set(1.4, 0.42, 0.88); jaw.material = belly;
+      // The mouth: one dark line wrapped around the front of the head, turned down at the corners.
+      const lip = []; for (let k = 0; k <= 16; k++) { const a = -1.75 + (k / 16) * 3.5; lip.push(new BB.Vector3(Math.sin(a) * 0.43, -0.105 - Math.abs(a) * 0.012, 0.04 + Math.cos(a) * 0.33)); }
+      const mouth = add(MB.CreateTube("mouth", { path: lip, radius: 0.02, tessellation: 6 }, scene), this.head, 0, 0, 0, 0); mouth.material = maw;
+      const eyeMat = glow(scene, `${id}-eyes`, L.eyes), pupil = M("pupil", "#0a0a0a");
+      for (const sx of [-1, 1]) {
+        const bulge = add(MB.CreateSphere("eyeBulge", { diameter: 0.22, segments: 8 }, scene), this.head, sx * 0.21, 0.12, 0.17); bulge.material = hide;
+        const eye = add(MB.CreateSphere("eye", { diameter: 0.17, segments: 8 }, scene), this.head, sx * 0.23, 0.13, 0.23, 0); eye.material = eyeMat;
+        const slit = add(MB.CreateBox("pupil", { width: 0.1, height: 0.022, depth: 0.012 }, scene), this.head, sx * 0.24, 0.13, 0.325, 0); slit.material = pupil; // a toad's sideways pupil
+        const lid = add(MB.CreateSphere("lid", { diameter: 0.23, segments: 6 }, scene), this.head, sx * 0.21, 0.19, 0.19); lid.scaling.set(1, 0.42, 1); lid.rotation.z = sx * 0.3; lid.material = hide; // a heavy, angry lid
+        const nos = add(MB.CreateSphere("nostril", { diameter: 0.035, segments: 4 }, scene), this.head, sx * 0.06, 0.0, 0.38, 0); nos.material = maw;
+        for (let g = 0; g < 3; g++) { // feathery gill stalks behind the jaw, like an axolotl's
+          const gl = add(MB.CreateCylinder("gill", { height: 0.26 - g * 0.03, diameterTop: 0.02, diameterBottom: 0.06, tessellation: 5 }, scene), this.head, sx * 0.4, 0.05 - g * 0.08, -0.06, 0.012);
+          gl.rotation.set(-0.5, 0, -sx * (1.1 + g * 0.25)); gl.material = gillM;
+        }
+      }
+      for (const [x, y, z] of [[-0.25, 0.08, -0.12], [0.18, 0.13, -0.16], [0.02, 0.15, -0.05], [-0.1, 0.14, 0.08], [0.32, 0.03, 0.02], [-0.34, 0.0, 0.0]]) {
+        const w = add(MB.CreateSphere("headWart", { diameter: 0.05, segments: 4 }, scene), this.head, x, y, z); w.material = wartM;
+      }
+      this.throatSac = add(MB.CreateSphere("throatSac", { diameter: 0.34, segments: 10 }, scene), this.head, 0, -0.27, 0.12, 0.015);
+      this.throatSac.material = M("sac", L.sac);
+      this._drool(scene, id, [[-0.36, -0.13, 0.2], [0.37, -0.13, 0.19], [0.1, -0.16, 0.34]], 0.09);
     } else if (L.head === "skull") { // the Clockwork Sentinel: a brass skull with a hinged jaw, deep red eyes and iron horns
       const brass = dark, iron = M("iron", "#2a2622"), eyeMat = glow(scene, `${id}-eyes`, L.eyes);
       const cran = add(softBox("cranium", { width: 0.4, height: 0.34, depth: 0.42 }, scene), this.head, 0, 0.04, 0); cran.material = brass;
@@ -516,7 +545,7 @@ export class Rig {
     const webHand = (parent, x, y, z, rotX, k) => {
       const hand = new BB.TransformNode(`${id}-webHand`, scene);
       hand.parent = parent; hand.position.set(x, y, z); hand.rotation.x = rotX; hand.scaling.setAll(k);
-      const skinM = L.gear ? accent : skin, webM = M("handWeb", L.gear ? "#3a3022" : "#55602e"), clawM = M("talon", L.talon ?? "#e7e1cf");
+      const skinM = L.gear ? accent : skin, webM = M("handWeb", L.web ?? (L.gear ? "#3a3022" : "#55602e")), clawM = M("talon", L.talon ?? "#e7e1cf");
       const palm = add(MB.CreateSphere("palm", { diameter: 0.2, segments: 7 }, scene), hand, 0, 0, 0, 0.02);
       palm.scaling.set(1.15, 0.6, 1.05); palm.material = skinM;
       const web = add(MB.CreateCylinder("handWeb", { height: 0.014, diameter: 0.5, tessellation: 12, arc: 0.36 }, scene), hand, 0, 0, 0.02);
@@ -951,6 +980,11 @@ export class Rig {
       else { const f = (k - 0.75) / 0.25; d.dropN.position.y = -len - f * f * 0.12; d.drop.scaling.setAll(1.2 * (1 - f)); } // it lands on the chest and joins the goo
       d.drop.setEnabled(fighter.alive || k < 0.75);
     }
+    if (this.throatSac) { // the throat sac puffs in and out; it balloons before a spit or a tongue
+      const charge = fighter.current && (fighter.current.id === "Spit" || fighter.current.id === "Tongue") ? 0.35 : 0;
+      const k = 1 + Math.max(0, Math.sin(this.time * 2.2)) * 0.25 + charge; this.throatSac.scaling.set(k, k * 0.85, k);
+    }
+    if (this.tailNodes) this.tailNodes.forEach((n, i) => { n.rotation.y = Math.sin(this.time * 2.4 - i * 0.7) * (0.18 + i * 0.06) * (1 + run); });
     if (this.gear) this.gear.rotation.y += dt * (fighter.current?.id === "Gearspin" ? 9 : 0.8);
     if (this.wardRing) { const w = fighter.alive && fighter.tags.has("WARDED"); this.wardRing.setEnabled(w); if (w) this.wardRing.rotation.y -= dt * 2.5; }
     if (this.skirt && !this.legs) this.skirt.rotation.x = bodyLean * 0.25;

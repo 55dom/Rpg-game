@@ -17,7 +17,7 @@ export const MATERIALS = Object.freeze({
 export const DROPS = Object.freeze({
   hound: ["hide", 0.3], acolyte: ["thread", 0.25], cantor: ["thread", 0.5], bulwark: ["plate", 0.4], beast: ["heart", 0.2],
   rat: ["tail", 0.2], clockwork: ["gear", 0.5], bandit: ["strap", 0.3],
-  hask: ["heart", 2], ilse: ["thread", 4], galen: ["plate", 4], magistrate: ["gear", 5],
+  hask: ["heart", 2], ilse: ["thread", 4], galen: ["plate", 4], gullmaw: ["heart", 5],
 });
 
 /** Tempering: what each level adds, by kind of gear, and what it costs. Charms grow their own effect by 30% a level. */

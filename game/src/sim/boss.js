@@ -291,7 +291,7 @@ export class SparController {
 
 // ---- Arc 1–2 bosses (data/bosses2.js) --------------------------------------------------------------
 import { ILSE_ABILITIES, ILSE_PHASES, ILSE_TUNING, ilseOptions, GALEN_ABILITIES, GALEN_PHASES, GALEN_TUNING, galenOptions,
-  MAGISTRATE_ABILITIES, MAGISTRATE_PHASES, MAGISTRATE_TUNING, magistrateOptions } from "../data/bosses2.js";
+  GULLMAW_ABILITIES, GULLMAW_PHASES, GULLMAW_TUNING, gullmawOptions } from "../data/bosses2.js";
 
 /** Shared phase plumbing: a new brain per phase, objects to clear when the boss falls. */
 class PhasedBoss {
@@ -404,40 +404,40 @@ export class GalenController extends PhasedBoss {
   }
 }
 
-export class MagistrateController extends PhasedBoss {
-  constructor(world, f) { super(world, f, MAGISTRATE_PHASES, magistrateOptions); this.hand = null; this.started = false; this.sentenced = false; }
+export class GullmawController extends PhasedBoss {
+  constructor(world, f) { super(world, f, GULLMAW_PHASES, gullmawOptions); this.jet = null; this.started = false; this.swallowed = false; }
   onCustom(key, value, a) {
-    const w = this.world, f = this.f, T = MAGISTRATE_TUNING;
-    if (key === "cogs") { this._cogFan("Cog", value, 0.22, a); return true; }
-    if (key === "gavel") { const fw = f.forward; w.addWave(f, f.pos.x + fw.x * 1.8, f.pos.z + fw.z * 1.8, { speed: 8, maxR: value + 1, width: 0.7, spec: T.gavelRing, ability: a, kind: "gavel" }); return true; }
+    const w = this.world, f = this.f, T = GULLMAW_TUNING;
+    if (key === "bile") { this._cogFan("Bile", value, 0.22, a); return true; }
+    if (key === "splash") { w.addWave(f, f.pos.x, f.pos.z, { speed: 8, maxR: value + 1, width: 0.7, spec: T.splash, ability: a, kind: "splash" }); return true; }
     return false;
   }
   enterPhase(p) {
-    const w = this.world, T = MAGISTRATE_TUNING;
-    if (p === 2) { this.hand = { angle: 0, warn: T.handWarn, hitSet: new Map() }; w.emit({ type: "courtInSession", fighter: this.f, hand: this.hand, center: this.home, length: T.handLength }); }
-    if (p === 3 && !this.sentenced) { // the sentence: an ally in a cage, or new turrets if you came alone
-      this.sentenced = true;
+    const w = this.world, T = GULLMAW_TUNING;
+    if (p === 2) { this.jet = { angle: 0, warn: T.jetWarn, hitSet: new Map() }; w.emit({ type: "flood", fighter: this.f, jet: this.jet, center: this.home, length: T.jetLength }); }
+    if (p === 3 && !this.swallowed) { // swallowed: an ally spat out in a slime bubble, or new egg sacs if you came alone
+      this.swallowed = true;
       const ally = w.companions.find((c) => c.alive) ?? null;
-      if (ally) { const cage = w.spawnObject("cage", ally.pos.x, ally.pos.z, this.f); this.objects.push(cage); ally.caged = cage; w.emit({ type: "sentence", fighter: this.f, target: ally, cage }); }
-      else { this._ring(2, T.turretRadius, "turret"); w.emit({ type: "sentence", fighter: this.f, target: null }); }
+      if (ally) { const bubble = w.spawnObject("bubble", ally.pos.x, ally.pos.z, this.f); this.objects.push(bubble); ally.caged = bubble; w.emit({ type: "swallowed", fighter: this.f, target: ally, bubble }); }
+      else { this._ring(2, T.sacRadius, "eggsac"); w.emit({ type: "swallowed", fighter: this.f, target: null }); }
     }
   }
   step() {
-    const w = this.world, f = this.f, T = MAGISTRATE_TUNING;
-    if (!this.started) { this.started = true; this._ring(this.rules.turrets ?? 2, T.turretRadius, "turret"); }
-    const h = this.hand;
+    const w = this.world, f = this.f, T = GULLMAW_TUNING;
+    if (!this.started) { this.started = true; this._ring(this.rules.sacs ?? 2, T.sacRadius, "eggsac"); }
+    const h = this.jet;
     if (!h) return;
     if (h.warn > 0) { h.warn--; return; }
-    h.angle += T.handSpeed * f.timeScale; // the great hand of the clock sweeps the floor
+    h.angle += T.jetSpeed * f.timeScale; // the jet of cistern water sweeps the floor in a circle
     const c = this.home, dx = Math.sin(h.angle), dz = Math.cos(h.angle);
     for (const t of w.fighters) {
-      if (t.team === f.team || !t.alive || t.pos.y > T.handHeight) continue;
+      if (t.team === f.team || !t.alive || t.pos.y > T.jetHeight) continue;
       const rx = t.pos.x - c.x, rz = t.pos.z - c.z, along = rx * dx + rz * dz;
-      if (along < 0 || along > T.handLength) continue;
-      if (Math.abs(rx * dz - rz * dx) > T.handWidth + t.stats.radius) continue;
+      if (along < 0 || along > T.jetLength) continue;
+      if (Math.abs(rx * dz - rz * dx) > T.jetWidth + t.stats.radius) continue;
       if ((h.hitSet.get(t) ?? -1e9) > w.frame - 60) continue; // once a second at most
       h.hitSet.set(t, w.frame);
-      w._resolve(f, t, { spec: T.hand, ability: MAGISTRATE_ABILITIES.Sweep, hitSet: new Set(), origin: { x: c.x + dx * along, y: 0.5, z: c.z + dz * along }, projectile: true });
+      w._resolve(f, t, { spec: T.jet, ability: GULLMAW_ABILITIES.Slap, hitSet: new Set(), origin: { x: c.x + dx * along, y: 0.5, z: c.z + dz * along }, projectile: true });
     }
   }
 }
