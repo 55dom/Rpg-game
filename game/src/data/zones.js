@@ -156,7 +156,7 @@ export const ZONES = {
     cast: [
       { id: "keeper", look: "keeper", x: 3, z: 24.6, yaw: Math.PI, node: "W_HallKeeper",
         routine: { role: "elder", steps: [{ do: "idle", at: [3, 24.6], face: Math.PI, dur: [9, 14] }, { do: "work", at: [-4.5, 24.4], face: 0, anim: "light", dur: [5, 7] }] } },
-      { id: "vendor", look: "vendor", x: 21, z: -4.4, yaw: Math.PI / 2, node: "W_Vendor", shop: "lowmarket",
+      { id: "vendor", look: "vendor", x: 21, z: -4.4, yaw: Math.PI / 2, node: "W_Vendor", shop: "lowmarket", after: "B_Shop_market",
         routine: { home: [25.6, 18], steps: [{ do: "work", at: [21, -4.4], face: Math.PI, anim: "hawk", dur: [10, 16] }, { do: "work", at: [23.6, -5.2], face: Math.PI, anim: "work", dur: [4, 6] }] } },
       { id: "guard", look: "guard", x: 5.4, z: -30, yaw: -0.4, node: "W_Guard",
         routine: { role: "guard", steps: [{ do: "idle", at: [5.4, -30], face: 0, dur: [8, 12] }, { do: "idle", at: [-5.4, -30], face: 0, dur: [8, 12] }] } },
@@ -168,7 +168,7 @@ export const ZONES = {
         routine: { home: [-12.3, -20], steps: [{ do: "work", at: [-4, -8], face: 0.4, anim: "hawk", dur: [10, 14] }, { do: "work", at: [-3, 9.5], face: Math.PI * 0.9, anim: "hawk", dur: [10, 14] }] } },
       { id: "guard2", look: "guard", x: -7, z: 23, yaw: Math.PI, node: "W_Guard2",
         routine: { role: "guard", steps: [{ do: "walk", to: [-7, 23] }, { do: "idle", at: [-7, 23], face: Math.PI, dur: [6, 9] }, { do: "walk", to: [7, 23] }, { do: "idle", at: [7, 23], face: Math.PI, dur: [6, 9] }] } },
-      { id: "cook", look: "cook", x: 5.6, z: -5.4, yaw: -0.6, node: "W_Cook",
+      { id: "cook", look: "cook", x: 5.6, z: -5.4, yaw: -0.6, node: "W_Cook", after: "B_Shop_cook",
         routine: { home: [25.6, 27], steps: [{ do: "work", at: [5.6, -5.4], face: -0.6, anim: "stir", dur: [14, 20] }, { do: "work", at: [6.8, -6.6], face: 2.6, anim: "work", dur: [4, 6] }] } },
     ],
     extras: [
@@ -279,7 +279,7 @@ export const ZONES = {
           { do: "work", at: [1.6, -2.0], face: 2.2, anim: "serve", dur: [3, 4] }, { do: "work", at: [-3.5, -2.4], face: -2.2, anim: "serve", dur: [3, 4] }] } },
       { id: "hazel", look: "hazel", x: -2.4, z: -4.4, yaw: 0, node: "W_Hazel",
         routine: { steps: [{ do: "work", at: [-2.6, -4.4], face: 0.3, anim: "sweep", dur: [8, 12] }, { do: "work", at: [-2.8, 2.2], face: -1.2, anim: "sweep", dur: [8, 12] }, { do: "work", at: [4.6, -1.2], face: 2, anim: "sweep", dur: [8, 12] }] } },
-      { id: "odette", look: "odette", x: 4.6, z: 4.4, yaw: Math.PI, node: "W_Odette",
+      { id: "odette", look: "odette", x: 4.6, z: 4.4, yaw: Math.PI, node: "W_Odette", after: "B_Shop_cafe",
         routine: { steps: [{ do: "work", at: [4.8, 4.3], face: Math.PI, anim: "write", dur: [10, 14] }, { do: "work", at: [3.6, 4.3], face: Math.PI, anim: "work", dur: [5, 7] }] } },
       { id: "juno", look: "junoMaid", x: -2.2, z: 1.2, yaw: -1.4, node: "W_JunoCafe",
         routine: { steps: [{ do: "work", at: [-3.4, 2.6], face: -2.0, anim: "write", dur: [6, 9] }, { do: "work", at: [1.4, -1.6], face: 2.4, anim: "serve", dur: [5, 7] }, { do: "idle", at: [0.2, 2.1], face: 0.2, dur: [4, 6] }] } },

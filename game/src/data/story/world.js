@@ -1,6 +1,7 @@
 // Talk nodes for free roam (the Lighthouse and Aurelin). Lines can change with story flags.
 
 import { CAFE_SCRIPT } from "./cafe.js";
+import { BOND_SCRIPT } from "../bonds.js";
 
 const BASE_SCRIPT = `
 title: W_Dagrun
@@ -327,5 +328,5 @@ Guard2: Watch your purse in the Lowmarket. And don't feed the pigeons. They unio
 ===
 `;
 
-/** Every free-roam talk node: the towns, plus the Gilded Spoon café (data/story/cafe.js). */
-export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT;
+/** Every free-roam talk node: the towns, the Gilded Spoon café (data/story/cafe.js), and bonds (data/bonds.js). */
+export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT;

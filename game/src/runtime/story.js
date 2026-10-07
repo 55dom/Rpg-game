@@ -13,6 +13,8 @@ import { B, toon2, glow } from "./look.js";
 import { ZONES, arrivalPoint } from "../data/zones.js";
 import { Inventory } from "../core/inventory.js";
 import { Progress } from "../core/progress.js";
+import { Bonds } from "../core/bonds.js";
+import { BONDS, BOND_GAIN } from "../data/bonds.js";
 import { EPISODE_XP, QUEST_XP } from "../data/skills.js";
 import { EPISODE_REWARD } from "../data/items.js";
 import { QuestLog } from "../core/quests.js";
@@ -218,7 +220,8 @@ class Stage {
       const back = 1.8 + sep * 0.25 + (sb - 1) * 1.5;
       const side = 1.3 + (wide - 1) * 0.9; // far enough to the side that the near shoulder frames the shot instead of filling it
       const pos = { x: b.pos.x - ux * back + rx * side, y: 2.05 * sb + (b.pos.y ?? 0), z: b.pos.z - uz * back + rz * side };
-      const look = { x: a.pos.x - ux * 0.3, y: 1.6 + (a.pos.y ?? 0), z: a.pos.z - uz * 0.3 };
+      const sa = a === this.getWorld().player ? 1 : this.actors.get(ids[0])?.rig.look.scale ?? 1;
+      const look = { x: a.pos.x - ux * 0.3, y: 1.72 * sa + (a.pos.y ?? 0), z: a.pos.z - uz * 0.3 }; // their face, whatever their height
       return { pos, look, fov: 0.62 };
     }
     return null;
@@ -317,8 +320,9 @@ export class StoryPlayer {
     this.player = { name: "Rook", pronouns: "they" };
     this.inventory = new Inventory();
     this.progress = new Progress();
+    this.bonds = new Bonds(this.flags); // bond state lives in the flags
     this.quests = new QuestLog(QUESTS, this.flags, {
-      onReward: (q, r) => { if (r.marks) this.inventory.earn(r.marks); this.gainXp(r.xp ?? QUEST_XP); },
+      onReward: (q, r) => { if (r.marks) this.inventory.earn(r.marks); this.gainXp(r.xp ?? QUEST_XP); for (const [id, n] of Object.entries(r.bond ?? {})) this.bondGain(id, n); },
       onEvent: (e) => this.ctx.onQuest?.(e),
     });
     let updating = false;
@@ -416,6 +420,14 @@ export class StoryPlayer {
     }
     if (this.active) this.autosave();
   }
+
+  /** A bond grows (talks, gifts, fights, quests); the host shows it. */
+  bondGain(id, n) {
+    const r = this.bonds.add(id, n);
+    if (r.gained || r.rankUp) this.ctx.onBond?.(id, r);
+    return r;
+  }
+  get day() { return this.clock?.day ?? 1; }
 
   /** Rook earns XP (fights, quests, episodes); the host shows level-ups. */
   gainXp(n, at = null) {
@@ -649,6 +661,12 @@ export class StoryPlayer {
         break;
       }
       case "earn": this.inventory.earn(Number(args[0]) || 0); this.ctx.hud.toast(`+${args[0]} MARKS`, "clear"); break;
+      case "gift": { // <<gift bas honeybun>>: give it; $GIFT_REACT says how it went (-1: already had one today)
+        const r = this.bonds.give(args[0], args[1], this.day);
+        this.flags.set("GIFT_REACT", r.react);
+        if (r.react >= 0) this.ctx.onBond?.(args[0], { ...r, gift: args[1] });
+        break;
+      }
       case "heal": { // a good meal: full health and mana
         const p = this.ctx.getWorld().player; p.combatant.health.fill(); p.mana?.fill();
         this.ctx.hud.toast(args[0] ? args.join(" ").toUpperCase() : "WARM AND FULL", "clear"); this.ctx.sfx.play("heal"); break;
@@ -854,7 +872,7 @@ export class StoryPlayer {
       if (near) {
         const c = this.ctx.controls;
         const device = c.device === "keyboard" && !c.keyboardUsed && this.ctx.root.classList.contains("is-touch") ? "touch" : c.device;
-        t.innerHTML = `<kbd>${this.ctx.hud.label(device, "Light")}</kbd>${near.pickup ? near.pickup.label : `Talk to ${Object.values(CAST).find((k) => k.actor === near.id)?.name ?? near.id}`}`;
+        t.innerHTML = `<kbd>${this.ctx.hud.label(device, "Light")}</kbd>${near.pickup ? near.pickup.label : `Talk to ${Object.values(CAST).find((k) => k.actor === near.id)?.name ?? near.id}${this.roaming && this.bonds.eventReady(near.id) ? " <b class=\"bond-ready\">♥ BOND EVENT</b>" : ""}`}`;
       }
     }
     if (near && !near.pickup) { const a = this.stage.get(near.id); if (!a.down) a.targetYaw = Math.atan2(p.pos.x - a.pos.x, p.pos.z - a.pos.z); }
@@ -919,9 +937,19 @@ export class StoryPlayer {
     this.stage.face("player", c.id);
     this.stage.face(c.id, "player");
     this._shot("two", [c.id, "player"]);
-    const node = x.talked.has(c.id) && c.again ? c.again : c.node;
+    // A squadmate whose bond has reached a gate: their bond event plays instead of small talk.
+    const event = this.roaming && BONDS[c.id] ? this.bonds.eventReady(c.id) : null;
+    const node = event ?? (x.talked.has(c.id) && c.again ? c.again : c.node);
     await this.runNode(node);
     if (!this.exploring) return true;
+    if (event) this.ctx.onBond?.(c.id, { event: true, rank: this.bonds.rank(c.id) });
+    if (this.roaming && BONDS[c.id]) { // the first chat of the day brings you closer; then a gift, if you have one
+      const r = this.bonds.talk(c.id, this.day);
+      if (r && (r.gained || r.rankUp)) this.ctx.onBond?.(c.id, r);
+      if (!event) await this.runNode(`B_Menu_${c.id}`);
+      if (!this.exploring) return true;
+    }
+    if (c.after) { await this.runNode(c.after); if (!this.exploring) return true; } // e.g. a stall's gifts
     if (c.shop) { this.view.hide(); await this.ctx.openShop?.(c.shop); }
     x.talked.add(c.id);
     this.skipping = false;
@@ -1140,6 +1168,10 @@ export class StoryPlayer {
       for (const [who, text] of beat.lines ?? []) this.say(who, text); // squad chatter as the fight starts
       const won = await new Promise((res) => { this.fight.resolve = res; });
       this._hint("");
+      if (won) { // fighting side by side brings the squad closer
+        const comp = this.ep?.world?.companions, party = comp === true || comp === undefined ? ["bas", "juno"] : Array.isArray(comp) ? comp : [];
+        for (const id of party) this.bondGain(id, BOND_GAIN.fight);
+      }
       if (won || !beat.retry) { this.fight = null; return { won }; }
       this.fight = null;
       this.say("Rook", beat.retry);

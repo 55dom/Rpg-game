@@ -31,6 +31,7 @@ import { ZONES } from "./data/zones.js";
 import { Inventory } from "./core/inventory.js";
 import { Progress, addMods, pageLevel, pageLevelProgress } from "./core/progress.js";
 import { SKILLS, TREE_COLUMNS, XP_BY_KIND, PAGE_ROMAN, MAX_LEVEL } from "./data/skills.js";
+import { BONDS, RANK_POINTS, RANK_UNLOCKS, GIFTS } from "./data/bonds.js";
 import { ITEMS, SHOPS, SLOTS, BOUNTIES, slotKind } from "./data/items.js";
 import { squadRank } from "./core/quests.js";
 import { fillText } from "./core/script.js";
@@ -264,6 +265,17 @@ export function boot(doc = document) {
           sfx.play("assist");
           hud.cutIn(f.stats.name, a.id.replace(/([a-z])([A-Z])/g, "$1 $2"), f.kind);
           if (a.id === "PillarUppercut") { vfx.pillar(t.pos); sfx.play("stone"); camera.shake(0.35); }
+          break;
+        }
+        case "teamAttack": {
+          const b = BONDS[ev.kind];
+          hud.toast("TEAM ATTACK", "finisher"); hud.banner((b?.team?.name ?? "TEAM ATTACK").toUpperCase());
+          sfx.play("ultActivate"); camera.shake(0.3); vfx.flash(chest(world.player), 3, "#ffd27a", 0.2);
+          break;
+        }
+        case "teamStrike": {
+          vfx.ring({ x: ev.target.pos.x, y: 0.05, z: ev.target.pos.z }, 8, PALETTE.gale, 0.5); vfx.sparksAt(ev.at, 24, "mint", 14, 6);
+          vfx.flash(ev.at, 4, "#ffffff", 0.25); impact(5, true); camera.kick(1); sfx.play("finisher");
           break;
         }
         case "shield": sfx.play("shield"); vfx.ring({ x: ev.target.pos.x, y: 0.06, z: ev.target.pos.z }, 4, "#e8b46a", 0.4); hud.pushLog("Bas: Bastion Wall"); break;
@@ -580,7 +592,7 @@ export function boot(doc = document) {
     setPlayerVisible: (on) => views.get(world.player)?.setVisible(on),
     setSquadVisible: (on) => { for (const c of world.companions) views.get(c)?.setVisible(on); },
     getWorld: () => world,
-    makeWorld: (opts) => newWorld({ ...opts, mods: statMods(), progress: story.progress }),
+    makeWorld: (opts) => newWorld({ ...opts, mods: statMods(partyOf(opts.companions)), progress: story.progress, teamAttacks: story.bonds.teamAttacks() }),
     openShop: (id) => openShop(id),
     onQuest: (e) => {
       if (e.type === "questStart") { hud.toast("NEW QUEST", "afterimage"); hud.banner(e.quest.title.toUpperCase()); sfx.play("surgeFull"); }
@@ -590,6 +602,17 @@ export function boot(doc = document) {
         hud.toast("QUEST COMPLETE", "finisher"); sfx.play("ultActivate");
         hud.banner(`${e.quest.title.toUpperCase()}${r.marks ? ` · +${r.marks} MARKS` : ""}`);
       }
+    },
+    onBond: (id, r) => {
+      const b = BONDS[id]; if (!b) return;
+      if (r.event) { hud.toast("BOND EVENT", "afterimage"); hud.banner(`${b.name.toUpperCase()} · YOU'RE CLOSER NOW`); sfx.play("surgeFull"); refreshGrimDot(); return; }
+      if (r.rankUp) {
+        const un = RANK_UNLOCKS[r.rank];
+        hud.toast(`BOND · ${b.name.toUpperCase()} · RANK ${r.rank}`, "finisher"); sfx.play("ultActivate");
+        hud.banner(un ? `UNLOCKED: ${un.toUpperCase()}` : `${b.name.toUpperCase()} TRUSTS YOU A LITTLE MORE`);
+        applyGear();
+      } else if (r.gained) hud.toast(`♥ ${b.name.toUpperCase()} +${r.gained}`, "clear");
+      if (story.bonds.eventReady(id)) hud.banner(`${b.name.toUpperCase()} HAS SOMETHING TO TELL YOU`);
     },
     onXp: (n, levels) => {
       if (!levels) return;
@@ -713,7 +736,9 @@ export function boot(doc = document) {
     shopModal.querySelector("[data-total]").textContent = modsText(Object.fromEntries(Object.entries(total).filter(([, v]) => v)));
   };
   /** Rook's stat mods: equipment plus level growth and Margin skills. */
-  const statMods = () => addMods(story.inventory.mods, story.progress.mods);
+  /** Who fights beside Rook in a world made with these companion options (the World's default is both). */
+  const partyOf = (c) => (c === true || c === undefined ? ["bas", "juno"] : Array.isArray(c) ? c : []);
+  const statMods = (party = world?.companions?.map((f) => f.kind) ?? []) => addMods(addMods(story.inventory.mods, story.progress.mods), story.bonds.mods(party));
   /** Gear changes apply to Rook immediately (outside fights the world can be rebuilt cheaply). */
   const applyGear = () => {
     const w = world, old = w.mods, m = statMods(), p = w.player;
@@ -741,6 +766,21 @@ export function boot(doc = document) {
       ["MERIT", `${f.get("MERIT") || 0}${rank.next ? ` · next rank at ${rank.next}` : " · top of the Crown's ranking"}`],
       ["SQUAD REPUTATION", f.get("REP_SQUAD") || 0], ["RENOWN · AURELIN", f.get("RENOWN_AURELIN") || 0], ["RENOWN · GREYWATER FENS", f.get("RENOWN_FENS") || 0],
     ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+    const bd = story.bonds;
+    journal.querySelector("[data-bonds]").innerHTML = Object.entries(BONDS).map(([id, b]) => {
+      const rank = bd.rank(id), pts = bd.points(id), lo = RANK_POINTS[rank - 1], hi = RANK_POINTS[rank] ?? lo;
+      const pct = rank >= 10 ? 100 : Math.round(((pts - lo) / Math.max(1, hi - lo)) * 100);
+      const status = bd.eventReady(id) ? "♥ Bond event ready: go and talk to them" : bd.waiting(id) ? "Their next chapter comes later in the story" : "";
+      const loved = rank >= 2 ? bd.lovedGift(id) : null;
+      const next = Object.entries(RANK_UNLOCKS).find(([r]) => Number(r) > rank);
+      const unlocked = [rank >= 2 ? `<i>${b.lore}</i>` : "", rank >= 3 && b.passive ? `<b>${b.passive.name}:</b> ${b.passive.desc}` : "", rank >= 5 && b.team ? `<b>${b.team.name}:</b> ${b.team.desc}` : ""].filter(Boolean).join("<br>");
+      return `<div class="bond"><div class="bond-head"><b>${b.name}</b><span>RANK ${rank} · ${bd.title(id).toUpperCase()}</span></div>
+        <span class="xpbar"><u style="width:${pct}%"></u></span>
+        <small>${status ? `<em>${status}</em><br>` : ""}${loved ? `Would love: ${GIFTS[loved].name}. ` : ""}${next ? `Rank ${next[0]}: ${next[1]}.` : ""}</small>
+        ${unlocked ? `<p>${unlocked}</p>` : ""}</div>`;
+    }).join("");
+    const gifts = Object.entries(GIFTS).filter(([g]) => Number(story.flags.get(`GIFT_${g.toUpperCase()}`)) > 0).map(([g, gi]) => `${gi.name} ×${story.flags.get(`GIFT_${g.toUpperCase()}`)}`);
+    journal.querySelector("[data-gifts]").textContent = gifts.length ? `Gifts in your bag: ${gifts.join(", ")}.` : "No gifts in your bag. The Gilded Spoon, the Lowmarket stall and the fish cook sell them.";
     const list = story.quests.entries();
     journal.querySelector("[data-quests]").innerHTML = list.length ? list.map((q) =>
       `<button class="${q.done ? "done" : ""}"><b>${q.done ? "DONE" : "ACTIVE"}</b><span>${q.title}<small>${fillText(q.objective, { ...story.player, flags: story.flags })} · from ${q.giver}, ${q.region}</small></span></button>`).join("")

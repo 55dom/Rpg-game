@@ -17,6 +17,7 @@ export class WorldClock {
   /** @param {{ hour?: number, rng?: () => number }} o */
   constructor({ hour = 9, rng = Math.random } = {}) {
     this.hour = hour;
+    this.day = 1; // counts up at midnight (one gift and one chat a day per squadmate)
     this.rng = rng;
     this.sky = "clear";       // "clear" | "overcast" | "rain"
     this.wet = 0;             // eased 0–1 rain amount
@@ -29,7 +30,9 @@ export class WorldClock {
   setClimate(id) { this.climate = CLIMATES[id] ?? CLIMATES.default; if (this.climate.indoor) return; if (this.sky === "rain" && this.climate.rain < 0.1) this.sky = "overcast"; }
 
   update(dt) {
-    this.hour = (this.hour + (dt * 24) / DAY_SECONDS) % 24;
+    const h = this.hour + (dt * 24) / DAY_SECONDS;
+    if (h >= 24) this.day++;
+    this.hour = h % 24;
     this.next -= dt;
     if (this.next <= 0) { this._change(); this.next = 150 + this.rng() * 150; }
     const rain = this.sky === "rain" && !this.climate.indoor ? 1 : 0;
@@ -51,6 +54,6 @@ export class WorldClock {
   get density() { return Math.max(0.12, (0.25 + 0.75 * this.daylight) * (1 - this.wet * 0.7)); }
   /** "07:30" */
   get label() { const h = Math.floor(this.hour), m = Math.floor((this.hour - h) * 60); return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`; }
-  toJSON() { return { hour: this.hour, sky: this.sky }; }
-  load(d) { if (!d) return; this.hour = d.hour ?? this.hour; this.sky = d.sky ?? this.sky; this.wet = this.sky === "rain" ? 1 : 0; this.cloud = this.sky === "clear" ? 0 : 1; }
+  toJSON() { return { hour: this.hour, sky: this.sky, day: this.day }; }
+  load(d) { if (!d) return; this.hour = d.hour ?? this.hour; this.day = d.day ?? this.day; this.sky = d.sky ?? this.sky; this.wet = this.sky === "rain" ? 1 : 0; this.cloud = this.sky === "clear" ? 0 : 1; }
 }

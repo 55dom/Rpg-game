@@ -9,7 +9,7 @@ export const QUESTS = {
       { text: "Bring it back to Dagrun at the Lighthouse.", done: "$FRIED_DELIVERED" },
     ],
     summary: "Dagrun ate it in two bites. Then he asked for another.",
-    reward: { marks: 25, flags: { MERIT: 15, REP_SQUAD: 3 } },
+    reward: { marks: 25, flags: { MERIT: 15, REP_SQUAD: 3 }, bond: { dagrun: 12 } },
   },
   rumors: {
     title: "The Village Nobody Remembers", giver: "Townsperson", region: "Aurelin",
@@ -55,6 +55,6 @@ export const QUESTS = {
       { text: "Everything points to table three, by the window. Go and see.", done: "$CAKE_FOUND" },
     ],
     summary: "The cake went to the wrong table. Old Fenwick ate two tiers out of politeness. The Countess got a 'brave, minimalist cake'.",
-    reward: { marks: 40, xp: 120, flags: { RENOWN_AURELIN: 6, MERIT: 5 } },
+    reward: { marks: 40, xp: 120, flags: { RENOWN_AURELIN: 6, MERIT: 5 }, bond: { juno: 12 } },
   },
 };

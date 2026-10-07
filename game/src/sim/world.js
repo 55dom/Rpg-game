@@ -5,7 +5,7 @@
 import { Intent, InputBuffer, mask } from "../core/input.js";
 import { ResourcePool } from "../core/stats.js";
 import { Combatant, Team, HitOutcome, Rules, resolveHit } from "../core/combat.js";
-import { AbilityRunner, AbilityController, EventType, MoveContext, StartResult } from "../core/abilities.js";
+import { AbilityRunner, AbilityController, EventType, MoveContext, StartResult, defineAbility } from "../core/abilities.js";
 import { AttackTokenPool, EnemyBrain, MoveIntent, CompanionBrain, AllyMove, STANCES } from "../core/ai.js";
 import { COMPANIONS } from "../data/companions.js";
 import { ENEMIES, WAVES } from "../data/enemies.js";
@@ -50,6 +50,12 @@ const AIR = new Set(["AirL1", "AirL2", "AirL3"]);
 const HANG = new Set(["AirL1", "AirL2", "AirL3"]); // started in the air, these hold Rook up (plus anything tagged "hang")
 const hangs = (a) => HANG.has(a.id) || a.tags.includes("hang");
 const WALL = Object.freeze({ center: [0, 1.4, 0], size: [5.2, 3.4, 1.4] });
+/** Team Attacks (bond rank 5): the companion's move, then the two of you strike together. */
+export const TEAM_ATTACK = defineAbility({ id: "TeamAttack", startup: 1, active: 1, recovery: 1, tags: ["team", "heavy"],
+  hit: hitSpec({ damage: 48, posture: 55, hitstop: 12, hitstun: 50, launch: 10 }) });
+export const TEAM_SURGE = 50; // Surge spent on a Team Attack
+const TEAM_DELAY = 24;        // frames after the companion's move starts
+
 const WALL_HIT = hitSpec({ damage: 4, posture: 10, hitstop: 3, hitstun: 16, knockback: 3 });
 const WALL_LAUNCH = hitSpec({ damage: 6, posture: 12, hitstop: 4, hitstun: 30, launch: 9 });
 const MOBILITY = new Set(["Dodge", "Jump", "Guard", "AirJump", "AirDash"]);
@@ -270,6 +276,8 @@ export class World {
       graph: buildRookGraph(() => this.player.context(), ROOK_ABILITIES, this.loadout, { ultimate: this.ultimate }), x: 0, z: -4,
     }));
     this.assist = !!o.assist;
+    this.teamAttacks = new Set(o.teamAttacks ?? []); // companions with a Team Attack unlocked (bond rank 5)
+    this.teamHit = null;
     this.companions = [];
     this.projectiles = [];
     if (o.companions) for (const kind of Array.isArray(o.companions) ? o.companions : Object.keys(COMPANIONS)) this.addCompanion(kind);
@@ -328,6 +336,13 @@ export class World {
     c.controller.startDirect(c.assistAbility, this.frame);
     c.assistReadyFrame = this.frame + c.stats.assistCooldownFrames;
     this.emit({ type: "assist", fighter: c, ability: c.assistAbility, target: t });
+    // Bond rank 5 and half a Surge gauge: the assist becomes a Team Attack, and Rook strikes with them.
+    const s = this.player.surge;
+    if (this.teamAttacks.has(kind) && s && s.current >= TEAM_SURGE) {
+      s.trySpend(TEAM_SURGE);
+      this.teamHit = { frame: this.frame + TEAM_DELAY, target: t, by: c };
+      this.emit({ type: "teamAttack", fighter: c, kind, target: t });
+    }
     return { ok: true, target: t };
   }
 
@@ -1101,6 +1116,14 @@ export class World {
       }
     }
     if (this.comboTimer > 0 && --this.comboTimer === 0) this.comboCount = 0;
+    if (this.teamHit && this.frame >= this.teamHit.frame) { // the joint strike lands
+      const { target: t } = this.teamHit; this.teamHit = null;
+      if (t.alive && this.player.alive) {
+        const at = { x: t.pos.x, y: t.pos.y + (t.stats.height ?? 1.8) * 0.55, z: t.pos.z };
+        this._resolve(this.player, t, { spec: TEAM_ATTACK.hit, ability: TEAM_ATTACK, hitSet: new Set(), origin: at, team: true });
+        this.emit({ type: "teamStrike", target: t, at });
+      }
+    }
     for (const f of this.fighters) { // training dummies stay on their posts with endless health
       if (!f.traits.dummy) continue;
       f.pos.x = f.prev.x = f.anchor.x; f.pos.z = f.prev.z = f.anchor.z;
