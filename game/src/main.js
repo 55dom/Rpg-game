@@ -292,7 +292,7 @@ export function boot(doc = document) {
         case "silenceZone": silenceFx.add(ev.zone); sfx.play("heal", 0.7); break;
         case "silenceEnd": silenceFx.remove(ev.zone); break;
         case "silenced": hud.toast(ev.what === "dodge" ? "DODGE SILENCED · PARRY!" : "SILENCED", "danger"); sfx.play("block", 0.5); break;
-        case "wave": vfx.ring({ x: ev.wave.x, y: 0.08, z: ev.wave.z }, ev.wave.maxR, { toll: "#c9b4ff", rot: "#c86a2a", splash: "#6ac8d8", shock: "#9ad8ff" }[ev.wave.kind] ?? "#ffffff", ev.wave.maxR / ev.wave.speed); sfx.play(ev.wave.kind === "rot" ? "mud" : "slam", 0.7); camera.shake(0.2); break;
+        case "groundWave": vfx.ring({ x: ev.wave.x, y: 0.08, z: ev.wave.z }, ev.wave.maxR, { toll: "#c9b4ff", rot: "#c86a2a", splash: "#6ac8d8", shock: "#9ad8ff" }[ev.wave.kind] ?? "#ffffff", ev.wave.maxR / ev.wave.speed); sfx.play(ev.wave.kind === "rot" ? "mud" : "slam", 0.7); camera.shake(0.2); break;
         case "bells": hud.toast("THE BELLS RING", "danger"); hud.banner("NO SPELLS ANYWHERE · BREAK THE THREE BELLS"); silenceFx.all(true); break;
         case "bellsBroken": hud.toast("SILENCE BROKEN", "break"); silenceFx.all(false); impact(3, true); sfx.play("postureBreak"); break;
         case "wardBroken": hud.toast("HER WARD FALLS", "break"); break;

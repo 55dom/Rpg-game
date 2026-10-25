@@ -492,7 +492,7 @@ export class World {
   addWave(owner, x, z, { speed = 6, maxR = 9, width = 0.9, spec, ability, kind = "toll" }) {
     const w = { owner, x, z, r: 0.4, speed, maxR, width, spec, ability, kind, hitSet: new Set() };
     this.waves.push(w);
-    this.emit({ type: "wave", wave: w });
+    this.emit({ type: "groundWave", wave: w }); // not "wave": that event means a new enemy wave
     return w;
   }
   /**
