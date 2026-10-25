@@ -68,3 +68,49 @@ test("attackFailed releases", () => {
   assert.ok(!pool.holds("e"));
   assert.equal(b.state, BrainState.Idle);
 });
+
+import { CompanionBrain, Stance, AllyMove } from "../src/core/ai.js";
+
+const jab = defineAbility({ id: "Jab", startup: 4, active: 2, recovery: 6 });
+const heal = defineAbility({ id: "Heal", startup: 4, active: 2, recovery: 6 });
+const shield = defineAbility({ id: "Shield", startup: 4, active: 2, recovery: 6 });
+const cp = (o) => ({ frame: 0, isDead: false, isStaggered: false, abilityRunning: false, leaderDistance: 2, leaderHealth: 1, leaderThreatened: false, target: null, ...o });
+
+test("companion follows the leader when there's nothing to fight", () => {
+  const b = new CompanionBrain("c", [new AttackOption(jab, 0, 2)]);
+  assert.equal(b.think(cp({ leaderDistance: 8 })).move, AllyMove.Follow);
+  assert.equal(b.think(cp({ leaderDistance: 1 })).move, AllyMove.Hold);
+});
+
+test("companion stances set how far it roams", () => {
+  const b = new CompanionBrain("c", [new AttackOption(jab, 0, 2)]);
+  const far = cp({ target: { distance: 5, distanceToLeader: 8 } });
+  assert.equal(b.think(far).move, AllyMove.Approach, "Press chases a target 8 m from the leader");
+  b.stance = Stance.Guard;
+  assert.equal(b.think(far).move, AllyMove.Hold, "Guard stays home");
+  assert.equal(b.think(cp({ target: { distance: 1.5, distanceToLeader: 3 } })).attack, jab);
+});
+
+test("companion recovers after attacking, and Support attacks less often", () => {
+  const b = new CompanionBrain("c", [new AttackOption(jab, 0, 2, 1, 30)]);
+  const t = { distance: 1, distanceToLeader: 1 };
+  assert.equal(b.think(cp({ frame: 0, target: t })).attack, jab);
+  b.think(cp({ frame: 1, target: t, abilityRunning: true }));
+  assert.equal(b.think(cp({ frame: 13, target: t })).attack, null, "recovering");
+  b.stance = Stance.Support;
+  const s = new CompanionBrain("s", [new AttackOption(jab, 0, 2, 1, 30)]); s.stance = Stance.Support;
+  s.think(cp({ frame: 0, target: t }));
+  assert.equal(s.options[0].readyFrame, 60, "cooldown doubled in Support");
+});
+
+test("companion heals and shields by stance, with cooldowns", () => {
+  const b = new CompanionBrain("c", [new AttackOption(jab, 0, 2)], [
+    { ability: heal, kind: "heal", cooldownFrames: 300 }, { ability: shield, kind: "shield", cooldownFrames: 300 }]);
+  assert.equal(b.think(cp({ leaderHealth: 0.6 })).support, null, "Press only heals in emergencies");
+  assert.equal(b.think(cp({ leaderHealth: 0.3 })).support, "heal");
+  b.stance = Stance.Support;
+  assert.equal(b.think(cp({ frame: 10, leaderHealth: 0.6 })).support, null, "heal on cooldown");
+  assert.equal(b.think(cp({ frame: 10, leaderThreatened: true })).support, "shield");
+  b.stance = Stance.Guard;
+  assert.equal(b.think(cp({ frame: 400, leaderThreatened: true })).support, "shield");
+});

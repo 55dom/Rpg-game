@@ -60,5 +60,124 @@ After any change, run `npm test`. The scripted fights in `test/sim.test.js` chec
 | Touch, gamepad, keyboard, mouse | `runtime/controls.js` |
 | Accessibility: impact flashes toggle (FX), reduced-motion support, sound toggle | menu in `template.html`, `applySettings` in `main.js` |
 
+## Step 4 and 5 features (Phase 1 complete)
+| Feature | Where |
+|---|---|
+| Double jump, air dash (once per airtime) | `AirJump`, `AirDash` in `data/rook.js`; `airJumps`, `airDashes`, `hoverFrames` in `sim/world.js` |
+| Juggle height rules | `_resolve` in `sim/world.js` |
+| Lock-on switching | `switchLock` in `sim/world.js`; Tab / right-stick flick / tap LOCK |
+| Vacuum Pull (`pull` hit property), Tempest Edge (data only) | `data/rook.js`; `_pull` in `sim/world.js` |
+| Touch assist, melee mana gain | `assist` and `Tuning` in `sim/world.js`; `smartCombo` in `runtime/controls.js` |
+| Adaptive resolution, FPS readout, auto-pause | `quality` in `main.js`; frame-data panel |
+
+Keys added: **R** Vacuum Pull, **T** Tempest Edge, **Tab** switch target. Restart moved to **Backspace**.
+
+## Phase 2, Step 1: Surge, Skyrender, reactions
+| Feature | Where |
+|---|---|
+| Tags and the reaction engine | `core/tags.js`; reaction rows in `data/reactions.js`; `_react` in `sim/world.js` |
+| Hits that apply tags | `applyTags` in `hitSpec` (e.g. Launcher, L4, Counter MARK for 4–5 s) |
+| Surge gauge | `surge` in `sim/world.js`, gains in `ROOK_STATS.surgeGain` |
+| Skyrender | `data/rook.js`: one ability whose hitboxes carry their own hits (`SkyRing`, `SkyCut`, `SkyFinal`) |
+| Time stop | `timeStop` custom event → `world.stopFrames` |
+| Camera shots as data | `runtime/shots.js`, played by `camera.cue(name)` from `CameraCue` events |
+
+To add a reaction, add a row to `data/reactions.js`: `when` (tag on the target), `with` (a tag the hit applies, an ability tag like `burst`/`gust`, or `airborne`), and an `effect` (`damage`, `posture`, `hitstop`, `radius`, `launch`, `stagger`). No code changes.
+
+Keys added: **V** (gamepad LB+RB, touch ULT) for Skyrender when the Surge bar is full.
+
+## Phase 2, Step 2: the squad
+| Feature | Where |
+|---|---|
+| Companion AI (stances, follow, support moves) | `CompanionBrain` in `core/ai.js` |
+| Bas and Juno: stats, moves, assists, supports | `data/companions.js` (`COMPANIONS` roster) |
+| Assist calls, healing, shields, team targeting, revives | `callAssist`, `heal`, `_companionBrain`, `_enemyTarget` in `sim/world.js` |
+| Squad reactions | `data/reactions.js` (Taut Line, Slingshot, Shatterstone) |
+| Character looks (proportions, hair, weapons) | `LOOKS` in `runtime/rig.js` |
+
+Keys: **1** call Bas, **2** call Juno, **3** cycle stance (gamepad D-pad ◀ ▶ ▲; touch BAS, JUNO, STNC).
+
+## Phase 2, Step 3: the Fens roster
+| Feature | Where |
+|---|---|
+| Enemy types, traits (`heavy`, `armoredAttacks`, `frontalGuard`, `ranged`), waves | `data/enemies.js` |
+| Spawning any type | `spawnEnemy(kind, x, z)` / `spawnWave()` in `sim/world.js` |
+| Projectiles (fire, fly, deflect, parry, time stop) | `fireProjectile`, `_projectiles` in `sim/world.js`; `EventType.Projectile` |
+| Ward and Dispel | `ward` in `sim/world.js`; Dispel row in `data/reactions.js` |
+| Juggle decay | `juggleHits` and `Tuning.juggleDecay` in `sim/world.js` |
+| Looks (four-legged hound, staff, spear, shield, claws) | `LOOKS` and `_buildBeast` in `runtime/rig.js` |
+
+To add an enemy: a new entry in `ENEMIES` (stats, hitboxes, moves, AI options, traits) and a `LOOKS` entry. Add it to `WAVES` to see it in the sandbox.
+
+## Phase 2, Step 4: Hask the Bogwarden
+| Feature | Where |
+|---|---|
+| Boss data (moves, phases, tuning) | `data/hask.js` |
+| Boss controller (dive, burrow, mud waves, warning, eruption, uproot, phases, summon) | `sim/boss.js` |
+| World hooks (`spawnBoss`, `summon`, submerged rules, WEIGHTED, EXPOSED) | `sim/world.js` |
+| Look, burrowing mound, mud waves, warning disc, bog layer | `runtime/rig.js`, `runtime/vfx.js`, `runtime/arena.js` |
+
+Sandbox: press **B** to go straight to the boss. It's also wave 7 in `WAVES`.
+
+The build now refuses to write a page whose script doesn't parse (`build.mjs`).
+
+## Phase 2, Step 5: pages, cel-shading v2, the combat run
+| Feature | Where |
+|---|---|
+| Page branches and evolution data | `data/pages.js` |
+| Wind Wall, loadout swap, page XP, `evolvePage` | `data/rook.js`, `sim/world.js` |
+| Episode 4 run (encounters, lines, rests, retries, rank) | `data/run.js`, `sim/run.js` |
+| Toon shader v2 (shadows, rim, hair gloss, tinted lines, grade) | `runtime/look.js` (`toon2`) |
+| Pages modal, results screen, vignette | `template.html`, `main.js` |
+
+The start screen has two buttons: **Play Episode 4** (the run) and the training yard (sandbox). **P** opens the pages; on a gamepad it's the View button.
+
+## Phase 3, Step 1: the story engine
+| Feature | Where |
+|---|---|
+| Flags and the condition language | `core/flags.js` |
+| Dialogue scripts: parser, runner, pronoun tokens | `core/script.js` |
+| Saves (versions, migrations, slots) | `core/save.js` |
+| Episode beats (cold open, title, scene, fight, preview) | `sim/episode.js` |
+| Cast (speaker names and colors) | `data/story/cast.js` |
+| Episode 1 script and beats | `data/story/ep1.js` |
+| Dialogue box, stage actors, camera shots, story flow | `runtime/story.js` |
+
+### Writing dialogue
+Scripts are plain text inside `data/story/epN.js`. A node looks like this:
+
+```
+title: Ep1_Steps
+---
+Severin: Thornwick mud on your boots.        speaker: line
+A crowd murmurs.                             narration (no speaker)
+FIFTEEN YEARS LATER                          all caps narration = a big caption
+-> "Say that again." #bold                   an option (indent its replies under it)
+    Severin: Gladly.
+-> Walk away. <<if $MET_MOSS>> #wry          an option only shown when the condition holds
+<<set $SEVERIN_RILED to 1>>
+<<if $EXAM_DUEL_WON>> … <<else>> … <<endif>>
+<<shot on Severin>>  <<shot two Severin Rook>>  <<shot wide>>
+<<fx book Rook>>  <<sfx hymn>>  <<wait 1>>  <<jump Ep1_Ceremony>>
+===
+```
+
+- **Player name and pronouns:** `{name}`, `{they}` / `{them}` / `{their}` / `{theirs}` / `{themself}`. Capitalize for sentence starts (`{They}`).
+- **Verb agreement:** `{is}`, `{was}`, `{has}`, and `walk{s}` (they walk / she walks).
+- **Temper tags:** `#bold`, `#earnest`, and `#wry` on an option raise that Temper flag when it's picked.
+- **Speakers:** every speaker must exist in `data/story/cast.js`. The tests check this.
+- **Staging:** `<<move Severin 1 2>>` walks there (add `wait` to finish first), `<<face Rook Severin>>`, `<<pose Herald raise>>` (point, raise, hand, cross, bow, tilt, fist, none), `<<show Acolyte>>` / `<<hide …>>`, `<<cue dark>>` (set moments), `<<cutscene id>>`, and `<<shot wide side>>` / `<<shot wide front>>`.
+- **Spoilers:** keep comments in story data spoiler-free. Players can read the page source (GDD §15.11).
+
+## Phase 3, Step 2: cutscenes and sets
+| Feature | Where |
+|---|---|
+| Timeline math (camera keys, events, moves) | `core/timeline.js` |
+| Cutscene data | `data/story/cutscenes.js` |
+| Story sets (Tower steps, Tower hall, Larkspur) | `runtime/sets.js` |
+| Cutscene playback, staging, descending grimoires | `runtime/story.js` |
+
+A beat or fight picks its set with `stage: "towerHall"`. A cutscene beat is `{ type: "cutscene", cutscene: "ep1_larkspur" }`.
+
 ## Publishing the artifact
 `npm run build` also writes `dist/fragment.html` (the page without its outer `<html>` shell). That file is what gets published to the Claude artifact link.

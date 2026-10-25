@@ -138,3 +138,13 @@ test("hitSpec validates", () => {
   assert.equal(isHitSet(hitSpec()), false);
   assert.ok(isHitSet(hitSpec({ launch: 2 })));
 });
+
+test("perfect dodge window is per fighter (touch assist)", () => {
+  const [a, d] = fighters();
+  d.perfectDodgeFrames = Rules.PerfectDodgeFrames + 3;
+  d.startInvulnerability(12);
+  for (let i = 0; i < Rules.PerfectDodgeFrames + 1; i++) d.tick();
+  assert.equal(resolveHit(a, d, hitSpec({ damage: 5 })).outcome, HitOutcome.PerfectDodge);
+  assert.equal(hitSpec({ pull: 3 }).pull, 3);
+  assert.throws(() => hitSpec({ pull: -1 }));
+});

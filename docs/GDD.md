@@ -1,7 +1,19 @@
 # UNWRITTEN — Knights of the Last Lantern
-### Game Design Document · Foundation Draft v1.3
+### Game Design Document · Foundation Draft v1.7
 
-> **v1.3 changes:** The archdemons' **Astral Path is a long tunnel of dark aura that leads to the Demon Continent**; the continent at its far end shows **no battle fires**, because the tunnel runs through time as well as space (§28). Backlash consistency pass (`docs/BACKLASH.md` v1.7): storyboard and clip counts corrected, four memory splices, and the King's fight kept as a sequel-only sketch.
+> **v1.7 changes:** The archdemons' **Astral Path is a long tunnel of dark aura that leads to the Demon Continent**; the continent at its far end shows **no battle fires**, because the tunnel runs through time as well as space (§28). Backlash consistency pass (`docs/BACKLASH.md` v2.0): storyboard and clip counts corrected, four memory splices, and the King's fight kept as a sequel-only sketch.
+
+> **v1.6 changes:** **Character & world design standard (§29).**
+> - **Every character redesigned** around their storyboard head (faces unchanged): anime proportions with long, slender legs; eight body types; occupation-based clothing with wear and repairs; one skinned model per character.
+> - **Animation:** planted-foot walking and running, jumps with landings, personal idles and gaits, and full-body attacks.
+> - **Townsfolk** follow daily routines and react to fights, rain, night and the player.
+> - **The world lives:** a day/night cycle, weather, districts, animals, set dressing, and visible aftermath and rebuilding.
+
+> **v1.5 changes:** Ghorran's hairstyle follows `ref-03` (messy, swept, long bangs; still long with the knee-length ponytail). Ties now match hair: dark blue for Ghorran, pink for Vaelith (§28).
+
+> **v1.4 changes:** Clergy Duo revised (§28): **the same smooth white mask for both, hers smiling and his turned upside down into a frown**; Ghorran's silky dark-blue hair (white and light-blue gloss); Vaelith's short silky pink twin ponytails (light-pink gloss) and **maid detailing** on her suit and slit skirt. New **§19.6.1 Color grading** for the whole game, modeled on the anime *That Time I Got Reincarnated as a Slime*.
+
+> **v1.3 changes:** The Clergy Duo's true look is set from owner reference art (§28, `docs/art/clergy-duo/`): black suits, white shirts, black ties, and white masks with painted, unchanging faces. The butler has long blue hair in a low ponytail and a cracked-grin mask with a red dot nose. The musician wears a long black skirt slit high at the side and a closed-eye smiling mask.
 
 > **v1.2 changes:** **Engine changed to Babylon.js (web).** The game runs in any modern browser on PC and phones, free to build and free to host, and is playable straight from a link (§20). The tested combat core was ported from C# to JavaScript with the same rules and tests. Phase 1 Step 3 is done: hit effects, impact frames, parry → counter, perfect dodge → Afterimage, posture break → Lantern Break, synthesized sound, touch controls (`docs/DEV.md`).
 
@@ -291,7 +303,7 @@ Format: **Signature mechanic (resource)** · Off = Offensive · Def = Defensive 
 **18. Clockwork**: *Torque*. Deploys gear turrets and drones (count-limited).
 - Off: *Gear Turret*, *Spring Trap* · Def: *Cog Drone* shield · Mob: spring launch pad · Util: repair machines, puzzles
 - Ult: *Grand Orrery* · Awk: *Perpetual Engine*
-- Weak: Storm overload; Rot · *Clockwork Magistrate (boss)*
+- Weak: Storm overload; Rot
 
 **19. Alchemy**: *Transmute*. Hits GILD targets: heavier and slower, but brittle.
 - Off: *Transmute Strike* · Def: *Gilded Skin* · Mob: *Quicksilver Step* · Util: transmute materials (ties into crafting)
@@ -632,7 +644,7 @@ Every episode follows the anime pacing template (§18). Episodes listed in brief
 9. **The Royal Festival.** Aurelin hub opens. Rank promotion. Severin snubs you publicly but saves a civilian you missed. First glimpse of **Elodie**. Severin's pendant belonged to his brother **Aurek**, lost in the Hollowmarch six years ago (🔒 red herring). Juno's Lowmarket stall sells her Quill-knot cords to the public (🔒 S6 alibi).
 10. **The Hall of Lanterns.** You light your lantern in the capital's great hall (every knight has one here, mirrored by their squad's lanterns). 🔒 Close-up insert: when a knight dies, their wick turns to ash.
 11. **Beneath the Festival.** Children are disappearing into the **Undercroft**. Forced alliance with Severin.
-12. **The Clockwork Court.** **Boss 5: The Clockwork Magistrate.** Severin shields you. Rivalry turns to respect.
+12. **The Drowned Cistern.** **Boss 5: Gullmaw, the Cistern Toad.** Severin shields you. Rivalry turns to respect.
 13. **The Chancellor's Garden.** Political episode. Aldric Valcourt offers Rook a place in the Lances if they "give the grimoire to the Crown for study." Refusing has consequences (rep −, Valcourt hostility flag).
 14. **Tamsin Sings Off-Key.** Comedy and heart. Tamsin's character beat. The Lanterns climb the Merit ranking.
 15. **Two Faces of the Choir.** **Boss 6: the Cantor Twins** (Mirror & Smoke). They reveal the Choir's target: the **Hollowmarch Gate**.
@@ -1108,9 +1120,12 @@ Template: **P1** learn → **P2** strategy shift → **P3** arena changes → **
 - Final: desperation charge across the whole Tower. The grimoire bleeds ink; Rook writes nothing yet, but the *page highlights* the seal you must hit.
 - Consequence: Iron Wardens respect +; Galen's lantern (in the Hall) finally goes out (sets up the lantern rule)
 
-**B5 · The Clockwork Magistrate** (Ep 12, Undercroft)
-- P1: gavel slams, turret deployment · P2: "court in session": the arena **rotates** room by room (it's built inside a clockwork tower) · P3: you fight inside its gears · P4: it **sentences** party members, locking one AI ally in a cage you must free mid-fight
-- Weak: Storm overloads; WET + CHARGED stops the gears · Consequence: Severin owes you a debt (flag); Lowmarket Renown ++
+**B5 · Gullmaw, the Cistern Toad** (Ep 12, Undercroft) — *replaced the Clockwork Magistrate (design change)*
+- A bat/amphibian monster: a winged toad-newt the size of a cart that the Choir fed ink to in the flooded cistern under Aurelin. Broad flat toad head with a mouth from ear to ear, bulging gold eyes with sideways pupils, a puffing throat sac, axolotl gill stalks, a pale belly, warty back with a fin-frill (no tail); large **bat** wings (arm bone, four long fingers, scalloped membrane, hooked thumb claws) that beat before and through its leaps, tall pointed bat ears, a leaf-nose and two hanging fangs; **webbed claw hands and webbed clawed feet** (the same monster hand/foot language as the bog brutes).
+- Moves: webbed-claw Slap · Tongue lash (reels you in) · Belly-Flop leap (unblockable, splash ring: jump it) · Bile Spit fan (WEIGHTED)
+- Special · **Lily Pad Leap**: seven lily pads on magic circles light up (the arena's centre and six around it in a hexagon, joined to the centre by lines of light). Its wings beat, then it hops pad to pad on its frog legs, fast (~0.3 s a hop), smashing each pad (unblockable); every pad flashes red just before it lands there, and the last, bigger smash is on the centre. Clean-shot VFX: a green motion-blur ghost trail, anime speed lines, a blur and a shockwave + splash on each landing. Breaking its posture mid-leap stops it.
+- P1: two bile egg sacs on the cistern floor spit at you · P2 (70%) "the flood": a high-pressure water jet sweeps the floor in a circle (jump it) · P3 (40%) "swallowed": it gulps an AI ally and spits them out in a slime bubble you must burst mid-fight (or lays new egg sacs if you came alone)
+- Weak: Storm (WET + CHARGED) · Consequence: Severin owes you a debt (flag); Lowmarket Renown ++
 
 **B6 · The Cantor Twins (Vesk & Vale)** (Ep 15)
 - Duo boss: Mirror (Vesk) and Smoke (Vale). Their mechanics combine: smoke hides real mirrors.
@@ -1256,6 +1271,30 @@ Camera presets, each a reusable data asset: **Pan, Tilt, Dolly, Tracking, Crane,
 - **Hand-authored VFX:** flipbook textures (2D-drawn) on particles, not physically simulated effects.
 - **Limited animation:** an **animation stepping** option per move. Pose playback can be sampled at 12 fps ("animating on twos") for a held, punchy anime look, while gameplay logic stays at 60 Hz. Major attacks switch to full-rate for smoothness at the key moment. **This costs almost nothing and is the single biggest "it looks like anime" lever.**
 
+### 19.6.1 Color grading and character shading
+**Reference:** the TV anime *That Time I Got Reincarnated as a Slime*. We match its *qualities*, not its assets: bright, clean, saturated color with glossy, readable characters.
+
+| Element | Target |
+|---|---|
+| **Palette** | High saturation, clean hues, little grey. **Shadows shift hue** (toward cool blue or violet) instead of going grey or brown, so colors stay vivid in shade |
+| **Cel shading** | One crisp shadow step on characters (two tones), plus a soft gradient only on large forms. Minimal texture noise; flat, clean color areas |
+| **Hair** | Silky, with a bright **"angel ring" band** that follows the head and sharp **white streak highlights**, plus a second **tinted gloss** in the hair's own light color (light blue on dark blue, light pink on pink) |
+| **Eyes** | Large and glossy, with layered highlights (one big, one small) |
+| **Line art** | Thin and clean; **tinted dark lines** (local color, darkened) rather than pure black, except on deliberately black designs |
+| **Lighting** | A clear key light, cool ambient fill, and a **rim light** on every character, so dark clothing (black suits, coats) always reads against the background |
+| **Glow** | Soft bloom on light sources, magic, and highlights; gentle diffusion on bright areas |
+| **Backgrounds** | Painterly and slightly softer, lower in contrast than characters, so characters pop |
+| **Dark scenes** | Night, the Astral Path, and the Demon Continent stay **colorful-dark**: deep violets, blues, and reds, never muddy black |
+
+**Implementation:** Phase 2 Step 5 ("cel-shading v2") builds this as a custom toon shader:
+- a two-tone ramp with hue-shifted shadows
+- rim light
+- a hair gloss band and streak highlights
+- tinted outlines
+- a final color-grade pass (saturation, lift, soft bloom)
+
+**Built in Phase 2 Step 5** (`runtime/look.js`, `toon2`). The grade runs inside the shader rather than as a post-process, because a full-screen pass fought the glow layer and washed out the picture.
+
 ### 19.7 Animation quality tiers
 | Tier | Use | Keys | Playback |
 |---|---|---|---|
@@ -1308,7 +1347,7 @@ With Unity, native speed came from IL2CPP turning C# into C++. On the web:
 |---|---|
 | **Logic** | Combat runs on a **fixed 60 Hz logic clock** independent of render frame rate, so a 30 fps phone plays *exactly* the same frame data as a 144 Hz PC ✅ *built* |
 | **Controls** | Floating virtual stick (left half), on-screen buttons (right): Slash, Heavy, Dodge, Jump, Guard, Gale, Lock; drag the upper right to orbit the camera. Touch, keyboard, and gamepad all produce the same intents, so **gameplay code is identical** ✅ *built*. Later: a **Magic button** that opens the 4-spell ring; Ultimate and Team Attack appear when charged |
-| **Touch assists** (later, on by default on touch) | Auto lock-on; +3f parry and perfect-dodge windows; **Smart Combo** (hold Slash to continue the string). Assists never change damage |
+| **Touch assists** (on by default on touch; **AST** button) | +3f parry and perfect-dodge windows; **Smart Combo** (hold Slash to continue the string) ✅ *built*. Assists never change damage |
 | **Fairness** | Only **1** enemy attacks at a time on mobile (2 on PC) through the attack-token pool ✅ *built* |
 | **UI** | Touch HUD layout, safe-area aware for notches ✅ *built*; the frame-data panel starts hidden |
 | **Rendering** | Mobile tier: render resolution capped at 1.5× pixel ratio, smaller glow buffer, fewer arena props and particles ✅ *built*; later dynamic resolution |
@@ -1328,7 +1367,7 @@ With Unity, native speed came from IL2CPP turning C# into C++. On the web:
 | Input | Own `Controls` layer: keyboard, mouse, Gamepad API, Pointer Events | One intent stream for every device ✅ *built* |
 | Camera | Own camera director (follow, lock-on, shake, punch-in) | Replaces Cinemachine; states as data later |
 | Cinematics | JSON timelines played by the same event system as abilities | Replaces Unity Timeline |
-| Dialogue | **ink** (inkjs) or Yarn (yarn-bound): decided in Phase 3 | Both are free, writer-friendly, and run in the browser |
+| Dialogue | **Decided (Phase 3):** a **Yarn-style plain-text script** with our own small parser (`core/script.js`) | Writers get Yarn's familiar syntax (nodes, options, `<<if>>`, `<<set>>`, `<<jump>>`); the game gets zero dependencies, a tiny download, and parse errors with line numbers |
 | Audio | Web Audio API: synthesized placeholders now ✅ *built*; recorded SFX and adaptive music layers later | Free; no middleware |
 | Art pipeline | Blender → glTF 2.0 (Draco meshes, KTX2 textures) | The web's native 3D format |
 | Data | Plain JS/JSON modules (abilities, enemies, combo graphs) | Designer-editable; validated on load ✅ *built* |
@@ -1461,8 +1500,20 @@ How to run, test, build, and publish: `docs/DEV.md`.
 | 1 | Input intents + buffer, fixed 60 Hz clock, resources, ability runner | ✅ Done (Unity), ported to JS |
 | 2 | Combo graph, hit/block/parry/dodge/posture rules, movement, hitboxes, Acolyte AI with attack tokens | ✅ Done (Unity), ported to JS |
 | **3** | **Feedback and rewards:** hit sparks, starburst flashes, blade trails, damage numbers, hitstop shake, camera shake and punch-in, impact frames; **parry → Counter**; **perfect dodge → Afterimage** (enemies at 0.35× for 0.6 s, 3 s cooldown, ghost trail); **posture break → Lantern Break** (priority route that cuts any recovery, cinematic slow-mo on the kill); synthesized SFX; touch controls; frame-data panel | ✅ **Done** (Babylon.js) |
-| 4 | Movement set: double jump, air dash, lock-on switching; second spell as a data-only test (Definition of Done #4) | Next |
-| 5 | Phone smoke test, performance pass, Definition of Done review | — |
+| 4 | **Movement and spells:** double jump and air dash (once per airtime), lock-on switching (and the lock moves on when a target dies), juggle height rules (air hits hold the target at Rook's height; the slam spikes it down), **Vacuum Pull** (pulls targets to Rook, even into the air), **Tempest Edge** (data only), melee hits refill mana | ✅ **Done** |
+| 5 | **Performance and mobile:** no allocations in the fight simulation, pooled render effects, adaptive resolution, FPS readout, auto-pause on tab switch, **touch assist** (+3 frame parry and perfect-dodge windows, hold Slash to keep comboing), spell slots in the HUD | ✅ **Done** (real-phone check is yours, below) |
+
+**Definition of Done review (end of Phase 1):**
+| # | Criterion | Result |
+|---|---|---|
+| 1 | The signature chain executes reliably with no dropped inputs | ✅ Automated test runs the exact chain (L, L, Gale Cutter, jump cancel, air L ×2, air dash, air L, slam): all 7 hits land, in Node and in a real browser |
+| 2 | Perfect dodge and parry learnable within 5 minutes | ⏳ Needs people playing it. Prompts, help screen, and the touch assist are in place to help |
+| 3 | 3 acolytes stay readable | ✅ Attack tokens: never more than 2 attackers (1 on mobile), tested |
+| 4 | A new spell needs only data + VFX | ✅ Tempest Edge was added with zero changes to the simulation or core (verified by diff). Vacuum Pull needed one new reusable hit property (`pull`) |
+| 5 | No per-frame allocations in combat hot paths | ✅ The fight simulation allocates nothing per frame (heap-profiled in Chrome). Rendering allocates a few KB per frame inside Babylon itself |
+| 6 | Runs on a mid-range phone at 30 fps or better with touch | ⏳ Built and tested at phone size in a browser; needs a check on a real phone |
+
+**Phase 1 gate:** "Is the combat fun with grey boxes?" That answer comes from playing it. Phase 2 starts once the owner says yes.
 
 **Definition of done:**
 1. The chain *L → L → Gale Cutter → jump-cancel → air L ×2 → air dash → air L → slam* executes reliably at 60 fps with no dropped inputs.
@@ -1488,7 +1539,125 @@ Estimates assume **1–2 people, part-time-ish**. Every phase ends with a **go/n
 | **5: Full RPG** | Progression, equipment, bonds + bond events, party switching (3 chars), crafting-lite, HQ upgrades, quests, Arc 1–2 bosses, hidden lore | 9–12 months | Arc 1 + 2 complete, content pipeline proven |
 | **6: Narrative Expansion** | Arc 3+, Cal's death & clue network, Brannoc, the Sable Knight encounters, transformations, the Siege of Aurelin reveal | ongoing | Mystery playtest targets met (§15.5 note) |
 
+### 23.1 Phase 2 plan (Combat Vertical Slice)
+| Step | Content | Status |
+|---|---|---|
+| 1 | **Surge** gauge (fills from damage dealt and taken, parries, perfect dodges, reactions) · **Skyrender** ultimate on the §19.4 template (time stop, activation, charge orbit, close-up with name card, release, aerial combo, impact frame, aftermath, return) · **data-driven camera shots** (`runtime/shots.js`) · **Tags & Reactions engine** (§7.2) with its first row: heavy finishers MARK, any spell **Detonates** the mark with splash | ✅ Done |
+| 2 | **Companions Bas (Stone) and Juno (Thread).**<br>• **AI:** they follow in formation and fight by stance. **Press** hunts the player's target. **Guard** stays close and intercepts attacks on Rook, and Bas casts **Bastion Wall** (half damage). **Support** hangs back, and Juno **Stitches** wounds.<br>• **Assist calls:** Bas blinks in with **Pillar Uppercut** (launch, re-launches juggled foes, ANCHORS). Juno with **Snare Line** (BINDS: can't move).<br>• **Squad reactions:** **Taut Line** (anchor + bind: long stagger), **Slingshot** (bind + wind: fling), **Shatterstone** (anchor + heavy: splash).<br>• **Team rules:** enemies target the whole team. Downed companions get back up after 10 s. The combo counter and Surge are shared | ✅ Done |
+| 3 | **The Greywater Fens roster (five types):**<br>• **Choir Acolyte:** swordsman.<br>• **Fen Hound:** pack rusher with a lunge.<br>• **Choir Cantor:** ranged sound bolts, plus a **Hymn** that WARDS allies (super armor, -30% damage).<br>• **Choir Bulwark:** tower shield that blocks everything from the front, unless it's attacking or BOUND.<br>• **Bog Beast ★:** elite brute. Heavy: no launch or pull until its posture breaks. Armored attacks; unblockable mud slam.<br>**Projectiles:** your sword cuts them out of the air; they can be parried and dodged, and they freeze during time stop. **Dispel** reaction: wind on a warded foe. **Juggle decay:** each air hit adds 12% gravity, up to 2.5x | ✅ Done |
+| 3a | *(engine)* Data-driven enemy roster (`data/enemies.js`) and wave list; four-legged character form | ✅ Done |
+| 4 | **Hask the Bogwarden** (§16 B2), boss with a scripted controller (`sim/boss.js`):<br>• **P1:** dives; a mud mound hunts you; ground-skimming mud waves make you **WEIGHTED** (slow, low jumps; Juno's Stitch cleanses). It erupts under you after a **red warning circle**. **Wind on the mound UPROOTS it** (launched, stunned, posture damage).<br>• **P2 (65%):** roars and **calls two Fen Hounds out of the bog**; triple mud waves.<br>• **P3 (35%):** **the bog drains** (the arena visibly changes); no more dives; **EXPOSED** (+50% damage and posture); Belly Flop and Charge.<br>Plus a title card, a boss bar with phase marks, and the *Vacuum Pull* page drop. *Deviation:* the P2 log barricade is postponed to the Fens level-art pass (it needs level geometry); the hound call fills that strategy-shift slot | ✅ Done |
+| 5 | **Page evolution, cel-shading v2, HUD, and the combat run:**<br>• **Four spells:** Gale Cutter, Vacuum Pull, Tempest Edge, and the new **Wind Wall** (Y): a standing wall that stops enemy bolts and pushes foes back. Each spell earns page XP on hits. A full page **evolves** into one of two branches you choose (**P** opens the pages): Twin Cutter / Gale Lance, Maelstrom / Undertow, Cyclone / Tempest Step, Mirror Gale / Downdraft.<br>• **The combat run:** *Episode 4 · The Village That Wasn't There*, seven encounters in the Greywater Fens ending with Hask. It has title cards and squad lines between fights, a rest that heals between encounters, a retry on a wipe, and a results screen with a rank (S/A/B/C) from time, damage taken, best combo, reactions, and retries. Run time is about 10–15 minutes.<br>• **Cel-shading v2** (§19.6.1): a custom toon shader with hue-shifted shadows, a rim light, a hair angel ring with white streaks, tinted outlines, and anime eye highlights. The color grade (saturation and contrast) runs in the shader, with a soft cool vignette. Any device that can't compile it falls back to the classic material on its own.<br>• **HUD:** dynamic spell chips with page XP, party cards with stances, status chips, combo grades, subtitles, and a results screen | ✅ Done |
+
+**Phase 2 gate review.** The gate is *"a playable 10–15 minute combat run that feels anime."*
+- **Built and checked:**
+  - Every item in the Phase 2 row of §23 exists: 3 characters with assists, 5 enemy types, a mini-boss, reactions, 4 spells with evolution, data-driven camera shots, the toon shader, impact frames, one ultimate, and the combat HUD.
+  - 95 automated tests pass.
+  - The full run plays start to finish in a desktop and a phone browser.
+- **Your call:** whether it *feels anime* is a human judgment. Play the run from the start screen ("Play Episode 4"). Tell me what feels flat (hit weight, camera, readability, pacing) and I'll tune it before Phase 3.
+- **Known gaps carried forward:** Hask's P2 log barricade (it needs level art); real character models and animation (the current blocky rigs are placeholders, §20); voice.
+
 **Honest scope note:** a three-arc release (Episodes 1–28) is already a substantial game. Consider shipping **Arcs 1–3 as "Season 1"**. It ends with the Sable Knight at Aurek's grave, a perfect anime season cliffhanger that points players toward the wrong answer. Arcs 4–7 become Season 2, with the reveal as its centerpiece.
+
+
+### 23.2 Phase 3 plan (Story Vertical Slice)
+| Step | Content | Status |
+|---|---|---|
+| 1 | **Story engine and Episode 1 (graybox).**<br>• **Engine:** the **FlagStore** with a safe condition language, **Yarn-style dialogue scripts** (options, Temper tags `#bold` / `#earnest` / `#wry`, `<<if>>`, `<<set>>`, `<<jump>>`, host commands), and **name and pronoun tokens** (`{name}`, `{they}`, `{is}`, `walk{s}`…).<br>• **Saves:** versioned saves with migrations, an autosave at every beat, and Continue from the title screen.<br>• **Episode flow:** the **EpisodeDirector** (cold open, title card, scene, fight, "WHAT HAPPENS NEXT?" preview).<br>• **Episode 1, The Tower of Choosing**, playable start to finish: name and pronouns, the Larkspur cold open, Severin, Brother Moss, the one-page grimoire, the Choir attack as the first combat tutorial (one page, no ultimate, no squad yet), and the "…It's you" hook.<br>• **Scenes:** auto-framed close-ups and over-the-shoulder reverse shots. *Staged in the yard for now; Step 2 builds the Tower* | ✅ Done |
+| 2 | **Cutscene director and the Tower of Choosing:**<br>• **Timeline cutscenes** as data (`data/story/cutscenes.js`): camera keyframes with easing and hard cuts, captions, sounds, actor walks, and fades. Skippable.<br>• **The 3D Larkspur cold open:** the village burning at night with fire, smoke and embers, a crane down into the street, and the silhouette walking out of the flames carrying the infant.<br>• **Story sets** with their own sky, fog and character lighting: the **Tower steps** (morning: the tower, stairs, banners and waiting candidates) and the **Tower hall** (stained glass, light shafts, drifting grimoires, a dais of light; the windows go dark when the Choir sings). The Episode 1 fight takes place in the hall.<br>• **Staging commands** for scripts: `<<move>>`, `<<face>>`, `<<pose>>` (point, raise, cross arms, bow, tilt…), `<<show>>`/`<<hide>>`, `<<cue>>`. Speakers bob while they talk, and close-ups re-aim when someone turns.<br>• **Grimoires descend:** Severin's seven-clasp tome and Rook's thin one float down out of the light | ✅ Done |
+| 3 | **Episode 2, The Knight Exam:**<br>• **The exam grounds:** an arena under open sky with full stands that cheer, the captains' box, and the seven squad banners.<br>• **Trial of the Pack:** a hound fight that teaches dodging, perfect dodges and parries.<br>• **Boss 1, Severin** (`data/severin.js`, `SeverinController`). P1: Star Needles in fans of three, a rapier lunge and flurry, a backstep. P2 (60%): he takes his **Polaris** point and pins five stars joined as a constellation. The lines glow red, then strike: jump or dodge through. **Knock him off Polaris** and the stars go dark while he reels.<br>• **Getting up:** you can get back up three times (`EXAM_GET_UPS`). Winning and losing both continue (`EXAM_DUEL_WON`), with different scenes.<br>• **New cast:** Dagrun, Cal, Corvina, Brannoc, Ysolde, and the Proctor. The draft ends with Dagrun's *"I'll take the one-pager."* | ✅ Done |
+| 4 | **Episode 3, The Lighthouse with No Sea:**<br>• **The Lighthouse hub** (`lighthouse` set): the lighthouse with its sweeping beam, the keeper's house, the lantern rack, the dinner table, a training ring, and stranded boats on the dry Sea of Marrow. Dusk fades to night.<br>• **Exploration beats:** walk freely, talk to whoever is close (a talk prompt plus the Slash button), with an objective tracker. Each character has a first talk and a repeat line.<br>• **The squad:** Juno, Bas, Lio and Tamsin join the cast, along with Dagrun asleep in his chair.<br>• **Sparring with Cal:** the dodge lesson (red-glint thrusts, perfect dodge into counter, parries). His own evasions follow a fixed rhythm that the game never points out.<br>• **Threshold:** Cal's golden door of light, and the rule *"A door I open, I can only close from the other side."*<br>• **Dinner:** the lantern speech, Cal's four-note tune, his joke about dying, and your own lantern lit on the rack | ✅ Done |
+| 5 | **Episode 4 as a story episode, saves, and the gate:**<br>• **Episode 4:** a Lighthouse briefing where Lio notices new lines on the grimoire, then the empty village in the **Greywater Fens** (reeds, dead trees, still water, mist). Four squad fights follow, then the **Mirren choice**: save the child or chase the acolyte (`MIRREN_SAVED`). Then Hask in the Fens' own bog, and an ending that changes with the choice. Vacuum Pull is locked until Hask drops it.<br>• **Saves:** three manual slots plus the autosave. A **SAVE** button works during the story, even mid-scene.<br>• **Episodes & Saves menu:** replay any unlocked episode, or load any slot. Unlocks are kept separately, so deleting a save never relocks an episode.<br>• **Fix:** party cards no longer pile up between fights | ✅ Done |
+
+**Phase 3 gate review.** The gate is *"Does it feel like an anime episode?"*, tested with outside players.
+- **Built and checked:**
+  - Episodes 1–4 play end to end. Each one has a title card and a "WHAT HAPPENS NEXT?" preview.
+  - Every story system from the §23 row exists: Yarn-style dialogue, flags, saves, storyboarded cutscenes, a cold open, hubs and exploration, two bosses in story context (Severin, Hask), and the first fake-death seeds planted as character texture (§15.5: "Mind the step", the dodge rhythm, the four-note tune, "Dying's overrated", the lantern speech, the door rule).
+  - 122 automated tests pass. Every episode was played in a desktop browser, and the story and combat in a phone browser.
+- **Your call:** the playtest with outsiders is yours to run. Watch whether players lean in at the hooks ("…It's you", the empty village) and whether they remember Cal.
+- **Known gaps carried forward:**
+  - Voice acting and music (sounds are still synthesized).
+  - Real models and animation (the rigs are stand-ins).
+  - Lip sync.
+  - Episode 5 onward.
+
+
+### 23.3 Phase 4 plan (World)
+| Step | Content | Status |
+|---|---|---|
+| 1 | **Zone engine and the Aurelin hub.**<br>• **Zones as data** (`data/zones.js`): a set, bounds, solids, arrivals, townsfolk, and exits. Each zone's layout drives both what's drawn and what's solid.<br>• **Free roam** ("The World" on the title screen): walk out through exits, or use the world map (**P**).<br>• **Saves:** the autosave remembers which zone you're in.<br>• **Aurelin:** the fountain plaza, the Hall of Lanterns, the Lowmarket stalls, streets of houses, the city walls and south gate, and a walking crowd (instanced).<br>• **Townsfolk** whose lines react to the story (the exam result, Mirren, your lantern) | ✅ Done |
+| 2 | **Economy and equipment:**<br>• **Marks:** earned from every defeated enemy (bounties per kind) and when you finish an episode.<br>• **12 curated items** (`data/items.js`) across a weapon, a cloak, and two charms. Each has one clear identity: damage, posture, mana, defense, health, Surge, or speed (no random affixes, §17).<br>• **The Lowmarket stall** in Aurelin sells them, and new gear goes on right away.<br>• **The BAG screen** lets you swap gear anywhere in the story.<br>• **In the fight:** gear changes Rook's stats and damage (`World` mods).<br>• **Saves:** your gear and Marks save with the story | ✅ Done |
+| 3 | **Reputation, merit, and side quests:**<br>• **Quest engine** (`core/quests.js`): each quest's state lives in one flag (`Q_<ID>`), and its stages advance when their flag expression comes true, so dialogue, pickups, and fights can all drive it. Rewards grant Marks, merit, and reputation.<br>• **Three Aurelin side quests** (`data/quests.js`): *Something Fried* (Dagrun's lunch from the fountain cook), *The Village Nobody Remembers* (ask the guard, the crier, and the vendor about the vanished Fens village), and *A Lantern for the Kid* (find a toy by the gate).<br>• **Renown changes the city:** at Aurelin renown 10, the guard salutes and the Lowmarket gives 10% off.<br>• **Squad merit:** the Lanterns start last of seven squads and climb the ranking as merit grows.<br>• **The QUESTS journal** shows reputation, merit, squad rank, and the quest log. The objective tracker shows the active quest | ✅ Done |
+| 4 | **Thornwick, the Fens field, and the Undercroft:**<br>• **Field and dungeon fights** (`runtime/story.js` encounters): walk into an encounter's area and enemies ring the spot (`World.spawnWave(kinds, at)`). Field fights come back each visit and give up if you run about 12 m away. Dungeon rooms bar their passages until they're clear and stay cleared. Falling wakes you at the zone's entrance with nothing lost.<br>• **Thornwick** (home): the green and its oak, the orphanage, the smithy, the mill and fields, and a palisade. Mother Wren, Farmer Odo, and the smith live here. **The orphan ledger** is readable: you were found the night Larkspur burned. **Quest:** *Bandits on the Mill Road*, with the new **Road Bandit** (a knife thrower).<br>• **The Greywater Fens** as a field zone: hounds in the reeds, the Choir back in the empty village, and a bog beast. Old Ness the fisher lives here, and the hymn nailed to the well can be read.<br>• **The Undercroft** (dungeon, down the Lowmarket grate): three barred rooms with the new **Undercroft Rat** (swarms) and **Clockwork Sentinel** (armored attacks; Gearspin is unblockable, so dodge it). The Gear Hall has a strongbox (+60 Marks). **Quest:** *Something Below the Lowmarket* (from the cook).<br>• **Travel:** the Lighthouse's west road leads to Thornwick, and Thornwick's north-west path leads to the Fens. The map lists every overworld zone. Dungeons are entered on foot. Each zone you enter sets `VISITED_<ZONE>` | ✅ Done |
+| 5 | **Performance budget and the gate:**<br>• **Static scenery is merged** (`kit.bake` in `runtime/sets.js`): one mesh per material, ink line and 24 m cell, so each cell is still culled.<br>• **Characters merge the parts that move together** (`Rig._bakeParts`), and far characters drop their ink lines (level of detail: 30 m on PC, 20 m on phones).<br>• **The glow pass only draws things that glow**, instead of every mesh a second time.<br>• **A performance meter** (**?** → *Show performance meter*) shows FPS, draw calls against the budget, triangles, and render scale.<br>• **Fix:** the top menu no longer runs off narrow phone screens | ✅ Done |
+
+**Performance budget** (measured with Babylon's scene instrumentation at fixed spots in every zone; "before" is the Step 4 build):
+
+| Zone (worst spot) | PC draws: before → after | Phone draws: before → after | Phone triangles |
+|---|---|---|---|
+| Lighthouse | 760 → 377 | 511 → 234 | 55K |
+| **Aurelin** (largest) | 667 → 307 | 434 → 189 | 49K |
+| Thornwick | 384 → 191 | 270 → 122 | 35K |
+| Greywater Fens | 894 → 284 | 413 → 197 | 35K |
+| Undercroft | 318 → 109 | 138 → 81 | 13K |
+
+- **Budget:** at most **400 draw calls on PC** and **250 on phones**, at most **80K triangles on phones**, and a scene CPU time under 8 ms per frame (measured: about 6 ms on PC and 3–3.5 ms on phones).
+- **Every zone is within budget.** The phone figure is the worst view, including the whole crowd in Aurelin.
+- **Adaptive resolution** (0.6×–2×) protects the frame rate on slow GPUs.
+- **Re-measured after the character and world redesign (§29)**, at the worst spot in each zone:
+
+  | Zone | PC draws | Phone draws | Phone triangles |
+  |---|---|---|---|
+  | Lighthouse | 206 | 148 | 116K |
+  | **Aurelin** | **396** | **212** | **142K** |
+  | Thornwick | 271 | 122 | 54K |
+  | Greywater Fens | 218 | 159 | 81K |
+  | Undercroft | 81 | 50 | 22K |
+
+  - **Draw calls stay within budget.** Each character is now one skinned mesh plus its weapon arm and face, and the crowd and animals are instanced.
+  - **The phone triangle budget is raised to 150K, on purpose.** Full anatomy and layered clothing need the extra triangles, and current phones handle them easily; draw calls are the real limit. Phones also get lighter bodies (`LOD.tess` 0.75) and ink lines only within 20 m.
+- **Frame rates were not measured on real hardware.** The test browser renders on the CPU, so its frame rates mean nothing. The real check is the meter on the reference phone.
+
+**Phase 4 gate review.** The gate is *"Performance budget met in the largest zone in a PC browser and on the mobile reference phone."*
+- **Built and checked:**
+  - **Five connected zones:** the Lighthouse, Aurelin, Thornwick, the Greywater Fens (a field zone with encounters), and the Undercroft (a dungeon with barred rooms).
+  - **Systems:** free roam, map travel, NPCs with talk nodes that react to the story, the Lowmarket shop, curated equipment, Marks, reputation (squad, Aurelin, Thornwick), squad merit and rank, five side quests with a journal, readable lore, field and dungeon fights, and three new enemy types.
+  - 145 automated tests pass. Every zone was walked, fought, and measured in a desktop browser and an emulated phone.
+- **Your call:**
+  - Open the meter on your phone in Aurelin's plaza. It should stay at 50+ FPS and show draw calls in green.
+  - Say whether exploring feels worth doing: talking, side quests, the Undercroft.
+- **Known gaps carried forward:**
+  - Zones load whole rather than streaming in. Each is small enough that this is fine for now.
+  - Rival squads exist only as a ranking, with no squad-vs-squad events yet.
+  - The world isn't tied into the episodes yet. Free roam is reached from the title screen.
+
+
+### 23.4 Phase 5 plan (Full RPG)
+| Step | Content | Status |
+|---|---|---|
+| 1 | **Character progression** (§17, §8.1):<br>• **Level 1–60 and XP** (`core/progress.js`, `data/skills.js`): XP from every defeated foe (by kind; bosses are worth most), quests (60 unless a quest says otherwise) and finished episodes (120). Each level takes longer than the last; an episode's fighting is worth a few levels, not ten.<br>• **Modest stat growth** per level: +5 health, +1 mana, +0.6% attack, +0.4% posture damage. A level-up refills health and mana, and gives a **skill point**.<br>• **Page mastery I–V:** pages level by use and keep levelling after they evolve. Each level adds 5% damage to that page; **III** is evolution (the branch choice); **V** (mastered) cuts its mana cost by a quarter. An evolved page stays evolved in every later fight and episode.<br>• **The Grimoire Tree:** five columns, one per page plus **Margin Notes** (Rook's own passives), three nodes each. A node needs the one above it, a minimum level (1, 4, 8), and a page's last node needs that page at III. Page nodes add damage or cut mana for that page; Margin Notes add health, mana regen, Surge gain and overall damage.<br>• **The GRIMOIRE screen** (top menu, or P): level and XP, stats, each page's level and evolution choice, and the tree. A dot on the button means a point to spend or a page to evolve. Learning applies immediately, mid-fight too.<br>• **Saves:** progression saves with the story (`prog`), alongside the bag | ✅ Done |
+| 2 | **Bonds and bond events** (§11; `core/bonds.js`, `data/bonds.js`):<br>• **Six Lanterns** (Bas, Juno, Tamsin, Lio, Cal, Dagrun), ranks 1–10 from *Stranger* to *Sworn*. State is story flags, so it saves with everything.<br>• **Raising a bond:** the first chat each in-game day (+6; the world clock now counts days), **gifts** (one per person per day: loved +15, liked +8, fine +3, disliked +0, each with their own reaction), **fighting side by side** in episodes (+4 each), and quests they care about (Dagrun's fried fish, the café cake for Juno).<br>• **Gifts:** seven, sold at the Gilded Spoon (Madame Odette), the Lowmarket stall and the fish cook. After chatting with a squadmate you can give one.<br>• **Gates:** a bond can't pass rank 2/4/6/8 until its **bond event** plays: talk to them when the prompt shows ♥. Written so far: Bas (ranks 2 and 4), Juno (2 and 4), Tamsin, Lio, Cal and Dagrun (2). A bond waiting on an unwritten scene says its next chapter comes later.<br>• **Unlocks:** rank 2 their story and the gift they'd love; rank 3 a passive (Bas: 8% less damage with him in the fight; Juno: +20 health with her; Tamsin: +10% Surge gain; Lio: +1 mana/s; Cal: +5% speed; Dagrun: +4% damage); rank 5 a **Team Attack** for Bas and Juno: with Surge at half or more, the assist call becomes a joint strike (50 Surge).<br>• **The Journal** (QUESTS) shows every bond: rank, progress, what's next, lore, passives, gifts in your bag | ✅ Done |
+| 3 | **Party switching** (§10; `data/severinKit.js`, `World.tagSwap`):<br>• **Severin tags in** (T, or TAG on touch): a rapier kit on Rook's frame data (thrust, thrust, flurry, lunge; riposte launcher; Fleche dash strike; air thrusts) and **Star Fan** (three needles) as his spell. No ultimate yet.<br>• **One on the field at a time.** Each keeps their own health and mana; the one on the bench recovers 0.4% a second. Tagging in sends out a **tag strike** (knocks back anyone close) and gives a moment of invulnerability; then a 2.5-second cooldown.<br>• **Cover:** if whoever's on the field falls and the other is standing, the partner tags in instead of a defeat.<br>• **Where:** the practice yard, and free roam once Episode 2 is done. Cal joins the roster after the reveal (Arc 5) | ✅ Done |
+| 4 | **Crafting-lite and Squad HQ** (`core/crafting.js`, `data/crafting.js`):<br>• **Materials** drop from every foe (Fen Hide, Choir Thread, Iron Plate, Bog Heart, Rat Tail, Brass Gear, Leather Strap); bosses drop several.<br>• **The workbench** at the Lighthouse **tempers** gear to +1 (+2 with the Forge): weapons +5% damage and +3% posture per level, cloaks +12 health and +2% defense, charms +30% of their effect. Marks plus materials.<br>• **The squad board** builds **HQ rooms**, each needing the squad's Merit (never spent), Marks and materials: **Kitchen** (a daily stew at the table: +20 health and +5% damage until midnight), **Training Ring+** (+20% XP from fights), **Forge** (+2 tempering), **Library Corner** (+50% page mastery), **Infirmary** (+30 health). Each built room appears at the Lighthouse (stove, banners and weapon rack, anvil and hearth, bookshelf, tent) | ✅ Done |
+| 5 | **Arc 1–2 bosses and hidden lore** (`data/bosses2.js`, `sim/boss.js`, `data/lore.js`):<br>• **B3 Deacon Ilse Marrowind** (the Fens, after you read the hymn): silence zones (no spells), Toll rings; P2 two acolytes and a ward while they stand; P3 three bells silence the whole field and shield her until broken; P4 she silences your dodges in five-second windows (parry).<br>• **B4 Sir Galen the Rusted** (the Tower of Choosing, a new zone on the map, after Ilse): a tower shield in front, lance, bash, cleave; P2 rings of rot (jump them; rust makes you take 25% more damage) and a charge; P3 his Oath (no stagger, no posture damage) until three vow-seals break; P4 desperation charges across the hall.<br>• **B5 Gullmaw, the Cistern Toad** (the Undercroft's flooded cistern, after Galen; a bat/amphibian monster with webbed claw hands and feet, large bat wings and ears, fangs, a throat sac and axolotl gills): claw slaps, the Lily Pad Leap (seven lit pads, a fast frog hop and smash on each, motion-blur trail), a tongue that reels you in, a belly-flop splash ring (jump it), bile spit (WEIGHTED), two bile egg sacs; P2 the water jet sweeps the floor (jump it); P3 it swallows an ally into a slime bubble (burst it), or lays new egg sacs.<br>• Bas and Juno fight beside you in every boss fight; bosses never give up the chase; the quest *The Pale Choir's Trail* threads all three.<br>• **Hidden lore:** six page fragments of the under-text, one per zone, faintly glinting; five restore **Clause I · The Wind Remembers** (+5% damage, +1 mana/s). The Journal shows each line found | ✅ Done |
+
+**Phase 5 gate review.** The gate is *"Arc 1 + 2 complete, content pipeline proven."*
+- **Built and checked:** every system in the Phase 5 row of §23 exists: progression (levels, page mastery, the Grimoire Tree), equipment with tempering, bonds and bond events with Team Attacks, party switching (Rook and Severin), crafting-lite and HQ upgrades, quests, five more Arc 1–2-scale bosses' worth of mechanics (B3–B5 built; B1 and B2 from Phase 3), and hidden lore. 189 automated tests pass; every new system was played in a desktop browser.
+- **The pipeline is proven:** a boss is data (stats, moves, phases, tuning) plus a phase controller; a place is a zone (bounds, cast, routines, pickups, encounters, exits); a scene is a dialogue script with camera, staging and choices; a quest is flag stages. Each new boss, zone, scene and quest in this phase was added that way.
+- **What is not done (honest scope):** Arc 1 and Arc 2 are **not complete as story**. Episodes 5–18 (Thread and Needle; the Silence Sermon and Rust Remembers as full episodes with their cutscenes; the Royal Festival; the Hall of Lanterns; the Clockwork Court; the Chancellor's Garden; the Cantor Twins (B6); the Hollowmarch; and *I'll Hold the Door*, the Hollow Bloom (B7) and Cal's death) still need writing and staging. The B3–B5 fights exist in the world now, ready to be placed inside their episodes. The Tower floor collapse in Galen's P3 is not built (it needs a falling-debris set).
+- **Your call:** play the new systems: the GRIMOIRE, BONDS in the Journal, TAG with Severin, the Lighthouse board and workbench, and the boss trail (read the hymn on the Fens well). Then decide: **write Arc 1–2's episodes next** (recommended: the story is the gate), or move on to Phase 6.
+
+
+### 23.5 Phase 6 plan (Narrative Expansion)
+The gate: *mystery playtest targets met* (§15.5 note: 10–20% suspect before the reveal, 80%+ recall a clue on rewatch). Phase 6 starts with **Arc 3, "Ashes and Echoes" (Eps 19–28)**, the arc that turns grief into the Sable Knight mystery. Arc 2's episodes (5–18) are still unwritten, so Arc 3 opens as its own chapter: it unlocks after Episode 4 and begins with a *"Previously"* recap of Arcs 1–2 as the story tells them. Leak prevention (§15.11) applies to every step: nothing in the build connects the masked knight to anyone.
+
+| Step | Content | Status |
+|---|---|---|
+| 1 | **Arc 3 opens: Ep 19 "An Empty Chair", the Hall of Lanterns, the clue system:**<br>• **Episode 19** (`data/story/ep19.js`): a *"Previously on UNWRITTEN"* recap, the title card, dinner at the Lighthouse with one chair empty, then a quiet walk around the HQ talking to everyone (Dagrun behind a closed door, Juno furious, Bas quiet, Tamsin trying, Lio shaken). Dagrun finally comes out and takes the squad to light a candle at the Hall of Lanterns. Brannoc's summons to Ironhold ends it (preview: Ep 20).<br>• **The Hall of Lanterns** (new interior zone, through the Hall's door on the plaza): seven squads' rows of lanterns, the Keeper, your own lantern. Cal's lantern follows the story: lit before, **dark (wick whole)** after Ep 18.<br>• **The clue system** (`core/clues.js`): clue flags by track (A, B, D, seeds), a derived investigation score that is **never stored** (§15.10), and a **leak test** that fails the build if any data file links the masked knight to anyone. Track A clues in this episode (A1 Lio's *"no residue"*; A2's first half, the whole wick, missable), each with its alibi.<br>• **Key items** in the Bag: the brass key (its text will change near the Hollowmarch: A3).<br>• **Arc 3 in EPISODES & SAVES**, unlocked after Episode 4.<br>• Checked by 7 new tests (199 in all) and a full browser play-through of Ep 19. | ✅ Done |
+| 2 | **The Iron Front (Eps 20–22)** (`data/ashfall.js`, `sim/varka.js`, `data/story/ep20–22.js`, `data/story/iron.js`):<br>• **Ironhold** (a new zone, on the map once Brannoc's summons arrives): the Iron Wardens' wall and gatehouse, the camp of tents and braziers behind it, the scorched field in front, the Ashfall camp smoking on the horizon. After Ep 22, Brannoc's sword is planted at his command tent.<br>• **The Ashfall Dominion:** the **Legionary** (halberd sweep; a red-glint **Brand** that can't be blocked and leaves you SCORCHED, a slow burn that never lands the last blow) and the **War-Mage** (Arc Lance bolts, and **Thunderheads**: a ring on the ground, then a bolt; step out).<br>• **Strikes from above** (a new world system): a warning ring, then the hit after a delay, for thunder and falling wreckage.<br>• **Captain Brannoc** fights beside you (Pledged Strike assist, Oath of Endurance shield) and spars with you in Ep 21. Your vow there (*"I won't step back"* / *"…leave anyone behind"* / *"…lie to my squad"*) is what he speaks to at the end.<br>• **Boss 8 · General Varka Ironsong:** P1 her siege engine, the Ironsong, fires volleys from behind her (it can be broken); P2 it charges down a marked red lane, and her Magnet pulls you in; P3 it breaks apart and burning wreckage falls in orange rings; P4 Railgun dashes. She can't be killed by you: at 5% **Brannoc's Final Vow** ends it.<br>• **Ep 20 The Iron Front, Ep 21 The Oath of Steel, Ep 22 Ironsong:** two waves at the gate field; dawn training and the walk with Brannoc; the battle, his death on the field with Bas beside him, and a week later the Hall of Lanterns: **his wick is ash, Cal's still stands** (A2 completes, with the Keeper's alibi).<br>• Checked by 7 new tests (206 in all) and a browser play-through of Ep 20's first wave and all of Ep 22. | ✅ Done |
+| 3 | **Juno's Thread and the Sable Knight (Eps 23–24):** Juno's grief quest and Cal's hidden journal (A4); Brannoc's funeral attacked by **Wraithe**, the Choir's silent rift-walker (red herring); **Sable Encounter I**: the war engine falls through a black tear (B1); the Sable Knight as a separate identity (own model per the Disguise Bible, own data, no shared names); the Journal's **"Who is the Sable Knight?"** rumor board. | Planned |
+| 4 | **What Lio Knew and the Vault (Eps 25–26):** Lio's secret and the party fracture (forgive / exile, reconnecting by Ep 28); **Boss 9: the Sable Knight** (glaive, Severance tears, left-left-backstep, head tilt, silent casting, spares Rook at 25%, breaks Bas's arm → `BAS_ARM_BROKEN`); the mask voice chain (`MaskIntegrity`). | Planned |
+| 5 | **Transformations and Eclipse (Eps 27–28) + the gate kit:** Elodie's price; the grimoire's first **Under-Text stage (Annotation)**: write a clause; **Boss 10: Severin Eclipsed**; the Valcourt crypt hook. **Lore Archive · Theatre** (replay watched scenes, frame-step, slow-mo). A **playtest kit** for the gate: an opt-in end-of-arc survey ("who do you think the masked knight is?") and clue-recall logging. Arcs 4–5 (Encounters III–VI, the Siege of Aurelin reveal) follow as Phase 6 continues. | Planned |
 
 ---
 
@@ -1737,7 +1906,10 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 | **Now** | Archdemon, **5★**, intelligent for the first time | Archdemon, **5★**, intelligent for the first time |
 | **Collectively** | **The Clergy Duo** | |
 | **Concealed form** (CIN-05B) | Plain black suit, black shirt, tie, gloves, featureless black mask | The same |
-| **True outfit** (CIN-05C) | Immaculate black **butler's suit**: waistcoat, tie, gloves, black watch-chain | Black **maid's dress cut with a suit jacket and tie**, gloves, a slim black **instrument case** on her back |
+| **True outfit** (CIN-05C) | Black suit, **white shirt**, **dark-blue tie** (matches his hair), black shoes. Walks with a hand in his pocket | The same black suit jacket and **white shirt**, a **pink tie** (matches her hair), with a **long black skirt slit high at the side** and **maid detailing** (short frilled apron, frilled cuffs, lace collar, small lace headdress); a slim black **instrument case** on her back |
+| **Hair** | Silky **dark blue** with **white and light-blue glossy highlights**. Style from `ref-03`: messy, swept, flyaway strands, long bangs across the mask; kept long, in a low ponytail to the knees | Short, silky **pink**, in **two ponytails**, with **light-pink glossy highlights** |
+| **Mask** (true form; never removed) | The **same smooth white mask** as hers, **turned upside down**: closed crescent eyes, a **frown** | **Smooth white, closed crescent eyes, a smile** |
+| **Reference art** | Outfit, ponytail, pose: `ref-01` (its mask is retired). Hairstyle: `ref-03-ghorran-hairstyle.jpg` (style only). Mask: `ref-02`, inverted | Mask: `docs/art/clergy-duo/ref-02-smiling-mask.jpg`. Jacket, shirt, tie: ref-01 |
 | **Archdemon form** (CIN-05C) | Horns from the brow; the Commander's vast wings, from slits in the coat; mask stays on | The same |
 | **As shown** | Unhurried, precise; does the lifting; opens the path | Watchful; **turns back to look at Cal**; hums the army's march as a lullaby |
 | **Abilities shown** | **Time travel** and stopping time locally; travelling between worlds; the black circle; the Astral Path (a tunnel of dark aura they open without a word); changing form; concealing horns and wings. All of it is **the King's aura** | |
@@ -1762,7 +1934,7 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 | The King lies down in a black coffin; the lid closes | CIN-05B (cut 011a) |
 | After time resumes: the sealed coffin, the empty throne, the empty places beside it | CIN-05B (cut 050) |
 | A **language no one has heard**, never subtitled | CIN-05B, CIN-05C |
-| *(Cal's Path)* On a **dark astral path** past the **wreckage of other worlds**: **butler and maid** outfits, **horns**, **the Commanders' wings**; their excitement; the maid hums the march; Cal whistles it back; **★★★★★** through Cal's eyes. The path is a **long tunnel of dark aura** leading to the **Demon Continent**, which shows **no battle fires**; a tall doorway at its end | CIN-05C |
+| *(Cal's Path)* On a **dark astral path** past the **wreckage of other worlds**: their true **suits and white painted masks**, **horns**, **the Commanders' wings**; their excitement; the maid hums the march; Cal whistles it back; **★★★★★** through Cal's eyes. The path is a **long tunnel of dark aura** leading to the **Demon Continent**, which shows **no battle fires**; a tall doorway at its end | CIN-05C |
 
 ### 28.3 Design rules
 1. **Calm is the horror.** They never run, pose, shout, threaten, or fight on screen. They walk like people arriving at a meeting, even while transforming.
@@ -1783,7 +1955,7 @@ A mystery built in two halves. In Backlash (CIN-05B), two impossibly calm figure
 | V2 | **The mural + a symbol** | Backlash Ch 3, the caverns | The filled black circle scratched beside a dead soldier's tallies; the mural of a King giving his aura to two Wings; a **memory splice** right after Cal studies it | Ancient history; a scratch |
 | V3 | **Records of disappearances** | Arc 6, Silent Quill archive (side quest) | Centuries of vanishings: witnesses report *"the world held its breath"* and *"two people dressed for a funeral, one of them humming."* One entry: a shepherd near Larkspur, fifteen years ago, *"lost a moment of time."* | Folk superstition, filed under *Unexplained* |
 | V4 | **Someone mentions "black figures"** | Arc 6, a stranded Demon Soldier in Liraen | *"The Wings left the King. Now the black ones come for those who fall wrong."* He won't say more | Battlefield superstition |
-| V5 | **Cal recognizes the clothing** | Arc 7, Juno's sketchbook | A stranger once commissioned two odd garments from Juno: a black butler's suit and a black maid's dress *with a tie*. Cal goes quiet for a full beat. *"Don't make those for anyone."* | Juno: *"…Fashion critic now?"* |
+| V5 | **Cal recognizes the clothing** | Arc 7, Juno's sketchbook | A stranger once commissioned two odd outfits from Juno: two black suits, one with a **dark-blue tie**, one with a **pink tie** and a **long skirt slit to the thigh**, and in the margin, the same white mask drawn twice: once **smiling**, once **upside down, frowning**. Cal goes quiet for a full beat. *"Don't make those for anyone."* | Juno: *"…Fashion critic now?"* |
 | V6 | **Quiet about portals** | Arc 7 banter skit | Tamsin: *"Why don't you just portal us to the throne room?"* Cal: *"Doors, Tamsin. I make doors."* Not a joke, for once | He's touchy about his magic |
 | V7 | **Direct question** | Arc 7, after the alliance | Rook: *"The two in black. Who were they?"* Cal's smile falters, the only time in Arc 7. *"…Family. Sort of. Not yet."* | — |
 | V8 | **The sleeping King recognizes the language** | Arc 7, at the coffin | Cal mutters the three syllables he whispered as he "died." From inside the sealed coffin, **one word answers** in the same tongue. The archdemons go perfectly still. Cal, for once, says nothing | — |
@@ -1799,6 +1971,120 @@ The **who** and the **how** are decided. These stay undecided until a later arc 
 - Whether "the dead who fall wrong" means every 0★ being.
 
 Whatever is decided must stay consistent with §28.1–28.4.
+
+---
+
+## 29. CHARACTER & WORLD DESIGN STANDARD
+
+**Visual target:** a grounded medieval world, stylized anime characters, and spectacular fantasy combat. Everyday life looks believable and lived in (the design principles of *Kingdom Come: Deliverance II*, never its characters, costumes, places or assets), so that supernatural combat hits harder by contrast. Every visible element should look deliberately placed: no clones, no filler, no outfit that contradicts its wearer's job, and no redesigns between scenes.
+
+### 29.1 Identity rules (locked)
+- **Storyboard = identity.** A character's head (face shape, eyes, hair silhouette, colors, beard, mask or hood) is defined once in `runtime/rig.js` `LOOKS` and is never redesigned or swapped. The body is built *around* the head; the head is never forced onto a generic body.
+- **Body reference = proportions.** The supplied reference sets the lower-body silhouette (slim thighs, long slender calves, narrow ankles, proportional feet, smooth joints). It is used for proportion only, never identity, clothing or face.
+- **One model everywhere.** A character is one model (`Rig`): the same one in gameplay, dialogue, cutscenes and fights. Nothing is regenerated per scene. Every scene, script and cutscene keeps its storyboard: same staging, same lines, same shots.
+
+### 29.1b Owner design sheets (`docs/art/character-sheets/`): the current storyboard
+The four sheets in `docs/art/character-sheets/` are the character designs. The game follows them; any difference is listed below.
+- **Faces:** a round cranium tapering to a soft, narrower jaw and chin (`animeHead`), with brows, a small nose, a mouth and ears, and each character's eye color. **The eyes stay the master-prompt eyes**: large dark ovals with two highlights.
+- **The Lanterns** (Rook, Bas, Juno, Cal, Dagrun, Tamsin) wear a **gold stand collar** instead of the old scarf. Swords hang at the left hip. Bas wears steel gauntlets, Dagrun a buttoned navy coat, and Juno a pink baldric.
+- **The Pale Choir** wear closed **knight helms** with purple plumes and side drapes:
+  - **Acolytes and cantors:** white robes with a purple sash, gold-stitched hems and purple boots.
+  - **Bulwarks:** leather armor with a red strap, behind the purple tower shield.
+- **Bandits:** brown hair, leather jerkins with a red baldric, bracers, gloves and pouches.
+- **Clockwork Sentinel:** slim brass; **Bog Beast / Hask:** green armored golems.
+- **Guard:** the city's blue knee-length coat with a gold emblem, gloves, boots and a spear. **Smith:** leather armor, red gloves and a heraldic shield.
+- **Townsfolk:**
+  - **Keeper:** purple robe with a yellow sash.
+  - **Vendor:** brown tunic with a yellow sash.
+  - **Gossip** (orange hair) and **Wren** (white hair): purple dresses, both holding a scroll.
+  - **Cook:** a white robe, yellow sash and red belt.
+  - **Farmer:** a green vest and a kite shield.
+  - **Ness:** a green robe and a staff with a violet orb.
+  - **Kid:** a blue tunic and shorts.
+- **Others:** Lio (white bob, blue dress, satchel, lantern), Tamsin (no lute), Mirren (ponytail, brown dress, red belt), Ysolde (long orange hair, green tunic, spear), Moss (white hair in a bun, brown robe), the Herald (black bob, purple robe, yellow sash), Severin (white uniform, blue cape and boots), Corvina (white gown, gold embroidery), Brannoc (full plate, red belt).
+- **Deliberate differences:**
+  - **The Larkspur stranger** keeps a blank silhouette head and the wrapped infant. The sheet shows a face and a box, but the cold open depends on not seeing who he is. He wears the sheet's black outfit and brown boots.
+  - **Rook keeps the sword** (his whole moveset uses it). The sheet's glowing staff reads as his floating grimoire, which he keeps.
+- **Crowds and regular NPCs:**
+  - **The background crowd** (`runtime/crowd.js`) uses five archetypes from the sheets: villager (tunic and boots), woman in a long dress, elder in a robe with a yellow sash, laborer in leather, and child in tunic and shorts. Every passer-by has the sheets' head shape, the master eyes, a hairstyle (fringe, bob, long or beard), and knees that bend as they walk.
+  - **Regular NPCs** (full models, daily routines, no conversation; `zones.extras`): in Thornwick, a washerwoman at the laundry line, a woodcutter and a water-carrier; in Aurelin, a pilgrim at the chapel.
+
+### 29.2 Character sheets (`data/sheets.js`)
+Every character has a sheet: **build**, **gait**, **idle**, and **outfit**.
+- **The head height is fixed** (`HEAD_Y`), so each build fits its body under the head: longer legs mean a shorter torso, never a different head.
+- **Eight builds:** slim, lithe, athletic, broad, stocky, frail, child, and brute. Each sets leg length, shoulder width, chest, waist and hip radii, depth, limb radii, and hand size. Legs are longer than the torso for every build except brutes.
+- **Height** comes from the head's own scale (`LOOKS.scale`), from the 0.62 child to the 2.0 Hask.
+
+### 29.3 Clothing system
+Clothing = **occupation + social class + region + weather + age + personality + wealth + faction**. Outfits are built from layers:
+- **Torso:** a top whose hem falls to the hip, thigh, knee or ankle (open coat or closed robe), and long, rolled or short sleeves.
+- **Legs and feet:** trousers or shorts; tall, ankle or waders boots, or shoes.
+- **Layers:** apron, vest, breastplate, pauldrons, tabard (with a faction emblem), cloak, collar, and gloves.
+- **Kit:** belt with pouches, tool belt, satchel, bracers, and jewelry (brooch, chain).
+- **Wear:** patches (repairs, seeded per character so they never move) and grime (dirt baked toward the hem and boots).
+
+| Who | Their outfit says |
+|---|---|
+| **Smith** | Heavy apron, rolled sleeves, leather gloves, tool belt, soot (grime 0.85) |
+| **Farmer** | Linen shirt, worn trousers, work boots, rough belt, a vest, patches, mud (0.7) |
+| **Merchant (vendor)** | Better cloth, an open long coat, pouches, a satchel, a gold chain |
+| **Guard** | Breastplate over a gambeson, the city's blue tabard and emblem, gloves, cloak, weapon |
+| **Nobility (Severin, Corvina)** | Fine pale fabrics, gold brooch and trim, tall polished boots, spotless (grime 0) |
+| **Adventurers (the Lanterns, bandits)** | Mixed gear, travel-worn coats, pouches, bracers, weapons (the bandits are patched and filthy) |
+| **Clergy (Moss, Keeper, the Choir)** | Long robes; patched (Moss), gold chain of office (Keeper), uniform sashes and hoods (the Choir) |
+
+### 29.4 Body model (`runtime/body.js`)
+- **Anatomy:** a lathed torso (chest, waist, hips) with collarbones and shoulder caps, and a neck. Two-bone legs with modeled thighs, kneecaps, calves, ankles and feet. Arms with an elbow (the off arm bends), forearms, and hands with a thumb.
+- **Garments are thick shells**, so ink lines never show through an edge. Coat tails and robes swing with the thighs.
+- **Rendering:** every cel-shaded part is baked into one **skinned mesh** colored per vertex (`toonSkin` in `look.js`). Its bones follow the rig's nodes. Garment wear is baked into the vertex colors.
+- **The weapon arm keeps its own ink line**, because it crosses the body. The face has none of its own: the head's silhouette shell draws it.
+- **Swords are sheathed** out of combat: long swords across the back, rapiers at the hip. Staffs, spears and rods are held upright.
+
+### 29.5 Animation (`runtime/motion.js`, `core/ik.js`)
+- **Walking:** contact → down → passing → up. Two-bone IK puts each foot on its target.
+- **No skating:** the walk cycle advances by distance travelled, so a planted foot moves back at exactly the body's speed. Measured in the browser: planted feet move at most 0.1 m/s while the body walks at 1–3 m/s.
+- **Gaits** (confident, soldier, graceful, lively, nervous, heavy, old, child, prowl, machine) change stride, cadence, bounce, hip sway, arm swing and lean. A knight doesn't walk like a nervous villager.
+- **Running** leans in, lengthens the stride, lifts the feet higher, and bends the elbows. Turning on the spot takes small steps.
+- **Jumping:** crouch → tuck → reach → landing compression, with the knees bending on impact.
+- **Idles:** breathing and occasional weight shifts, with personal carriage (proud, tired, fidgety…).
+- **Combat:** a planted fighting stance, and lunges that drive from the feet through the hips: the stance widens, the hips turn and the chest counter-turns (anticipation → strike → follow-through → recovery).
+- **Kneeling and falls** are posed from the hips.
+- **Drawn on twos:** secondary motion (hair, scarf, cape) is held for two frames, the stop-motion-inspired look: clean key poses, not choppy.
+
+### 29.6 NPC behavior (`sim/routine.js`, `runtime/ambient.js`)
+- **Routines:** each townsperson has a day: they walk to a spot and work there (hammering, sweeping, stirring, hawking, fishing, reading, sewing, strumming, sparring, lighting the lamps, hoeing), wander, and move on. Routines can depend on story flags. Farmer Odo frets on the road until the bandits are gone, then goes back to his field.
+- **Reactions, in priority order:**
+  1. **A fight within 24 m:** civilians run to the shelter farthest from it and cower; children run fastest; guards turn to face it.
+  2. **Rain:** everyone but the guards heads for cover.
+  3. **Night:** people with a home go in.
+  4. **The player stops beside them:** they stop and look. Walking past earns a glance.
+- **The background crowd** (`runtime/crowd.js`) has legs and arms in step with the ground, varied height, build, skin, hair, clothes, age and pace, and pairs who stop to talk. Weather and night thin it out, and rain hurries it along.
+
+### 29.7 Living world
+- **Time and weather** (`sim/weather.js`): a 16-minute day and per-region climates (the Fens are wet, the dry sea almost never rains). The sky, fog and light follow the clock. Windows and lamps light up at night, rain falls around the camera, and the time and weather show in the zone tracker. Both are saved with the world.
+- **Districts:**
+  - **Aurelin:** the Crown Ward's stone townhouses (pilasters, balconies, family banners, hedges), the poor quarter by the grate (patched-plank shacks, laundry, a puddle), the chapel, the Lantern & Anchor tavern, the cooper's yard, the market's goods, street lamps, and a horse and cart at the gate.
+  - **Thornwick:** the tavern corner, the well, woodpiles, laundry, a chicken run, the sheep and cow pasture, the mill cart, and lamps.
+  - **The Fens' empty village:** an overturned cart, a cold cookpot, a dropped doll, and laundry still on the line.
+  - **The Undercroft:** broken statues, bones, and rat nests.
+- **Animals** (`runtime/critters.js`, one draw call per species): chickens, sheep, cows, dogs, cats, pigeons and crows (the birds fly off when you come close), and a horse.
+- **Visual history** (`kit.when`): the bandits' barn goes from charred ruin to scaffolding (one visit after you clear the road) to rebuilt (three visits after). The mill road goes from bandit camp, to the mess the fight left, to carts on the road again.
+
+### 29.8 What a browser game can and can't do here (honest scope)
+- **Blender pipeline:** the characters are still procedural (built in code), not Blender meshes; there is no Blender in this toolchain. The pipeline is ready for the swap: one skinned mesh per character with a named skeleton. A Blender-authored `.glb` per character can replace `buildBody` while keeping `LOOKS`, the sheet, and every animation and scene.
+- **Animation:** procedural (IK, gait and pose data), not keyframed by hand. Authored key poses can be layered on top later.
+- **Faces:** no lip sync or facial expressions yet (§23.2 gaps).
+
+### 29.9 Playability patch: scenes, training, collision, the Gilded Spoon
+- **Dialogue presentation:** the dialogue box is fully opaque and draws over everything. During a scene the top menu keeps only SAVE. On short (landscape phone) screens the box is compact. The camera aims a little below the subject's face so the face sits in the clear band between the top of the screen and the box (`camera.frameBias`, set each frame from the box's position). Anyone not in the shot who stands between the camera and its subject, or right against the lens, fades out until the camera moves on (`StoryPlayer._occlusion`).
+- **No props across faces:** upright staffs and spears lean out, away from the head; the "raise" gesture lifts the arm up and out, never across the face.
+- **Arms:** a relaxed arm hangs angled out from the shoulder, clear of coats, robes and sashes (the weapon arm's rest pose swings outward with yaw; the off arm splays a little more). Short sleeves are the shirt's own color.
+- **Lighthouse training dummies:** four straw dummies around the training ring are real targets (`World.spawnDummy`): endless health (topped up every hit; the target card reads *Training Dummy · HP ∞*), never die, never leave their posts, never fight back. They take hits, damage numbers, sparks, hit-stop, launches and posture breaks, and rock on their posts. The squad leaves them to you. They exist whenever you walk around the Lighthouse, in free roam and in Episode 3.
+- **Collision:** episode walk-arounds on a zone's set now use that zone's walls and buildings (the Lighthouse's house and tower were walk-through in Episode 3). Aurelin gained solids for the gate towers, the Hall's colonnade, the Crown Ward hedges, the street lamps, the tavern yard and the cooper's barrels.
+- **Interiors:** zones marked `interior` are rooms seen from above. The wall between the camera and the room hides itself; a skirting strip keeps the room's edge readable. Indoors it never rains. Enter through a door (an exit rect in front of it), leave through the room's door.
+  - **The Gilded Spoon** (a café at the top of the Lowmarket): checkered floor, five tables, a counter with the (empty) cake case, a kitchen, shelves, plants, lamps and a cat. Staff, each with their own job, routine and lines: **Pip** greets at the door, **Mari** takes orders, **Bettany** serves (nervous), **Hazel** sweeps, **Madame Odette** runs the counter, **Barnaby** cooks, and **Juno** works shifts after hours for extra Marks. Regulars sit at their tables (seated pose; only their heads turn to look): **Tobin**, **Old Fenwick**, **Nib** and a **Hooded Traveler**. Sit at an empty chair to order (tea, honey bun, Lantern Latte: Marks for full health and mana); read the menu board.
+  - **Side story, "The Day the Café Lost Its Cake"** (`data/story/cafe.js`, quest `cake`): an opening scene on your first visit (the establishing shot, Pip's welcome with four answers, "YOU!", "Don't panic... the cake is definitely gone", the staff accusing each other, Juno caught moonlighting), ten clues to find (staff, customers, the cake case), and a reveal at table three: the order slip was smudged, and Old Fenwick has been politely eating a three-tier cake for an hour. Afterwards the café carries on as normal, the leftover tier is back in the case, and everyone's lines change ("Please don't ask where the cake went").
+  - **The vendor's house** on the east street: one room with a bed, a hearth and a table, and **Hetty** at home.
 
 ---
 
@@ -1818,4 +2104,4 @@ The foundation questions from v0.1 are still open:
 3. **Cast & story:** Brannoc's real death, Aurek Valcourt as the red herring, the Palimpsest protagonist. Anything to change?
 4. **Scope calls:** 4 player affinities at launch, AI companions first (tag-swap for Rook, Severin, and Cal later), zones rather than a seamless open world, "Season 1" = Arcs 1–3.
 
-**Phase 1 progress:** Steps 1–3 are done and playable in the browser (§22 progress table, `docs/DEV.md`). **Next: Step 4**: double jump, air dash, lock-on switching, and a second spell added as data only (the architecture test), then the phone smoke test. Story systems (flags, Theatre mode) come in Phase 3. **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.
+**Phase 1:** complete (§22). **Phase 2:** complete (§23.1): Skyrender, reactions, the squad, the Fens roster, Hask the Bogwarden, page evolution, cel-shading v2, and the Episode 4 combat run. It waits on your gate review ("does it feel anime?"). **Phase 3:** complete (§23.2): Episodes 1–4 playable as story, with dialogue, choices, saves, cutscenes, and hubs. It waits on your gate review. **Phase 4:** complete (§23.3): five connected zones, shops and equipment, reputation, merit and side quests, field and dungeon fights, and the performance budget (met in every zone). It waits on your gate review: check the performance meter on your phone. **Character & world redesign (§29):** done. Every character has a fitted body, outfit, gait and idle around their unchanged storyboard head; townsfolk have routines; and the world has a day/night cycle, weather, districts and animals. **Phase 5 (Full RPG)** is complete as systems (§23.4): progression, bonds, party switching, crafting and the HQ, three more bosses and hidden lore. It waits on your gate review; the open item is writing Arc 1–2's episodes (5–18). **The Backlash prototype** (Ash Line Eleven vs. the Knight Hero, Observe/Insight, the fading order, the door transition) is the first test after the combat core, because it de-risks the most unusual systems in the game (`docs/BACKLASH.md` §26). Full Backlash content is Phase 6.

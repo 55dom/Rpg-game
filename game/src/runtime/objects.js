@@ -1,0 +1,99 @@
+// Things bosses put on the field (data/bosses2.js, data/ashfall.js): a silence bell, a rusted vow-seal, a bile
+// egg sac, a slime bubble, a siege engine. Not characters, so not Rigs: a few cel-shaded parts that shake when hit,
+// glow while they work, and crumble when broken. Same interface the render loop uses for Rigs.
+
+import { B, toon, glow, inkOutline } from "./look.js";
+
+export class ObjectView {
+  constructor(scene, kind, id, look) {
+    const BB = B(), MB = BB.MeshBuilder;
+    this.kind = kind; this.look = look; this.time = 0; this.flash = 0; this.dead = 0; this.swinging = false;
+    this.root = new BB.TransformNode(`${id}-obj`, scene);
+    this.meshes = [];
+    const part = (m, hex, x, y, z, o = 0.025, glowing = false) => {
+      m.parent = this.root; m.position.set(x, y, z); m.isPickable = false;
+      m.material = glowing ? glow(scene, `${id}-${m.name}-g`, hex) : toon(scene, `${id}-${m.name}-m`, hex);
+      if (o) inkOutline(m, o);
+      this.meshes.push(m); return m;
+    };
+    switch (look.shape) {
+      case "bell": { // a bronze bell hung in a wooden frame, ringing silence
+        for (const x of [-0.7, 0.7]) part(MB.CreateBox("post", { width: 0.16, height: 2.4, depth: 0.16 }), "#5a3a22", x, 1.2, 0);
+        part(MB.CreateBox("beam", { width: 1.7, height: 0.16, depth: 0.2 }), "#5a3a22", 0, 2.4, 0);
+        this.swing = new BB.TransformNode(`${id}-swing`, scene); this.swing.parent = this.root; this.swing.position.y = 2.3;
+        const bell = part(MB.CreateCylinder("bell", { height: 0.9, diameterTop: 0.35, diameterBottom: 0.9, tessellation: 14 }), "#a07a3a", 0, -0.5, 0);
+        bell.parent = this.swing;
+        this.glowPart = part(MB.CreateTorus("rim", { diameter: 0.9, thickness: 0.06, tessellation: 18 }), "#c9b4ff", 0, -0.95, 0, 0, true); this.glowPart.parent = this.swing;
+        break;
+      }
+      case "seal": { // a rust-red standing stone with a burning vow rune
+        part(MB.CreateBox("stone", { width: 0.9, height: 1.7, depth: 0.5 }), "#6a3a2a", 0, 0.85, 0);
+        part(MB.CreateBox("chain", { width: 1.0, height: 0.1, depth: 0.56 }), "#3a3a42", 0, 1.2, 0, 0.01);
+        this.glowPart = part(MB.CreateBox("rune", { width: 0.4, height: 0.5, depth: 0.04 }), "#ff7a2a", 0, 1.05, 0.27, 0, true);
+        break;
+      }
+      case "eggsac": { // a clutch of Gullmaw's eggs on a slime mound: glowing green spheres with dark yolks, one big spitting sac
+        part(MB.CreateSphere("mound", { diameter: 1.4, segments: 10 }, scene), "#3a5a3a", 0, 0.05, 0).scaling.set(1, 0.35, 1);
+        const egg = (x, y, z, d) => { part(MB.CreateSphere("egg", { diameter: d, segments: 8 }, scene), "#a8d86a", x, y, z, 0.012); part(MB.CreateSphere("yolk", { diameter: d * 0.4, segments: 6 }, scene), "#1a2a14", x, y + d * 0.05, z + d * 0.32, 0); };
+        for (const [x, z, d] of [[-0.4, 0.2, 0.32], [0.38, 0.25, 0.3], [-0.25, -0.35, 0.28], [0.3, -0.3, 0.34]]) egg(x, 0.28, z, d);
+        this.head = new BB.TransformNode(`${id}-head`, scene); this.head.parent = this.root; this.head.position.y = 0.7;
+        const sac = part(MB.CreateSphere("sac", { diameter: 0.75, segments: 10 }, scene), "#7ab84a", 0, 0, 0); sac.parent = this.head; sac.scaling.set(1, 1.15, 1);
+        this.glowPart = part(MB.CreateSphere("vent", { diameter: 0.2, segments: 6 }, scene), "#d8ff6a", 0, 0.05, 0.33, 0, true); this.glowPart.parent = this.head;
+        break;
+      }
+      case "bubble": { // a slime bubble around a swallowed ally: a wobbling translucent shell
+        const shell = MB.CreateSphere("bubble", { diameter: 2.0, segments: 16 }, scene);
+        shell.parent = this.root; shell.position.set(0, 1.0, 0); shell.isPickable = false;
+        const m = new BB.StandardMaterial(`${id}-bubbleMat`, scene);
+        m.diffuseColor = BB.Color3.FromHexString("#6ac8a8"); m.emissiveColor = BB.Color3.FromHexString("#1a4a3a");
+        m.specularColor = BB.Color3.FromHexString("#ffffff"); m.specularPower = 64; m.alpha = 0.42; m.backFaceCulling = false;
+        shell.material = m; this.meshes.push(shell); this.bubble = shell;
+        part(MB.CreateSphere("slime", { diameter: 1.6, segments: 8 }, scene), "#4a8a6a", 0, 0.02, 0, 0).scaling.set(1, 0.12, 1);
+        this.glowPart = part(MB.CreateTorus("ring", { diameter: 1.9, thickness: 0.05, tessellation: 20 }, scene), "#8ae0d0", 0, 1.0, 0, 0, true);
+        break;
+      }
+      case "engine": { // the Ironsong: a wheeled war tower, iron-plated, a storm-charged ballista on top
+        const wood = "#5a3a22", iron = "#3a3f48";
+        part(MB.CreateBox("deck", { width: 2.8, height: 0.5, depth: 3.6 }, scene), wood, 0, 0.75, 0, 0.03);
+        this.wheels = [];
+        for (const x of [-1.5, 1.5]) for (const z of [-1.2, 1.2]) {
+          const w = part(MB.CreateCylinder("wheel", { height: 0.3, diameter: 1.1, tessellation: 12 }, scene), iron, x, 0.55, z, 0.02);
+          w.rotation.z = Math.PI / 2; this.wheels.push(w);
+        }
+        part(MB.CreateBox("tower", { width: 2.2, height: 2.6, depth: 2.4 }, scene), wood, 0, 2.3, -0.2, 0.03);
+        for (const y of [1.5, 2.4, 3.3]) part(MB.CreateBox("plate", { width: 2.3, height: 0.25, depth: 2.5 }, scene), iron, 0, y, -0.2, 0.015);
+        part(MB.CreateBox("ram", { width: 0.5, height: 0.5, depth: 1.4 }, scene), iron, 0, 1.1, 2.2, 0.02);
+        const bow = part(MB.CreateBox("ballista", { width: 2.4, height: 0.18, depth: 0.25 }, scene), iron, 0, 3.9, 0.6, 0.02); bow.rotation.y = 0;
+        part(MB.CreateBox("rail", { width: 0.25, height: 0.2, depth: 2.2 }, scene), wood, 0, 3.85, 0.4, 0.015);
+        for (const x of [-0.8, 0.8]) part(MB.CreateBox("banner", { width: 0.6, height: 1.4, depth: 0.04 }, scene), "#a02a2a", x, 2.4, 1.0, 0.012);
+        this.glowPart = part(MB.CreateTorus("coil", { diameter: 0.7, thickness: 0.09, tessellation: 16 }, scene), "#9ad8ff", 0, 4.3, -0.4, 0, true);
+        this.glowPart.rotation.x = Math.PI / 2;
+        break;
+      }
+      default: part(MB.CreateBox("thing", { size: 1 }), "#888888", 0, 0.5, 0);
+    }
+  }
+
+  update(f, t, dt) {
+    this.time += dt;
+    if (this.wheels) { const moved = Math.hypot(f.pos.x - this.root.position.x, f.pos.z - this.root.position.z); for (const w of this.wheels) w.rotation.x += moved / 0.55; } // rolling
+    this.root.position.set(f.pos.x, 0, f.pos.z);
+    if (this.head) this.head.rotation.y = f.yaw; else this.root.rotation.y = f.yaw;
+    const shake = this.flash > 0 ? Math.sin(this.time * 60) * 0.06 : 0;
+    this.flash = Math.max(0, this.flash - dt);
+    if (this.swing) this.swing.rotation.z = Math.sin(this.time * 3) * 0.12 + shake * 2;
+    else this.root.position.x += shake;
+    if (this.glowPart) this.glowPart.scaling.setAll(1 + Math.sin(this.time * 6) * 0.1);
+    if (this.bubble) { const w = Math.sin(this.time * 4) * 0.05; this.bubble.scaling.set(1 + w, 1 - w, 1 + w); }
+    if (!f.alive) { // crumble and sink
+      this.dead = Math.min(1, this.dead + dt * 1.2);
+      this.root.position.y = -this.dead * (this.wheels ? 4.8 : 2.6); // the engine is tall: it sinks into its own wreckage
+      this.root.rotation.z = this.dead * 0.4;
+      if (this.glowPart) this.glowPart.setEnabled(false);
+    }
+  }
+  hitFlash(seconds = 0.07) { this.flash = Math.max(this.flash, seconds * 3); }
+  bladeWorld() { const p = this.root.position; return { hilt: p, tip: p }; }
+  setVisible(on) { this.root.setEnabled(on); }
+  dispose() { for (const m of this.meshes) { m.material?.dispose(); m.dispose(); } this.root.dispose(); }
+}

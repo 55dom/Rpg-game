@@ -5,10 +5,11 @@ import { Intent } from "../core/input.js";
 
 const KEYS = {
   KeyJ: Intent.Light, KeyK: Intent.Heavy, Space: Intent.Jump, ShiftLeft: Intent.Dodge, ShiftRight: Intent.Dodge,
-  KeyL: Intent.Dodge, KeyF: Intent.Block, KeyE: Intent.Spell1,
+  KeyL: Intent.Dodge, KeyF: Intent.Block, KeyE: Intent.Spell1, KeyR: Intent.Spell2, KeyT: Intent.Spell3,
+  KeyV: Intent.Ultimate, KeyY: Intent.Spell4,
 };
 // Standard gamepad mapping.
-const PAD = { 0: Intent.Jump, 1: Intent.Dodge, 2: Intent.Light, 3: Intent.Heavy, 4: Intent.Block, 6: Intent.Block, 5: Intent.Spell1, 7: Intent.Dodge };
+const PAD = { 0: Intent.Jump, 1: Intent.Dodge, 2: Intent.Light, 3: Intent.Heavy, 4: Intent.Block, 5: Intent.Spell1, 7: Intent.Spell2, 6: Intent.Spell3 };
 const PAD_LOCK = 11, PAD_HELP = 9, PAD_RESET = 8;
 
 export class Controls {
@@ -22,7 +23,9 @@ export class Controls {
     this.blockHeld = false;
     this.device = "keyboard";
     this.padPrev = [];
-    this.touch = { stickId: null, cx: 0, cy: 0, x: 0, y: 0, lookId: null, lx: 0, ly: 0, block: false };
+    this.touch = { stickId: null, cx: 0, cy: 0, x: 0, y: 0, lookId: null, lx: 0, ly: 0, block: false, light: false, lightTimer: 0 };
+    this.smartCombo = false; // touch assist: holding Slash keeps the string going
+    this.flickArmed = true;
     this.onFirstInput = null;
 
     addEventListener("keydown", (e) => {
@@ -30,11 +33,22 @@ export class Controls {
       if (["Space", "Tab", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) e.preventDefault();
       if (e.repeat) return;
       this.device = "keyboard";
+      this.keyboardUsed = true;
       this.keys.add(e.code);
       if (KEYS[e.code]) this.presses.push(KEYS[e.code]);
-      if (e.code === "KeyQ" || e.code === "Tab") this.commands.push("lock");
+      if (e.code === "KeyQ") this.commands.push("lock");
+      if (e.code === "Tab") this.commands.push(e.shiftKey ? "switchLeft" : "switchRight");
       if (e.code === "KeyH" || e.code === "Slash") this.commands.push("help");
-      if (e.code === "KeyR") this.commands.push("reset");
+      if (e.code === "Backspace") this.commands.push("reset");
+      if (e.code === "Digit1") this.commands.push("assist:bas");
+      if (e.code === "Digit2") this.commands.push("assist:juno");
+      if (e.code === "Digit3") this.commands.push("stance");
+      if (e.code === "KeyB") this.commands.push("boss");
+      if (e.code === "KeyP") this.commands.push("pages");
+      if (e.code === "KeyT") this.commands.push("tag");
+      if (e.code === "Enter") this.commands.push("confirm");
+      if (e.code === "ArrowUp" || e.code === "KeyW") this.commands.push("navUp");     // menus and dialogue choices
+      if (e.code === "ArrowDown" || e.code === "KeyS") this.commands.push("navDown");
       if (e.code === "KeyG") this.commands.push("frameData");
       if (e.code === "Escape") this.commands.push("pause");
     });
@@ -108,11 +122,23 @@ export class Controls {
       btn.addEventListener("pointerdown", (e) => {
         e.preventDefault(); this._first(); this.device = "touch";
         btn.classList.add("down");
-        if (name === "Lock") { this.commands.push("lock"); return; }
+        if (name.startsWith("cmd:")) { this.commands.push(name.slice(4)); return; }
+        if (name === "Lock") {
+          // Tap: lock, or switch to the next target. Hold: release the lock.
+          btn._hold = setTimeout(() => { btn._hold = null; this.commands.push("unlock"); }, 450);
+          return;
+        }
         this.presses.push(Intent[name]);
         if (name === "Block") t.block = true;
+        if (name === "Light") { t.light = true; t.lightTimer = 0.25; }
       });
-      const up = () => { btn.classList.remove("down"); if (name === "Block") t.block = false; };
+      const up = () => {
+        if (!btn.classList.contains("down")) return;
+        btn.classList.remove("down");
+        if (name === "Block") t.block = false;
+        if (name === "Light") t.light = false;
+        if (name === "Lock" && btn._hold) { clearTimeout(btn._hold); btn._hold = null; this.commands.push("lockTap"); }
+      };
       btn.addEventListener("pointerup", up);
       btn.addEventListener("pointercancel", up);
       btn.addEventListener("pointerleave", up);
@@ -136,15 +162,26 @@ export class Controls {
       const rx = dz(pad.axes[2] ?? 0), ry = dz(pad.axes[3] ?? 0);
       if (ax || ay) { mx = ax; my = -ay; this.device = "gamepad"; }
       this.look.x += rx * 2.6 * dt; this.look.y += ry * 1.4 * dt;
+      // Flick the right stick hard left or right to switch lock-on targets.
+      if (Math.abs(rx) > 0.85 && this.flickArmed) { this.commands.push(rx > 0 ? "flickRight" : "flickLeft"); this.flickArmed = false; }
+      if (Math.abs(rx) < 0.3) this.flickArmed = true;
       pad.buttons.forEach((b, i) => {
         const down = b.pressed || b.value > 0.5;
         const was = this.padPrev[i];
         if (down && !was) {
           this._first(); this.device = "gamepad";
-          if (PAD[i] !== undefined) this.presses.push(PAD[i]);
+          // LB + RB together = Ultimate (GDD §9.1).
+          const other = i === 4 ? 5 : i === 5 ? 4 : -1;
+          if (other >= 0 && this.padPrev[other]) this.presses.push(Intent.Ultimate);
+          else if (PAD[i] !== undefined) this.presses.push(PAD[i]);
           if (i === PAD_LOCK) this.commands.push("lock");
           if (i === PAD_HELP) this.commands.push("help");
-          if (i === PAD_RESET) this.commands.push("reset");
+          if (i === PAD_RESET) this.commands.push("pages"); // View / Back: page evolution
+          if (i === 13) this.presses.push(Intent.Spell4); // D-pad down
+          if (i === 14) this.commands.push("assist:bas");   // D-pad left
+          if (i === 15) this.commands.push("assist:juno");  // D-pad right
+          if (i === 12) this.commands.push("stance", "navUp"); // D-pad up (navUp in menus)
+          if (i === 13) this.commands.push("navDown");
         }
         this.padPrev[i] = down;
         if ((i === 4 || i === 6) && down) block = true;
@@ -153,6 +190,10 @@ export class Controls {
     }
 
     if (this.touch.stickId !== null) { mx = this.touch.x; my = this.touch.y; }
+    if (this.touch.light && this.smartCombo) {
+      this.touch.lightTimer -= dt;
+      if (this.touch.lightTimer <= 0) { this.presses.push(Intent.Light); this.touch.lightTimer = 0.2; }
+    }
     if (this.touch.block) block = true;
     const len = Math.hypot(mx, my);
     if (len > 1) { mx /= len; my /= len; }

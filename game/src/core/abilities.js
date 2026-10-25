@@ -8,6 +8,7 @@ import { isHitSet } from "./combat.js";
 export const EventType = Object.freeze({
   PlayAnimation: 0, SpawnHitbox: 1, ApplyTag: 2, CameraCue: 3, PlaySound: 4,
   SpawnVfx: 5, Move: 6, Invulnerable: 7, Custom: 8,
+  Projectile: 9, // key = hitbox id (size + optional hit), value = speed in units/second
 });
 
 /** @enum {string} */
@@ -21,6 +22,7 @@ export const StartResult = Object.freeze({
 /** Context flags the combo graph reads. */
 export const MoveContext = Object.freeze({
   None: 0, Grounded: 1, Airborne: 2, AfterDash: 4, AfterParry: 8, TargetStaggered: 16,
+  AirJumpReady: 32, AirDashReady: 64, SurgeFull: 128,
 });
 
 /**
@@ -52,7 +54,7 @@ export function defineAbility(o) {
     if (!c.into) throw new RangeError(`${o.id}: cancel window needs a non-empty mask`);
   }
 
-  if ((o.manaCost ?? 0) < 0 || (o.cooldownFrames ?? 0) < 0) throw new RangeError(`${o.id}: negative cost`);
+  if ((o.manaCost ?? 0) < 0 || (o.cooldownFrames ?? 0) < 0 || (o.surgeCost ?? 0) < 0) throw new RangeError(`${o.id}: negative cost`);
 
   return Object.freeze({
     id: o.id,
@@ -61,6 +63,7 @@ export function defineAbility(o) {
     events: Object.freeze(events.map(({ _i, ...e }) => Object.freeze(e))),
     cancels: Object.freeze(cancels.map((c) => Object.freeze(c))),
     manaCost: o.manaCost ?? 0,
+    surgeCost: o.surgeCost ?? 0, // spent by gameplay when the move starts (ultimates)
     cooldownFrames: o.cooldownFrames ?? 0,
     hit: o.hit ?? null,
     hasHit: isHitSet(o.hit),

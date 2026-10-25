@@ -1,14 +1,17 @@
 // Hit effects. Everything is pooled: no allocations during a fight except Afterimage ghosts
 // (at most one burst per 3 s cooldown).
 
-import { B, PALETTE, color3, glow, clamp01, lerp } from "./look.js";
+import { B, PALETTE, color3, glow, toon as toonMat, clamp01, lerp } from "./look.js";
 
 /** A ribbon that follows a blade: newest edge bright, older edges fade (additive). */
 export class Trail {
   constructor(scene, name, hex, segments = 14) {
     const BB = B();
     this.n = segments;
-    this.tips = []; this.hilts = [];
+    // Preallocated ring of samples: no allocation per frame.
+    this.tips = Array.from({ length: segments }, () => new BB.Vector3());
+    this.hilts = Array.from({ length: segments }, () => new BB.Vector3());
+    this.head = 0; this.count = 0;
     this.color = color3(hex);
     const mesh = new BB.Mesh(name, scene);
     const pos = new Float32Array(this.n * 2 * 3);
@@ -36,21 +39,24 @@ export class Trail {
 
   /** Feed the blade each render frame. `on` widens the ribbon; off lets it collapse. */
   push(hilt, tip, on, dt) {
-    if (this.tips.length && B().Vector3.Distance(this.tips[0], tip) > 3) { this.tips.length = 0; this.hilts.length = 0; } // teleported
+    if (this.count && B().Vector3.DistanceSquared(this.tips[this.head], tip) > 9) this.count = 0; // teleported
     this.energy = on ? 1 : Math.max(0, this.energy - dt * 7);
     const base = this.energy > 0 ? hilt : tip;
-    this.tips.unshift(tip.clone()); this.hilts.unshift(base.clone());
-    if (this.tips.length > this.n) { this.tips.pop(); this.hilts.pop(); }
-    const k = this.tips.length;
+    this.head = (this.head + this.n - 1) % this.n;
+    this.tips[this.head].copyFrom(tip); this.hilts[this.head].copyFrom(base);
+    this.count = Math.min(this.n, this.count + 1);
+    const k = this.count;
     for (let i = 0; i < this.n; i++) {
-      const t = this.tips[Math.min(i, k - 1)], h = this.hilts[Math.min(i, k - 1)];
+      const slot = (this.head + Math.min(i, k - 1)) % this.n;
+      const t = this.tips[slot], h = this.hilts[slot];
       const fade = Math.pow(1 - i / this.n, 1.6) * this.energy;
       // Taper: older samples pull the inner edge out toward the tip.
       const w = 1 - i / this.n;
       const hx = lerp(t.x, h.x, w), hy = lerp(t.y, h.y, w), hz = lerp(t.z, h.z, w);
-      this.pos.set([t.x, t.y, t.z, hx, hy, hz], i * 6);
-      const c = this.color;
-      this.col.set([c.r * fade, c.g * fade, c.b * fade, fade, c.r * fade * 0.3, c.g * fade * 0.3, c.b * fade * 0.3, fade * 0.3], i * 8);
+      const c = this.color, o = i * 8, pp = i * 6, col = this.col, pos = this.pos;
+      pos[pp] = t.x; pos[pp + 1] = t.y; pos[pp + 2] = t.z; pos[pp + 3] = hx; pos[pp + 4] = hy; pos[pp + 5] = hz;
+      col[o] = c.r * fade; col[o + 1] = c.g * fade; col[o + 2] = c.b * fade; col[o + 3] = fade;
+      col[o + 4] = c.r * fade * 0.3; col[o + 5] = c.g * fade * 0.3; col[o + 6] = c.b * fade * 0.3; col[o + 7] = fade * 0.3;
     }
     this.mesh.updateVerticesData(B().VertexBuffer.PositionKind, this.pos);
     this.mesh.updateVerticesData(B().VertexBuffer.ColorKind, this.col);
@@ -111,8 +117,8 @@ export class Vfx {
       const r = MB.CreateTorus(`ring-${i}`, { diameter: 1, thickness: 0.06, tessellation: 40 }, scene);
       r.material = glow(scene, `ring-mat-${i}`, "#ffffff", 1, true);
       r.isPickable = false; r.setEnabled(false);
-      return { mesh: r, life: 0, max: 1, size: 1 };
-    }, 6);
+      return { mesh: r, life: 0, max: 1, size: 1, implode: false };
+    }, 8);
 
     // Gale Cutter crescent.
     this.crescents = new Pool((i) => {
@@ -122,6 +128,48 @@ export class Vfx {
       m.isPickable = false; m.setEnabled(false);
       return { mesh: m, life: 0, max: 0.3, vel: new BB.Vector3() };
     }, 3);
+
+    // Juno's threads: thin glowing lines stretched between two points.
+    this.threads = new Pool((i) => {
+      const m = MB.CreateBox(`thread-${i}`, { width: 0.03, height: 0.03, depth: 1 }, scene);
+      m.material = glow(scene, `thread-mat-${i}`, "#ff4d6d");
+      m.isPickable = false; m.setEnabled(false);
+      return { mesh: m, life: 0, max: 1, from: new BB.Vector3(), to: new BB.Vector3(), follow: null };
+    }, 4);
+    // Bas's pillars: stone columns that erupt from the ground, hold, then sink.
+    this.pillars = new Pool((i) => {
+      const m = MB.CreateCylinder(`pillar-${i}`, { height: 1, diameterTop: 0.9, diameterBottom: 1.3, tessellation: 7 }, scene);
+      m.material = toonMat(scene, `pillar-mat-${i}`, "#8c909b");
+      m.renderOutline = true; m.outlineWidth = 0.04; m.outlineColor = color3("#0f1117");
+      m.isPickable = false; m.setEnabled(false);
+      return { mesh: m, life: 0, max: 1, height: 4 };
+    }, 3);
+
+    // Cantor sound bolts: a violet orb with a spinning ring, synced to the sim's projectiles each frame.
+    this.boltPool = Array.from({ length: 10 }, (_, i) => {
+      const orb = MB.CreateSphere(`bolt-${i}`, { diameter: 0.45, segments: 8 }, scene);
+      orb.material = glow(scene, `bolt-mat-${i}`, "#c9a4ff");
+      const ring = MB.CreateTorus(`bolt-ring-${i}`, { diameter: 0.8, thickness: 0.04, tessellation: 20 }, scene);
+      ring.material = orb.material; ring.parent = orb;
+      orb.isPickable = ring.isPickable = false; orb.setEnabled(false);
+      return { orb, ring, id: 0 };
+    });
+
+    // Hask's mud waves: low brown domes skimming the ground.
+    this.mudPool = Array.from({ length: 8 }, (_, i) => {
+      const m = MB.CreateSphere(`mudwave-${i}`, { diameter: 1.7, segments: 8 }, scene);
+      m.material = toonMat(scene, `mudwave-mat-${i}`, "#6a5236"); m.renderOutline = true; m.outlineWidth = 0.03; m.outlineColor = color3("#0f1117");
+      m.isPickable = false; m.setEnabled(false);
+      return m;
+    });
+    // Eruption warning: a pulsing red disc on the ground.
+    this.warnPool = new Pool((i) => {
+      const d = MB.CreateDisc(`warn-${i}`, { radius: 2.2, tessellation: 36 }, scene);
+      d.rotation.x = Math.PI / 2;
+      d.material = glow(scene, `warn-mat-${i}`, "#ff3b3b", 0.45, true);
+      d.isPickable = false; d.setEnabled(false);
+      return { mesh: d, life: 0, max: 1 };
+    }, 2);
 
     // Ghost material for Afterimage.
     this.ghostMat = glow(scene, "ghost", "#7fe6ff", 0.32, true);
@@ -136,6 +184,9 @@ export class Vfx {
     }, 16);
 
     this.tmp = new BB.Vector3();
+    this.sparkPools = Object.values(this.sparks);
+    this.projected = new BB.Vector3();
+    this.viewport = new BB.Viewport(0, 0, 1, 1);
   }
 
   sparksAt(at, count, key = "gold", speed = 9, up = 2) {
@@ -155,17 +206,17 @@ export class Vfx {
     const f = this.flashes.take();
     f.mesh.setEnabled(true);
     f.mesh.position.set(at.x, at.y, at.z);
-    f.mat.emissiveColor = color3(hex);
+    f.mat.emissiveColor.copyFrom(color3(hex));
     f.size = size; f.life = f.max = life; f.spin = Math.random() * Math.PI;
   }
 
-  /** A flat shockwave ring expanding from `at`. */
-  ring(at, size = 3, hex = "#ffffff", life = 0.35) {
+  /** A flat shockwave ring expanding from `at` (or collapsing into it, for a vortex). */
+  ring(at, size = 3, hex = "#ffffff", life = 0.35, implode = false) {
     const r = this.rings.take();
     r.mesh.setEnabled(true);
     r.mesh.position.set(at.x, at.y, at.z);
-    r.mesh.material.emissiveColor = color3(hex);
-    r.size = size; r.life = r.max = life;
+    r.mesh.material.emissiveColor.copyFrom(color3(hex));
+    r.size = size; r.life = r.max = life; r.implode = implode;
   }
 
   crescent(pos, yaw) {
@@ -187,19 +238,67 @@ export class Vfx {
     n.el.className = `dmg show ${kind}`;
   }
 
-  afterimage(rig) {
-    const parts = rig.snapshot(this.ghostMat);
-    this.ghosts.push({ parts, life: 0.55, max: 0.55 });
+  /** A thread from `from` to `to` (both {x,y,z}); `follow` = optional {from(), to()} to track moving ends. */
+  thread(from, to, life = 0.35, follow = null) {
+    const t = this.threads.take();
+    t.mesh.setEnabled(true);
+    t.from.set(from.x, from.y, from.z); t.to.set(to.x, to.y, to.z);
+    t.life = t.max = life; t.follow = follow;
+  }
+
+  /** Show one orb per live projectile (no allocation; pool of 10). */
+  warning(at, seconds) {
+    const w = this.warnPool.take();
+    w.mesh.setEnabled(true);
+    w.mesh.position.set(at.x, 0.05, at.z);
+    w.life = w.max = seconds;
+  }
+
+  syncProjectiles(projectiles, dt) {
+    let i = 0, m = 0;
+    for (const p of projectiles) {
+      if (p.def.flat) {
+        if (m >= this.mudPool.length) continue;
+        const mesh = this.mudPool[m++];
+        mesh.setEnabled(true);
+        mesh.position.set(p.pos.x, 0.1, p.pos.z);
+        mesh.scaling.set(1, 0.45 + Math.sin(performance.now() / 70 + m) * 0.08, 1);
+        continue;
+      }
+      if (i >= this.boltPool.length) continue;
+      const b = this.boltPool[i++];
+      b.orb.setEnabled(true);
+      b.orb.position.set(p.pos.x, p.pos.y, p.pos.z);
+      b.ring.rotation.x += dt * 9; b.ring.rotation.y += dt * 5;
+      const s = 1 + Math.sin(performance.now() / 60) * 0.12;
+      b.orb.scaling.set(s, s, s);
+    }
+    for (; i < this.boltPool.length; i++) this.boltPool[i].orb.setEnabled(false);
+    for (; m < this.mudPool.length; m++) this.mudPool[m].setEnabled(false);
+  }
+
+  pillar(at, height = 4.5, life = 1.4) {
+    const p = this.pillars.take();
+    p.mesh.setEnabled(true);
+    p.mesh.position.set(at.x, 0, at.z);
+    p.height = height; p.life = p.max = life;
+    this.sparksAt({ x: at.x, y: 0.3, z: at.z }, 10, "gold", 7, 6);
+    this.ring({ x: at.x, y: 0.06, z: at.z }, 3.5, "#c9b28a", 0.35);
+  }
+
+  afterimage(rig, material = this.ghostMat, life = 0.55) {
+    const parts = rig.snapshot(material);
+    this.ghosts.push({ parts, life, max: life });
   }
 
   update(dt, camera, engine) {
-    for (const pool of Object.values(this.sparks)) {
+    for (const pool of this.sparkPools) {
       for (const s of pool.items) {
         if (s.life <= 0) continue;
         s.life -= dt;
         if (s.life <= 0) { s.mesh.setEnabled(false); continue; }
         s.vel.y -= 14 * dt;
-        s.mesh.position.addInPlace(s.vel.scale(dt));
+        s.vel.scaleAndAddToRef(dt, s.mesh.position);
         this.tmp.copyFrom(s.mesh.position).addInPlace(s.vel);
         s.mesh.lookAt(this.tmp);
         const k = s.life / s.max;
@@ -221,7 +320,7 @@ export class Vfx {
       r.life -= dt;
       if (r.life <= 0) { r.mesh.setEnabled(false); continue; }
       const k = 1 - r.life / r.max;
-      const s = r.size * (0.2 + 0.8 * Math.sqrt(k));
+      const s = r.implode ? r.size * (1 - 0.9 * k * k) : r.size * (0.2 + 0.8 * Math.sqrt(k));
       r.mesh.scaling.set(s, 1, s);
       r.mesh.visibility = 1 - k;
     }
@@ -229,8 +328,38 @@ export class Vfx {
       if (c.life <= 0) continue;
       c.life -= dt;
       if (c.life <= 0) { c.mesh.setEnabled(false); continue; }
-      c.mesh.position.addInPlace(c.vel.scale(dt));
+      c.vel.scaleAndAddToRef(dt, c.mesh.position);
       c.mesh.visibility = clamp01(c.life / c.max * 2);
+    }
+    for (const w of this.warnPool.items) {
+      if (w.life <= 0) continue;
+      w.life -= dt;
+      if (w.life <= 0) { w.mesh.setEnabled(false); continue; }
+      const k = 1 - w.life / w.max;
+      w.mesh.visibility = 0.5 + 0.5 * Math.abs(Math.sin(k * Math.PI * 6));
+      const s = 0.6 + 0.4 * k;
+      w.mesh.scaling.set(s, s, 1);
+    }
+    for (const t of this.threads.items) {
+      if (t.life <= 0) continue;
+      t.life -= dt;
+      if (t.life <= 0) { t.mesh.setEnabled(false); continue; }
+      if (t.follow) { const f = t.follow.from(), to = t.follow.to(); t.from.set(f.x, f.y, f.z); t.to.set(to.x, to.y, to.z); }
+      const len = B().Vector3.Distance(t.from, t.to);
+      t.mesh.position.set((t.from.x + t.to.x) / 2, (t.from.y + t.to.y) / 2, (t.from.z + t.to.z) / 2);
+      t.mesh.lookAt(t.to);
+      t.mesh.scaling.set(1, 1, Math.max(0.01, len));
+      t.mesh.visibility = Math.min(1, t.life / t.max * 3);
+    }
+    for (const p of this.pillars.items) {
+      if (p.life <= 0) continue;
+      p.life -= dt;
+      if (p.life <= 0) { p.mesh.setEnabled(false); continue; }
+      const k = 1 - p.life / p.max;
+      const rise = k < 0.12 ? k / 0.12 : k > 0.75 ? 1 - (k - 0.75) / 0.25 : 1; // erupt, hold, sink
+      const h = Math.max(0.05, p.height * rise);
+      p.mesh.scaling.set(1, h, 1);
+      p.mesh.position.y = h / 2;
     }
     for (let i = this.ghosts.length - 1; i >= 0; i--) {
       const g = this.ghosts[i];
@@ -244,14 +373,14 @@ export class Vfx {
     const BB = B();
     const w = engine.getRenderWidth(), h = engine.getRenderHeight();
     const cw = this.overlay.clientWidth || w, ch = this.overlay.clientHeight || h;
-    const vp = camera.viewport.toGlobal(w, h);
+    const vp = camera.viewport.toGlobalToRef(w, h, this.viewport);
     const tm = this.scene.getTransformMatrix();
     for (const n of this.numbers.items) {
       if (n.life <= 0) continue;
       n.life -= dt;
       if (n.life <= 0) { n.el.className = "dmg"; n.el.style.opacity = "0"; continue; }
       n.pos.y += n.vy * dt; n.vy *= 0.92;
-      const p = BB.Vector3.Project(n.pos, BB.Matrix.IdentityReadOnly, tm, vp);
+      const p = BB.Vector3.ProjectToRef(n.pos, BB.Matrix.IdentityReadOnly, tm, vp, this.projected);
       if (p.z < 0 || p.z > 1) { n.el.style.opacity = "0"; continue; }
       n.el.style.transform = `translate(${(p.x / w) * cw}px, ${(p.y / h) * ch}px) translate(-50%, -50%)`;
       n.el.style.opacity = String(clamp01(n.life / n.max * 2.5));

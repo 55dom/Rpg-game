@@ -1,8 +1,20 @@
 # BACKLASH — Playable Flashback Design Package
-### UNWRITTEN — Knights of the Last Lantern · Companion to `GDD.md` §26 · v1.7
+### UNWRITTEN — Knights of the Last Lantern · Companion to `GDD.md` §26 · v2.0
 
-> **v1.7:** **The Astral Path is a long tunnel of dark aura that leads to the Demon Continent.** The archdemons carry Cal down it toward home, and the continent waits at the far end with **no battle fires** on it, because the tunnel runs through time as well as space. Consistency pass across the package: the King's sequel-only fight sketch is labelled as such, the cinematic lengths match the storyboards, the four memory splices and the silence rule are listed correctly, and stale cut numbers are fixed.
+> **v2.0:** **The Astral Path is a long tunnel of dark aura that leads to the Demon Continent.** The archdemons carry Cal down it toward home, and the continent waits at the far end with **no battle fires** on it, because the tunnel runs through time as well as space. Consistency pass across the package: the King's sequel-only fight sketch is labelled as such, the cinematic lengths match the storyboards, the four memory splices and the silence rule are listed correctly, and stale cut numbers are fixed.
+
+> **v1.9:** Ghorran's **hairstyle** follows `ref-03`: a messy, swept cut with loose strands and long bangs across the mask, but **kept long**, gathered in the knee-length low ponytail, still dark blue with white and light-blue gloss. The mask stays on; `ref-03` is a hair reference only. **Ties match hair:** Ghorran's tie is **dark blue**, Vaelith's is **pink**.
+
+> **v1.8:** **Matching masks, hair, maid details, and color grading.**
+> - **Masks:** both now wear the same smooth white mask with closed crescent eyes. **Vaelith's smiles. Ghorran's is the same face turned upside down: a frown.** Comedy and tragedy, and neither ever moves.
+> - **Hair:** Ghorran keeps the long hair from reference 01, silky **dark blue with white and light-blue glossy highlights**. Vaelith has **short, silky pink hair in two ponytails with light-pink glossy highlights**.
+> - **Outfit:** Vaelith's suit and slit skirt gain **maid detailing**.
+> - **Color grading:** both are drawn in the game's bright, clean anime grading (GDD §19.6.1, reference: *That Time I Got Reincarnated as a Slime*).
 >
+> Supersedes the v1.7 masks and hair.
+
+> **v1.7:** **The Clergy Duo's true look is set** (owner reference art in `docs/art/clergy-duo/`). On the Astral Path, both wear **black suits with white shirts and black ties**. The butler has long blue hair in a low ponytail and a **white mask with cracked black lines and a jagged painted grin, with a red dot at the nose**. The musician wears the same jacket, shirt and tie with a **long black skirt slit high at the side**, and a **smooth white mask with closed, smiling crescent eyes**. The maid's dress and butler's waistcoat are retired. In the castle (concealed form), their masks are still featureless black; the concealment lifting reveals the white masks. The painted smiles never move, so their excitement still shows only in their bodies.
+
 > **v1.6:** **The King does not wake in this game.** The archdemons' secret plan is the **Rite of Waking**: sacrificing **themselves and Cal** to wake their King. They never tell Cal. Their excitement at finding him shows only in calm body language (masks stay on): they have found a power like their own, a source of power for the Rite. CIN-10 and the King sections updated.
 >
 > **v1.5:** **The flashback now ends on Cal's grin**, which match-cuts to present-day Cal, and the player then **chooses who to play** in the rest of the fight: Rook or Cal. Choosing Cal opens **Cal's Path**, the rest of his story (through the void, the Astral Path, Liraen, the mask) plus a scene after he steps through his door at the Siege. The archdemons **don't know who Cal is**: they take him because he is the **only one who can move** in their frozen time and he **answers in their language**.
@@ -206,7 +218,11 @@ The void **folds inward**, like reality sealing a wound, and vanishes. The press
 
 **The Astral Path (CIN-05C).** Out of the black, a different place: a **long tunnel of dark aura** running through an **astral realm**. It is the road the archdemons travel through time and between worlds, and this one runs **home, to the Demon Continent**. Its walls are the King's aura made visible, black and violet, turning slowly like smoke in water. Through them shows a starfield with cold aurora rippling through it: no ground, no sky. A path of black glass forms under the figures' feet one tile ahead of each step and dissolves behind them. It is **dark magic**, the King's aura, cast without a word. They are still walking at exactly the same unhurried pace, the man still carrying Cal.
 
-Here, the concealment falls away. The plain black suits **resolve into what they really are**: the man in an immaculate **black butler's suit**, waistcoat, tie, gloves, and a black watch-chain; the woman in a **black maid's dress cut with a suit jacket and tie**, gloved, a slim black instrument case on her back. Midway down the path, without breaking stride, they let the disguise go completely: **horns** rise from their brows, and **vast dark wings** unfurl from slits in their coats. Their masks stay on. **Fully revealed as archdemons.** The wings are the same shape as the Commanders' wings the player has seen all chapter.
+Here, the concealment falls away, and the featureless black masks and plain suits **resolve into what they really are**:
+- **The man (the butler):** a sharp black suit, crisp **white shirt**, slim **dark-blue tie** (the color of his hair), black shoes. Silky **dark-blue hair** with **white and light-blue glossy highlights**: messy and swept on top, loose strands curling away from the head, long bangs falling across the mask, and the rest gathered in a **low ponytail that sways to his knees**. His mask is **smooth white, with closed crescent eyes and a frown: her smiling face, turned upside down**. One hand rests in his trouser pocket the whole way; the other steadies Cal on his shoulder.
+- **The woman (the musician):** the **same black suit jacket and white shirt**, with a **pink tie** (the color of her hair), finished with **maid detailing**: a short white frilled apron over the front of a **long black skirt slit high up the side**, frilled white cuffs, a lace-edged collar, and a small white lace headdress. The slit opens with every unhurried step. Short, silky **pink hair in two ponytails** with **light-pink glossy highlights** bobs as she walks. A slim black instrument case rides on her back. Her mask is the **same smooth white mask: closed crescent eyes and a wide, serene smile**.
+
+**One mask, two faces:** her smile, his frown. Both are painted on and never move. Whatever they feel, the masks show the same thing. Midway down the path, without breaking stride, they let the disguise go completely: **horns** rise from their brows, and **vast dark wings** unfurl from slits in the backs of their jackets. Their masks stay on. **Fully revealed as archdemons.** The wings are the same shape as the Commanders' wings the player has seen all chapter.
 
 The tunnel is enormous, and long. Through its walls they pass the remains of **other worlds**: a cracked planet hanging in the dark, a burned city drifting in pieces, a sea frozen mid-wave. They don't look at any of it. Far ahead, at the end of the tunnel, the **Demon Continent** waits, small as a map, the black castle a speck. 🔒 **There are no fires on it.** The battlefield they just left lies dark and quiet, as if the battle ended long ago, because the tunnel runs through time as well as space. Nobody comments on it. The woman begins to **hum**: four slow notes, the Demon Army's march cadence turned into a lullaby. Over the man's shoulder, Cal, eyes half-closed and still smiling, **whistles it back**, badly. (This is where his whistled tune comes from.) The two archdemons glance at each other. Something in their posture is **excited**.
 
@@ -275,7 +291,7 @@ A split screen, half Rook's face, half Cal's grin, and one line: ***Whose story?
 > **Director's note.** Both choices tell the same story; the choice is about *whose eyes*, not *what happens*. Cal's Path is ~25 minutes of extra content, never locked away: Rook players can play it from the Lore Archive. Playing as Cal costs: a player-controlled version of Cal's kit (built anyway for Arc 7, now needed earlier), an AI opponent using Rook's kit (on top of the companion AI framework), and a board-view mode for Phase 5 (a top-down camera plus a drag-to-door command layer).
 
 ### Cal's Path, Part 3: After the Door (present day; CIN-10)
-At the end of the reveal fight, Cal steps through his door and closes it from the other side. The Astral Path again, the same long tunnel of dark aura to the Demon Continent, walked on his own feet this time. At its end, before the sealed black coffin and the empty throne, the butler and the maid are waiting. They incline their heads to him, a fraction: not as servants, not as equals. Something stranger. He answers them in their language. The maid begins to hum the march. Cal looks at the coffin, tilts his head, and says, in Liraen's tongue: ***"You two still haven't told me what I'm for."*** The butler says nothing. The maid keeps humming. Their masks show nothing at all. Cut to black. (Dramatic irony for Cal's Path players: he is the offering, and he doesn't know it.)
+At the end of the reveal fight, Cal steps through his door and closes it from the other side. The Astral Path again, the same long tunnel of dark aura to the Demon Continent, walked on his own feet this time. At its end, before the sealed black coffin and the empty throne, the butler and the maid are waiting. They incline their heads to him, a fraction: not as servants, not as equals. Something stranger. He answers them in their language. The maid begins to hum the march. Cal looks at the coffin, tilts his head, and says, in Liraen's tongue: ***"You two still haven't told me what I'm for."*** The butler says nothing. The maid keeps humming. Her painted smile and his painted frown don't move. Cut to black. (Dramatic irony for Cal's Path players: he is the offering, and he doesn't know it.)
 
 > After the Void scene, *"That's how I died"* is a **lie told with a smile**, and the player knows it. That irony is intended: he is telling Rook the story the world believes while standing in front of someone who has just seen the truth.
 
@@ -566,8 +582,8 @@ As in the main game: at most 2 hostile attackers on Cal at once. The *heroes* al
 | **As Commander (3★)** | Axe, brute force. Cleave, Wing Slam, Sky Fall (lands on his own soldiers if they're in the way), Rally Roar | Twin spears, precise and cold. Twin Flurry, Wing Dash, Aerial Plunge, Wing Wall |
 | **In Backlash** | NPC set pieces: drives the Lines, **kills King A** in Ch 5, guards the throne | NPC: watches the Culling Drill and culls the weakest without a word (E7); guards the throne |
 | **Rebirth** | The King pours half his **aura** into him | The other half |
-| **As archdemon (5★)** | **The butler.** Intelligent for the first time. Immaculate black butler's suit. Carries Cal | **The maid** (and musician). Intelligent for the first time. Black maid's dress cut with suit and tie, instrument case. Hums the march; the one who looks back at Cal |
-| **Concealed form** | Plain black suit, tie, gloves, featureless mask; horns and wings hidden | The same |
+| **As archdemon (5★)** | **The butler.** Intelligent for the first time. Black suit, white shirt, **dark-blue tie**; silky dark-blue hair (white and light-blue glossy highlights), messy swept cut with long bangs (`ref-03`) and a knee-length low ponytail; **smooth white mask, closed eyes, a frown** (her mask upside down). Carries Cal | **The maid** (and musician). Intelligent for the first time. Black suit jacket, white shirt, **pink tie**, **long black skirt slit high at the side**, **maid detailing** (frilled apron, cuffs, lace collar, headdress), instrument case; short silky pink hair in two ponytails (light-pink glossy highlights); **smooth white mask, closed eyes, a smile**. Hums the march; the one who looks back at Cal |
+| **Concealed form** | Plain black suit, tie, gloves, **featureless black mask**; horns and wings hidden | The same |
 | **Combat** | **None in this game.** Exclusive, rare NPCs (GDD §28) | **None in this game** |
 
 **The contrast is the point:** the brute becomes an immaculate butler; the cold commander becomes a maid who hums lullabies. Mindless obedience becomes intelligence, and the first thing they do with it is take the soldier who taught himself to ask questions.
@@ -861,7 +877,7 @@ Total silence is rationed. In the flashback every player sees, it is used exactl
 | **Body impression** | CIN-05B | A faint body-shaped hollow left in the ash where Cal lay | Decal |
 | **Astral tunnel** | CIN-05C, CIN-10 | A long, semi-transparent tube mesh with a scrolling dark-aura shader (black-violet noise turning like smoke in water) over a starfield skybox with slow aurora ribbons. The Demon Continent at the far end is a low-detail map mesh with **no fire decals**. The other worlds' wreckage is three low-detail silhouettes seen through the walls | Skybox + 5 meshes, 0 particles |
 | **Black-glass path** | CIN-05C | Tiles spawn one step ahead (scale-in + chime) and dissolve behind (pooled) | ≤ 30 tiles live |
-| **Concealment lifting** | CIN-05C | A thin ripple passes down each figure; the plain suit material swaps to the detailed butler / maid outfits | Material swap + ripple shader |
+| **Concealment lifting** | CIN-05C | A thin ripple passes down each figure; the plain suits swap to the true outfits (white shirts, the musician's slit skirt) and the **black masks wash to white**, revealing the painted faces | Material swap + ripple shader |
 | **Horns & wings** | CIN-05C | Horns grow from the brow (blend-shape + mesh); wings unfurl from coat slits (skinned, cloth-sim **off**, hand-keyed) | 0 particles |
 | **Ink stars ★★★★★** | CIN-05C | Same ink-star renderer as §13, one cut | Instanced |
 
@@ -1077,13 +1093,13 @@ Format: **CUT · PICTURE · ACTION / STAGE · DIALOGUE / AUDIO · TIME / FRAMES 
 | 002 | Extreme wide: a **long tunnel of dark aura**, its black-violet walls turning slowly like smoke in water, running through an astral starfield with cold aurora beyond. Tiny in the center: two walking figures, one carrying a third | Slow fade up from black | Realm drone rises; the Void Note woven in | 4.0s / 96 |
 | 003 | Low, at path level: a black-glass tile forms one step ahead of a polished black shoe; the tile behind dissolves | Tracking backward with their feet | Glass chime; dissolve hiss; their unchanged cadence | 3.0s / 72 |
 | 004 | MS: the man, carrying Cal over his shoulder. His free gloved hand moves slightly, and the path ahead extends (**dark magic, no word**) | Tracking | — | 2.5s / 60 |
-| 005 | MS: a thin ripple passes down the man's plain suit: it resolves into an immaculate **black butler's suit**, waistcoat, tie, watch-chain | Tracking; ripple 12f | A faint shimmer | 3.0s / 72 |
-| 006 | MS: the same ripple down the woman: a **black maid's dress cut with a suit jacket and tie**, gloves, a slim black instrument case on her back | Tracking | Shimmer | 3.0s / 72 |
+| 005 | MS: a thin ripple passes down the man: his black mask washes **white**: closed crescent eyes, a **painted frown**. His shirt turns **white** under the black suit and a **dark-blue tie**; silky **dark-blue hair** spills loose in messy, swept strands, long bangs across the mask, white and light-blue highlights catching the aurora, a low ponytail swaying to his knees. One hand stays in his pocket | Tracking; ripple 12f | A faint shimmer | 3.0s / 72 |
+| 006 | MS: the same ripple down the woman: **black suit jacket, white shirt, pink tie**, a frilled white apron and cuffs, a lace collar, and a **long black skirt slit high at the side** that opens as she walks; a slim black instrument case on her back. Short **pink twin ponytails** with light-pink gloss spill out under a small lace headdress. Her mask washes white: **the same mask, smiling** | Tracking | Shimmer | 3.0s / 72 |
 | 007 | CU, profile: the man's masked head. **Horns** rise from his brow, curving back, slow and unhurried | Static; he doesn't break stride | Low creak, like old wood | 2.5s / 60 |
 | 008 | MS from behind: **vast dark wings** unfurl from slits in his coat, then the woman's. They keep walking | Slow crane up | One long unfurl; two heavy wingbeats, never used to fly | 4.0s / 96 |
 | 008a | Extreme wide: through the tunnel walls, they pass the **wreckage of other worlds**: a cracked planet hanging in the dark, a burned city drifting in pieces, a sea frozen mid-wave. Neither looks | Slow pan | Drone; a faint, far-off groan of breaking stone | 4.0s / 96 |
 | 009 | Extreme wide over their shoulders, down the length of the tunnel: at its far end, small as a map, the **Demon Continent**, the black castle a speck. **No fires anywhere**: the battlefield is dark and quiet | Slow push toward it, then tilt up to the figures | Drone; very faint, from far ahead, the four-beat march drum | 4.0s / 96 |
-| 010 | Two-shot, walking: the archdemons, fully revealed (horns, wings, masks, butler and maid) | Tracking | MAN: *[unknown language, soft]* · WOMAN: *[unknown language]* | 4.0s / 96 |
+| 010 | Two-shot, walking: the archdemons, fully revealed (horns, wings, suits; **her smile and his frown side by side**; her skirt slit and twin ponytails swinging in step, his long ponytail swaying) | Tracking | MAN: *[unknown language, soft]* · WOMAN: *[unknown language]* | 4.0s / 96 |
 | 011 | CU: Cal over the man's shoulder, eyes half-closed, still smiling | Static | CAL: *[two words in the unknown language]*. No subtitles | 2.5s / 60 |
 | 012 | MS: the woman, walking, begins to **hum** | Tracking | Four slow notes: **the march as a lullaby** | 4.0s / 96 |
 | 013 | CU: Cal whistles it back, off-key | Hold | Whistle, once | 2.5s / 60 |
@@ -1168,7 +1184,7 @@ Format: **CUT · PICTURE · ACTION / STAGE · DIALOGUE / AUDIO · TIME / FRAMES 
 | 005 | CU: Cal | Static | CAL: *[unknown language, short]* | 2.0s / 48 |
 | 006 | MS: the maid begins to hum the march | Static | The four notes | 3.0s / 72 |
 | 007 | CU: Cal looks at the coffin and tilts his head (S4) | Hold | CAL: ***"You two still haven't told me what I'm for."*** | 3.5s / 84 |
-| 007a | Two-shot: the butler and the maid, masks blank, perfectly still. She keeps humming. Neither answers | **Held 2s** | The hum | 2.5s / 60 |
+| 007a | Two-shot: the butler and the maid, her smile and his frown unmoving, perfectly still. She keeps humming. Neither answers | **Held 2s** | The hum | 2.5s / 60 |
 | 008 | **CUT TO BLACK** | Hard cut | Silence | 2.0s / 48 |
 | → | **Back to Rook: Ep 50's ending** (GDD §15.8) | — | — | — |
 
@@ -1510,3 +1526,28 @@ public class NarrationService : MonoBehaviour
 5. Adding a new Trial tier requires **only a new `HeroTierData` asset** (architecture check).
 
 **Gate:** if (1) or (3) fails, we revise the soldier's feel and the Orders UI **before** building the Saint, King A, or any cinematic.
+
+
+---
+
+## Art reference: the Clergy Duo (true form)
+
+Owner reference art plus written canon (v1.8). It applies to the Astral Path (CIN-05C), CIN-10, and every later archdemon appearance.
+
+| | **Ghorran, the butler** | **Vaelith, the musician (maid)** |
+|---|---|---|
+| **Mask** | `ref-02-smiling-mask.jpg` **turned upside down**: smooth white, closed crescent eyes, a **frown** | `ref-02-smiling-mask.jpg` as drawn: smooth white, closed crescent eyes, a **smile** |
+| **Hair** | **Style: `ref-03`** (messy, swept, loose flyaway strands, long bangs falling across the mask), **kept long**: a low ponytail to the knees as in `ref-01`. Silky **dark blue**, with **white and light-blue glossy highlights** | **Short, silky pink**, in **two ponytails**, with **light-pink glossy highlights** |
+| **Outfit** | `ref-01`: black suit, white shirt, black shoes; **tie in dark blue to match his hair** | `ref-01` jacket and shirt, a **tie in pink to match her hair**, plus a **long black skirt slit high at the side** and **maid detailing**: short white frilled apron, frilled cuffs, lace-edged collar, small lace headdress |
+| **Pose** | `ref-01`: tall, loose, hand in pocket | Upright, precise; the instrument case on her back |
+
+Files:
+- `docs/art/clergy-duo/ref-01-suit-and-cracked-grin-mask.jpg`: outfit, ponytail length, pose. **Its cracked-grin mask is retired.**
+- `docs/art/clergy-duo/ref-02-smiling-mask.jpg`: the mask both wear.
+- `docs/art/clergy-duo/ref-03-ghorran-hairstyle.jpg`: **Ghorran's hairstyle only.** Ignore its colors (his hair is dark blue), its face (the mask never comes off), and its red vest, tie and pin.
+
+**Rules:**
+- The masks never come off, and the painted faces never change.
+- Silhouettes stay slim and tall. Flat black suit shapes sit against white shirts and masks, with a **rim light** on the suits so they never sink into dark backgrounds.
+- Horns and wings appear only in archdemon form (the Astral Path and after). In concealed form (CIN-05B, in the castle) the masks are featureless black, and the hair is hidden under the concealment.
+- Color grading follows GDD §19.6.1: bright, saturated, clean cel shading, glossy hair. On the dark Astral Path, keep the palette rich in violets and blues, never muddy black.

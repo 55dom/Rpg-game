@@ -17,7 +17,8 @@ export const HitOutcome = Object.freeze({
  * @param {object} o
  * @param {number} [o.damage] @param {number} [o.posture] @param {number} [o.hitstop]
  * @param {number} [o.hitstun] @param {boolean} [o.unblockable] @param {number} [o.launch]
- * @param {number} [o.knockback]
+ * @param {number} [o.knockback] @param {number} [o.pull] drag the target up to this far toward the attacker
+ * @param {[string, number][]} [o.applyTags] tags this hit puts on the target, with durations in frames
  */
 export function hitSpec(o = {}) {
   const spec = Object.freeze({
@@ -28,8 +29,13 @@ export function hitSpec(o = {}) {
     unblockable: !!o.unblockable,
     launch: o.launch ?? 0,
     knockback: o.knockback ?? 0,
+    pull: o.pull ?? 0,
+    applyTags: Object.freeze((o.applyTags ?? []).map(([tag, frames]) => {
+      if (!tag || !(frames > 0)) throw new RangeError("applyTags entries are [tag, positive frames]");
+      return Object.freeze([tag, frames]);
+    })),
   });
-  for (const k of ["damage", "posture", "hitstop", "hitstun", "launch", "knockback"]) {
+  for (const k of ["damage", "posture", "hitstop", "hitstun", "launch", "knockback", "pull"]) {
     if (spec[k] < 0) throw new RangeError(`hit ${k} can't be negative`);
   }
   return spec;
@@ -58,6 +64,8 @@ export class Combatant {
     this.invulnerableFrames = 0;
     this.invulnerableElapsed = 0;
     this.parryFrames = 0;
+    /** How early in a dodge's i-frames a dodged hit counts as perfect (touch assist widens it). */
+    this.perfectDodgeFrames = Rules.PerfectDodgeFrames;
     this.blocking = false;
     this.superArmor = false;
     this.staggerFrames = 0;
@@ -101,7 +109,8 @@ export class Combatant {
     }
   }
 
-  takeDamage(amount) { this.health.add(-amount); }
+  /** Health can't go below `floor` (bosses whose last blow belongs to the story set it). */
+  takeDamage(amount) { this.health.add(-amount); if (this.floor > 0 && this.health.current < this.floor) this.health.set(this.floor); }
 
   /** Returns true if this broke posture. */
   takePostureDamage(amount) {
@@ -142,7 +151,7 @@ export function resolveHit(attacker, defender, spec) {
   if (attacker && attacker.team === defender.team && attacker.team !== Team.Neutral) return result(HitOutcome.Ignored);
 
   if (defender.invulnerableFrames > 0) {
-    const perfect = defender.invulnerableElapsed < Rules.PerfectDodgeFrames;
+    const perfect = defender.invulnerableElapsed < defender.perfectDodgeFrames;
     return result(perfect ? HitOutcome.PerfectDodge : HitOutcome.Dodged);
   }
 
