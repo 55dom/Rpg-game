@@ -1,4 +1,5 @@
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import { World } from "../src/sim/world.js";
 import { Intent } from "../src/core/input.js";
@@ -120,7 +121,7 @@ test("Gullmaw's moves: the tongue reels you in, the belly-flop sends out a splas
   assert.ok(A.Flop.hit.unblockable && A.Flop.events.some((e) => e.key === "splash"), "the flop is unblockable and splashes");
   assert.ok(GULLMAW_HITBOXES.Bile.hit.applyTags.some(([t]) => t === "WEIGHTED"), "bile is heavy");
   b.boss.onCustom("splash", 6, A.Flop);
-  assert.ok(w.drainEvents().some((e) => e.type === "wave" && e.wave.kind === "splash"));
+  assert.ok(w.drainEvents().some((e) => e.type === "groundWave" && e.wave.kind === "splash"));
   assert.equal(LOOKS.gullmaw.weapon, "claw", "webbed claw hands"); assert.equal(LOOKS.gullmaw.head, "toad");
   const sheet = SHEETS.gullmaw.outfit;
   assert.ok(sheet.amphibian && sheet.wings && sheet.web && sheet.boots === "bare", "bat wings on an amphibian, webbed clawed feet");
@@ -149,4 +150,19 @@ test("Gullmaw's Lily Pad Leap: seven pads (a centre and six around), a fast hop 
   assert.ok(w.player.combatant.health.current < hp0, "standing on a lit pad hurts");
   assert.equal(b.pos.y, 0);
   assert.ok(!SHEETS.gullmaw.outfit.tail, "no tail");
+});
+
+test("a ground shockwave and a new enemy wave are different events, so neither handler swallows the other", () => {
+  const w = new World({ seed: 5 }); w.drainEvents();
+  w.addWave(w.player, 0, 0, { kind: "toll" });
+  const ring = w.drainEvents();
+  assert.ok(ring.some((e) => e.type === "groundWave" && e.wave.kind === "toll"), "the ring is a groundWave");
+  assert.ok(!ring.some((e) => e.type === "wave"), "the ring is not announced as an enemy wave");
+  w.spawnWave();
+  const next = w.drainEvents().find((e) => e.type === "wave");
+  assert.ok(next && Number.isInteger(next.wave), "a new enemy wave carries its number");
+  // The presentation layer routes events in one switch; a repeated label there is dead code.
+  const labels = readFileSync(new URL("../src/main.js", import.meta.url), "utf8").match(/case "[A-Za-z]+":/g);
+  const repeated = labels.filter((l, i) => labels.indexOf(l) !== i);
+  assert.deepEqual(repeated, [], "main.js has no repeated case labels");
 });
