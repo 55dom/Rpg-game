@@ -11,6 +11,8 @@ import { CUTSCENES } from "../data/story/cutscenes.js";
 import { validateCutscene, sampleCamera, eventsBetween, sampleMove } from "../core/timeline.js";
 import { B, toon2, glow } from "./look.js";
 import { makeTear } from "./tears.js";
+import { GuideTrail } from "./trail.js";
+import { findPath, trailMarks, guideTarget } from "../sim/guide.js";
 import { ZONES, arrivalPoint } from "../data/zones.js";
 import { Inventory } from "../core/inventory.js";
 import { Progress } from "../core/progress.js";
@@ -391,6 +393,42 @@ export class StoryPlayer {
         raining: !!this.weather?.raining, night: !!this.weather?.night, busy: x.busy });
     }
     if (this.exploring) this._exploreTick(dt);
+    this._guideTick(dt);
+  }
+
+  /**
+   * The floor trail (runtime/trail.js): on an episode's walk-around, arrows on the ground lead to the nearest
+   * person or thing the beat still needs, around buildings. Gone while you talk or fight, or once you're there.
+   */
+  _guideTick(dt) {
+    const x = this.exploring;
+    if (!x && !this.trail) return;
+    const scene = this.ctx.scene;
+    if (!scene || !globalThis.BABYLON) return;
+    this.trail ??= new GuideTrail(scene);
+    const g = this.guide ??= { t: 0, id: null, from: null, to: null, marks: [] };
+    let on = false;
+    if (x && !this.roaming && !x.busy && !x.combat && x.beat.guide !== false && x.beat.required?.length) {
+      const p = this.ctx.getWorld().player.pos;
+      const goal = guideTarget(p, x.beat.required, x.talked, (id) => {
+        const pk = x.pickups.find((q) => q.id === id);
+        if (pk) return truthy(pk.cond(this.flags)) ? { x: pk.x, z: pk.z } : null;
+        const a = this.stage.get(id);
+        return a && !a.hiddenActor ? { x: a.pos.x, z: a.pos.z } : null;
+      });
+      on = !!goal && goal.d > 2.1; // close enough: the talk prompt takes over
+      g.t -= dt;
+      const moved = (a, b, k) => !a || Math.hypot(a.x - b.x, a.z - b.z) > k;
+      if (on && g.t <= 0 && (goal.id !== g.id || moved(g.from, p, 0.6) || moved(g.to, goal, 0.5))) {
+        g.t = 0.25; g.id = goal.id; g.from = { x: p.x, z: p.z }; g.to = { x: goal.x, z: goal.z };
+        const path = findPath(g.from, g.to, this.ctx.getWorld().bounds);
+        g.marks = trailMarks(path, { max: this.trail.max });
+        const pk = x.pickups.find((q) => q.id === goal.id);
+        this.trail.set(g.marks, pk && pk.marker !== false ? null : g.to); // a glowing pickup already marks its spot
+      }
+    }
+    this.trail.show(on);
+    this.trail.update(dt);
   }
 
   /** Light / Enter / tap while a scene or card is up. */
