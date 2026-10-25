@@ -152,6 +152,15 @@ export class Sfx {
         this._tone(t, 0.45, { type: "sawtooth", f0: 900, f1: 120, gain: 0.05, attack: 0.25 });
         break;
       case "gale": this._noise(t, 0.35, { f0: 600, f1: 3500, q: 3, gain: 0.25, attack: 0.04 }); break;
+      case "rift": // a pale seam opening in the air: thin, glassy, a tearing sweep
+        this._noise(t, 0.34, { f0: 700, f1: 5200, q: 6, gain: 0.16 * p, attack: 0.03 });
+        this._tone(t + 0.02, 0.5, { type: "sine", f0: 1900, f1: 950, gain: 0.035 * p, attack: 0.04 });
+        break;
+      case "tear": // a black tear: something heavy giving way, then a cold ring
+        this._noise(t, 0.9, { type: "lowpass", f0: 3200, f1: 90, q: 2, gain: 0.34 * p, attack: 0.02 });
+        this._tone(t, 1.1, { type: "triangle", f0: 96, f1: 38, gain: 0.22 * p, attack: 0.02 });
+        this._tone(t + 0.15, 1.4, { type: "sine", f0: 2600, f1: 2400, gain: 0.025 * p, attack: 0.3 });
+        break;
       case "glint": this._tone(t, 0.12, { f0: 2400, gain: 0.12 }); this._tone(t + 0.1, 0.18, { f0: 3200, gain: 0.1 }); break;
       case "slam": this._tone(t, 0.4, { f0: 110, f1: 30, gain: 0.6 }); this._noise(t, 0.3, { type: "lowpass", f0: 1500, f1: 200, gain: 0.4 }); break;
       case "kill": this._tone(t, 0.6, { f0: 330, f1: 165, gain: 0.08 }); break;

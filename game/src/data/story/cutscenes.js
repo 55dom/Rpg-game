@@ -1,6 +1,10 @@
 // Cutscene timelines (see core/timeline.js for the format). Times are in seconds.
 
+import { IRONHOLD_LAYOUT } from "../zones.js";
+
 const PI = Math.PI;
+const RG = IRONHOLD_LAYOUT.ridge, EN = IRONHOLD_LAYOUT.engine;
+const KNIGHT = { x: RG.x - 1.5, z: RG.z - 4 }; // on the ridge's flat top
 
 export const CUTSCENES = {
   // Episode 1 cold open.
@@ -30,6 +34,60 @@ export const CUTSCENES = {
       { t: 9.6, caption: "A thin figure walks out of the fire, carrying something small against its chest." },
       { t: 14.4, caption: "It doesn't look back." },
       { t: 16.6, fade: "out" },
+    ],
+  },
+
+  // Episode 24: the Cindermaw rolls up the gate field toward the squad. A black tear opens under it, it drops
+  // through, and it falls out of the sky onto the Ashfall camp. On the east ridge, a masked figure with a long
+  // glaive is standing where he has been the whole time; he turns and walks away along the crest.
+  ep24_tear: {
+    id: "ep24_tear",
+    stage: "ironhold",
+    duration: 24.5,
+    actors: [
+      { id: "rook", look: "player", x: 0, z: 1, yaw: 0 },
+      { id: "bas", look: "bas", x: 0.4, z: 3, yaw: 0 },
+      { id: "dagrun", look: "dagrun", x: -1.8, z: 0.6, yaw: 0.1 },
+      { id: "juno", look: "juno", x: 1.8, z: 0.4, yaw: -0.1 },
+      { id: "tamsin", look: "tamsin", x: -3, z: -0.6, yaw: 0.15 },
+      { id: "lio", look: "lio", x: 3, z: -0.8, yaw: -0.15 },
+      { id: "knight", look: "masked", x: KNIGHT.x, z: KNIGHT.z, y: RG.h, yaw: -PI / 2 },
+    ],
+    camera: [
+      { t: 0, pos: [-3.5, 1.4, -4.5], look: [0, 3.2, 24], fov: 0.62 },                       // behind the squad: it's coming
+      { t: 3.2, pos: [-3.3, 1.5, -3.6], look: [0, 3.4, 22], fov: 0.6, ease: "linear" },
+      { t: 3.2, cut: true, pos: [2.2, 0.35, 0.5], look: [0, 4.5, 14], fov: 0.7 },               // low, looking up at the jaw
+      { t: 6, pos: [2.0, 0.4, 0.9], look: [0, 4.8, 13], fov: 0.72, ease: "linear" },
+      { t: 6, cut: true, pos: [-1.2, 1.7, 5.6], look: [0.2, 1.6, 2.6], fov: 0.5 },              // Bas, planting his feet
+      { t: 7.4, pos: [-1.1, 1.7, 5.3], look: [0.2, 1.6, 2.6], fov: 0.48, ease: "linear" },
+      { t: 7.4, cut: true, pos: [-17, 3.5, 2], look: [0, 2.5, 6], fov: 0.62 },                  // wide from the side (the ridge far behind)
+      { t: 9, pos: [-16.5, 3.6, 2.2], look: [0, 2.2, 6], fov: 0.62, ease: "linear" },
+      { t: 9, cut: true, pos: [-4, 9, -1], look: [0, 0, 8], fov: 0.66 },                        // high, down onto the tear sealing
+      { t: 10.4, pos: [-3.8, 9.4, -0.6], look: [0, 0, 8], fov: 0.64, ease: "linear" },
+      { t: 10.4, cut: true, pos: [0.6, 1.6, 6.5], look: [0, 1.5, 1.5], fov: 0.55 },             // the squad: where did it go?
+      { t: 11.6, pos: [0.6, 1.6, 6.3], look: [0, 1.5, 1.5], fov: 0.55, ease: "linear" },
+      { t: 11.6, cut: true, pos: [-2, 4, -2], look: [EN.crash.x, 14, EN.crash.z], fov: 0.5 },   // the sky over the Ashfall camp
+      { t: 14.6, pos: [-2, 3.6, -2], look: [EN.crash.x, 4, EN.crash.z], fov: 0.5, ease: "inOut" },
+      { t: 14.6, cut: true, pos: [3.2, 1.6, 3], look: [1.8, 1.5, 0.4], fov: 0.5 },              // Juno points
+      { t: 15.8, pos: [3.2, 1.6, 3], look: [1.8, 1.5, 0.4], fov: 0.5 },
+      { t: 15.8, cut: true, pos: [27, 4.6, 2], look: [KNIGHT.x, RG.h + 1.3, KNIGHT.z], fov: 0.42 }, // the ridge: a masked figure
+      { t: 18.4, pos: [29, 4.8, 2.6], look: [KNIGHT.x, RG.h + 1.4, KNIGHT.z], fov: 0.36, ease: "linear" },
+      { t: 18.4, cut: true, pos: [31, 5.5, -4], look: [KNIGHT.x, RG.h + 1, KNIGHT.z + 5], fov: 0.5 }, // he turns, and walks
+      { t: 21.6, pos: [31, 5.5, -3.4], look: [KNIGHT.x, RG.h + 1, KNIGHT.z + 7], fov: 0.5, ease: "linear" },
+      { t: 21.6, cut: true, pos: [0.2, 1.7, 0.8], look: [KNIGHT.x, RG.h + 1, KNIGHT.z + 7.5], fov: 0.38 }, // from where we stand
+      { t: 24.5, pos: [0.2, 1.7, 0.8], look: [KNIGHT.x, RG.h + 1, KNIGHT.z + 8], fov: 0.38 },
+    ],
+    events: [
+      { t: 0, cue: "engineRoll" },
+      { t: 0.4, sfx: "stone" }, { t: 3.3, sfx: "stone" }, { t: 6.1, sfx: "slam" },
+      { t: 7.9, pose: { id: "knight", name: "raise" } },                // far off, a glaive comes up…
+      { t: 8.2, pose: { id: "knight", name: "none" } },                 // …and down
+      { t: 8.2, cue: "tear" }, { t: 8.2, sfx: "tear" },
+      { t: 11.8, cue: "sky" }, { t: 11.8, sfx: "tear" },
+      { t: 13.4, sfx: "slam" }, { t: 13.6, sfx: "fire" },
+      { t: 14.6, pose: { id: "juno", name: "point" } },
+      { t: 18.6, move: { id: "knight", to: [KNIGHT.x, KNIGHT.z + 8], dur: 4.6 } },
+      { t: 22.9, hide: "knight" },
     ],
   },
 };

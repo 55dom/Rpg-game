@@ -22,6 +22,7 @@ import { buildArena } from "./runtime/arena.js";
 import { StoryPlayer } from "./runtime/story.js";
 import { Sets } from "./runtime/sets.js";
 import { Constellation } from "./runtime/constellation.js";
+import { TearFx, makeTear } from "./runtime/tears.js";
 import { SaveStore, cleanName } from "./core/save.js";
 import { EPISODE_1, EP1_SCRIPT } from "./data/story/ep1.js";
 import { EPISODE_2, EP2_SCRIPT } from "./data/story/ep2.js";
@@ -31,6 +32,8 @@ import { EPISODE_19, EP19_SCRIPT } from "./data/story/ep19.js";
 import { EPISODE_20, EP20_SCRIPT } from "./data/story/ep20.js";
 import { EPISODE_21, EP21_SCRIPT } from "./data/story/ep21.js";
 import { EPISODE_22, EP22_SCRIPT } from "./data/story/ep22.js";
+import { EPISODE_23, EP23_SCRIPT } from "./data/story/ep23.js";
+import { EPISODE_24, EP24_SCRIPT } from "./data/story/ep24.js";
 import { keyItemsHeld } from "./data/keyItems.js";
 import { WORLD_SCRIPT } from "./data/story/world.js";
 import { compileExpr, truthy } from "./core/flags.js";
@@ -41,6 +44,7 @@ import { SKILLS, TREE_COLUMNS, XP_BY_KIND, PAGE_ROMAN, MAX_LEVEL } from "./data/
 import { BONDS, RANK_POINTS, RANK_UNLOCKS, GIFTS } from "./data/bonds.js";
 import { MATERIALS, HQ, TEMPER } from "./data/crafting.js";
 import { FRAGMENTS, CLAUSE } from "./data/lore.js";
+import { rumorBoard } from "./data/rumors.js";
 import { ITEMS, SHOPS, SLOTS, BOUNTIES, slotKind } from "./data/items.js";
 import { squadRank } from "./core/quests.js";
 import { fillText } from "./core/script.js";
@@ -304,6 +308,22 @@ export function boot(doc = document) {
         case "desperate": hud.toast("DESPERATION", "danger"); hud.banner("HE CHARGES THE WHOLE HALL · DODGE"); break;
         case "flood": hud.toast("THE CISTERN FLOODS", "danger"); hud.banner("THE WATER JET SWEEPS · JUMP IT"); waterJet.start(ev.center, ev.length); sfx.play("ultActivate"); break;
         case "strikeWarn": groundFx.warn(ev.strike); break;
+        // ---- Wraithe: tears in the air (pale, jagged), and the floor opening under you ----
+        case "riftOpen": {
+          const p = world.player.pos, yaw = Math.atan2(p.x - ev.at.x, p.z - ev.at.z);
+          tearFx.open({ x: ev.at.x, y: 1.1, z: ev.at.z }, { r: ev.role === "call" ? 0.9 : 0.7, kind: "pale", life: ev.role === "mark" ? 0.6 : 0.42, yaw });
+          if (ev.role !== "out") vfx.flash({ x: ev.at.x, y: 1.1, z: ev.at.z }, 1.2, "#f0ecff", 0.08);
+          sfx.play("rift", ev.role === "mark" ? 0.6 : 1);
+          break;
+        }
+        case "riftDrop": tearFx.open({ x: ev.at.x, y: ev.at.y + 0.8, z: ev.at.z }, { r: 1.2, kind: "pale", life: 0.6, ground: true }); if (ev.fighter === world.player) camera.shake(0.25); break;
+        case "riftCall": hud.pushLog(`Wraithe calls ${ev.called.length} acolytes through the air`); break;
+        case "riftEscape":
+          tearFx.open({ x: ev.at.x, y: 1.1, z: ev.at.z }, { r: 1, kind: "pale", life: 0.8, yaw: Math.atan2(world.player.pos.x - ev.at.x, world.player.pos.z - ev.at.z) });
+          vfx.flash({ x: ev.at.x, y: 1.1, z: ev.at.z }, 2, "#f0ecff", 0.15);
+          removeView(ev.fighter); if (hud.focus === ev.fighter) hud.focus = null;
+          sfx.play("rift");
+          break;
         case "strike": groundFx.hit(ev.strike); break;
         case "burn": if (ev.fighter === world.player) vfx.sparksAt({ x: ev.fighter.pos.x, y: 1, z: ev.fighter.pos.z }, 3, "red", 3, 3); break;
         case "engineRoll": groundFx.lane(ev.from, ev.to, ev.half * 1.6); hud.toast("THE IRONSONG CHARGES", "danger"); sfx.play("bossIntro", 0.6); break;
@@ -692,7 +712,8 @@ export function boot(doc = document) {
     },
     onEvents: (evs) => onEvents(evs),
   }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }, { episode: EPISODE_3, script: EP3_SCRIPT }, { episode: EPISODE_4_STORY, script: EP4_SCRIPT }, { episode: EPISODE_19, script: EP19_SCRIPT }, { episode: EPISODE_20, script: EP20_SCRIPT },
-    { episode: EPISODE_21, script: EP21_SCRIPT }, { episode: EPISODE_22, script: EP22_SCRIPT }], [WORLD_SCRIPT]);
+    { episode: EPISODE_21, script: EP21_SCRIPT }, { episode: EPISODE_22, script: EP22_SCRIPT },
+    { episode: EPISODE_23, script: EP23_SCRIPT }, { episode: EPISODE_24, script: EP24_SCRIPT }], [WORLD_SCRIPT]);
   const playerName = root.querySelector(".player-card .name");
   const showName = (n) => { if (playerName?.firstChild) playerName.firstChild.textContent = `${n.toUpperCase()} `; };
   const backToTitle = () => {
@@ -857,6 +878,14 @@ export function boot(doc = document) {
     const found = FRAGMENTS.filter((f) => story.flags.get(`FRAG_${f.n}`));
     journal.querySelector("[data-lore]").innerHTML = `<p class="mats"><b>Page fragments: ${found.length}/${FRAGMENTS.length}</b> · ${story.flags.get("CLAUSE_1") ? `<b>${CLAUSE.name}</b> restored: ${CLAUSE.desc}` : `Find ${CLAUSE.need} to restore a clause of the under-text.`}</p>` +
       found.map((f) => `<p class="mats"><i>"${f.text}"</i> · ${f.where}</p>`).join("");
+    // The rumor board: what people say about the stranger, once there's been one to talk about.
+    const rb = rumorBoard(story.flags), rumorHead = journal.querySelector("[data-rumor-head]"), rumorList = journal.querySelector("[data-rumors]");
+    rumorHead.hidden = rumorList.hidden = !rb.show;
+    if (rb.show) {
+      rumorHead.textContent = rb.title;
+      rumorList.innerHTML = rb.seen.map((t) => `<p class="seen">${t}</p>`).join("") +
+        (rb.rumors.length ? rb.rumors.map((r) => `<p><b>${r.theory}</b>${r.text} <i>· ${r.who}</i></p>`).join("") : `<p class="hint">Nobody has a theory yet. Ask around.</p>`);
+    }
     const list = story.quests.entries();
     journal.querySelector("[data-quests]").innerHTML = list.length ? list.map((q) =>
       `<button class="${q.done ? "done" : ""}"><b>${q.done ? "DONE" : "ACTIVE"}</b><span>${q.title}<small>${fillText(q.objective, { ...story.player, flags: story.flags })} · from ${q.giver}, ${q.region}</small></span></button>`).join("")
@@ -880,12 +909,17 @@ export function boot(doc = document) {
     const thunderMat = glow(scene, "strikeThunder", "#9ad8ff", 0.28, true), debrisMat = glow(scene, "strikeDebris", "#ff7a3a", 0.3, true), laneMat = glow(scene, "laneMat", "#ff3a2a", 0.22, true);
     return {
       warn(s) {
+        if (s.kind === "rift") { // Wraithe's Undertow: a pale tear opening in the ground, not a ring
+          const t = makeTear(scene, "riftWarn", { r: s.r, kind: "pale", seed: Math.round(s.x * 31 + s.z * 17), ground: true });
+          t.position.set(s.x, 0.05, s.z); t.scaling.setAll(0.2); strikes.set(s, t); sfx.play("rift", 0.5); return;
+        }
         const d = BB.MeshBuilder.CreateDisc("strikeWarn", { radius: s.r, tessellation: 28 }, scene); d.rotation.x = Math.PI / 2; d.position.set(s.x, 0.05, s.z);
         d.material = s.kind === "debris" ? debrisMat : thunderMat; d.isPickable = false; d.scaling.setAll(0.2); strikes.set(s, d);
       },
       hit(s) {
         strikes.get(s)?.dispose(); strikes.delete(s);
         const at = { x: s.x, y: 0.1, z: s.z };
+        if (s.kind === "rift") { vfx.flash({ x: s.x, y: 0.3, z: s.z }, 1.8, "#f0ecff", 0.12); sfx.play("rift", 0.8); return; } // it seals
         if (s.kind === "debris") { vfx.ring(at, s.r * 2.2, "#ff9a5a", 0.3); vfx.sparksAt({ x: s.x, y: 0.4, z: s.z }, 10, "gold", 8, 6); vfx.flash({ x: s.x, y: 0.8, z: s.z }, 2.2, "#ffb070", 0.12); sfx.play("slam", 0.55); }
         else { vfx.pillar(at, 6, 0.35); vfx.flash({ x: s.x, y: 1.4, z: s.z }, 2.6, "#cfeaff", 0.1); vfx.sparksAt({ x: s.x, y: 0.5, z: s.z }, 10, "white", 9, 5); sfx.play("ultActivate", 0.5); }
         camera.shake(0.18);
@@ -895,10 +929,11 @@ export function boot(doc = document) {
         m.position.set((from.x + to.x) / 2, 0.05, (from.z + to.z) / 2); m.rotation.y = Math.atan2(to.x - from.x, to.z - from.z); m.material = laneMat; m.isPickable = false; lanes.push(m);
       },
       clearLanes() { for (const m of lanes) m.dispose(); lanes.length = 0; },
-      update(dt) { for (const [s, d] of strikes) { const k = 1 - s.t / s.delay; d.scaling.setAll(0.2 + 0.8 * Math.min(1, k * 1.3)); d.material.alpha = 0.18 + 0.25 * k; } },
+      update(dt) { for (const [s, d] of strikes) { const k = 1 - s.t / s.delay; d.scaling.setAll(0.2 + 0.8 * Math.min(1, k * 1.3)); if (d.material) d.material.alpha = 0.18 + 0.25 * k; } },
       clear() { for (const d of strikes.values()) d.dispose(); strikes.clear(); this.clearLanes(); },
     };
   })();
+  const tearFx = new TearFx(scene); // Wraithe's pale tears in the air
   const silenceFx = (() => {
     const zones = new Map(), mat = glow(scene, "silenceMat", "#9a7aff", 0.28, true), fieldMat = glow(scene, "silenceAllMat", "#5a3a9a", 0.12);
     let field = null;
@@ -982,7 +1017,7 @@ export function boot(doc = document) {
     };
   })();
   const hopGhostMat = glow(scene, "hopGhost", "#8affc8", 0.3, true);
-  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); lilyFx.clear(); groundFx.clear(); root.classList.remove("leaping", "hopblur"); };
+  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); lilyFx.clear(); groundFx.clear(); tearFx.clear(); root.classList.remove("leaping", "hopblur"); };
 
   // Squad HQ: the board (rooms to build) and the workbench (tempering gear). One screen, two modes.
   const hqModal = root.querySelector("[data-hq]");
@@ -1249,7 +1284,7 @@ export function boot(doc = document) {
       if (state.ghostTimer <= 0) { const rig = viewFor(world.player); if (rig) vfx.afterimage(rig); state.ghostTimer = 0.09; }
     }
 
-    waterJet.update(); lilyFx.update(dt); groundFx.update(dt);
+    waterJet.update(); lilyFx.update(dt); groundFx.update(dt); tearFx.update(dt);
     if (world.boss?.boss?.leap) { // motion blur on the hops: a trail of fading ghosts of Gullmaw
       state.hopGhost = (state.hopGhost ?? 0) - dt;
       if (state.hopGhost <= 0) { const rig = viewFor(world.boss); if (rig?.snapshot) vfx.afterimage(rig, hopGhostMat, 0.22); state.hopGhost = 0.035; }

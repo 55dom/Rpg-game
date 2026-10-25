@@ -325,6 +325,11 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .shop-card .marks { font: 600 13px/1 var(--font-mono); letter-spacing: 0.2em; color: var(--lantern); margin: -6px 0 6px; }
 .shop-card em { font: 600 10px/1 var(--font-mono); letter-spacing: 0.16em; color: var(--muted); text-transform: uppercase; font-style: normal; margin-left: 6px; }
 .shop-card .total { font-size: 12px; color: var(--gale); text-align: left; margin: 8px 2px 0; }
+.rumors { display: grid; gap: 6px; text-align: left; }
+.rumors p { margin: 0; padding: 8px 10px; border: 1px solid #343a50; border-radius: 8px; font-size: 12px; line-height: 1.45; color: var(--text); background: #1d2131; }
+.rumors p.seen { border-color: rgba(156, 184, 255, 0.4); color: #c9cede; font-style: italic; }
+.rumors b { display: block; font-size: 13px; color: #ffe08a; margin-bottom: 2px; }
+.rumors i { color: var(--muted); font-style: normal; }
 .keyitems { display: grid; gap: 6px; text-align: left; }
 .keyitems p { margin: 0; padding: 8px 10px; border: 1px solid rgba(230, 181, 78, 0.35); border-radius: 8px; font-size: 12px; line-height: 1.4; color: var(--text); }
 .keyitems b { display: block; font-size: 13px; color: var(--gale); margin-bottom: 2px; }
@@ -699,6 +704,8 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <dl class="stats rep" data-rep></dl>
       <h3>QUESTS</h3>
       <div class="slot-list" data-quests></div>
+      <h3 data-rumor-head hidden></h3>
+      <div class="rumors" data-rumors hidden></div>
       <h3>LORE · THE UNDER-TEXT</h3>
       <div data-lore></div>
       <h3>BONDS · TALK EVERY DAY, GIVE GIFTS, FIGHT TOGETHER</h3>

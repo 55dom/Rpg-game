@@ -10,6 +10,7 @@ import { CAST, speakerName } from "../data/story/cast.js";
 import { CUTSCENES } from "../data/story/cutscenes.js";
 import { validateCutscene, sampleCamera, eventsBetween, sampleMove } from "../core/timeline.js";
 import { B, toon2, glow } from "./look.js";
+import { makeTear } from "./tears.js";
 import { ZONES, arrivalPoint } from "../data/zones.js";
 import { Inventory } from "../core/inventory.js";
 import { Progress } from "../core/progress.js";
@@ -521,7 +522,7 @@ export class StoryPlayer {
 
   async scene(beat) {
     this._enterScene(true);
-    this.ctx.sets?.use(beat.stage ?? "yard");
+    this.ctx.sets?.use(beat.stage ?? "yard"); this._refreshSet(); // set pieces follow the story (a cairn, a wreck…)
     this.stage.setup(beat);
     const wide = this.stage.shot("wide");
     if (wide) this.ctx.camera.frame(wide.pos, wide.look, { fov: wide.fov, cut: true });
@@ -697,7 +698,21 @@ export class StoryPlayer {
       return;
     }
     if (kind === "door") { await this.doorOfLight(CAST[who]?.actor ?? who); return; }
+    if (kind === "rift") { this.riftAt(CAST[who]?.actor ?? who); return; } // a pale seam where someone is about to step out
     if (kind === "book") await this.bookDescends(CAST[who]?.actor ?? who, who === "Severin" ? "tome" : "thin");
+  }
+
+  /** A pale tear in the air at an actor's spot, facing where they face. It doesn't hold up the script. */
+  riftAt(id) {
+    const a = this.stage.get(id);
+    if (!a) return;
+    const node = makeTear(this.ctx.scene, "story-rift", { r: 0.85, kind: "pale", seed: 7, ground: false });
+    node.position.set(a.pos.x, (a.pos.y ?? 0) + 1.15, a.pos.z);
+    node.rotation.y = a.yaw;
+    node.scaling.setAll(0.01);
+    this.ctx.sfx.play("rift");
+    const dur = this.skipping ? 0.05 : 3;
+    this.tweens.push({ t: 0, dur, fn: (k) => node.scaling.setAll(Math.max(0.01, Math.min(1, k * 6, (1 - k) * 4))), done: () => node.dispose(false, false) });
   }
 
   /** A grimoire floats down out of the light into someone's hands. */
@@ -834,7 +849,9 @@ export class StoryPlayer {
   }
 
   _objective() {
-    const x = this.exploring, b = x.beat, npcs = b.cast.filter((c) => c.node);
+    // {n}/{total} counts everyone there is to talk to, or only the ones the beat needs (counts: "required").
+    const x = this.exploring, b = x.beat, talkable = b.cast.filter((c) => c.node);
+    const npcs = b.counts === "required" ? talkable.filter((c) => b.required?.includes(c.id)) : talkable;
     const n = npcs.filter((c) => x.talked.has(c.id)).length;
     this.ui.objective.innerHTML = fillText(b.objective ?? "", { ...this.player, flags: this.flags }).replace("{n}", n).replace("{total}", npcs.length).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
     if (this.roaming) {
@@ -1139,7 +1156,7 @@ export class StoryPlayer {
   playCutscene(id) {
     const cs = CUTSCENES[id];
     if (!cs) return Promise.resolve();
-    this.ctx.sets?.use(cs.stage ?? "yard");
+    this.ctx.sets?.use(cs.stage ?? "yard"); this._refreshSet(); // set pieces follow the story (a cairn, a wreck…)
     this.stage.setup({ actors: cs.actors, rook: null });
     this.view.hide();
     this.ctx.root.classList.add("in-cut");
@@ -1194,7 +1211,7 @@ export class StoryPlayer {
   async runFight(beat) {
     this._enterScene(false);
     this.stage.clear();
-    this.ctx.sets?.use(beat.stage ?? "yard");
+    this.ctx.sets?.use(beat.stage ?? "yard"); this._refreshSet(); // set pieces follow the story (a cairn, a wreck…)
     const world = this.ctx.makeWorld({ ...this.ep.world, tokens: beat.tokens ?? this.ep.world?.tokens });
     for (;;) {
       world.resetPlayer();
@@ -1272,14 +1289,14 @@ export class StoryPlayer {
     const pv = this.ui.preview;
     const lines = pv.querySelector("[data-pv-lines]"), next = pv.querySelector("[data-pv-next]"), buttons = pv.querySelector("[data-pv-buttons]");
     lines.innerHTML = beat.lines.map((l) => `<p>${l}</p>`).join("");
-    next.textContent = beat.next ?? ""; next.classList.remove("on");
+    const nextEp = beat.nextEpisode && this.episodeById(beat.nextEpisode);
+    next.textContent = beat.next ?? (nextEp ? `Episode ${nextEp.number} · ${nextEp.title}` : ""); next.classList.remove("on"); // the next episode names itself
     buttons.innerHTML = "";
     pv.hidden = false;
     this.ctx.sfx.play("surgeFull");
     for (const p of lines.querySelectorAll("p")) { await this.sleep(0.9); p.classList.add("on"); }
     await this.sleep(0.9); next.classList.add("on");
     await this.sleep(0.4);
-    const nextEp = beat.nextEpisode && this.episodeById(beat.nextEpisode);
     const choice = await new Promise((res) => {
       const add = (label, value, alt) => {
         const b = document.createElement("button");

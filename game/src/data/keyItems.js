@@ -11,6 +11,11 @@ export const KEY_ITEMS = Object.freeze({
       { text: "A small brass key on a loop of string. Cal swore it opens the snack cupboard. The snack cupboard doesn't have a lock." },
     ],
   },
+  calNotebook: {
+    name: "Cal's notebook",
+    has: "HAS_CAL_NOTEBOOK",
+    text: [{ text: "Oilcloth, and Juno's red cord tied round it in a Quill knot. Lists, a bet he won, a drawing of Dagrun with a moustache, a door frame with its hinges on the far side. The last page says \"Tell Juno it held.\"" }],
+  },
   wardenSummons: {
     name: "Brannoc's summons",
     has: "HAS_SUMMONS",

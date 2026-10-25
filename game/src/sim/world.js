@@ -15,6 +15,8 @@ import { ILSE_STATS, ILSE_HITBOXES, ilseOptions, GALEN_STATS, GALEN_HITBOXES, ga
   OBJECTS as OBJECTS2, OBJECT_HITBOXES as OBJECT_HITBOXES2, GALEN_TUNING } from "../data/bosses2.js";
 import { VARKA_STATS, VARKA_HITBOXES, varkaOptions, ASH_OBJECTS, ASH_OBJECT_HITBOXES, THUNDER, BRANNOC_SPAR_STATS, BRANNOC_HITBOXES, brannocSparOptions } from "../data/ashfall.js";
 import { VarkaController, SparBoss } from "./varka.js";
+import { WRAITHE_STATS, WRAITHE_HITBOXES, wraitheOptions } from "../data/wraithe.js";
+import { WraitheController } from "./wraithe.js";
 const OBJECTS = { ...OBJECTS2, ...ASH_OBJECTS }, OBJECT_HITBOXES = { ...OBJECT_HITBOXES2, ...ASH_OBJECT_HITBOXES };
 import { CAL_STATS, CAL_HITBOXES, calOptions } from "../data/cal.js";
 import { SEVERIN_STATS, SEVERIN_HITBOXES, severinOptions } from "../data/severin.js";
@@ -55,6 +57,7 @@ const BOSSES = {
   brannocSpar: { stats: BRANNOC_SPAR_STATS, hitboxes: BRANNOC_HITBOXES, options: brannocSparOptions, traits: {}, Controller: SparBoss, z: 4 },
   varka: { stats: VARKA_STATS, hitboxes: VARKA_HITBOXES, options: varkaOptions, traits: { heavy: true, armoredAttacks: true }, Controller: VarkaController, z: 6 },
   gullmaw: { stats: GULLMAW_STATS, hitboxes: GULLMAW_HITBOXES, options: gullmawOptions, traits: { heavy: true, armoredAttacks: true }, Controller: GullmawController, z: 7 },
+  wraithe: { stats: WRAITHE_STATS, hitboxes: WRAITHE_HITBOXES, options: wraitheOptions, traits: {}, Controller: WraitheController, z: 6 },
 };
 export const BOSS_KINDS = Object.freeze(Object.keys(BOSSES));
 
@@ -498,10 +501,11 @@ export class World {
   /**
    * A strike from above (Thunderheads, falling wreckage): a ring on the ground now, the hit after `delay` frames.
    * Anyone of the other side inside the ring when it lands is hit. Step out of it.
+   * `lift` (Wraithe's Undertow): the ground opens instead, and whoever it catches drops out of the air that high up.
    */
-  addStrike(owner, x, z, { delay = 60, r = 1.7, spec, ability, kind = "thunder" }) {
+  addStrike(owner, x, z, { delay = 60, r = 1.7, spec, ability, kind = "thunder", lift = 0 }) {
     ({ x, z } = constrain({ x, z }, 0.3, this.bounds));
-    const s = { owner, x, z, r, t: delay, delay, spec, ability, kind };
+    const s = { owner, x, z, r, t: delay, delay, spec, ability, kind, lift };
     this.strikes.push(s);
     this.emit({ type: "strikeWarn", strike: s });
     return s;
@@ -512,7 +516,11 @@ export class World {
       for (const t of this.fighters) {
         if (t.team === s.owner.team || !t.alive || t.traits.object || t.pos.y > 2.2) continue;
         if (Math.hypot(t.pos.x - s.x, t.pos.z - s.z) > s.r + t.stats.radius * 0.5) continue;
-        this._resolve(s.owner, t, { spec: s.spec, ability: s.ability, hitSet: new Set(), origin: { x: s.x, y: 0.5, z: s.z }, projectile: true });
+        const outcome = this._resolve(s.owner, t, { spec: s.spec, ability: s.ability, hitSet: new Set(), origin: { x: s.x, y: 0.5, z: s.z }, projectile: true });
+        if (s.lift && outcome === HitOutcome.Hit && t.alive) { // through the floor, and out of the air above it
+          t.pos.y = t.prev.y = s.lift; t.vel.y = 0; t.grounded = false; t.knock.x = t.knock.z = 0;
+          this.emit({ type: "riftDrop", fighter: t, at: { x: t.pos.x, y: s.lift, z: t.pos.z }, from: { x: s.x, z: s.z } });
+        }
       }
       this.emit({ type: "strike", strike: s });
     }

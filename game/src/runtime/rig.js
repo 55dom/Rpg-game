@@ -12,6 +12,8 @@ import { SEVERIN_KIT_POSES } from "../data/severinKit.js";
 import { ILSE_POSES, GALEN_POSES, GULLMAW_POSES } from "../data/bosses2.js";
 import { CAL_POSES } from "../data/cal.js";
 import { BRANNOC_POSES, VARKA_POSES } from "../data/ashfall.js";
+import { WRAITHE_POSES } from "../data/wraithe.js";
+import { MASKED_LOOK } from "../data/masked.js";
 import { EventType } from "../core/abilities.js";
 import { buildBody, skinBake } from "./body.js";
 import { animateHumanoid } from "./motion.js";
@@ -98,6 +100,11 @@ export const LOOKS = {
   varka: { poses: VARKA_POSES, scale: 1.14, skirt: 1.0, coat: "#3a4252", trim: "#d9b45a", hairColor: "#e8e4f0", skin: "#e8c0a0",
     head: "face", hair: "long", angry: true, weapon: "staff", orb: "#9ad8ff", shoulders: 1.3, eyeColor: "#3a6aa0", trail: "#9ad8ff" },
   engine: { form: "object", shape: "engine", trail: "#ffd36a" },
+  masked: MASKED_LOOK, // the masked knight on the ridge (data/masked.js)
+  // Wraithe, the Pale Choir's rift-walker (Ep 23): ash-pale wrappings, a hood, a cloth bound over the mouth
+  // (the silent school), two needle blades. riftwalk: inside a tear he's simply gone (no sinking into the ground).
+  wraithe: { poses: WRAITHE_POSES, scale: 1.03, skirt: 1.1, coat: "#e2dfe8", trim: "#7a6a9a", hairColor: "#d8d4e4", skin: "#e8dcd4",
+    head: "face", hair: "crop", hood: "#c8c2d6", mask: "#ece8f2", weapon: "needle", eyeColor: "#7a6aa8", riftwalk: true, trail: "#f0ecff" },
   get brannocSpar() { return this.brannoc; }, // Brannoc in the training ring: same man
   // Things bosses put on the field: drawn by ObjectView (runtime/objects.js).
   bell: { form: "object", shape: "bell", trail: "#c9b4ff" }, seal: { form: "object", shape: "seal", trail: "#ff7a2a" },
@@ -257,9 +264,11 @@ export class Rig {
           const ear = add(MB.CreateSphere("ear", { diameter: 0.075, segments: 5 }, scene), this.head, sx * 0.222, 0.0, -0.01, 0);
           ear.scaling.set(0.45, 1, 0.7); ear.material = skin;
         }
-        const nose = add(MB.CreateSphere("nose", { diameter: 0.034, segments: 4 }, scene), this.head, 0, -0.03, 0.226, 0);
-        nose.scaling.set(0.8, 1.1, 0.8); nose.material = M("nose", L.skin);
-        if (!L.beard) { const mouth = add(MB.CreateBox("mouth", { width: 0.05, height: 0.011, depth: 0.012 }, scene), this.head, 0, -0.1, 0.218, 0); mouth.rotation.x = -0.4; mouth.material = M("mouth", "#8a4a42"); }
+        if (!L.mask) { // a cloth mask (below) covers these
+          const nose = add(MB.CreateSphere("nose", { diameter: 0.034, segments: 4 }, scene), this.head, 0, -0.03, 0.226, 0);
+          nose.scaling.set(0.8, 1.1, 0.8); nose.material = M("nose", L.skin);
+        }
+        if (!L.beard && !L.mask) { const mouth = add(MB.CreateBox("mouth", { width: 0.05, height: 0.011, depth: 0.012 }, scene), this.head, 0, -0.1, 0.218, 0); mouth.rotation.x = -0.4; mouth.material = M("mouth", "#8a4a42"); }
       }
       if (L.mask) { // a cloth mask over the nose and mouth (bandits)
         const m = add(animeHead(MB.CreateSphere("faceMask", { diameter: 0.475, segments: 12, slice: 0.42, updatable: true }, scene), 0.2375), this.head, 0, 0, 0.006, 0);
@@ -377,6 +386,17 @@ export class Rig {
       }
       // (No side pieces: the helm reads as one clean shape from the front.)
       const scarfN = add(MB.CreateTorus("neckScarf", { diameter: 0.24, thickness: 0.08, tessellation: 8 }, scene), this.head, 0, -0.27, -0.01, 0.02); scarfN.material = plume;
+    } else if (L.head === "fullmask") { // a smooth full mask over the whole head, narrow vertical slits for eyes: no face, ever
+      const maskMat = toon(scene, `${id}-fullmask`, L.maskColor ?? "#202028", { gloss: true });
+      const shellM = add(MB.CreateSphere("fullMask", { diameter: 0.48, segments: 14 }, scene), this.head, 0, 0.02, 0);
+      shellM.scaling.set(1, 1.1, 1.06); shellM.material = maskMat;
+      const slitMat = M("maskSlit", L.slitColor ?? "#000000");
+      for (const x of [-0.125, -0.07, 0.07, 0.125]) { // two pairs of slits; the seam down the middle stays closed
+        const zf = Math.sqrt(Math.max(0, 0.24 * 0.24 - x * x)) * 1.06;
+        const sl = add(MB.CreateBox("maskSlit", { width: 0.016, height: 0.09, depth: 0.02 }, scene), this.head, x, 0.04, zf - 0.002, 0);
+        sl.rotation.y = Math.atan2(x, zf); sl.material = slitMat;
+      }
+      const seam = add(MB.CreateBox("maskSeam", { width: 0.014, height: 0.17, depth: 0.02 }, scene), this.head, 0, -0.03, 0.254, 0); seam.material = maskMat;
     } else if (L.head === "lump") { // a bog brute: a heavy skull, a brow ridge over slanted eyes, a jaw full of fangs, horns
       const hide = dark, bone = M("fang", "#e8dfc4"), maw = M("maw", "#2a0a0a"), horn = M("horn", "#2a2620");
       const skull = add(MB.CreateSphere("head", { diameter: 0.56, segments: 10 }, scene), this.head, 0, -0.04, 0.06);
@@ -582,6 +602,19 @@ export class Rig {
     if (L.weapon === "claw") { // the weapon hand is a webbed claw
       webHand(this.shoulder, 0, 0, 0.66, 0, 1.15);
       tipZ = 1.25; hiltZ = 0.7;
+    } else if (L.weapon === "glaive") { // a long black glaive: a dark haft and a long single-edged blade with a cold edge
+      const len = 2.0, bz = 0.64 + len * 0.8 + 0.34;
+      const haft = add(MB.CreateCylinder("glaiveHaft", { height: len, diameter: 0.055, tessellation: 6 }, scene), this.shoulder, 0, 0, 0.64 + len * 0.3, 0.015);
+      haft.rotation.x = Math.PI / 2; haft.material = M("glaiveHaft", L.haftColor ?? "#141418");
+      const blade = add(MB.CreateBox("glaiveBlade", { width: 0.035, height: 0.17, depth: 0.72 }, scene), this.shoulder, 0, 0.05, bz, 0.015);
+      blade.material = M("glaiveBlade", L.bladeColor ?? "#1c1c24");
+      const edge = add(MB.CreateBox("glaiveEdge", { width: 0.02, height: 0.024, depth: 0.68 }, scene), this.shoulder, 0, 0.145, bz, 0);
+      edge.material = glow(scene, `${id}-glaiveEdge`, L.edgeColor ?? "#9cb8ff"); edge.metadata = { noGlow: true };
+      const tip = add(MB.CreateCylinder("glaiveTip", { height: 0.28, diameterTop: 0, diameterBottom: 0.17, tessellation: 3 }, scene), this.shoulder, 0, 0.06, bz + 0.48, 0.015);
+      tip.rotation.x = Math.PI / 2; tip.material = blade.material;
+      const collar = add(MB.CreateCylinder("glaiveCollar", { height: 0.09, diameter: 0.09, tessellation: 6 }, scene), this.shoulder, 0, 0, bz - 0.4, 0.01);
+      collar.rotation.x = Math.PI / 2; collar.material = M("glaiveCollar", L.trim);
+      tipZ = bz + 0.6; hiltZ = 0.64 + len * 0.3;
     } else if (L.weapon === "staff" || L.weapon === "spear" || L.weapon === "rod") {
       const len = L.weapon === "staff" ? 1.7 : L.weapon === "rod" ? 2.3 : 2.1;
       const shaft = add(MB.CreateCylinder("shaft", { height: len, diameter: 0.05, tessellation: 6 }, scene), this.shoulder, 0, 0, 0.64 + len * 0.3, 0.015);
@@ -921,7 +954,8 @@ export class Rig {
     let jitter = 0;
     if (fighter.frozen && fighter.combatant.isStaggered) jitter = (Math.random() - 0.5) * 0.12; // hitstop shake
     // Burrowing: sink out of sight, leaving a bubbling mound.
-    this.sink += ((fighter.submerged ? 1 : 0) - this.sink) * Math.min(1, dt * (fighter.submerged ? 3 : 8));
+    if (this.look.riftwalk) { const on = this.shown !== false && !fighter.submerged; if (this.root.isEnabled() !== on) { this.root.setEnabled(on); this.shadow.setEnabled(on); } } // through a tear: gone
+    else this.sink += ((fighter.submerged ? 1 : 0) - this.sink) * Math.min(1, dt * (fighter.submerged ? 3 : 8));
     this.root.position.set(x + jitter, y - this.sink * 4.5, z);
     if (this.mound) {
       const on = this.sink > 0.15 && fighter.alive;
@@ -1100,7 +1134,7 @@ export class Rig {
   }
 
   /** Hide or show the whole character (cutscenes hide the player). */
-  setVisible(on) { this.root.setEnabled(on); this.shadow.setEnabled(on); }
+  setVisible(on) { this.shown = on; this.root.setEnabled(on); this.shadow.setEnabled(on); }
 
   hitFlash(seconds = 0.07, hex) {
     this.flash = seconds;

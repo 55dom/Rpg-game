@@ -6,6 +6,7 @@ import { CAFE_SCRIPT } from "./cafe.js";
 import { BOND_SCRIPT } from "../bonds.js";
 import { CRAFT_SCRIPT } from "../crafting.js";
 import { LORE_SCRIPT } from "../lore.js";
+import { NOTEBOOK_READ } from "./ep23.js";
 
 const BASE_SCRIPT = `
 title: W_Dagrun
@@ -39,6 +40,10 @@ Dagrun: Aurelin's down the road if you want to stretch your legs.
 
 title: W_Juno
 ---
+<<if $JUNO_HAS_NOTEBOOK and $BOND_JUNO >= 75>>
+    Juno: {name}. I've read it every night. I think I'm ready now. Sit with me?
+    <<jump W_Juno_Read>>
+<<endif>>
 Juno: If you're going to the capital, don't buy anything in the Lowmarket that's "blessed." Nothing there is blessed.
 ===
 
@@ -336,5 +341,13 @@ Guard2: Watch your purse in the Lowmarket. And don't feed the pigeons. They unio
 ===
 `;
 
+// Juno shares Cal's notebook once she trusts you enough (bond rank 4), if she kept it in Episode 23.
+const NOTEBOOK_SCRIPT = `
+title: W_Juno_Read
+---
+${NOTEBOOK_READ}
+===
+`;
+
 /** Every free-roam talk node: the towns, the Gilded Spoon café (data/story/cafe.js), and bonds (data/bonds.js). */
-export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT + CRAFT_SCRIPT + LORE_SCRIPT + HALL_SCRIPT + IRON_SCRIPT;
+export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT + CRAFT_SCRIPT + LORE_SCRIPT + HALL_SCRIPT + IRON_SCRIPT + NOTEBOOK_SCRIPT;

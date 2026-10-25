@@ -78,6 +78,9 @@ export const IRONHOLD_LAYOUT = {
   wallZ: -21, gateHalf: 3, rect: [-30, -44, 30, 24],
   tents: [[-11, -27], [-11, -34], [-11, -41], [11, -27], [11, -34], [11, -41], [-20, -30], [20, -30]],
   command: { x: 0, z: -35 }, ring: { x: -20, z: -39 },
+  ridge: { x: 38, z: 8, h: 5 }, // the east ridge, a flat-topped rise just past the field's edge (scenery: nobody can walk up it)
+  engine: { from: 34, to: 9, crash: { x: 7, z: 54 } }, // Ep 24: the Cindermaw's roll up the field, and where it lands
+  cairn: { x: -10, z: -15.6 }, // Brannoc's cairn on the gate field (after Ep 22), outside the fighting ring
   braziers: [[-4.5, -24.5], [4.5, -24.5], [-6, -33], [6, -33], [-8.5, -23.5]],
   barricades: [[-14, 18, 0.2], [-5, 20, -0.1], [6, 19.5, 0.15], [15, 17, -0.25], [-22, 10, 0.9], [22, 8, -0.9]],
 };
@@ -383,6 +386,7 @@ export const ZONES = {
       ...IH.tents.map(([x, z]) => box(x - 2.1, z - 1.6, x + 2.1, z + 1.6)), box(IH.command.x - 3.2, IH.command.z - 2.4, IH.command.x + 3.2, IH.command.z + 2.4),
       ...IH.braziers.map(([x, z]) => circle(x, z, 0.45)),
       ...IH.barricades.map(([x, z]) => circle(x, z, 1.4)),
+      circle(IH.cairn.x, IH.cairn.z, 0.8),
     ] },
     spawn: { x: 0, z: -29, yaw: Math.PI },
     cast: [
@@ -393,6 +397,7 @@ export const ZONES = {
     ],
     pickups: [
       { id: "ironMemorial", x: IH.command.x, z: IH.command.z + 3.1, show: "$BRANNOC_DEAD", node: "W_IronMemorial", marker: false, label: "Brannoc's sword, planted at the command tent" },
+      { id: "ironCairn", x: IH.cairn.x + 1.2, z: IH.cairn.z + 1.1, show: "$BRANNOC_DEAD", node: "W_IronCairn", marker: false, label: "The cairn on the gate field" },
     ],
     encounters: [
       { id: "patrol", rect: [-17, -4, 17, 16], at: { x: 0, z: 6, r: 5 }, wave: ["ashLegion", "ashLegion", "ashMage"], when: "$EP20_DONE", flag: "IRON_PATROL", label: "AN ASHFALL PATROL" },

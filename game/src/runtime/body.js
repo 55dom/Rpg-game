@@ -274,6 +274,13 @@ export function buildBody(rig, scene, id, L, kind, add, skin) {
     const p = add(MB.CreateSphere("pauldron", { diameter: ar * 3.2, segments: 6, slice: 0.55 }, scene), rig.body, s * (sw - ar * 0.5), T - 0.04, 0);
     p.scaling.set(0.95, 0.7, depth * 1.25); p.rotation.z = -s * 0.2; p.position.y = T - 0.02; p.material = M(O.pauldrons);
   }
+  if (O.pauldron) { // one heavy pauldron, on the guarded (off-arm, left) shoulder only: three overlapping plates
+    const pm = M(O.pauldron), x = -(sw - ar * 0.4);
+    for (let i = 0; i < 3; i++) {
+      const pl = add(MB.CreateSphere("pauldronPlate", { diameter: ar * (4.4 - i * 0.6), segments: 7, slice: 0.55 }, scene), rig.body, x - i * 0.012, T + 0.01 - i * 0.07, 0);
+      pl.scaling.set(1, 0.62, depth * 1.35); pl.rotation.z = 0.3 + i * 0.13; pl.material = pm;
+    }
+  }
   if (O.tabard) for (const z of [1, -1]) {
     const t = add(MB.CreateBox("tabard", { width: cw * 1.15, height: T * 0.85 + 0.35, depth: 0.014 }, scene), rig.body, 0, T * 0.5 - 0.17, z * (front(0.5 * T) + 0.03));
     t.material = M(O.tabard); dirty(t, (O.grime ?? 0) * 0.6);
@@ -324,9 +331,16 @@ export function buildBody(rig, scene, id, L, kind, add, skin) {
     bag.material = M(O.satchel); dirty(bag, (O.grime ?? 0) + 0.1);
     const flap = add(MB.CreateBox("satchelFlap", { width: 0.205, height: 0.07, depth: 0.085 }, scene), rig.body, -(hw + 0.06), 0.075, 0.025); flap.material = M(darken(O.satchel, 0.85));
   }
-  if (O.cloak) { // a short travelling cloak: thick panels from the shoulders, closed so its ink line stays clean
-    const c = add(shell(scene, "cloak", [[sw * 0.55, T + 0.01], [sw * 1.02, T - 0.12], [sw * 1.05, T - 0.55], [sw * 1.1, -0.15]], 0.02, { tess: 14, arc: 0.5 }), rig.body, 0, 0, 0);
-    c.rotation.y = Math.PI; c.scaling.z = depth * 1.15; c.material = M(O.cloak); dirty(c);
+  if (O.cloak) { // a travelling cloak: thick panels from the shoulders, closed so its ink line stays clean
+    const long = O.cloakLength === "ankle"; // a heavy cloak to the ankles, wider at the hem so legs swing inside it
+    const prof = long ? [[sw * 0.55, T + 0.01], [sw * 1.04, T - 0.12], [sw * 1.1, T - 0.55], [sw * 1.3, -0.5], [sw * 1.5, -0.88]]
+      : [[sw * 0.55, T + 0.01], [sw * 1.02, T - 0.12], [sw * 1.05, T - 0.55], [sw * 1.1, -0.15]];
+    const c = add(shell(scene, "cloak", prof, 0.02, { tess: 14, arc: long ? 0.6 : 0.5 }), rig.body, 0, 0, 0);
+    c.rotation.y = Math.PI * (long ? 1.1 : 1); c.scaling.z = depth * (long ? 1.3 : 1.15); c.material = M(O.cloak); dirty(c);
+    if (O.cloakCollar) { // a high stand collar that rises past the jaw
+      const col = add(MB.CreateCylinder("cloakCollar", { height: 0.24, diameterTop: 0.46, diameterBottom: 0.34, tessellation: 12 }, scene), rig.body, 0, T + 0.1, -0.02);
+      col.scaling.z = 0.92; col.material = M(O.cloak);
+    }
     const clasp = add(MB.CreateSphere("clasp", { diameter: 0.05, segments: 4 }, scene), rig.body, sw * 0.4, T - 0.02, front(T - 0.06) + 0.02); clasp.material = M("#c9b07a");
   }
   if (O.brooch) { const br = add(MB.CreateSphere("brooch", { diameter: 0.055, segments: 4 }, scene), rig.body, -sw * 0.35, 0.82 * T, front(0.82 * T) + 0.012); br.material = M(O.brooch); }

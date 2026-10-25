@@ -133,7 +133,7 @@ export const EPISODE_22 = {
         { id: "myLantern", x: 2.1, z: 8.3, marker: false, node: "W_Hall_MyLantern", label: "Your lantern" },
       ],
       set: { EP22_DONE: 1 } },
-    { id: "preview", type: "preview", next: "Episode 23 · Juno's Thread",
+    { id: "preview", type: "preview", next: "Episode 23 · Juno's Thread", nextEpisode: "ep23",
       lines: [
         "Next time on UNWRITTEN:",
         "Juno knows where Cal hid something.",

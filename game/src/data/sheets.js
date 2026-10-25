@@ -8,6 +8,8 @@
 // Units are metres before the character's overall scale (LOOKS.scale). The head always sits at
 // the same height (HEAD_Y), so the body is fitted under it: longer legs mean a shorter torso.
 
+import { MASKED_SHEET } from "./masked.js";
+
 export const HEAD_Y = 1.88;
 
 /**
@@ -113,7 +115,11 @@ export const SHEETS = Object.freeze({
       belt: "#8f7c58", satchel: "#5a4232", grime: 0.4, patches: 3 } },
   stranger: { build: "slim", gait: "soldier", idle: "still",
     outfit: { top: "#141218", hem: "thigh", sleeves: "long", legs: "#141218", boots: "tall", bootColor: "#5a3a22", belt: "#3a2a1a", grime: 0 } },
+  masked: MASKED_SHEET, // the masked knight (data/masked.js)
   // ---- The Pale Choir ---------------------------------------------------------------------------------
+  wraithe: { build: "lithe", gait: "prowl", idle: "still",
+    outfit: { top: "#e2dfe8", hem: "knee", sleeves: "long", legs: "#4a4658", boots: "tall", bootColor: "#3a3646", belt: "#7a6a9a",
+      gloves: "#3a3646", bracers: "#c8c2d6", tattered: "#c8c2d6", grime: 0.1 } },
   acolyte: { build: "lithe", gait: "prowl", idle: "still",
     outfit: { top: "#c9c2cf", hem: "ankle", sleeves: "long", legs: "#3a1a4a", boots: "shoes", bootColor: "#3a1a4a", belt: "#4a1a5a", stitch: "#6a1a2a", gloves: "#1a1420", tattered: "#4a3a52", grime: 0.7 } },
   cantor: { build: "slim", gait: "graceful", idle: "still",

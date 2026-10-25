@@ -6,6 +6,7 @@ import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } fro
 import { buildCrowd } from "./crowd.js";
 import { buildCritters } from "./critters.js";
 import { palette, props } from "./props.js";
+import { makeTear } from "./tears.js";
 
 const mulberry = (seed) => () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 
@@ -1344,12 +1345,89 @@ function buildIronhold(scene, mobile) {
     const guard = add(MB.CreateBox("ih-memGuard", { width: 0.5, height: 0.08, depth: 0.08 }, scene), 0.01); guard.parent = mem; guard.position.set(C.x, 1.42, C.z + 3.1); guard.material = P("#5a2a2a");
     const cloak = add(MB.CreateBox("ih-memCloak", { width: 0.5, height: 0.6, depth: 0.12 }, scene), 0.012); cloak.parent = mem; cloak.position.set(C.x, 1.25, C.z + 3.15); cloak.material = P("#6a7280");
     for (const dx of [-0.6, 0.6]) { const c = add(MB.CreateCylinder("ih-memCandle", { height: 0.25, diameter: 0.1, tessellation: 6 }, scene)); c.parent = mem; c.position.set(C.x + dx, 0.12, C.z + 3.3); c.material = glow(scene, "ih-candle", "#ffd36a"); } }
+  // Brannoc's cairn on the gate field (after Ep 22): field stones, his shield against them, his cloak over the top.
+  const cairn = K.when("$BRANNOC_DEAD"), CA = L.cairn;
+  { const fieldStone = P("#8a8478");
+    for (const [dx, dy, dz, d] of [[0, 0.24, 0, 0.95], [0.38, 0.18, 0.22, 0.62], [-0.34, 0.18, -0.2, 0.66], [0.04, 0.6, 0.02, 0.58], [-0.04, 0.9, 0, 0.4]]) {
+      const st = add(MB.CreateSphere("ih-cairnStone", { diameter: d, segments: 6 }, scene), 0.015); st.parent = cairn; st.position.set(CA.x + dx, dy, CA.z + dz); st.scaling.y = 0.72; st.material = fieldStone;
+    }
+    const shield = add(MB.CreateCylinder("ih-cairnShield", { height: 0.07, diameter: 0.95, tessellation: 14 }, scene), 0.015); shield.parent = cairn;
+    shield.position.set(CA.x, 0.5, CA.z + 0.6); shield.rotation.x = 1.25; shield.material = P("#9aa2ae");
+    const boss = add(MB.CreateSphere("ih-cairnBoss", { diameter: 0.18, segments: 5 }, scene)); boss.parent = cairn; boss.position.set(CA.x, 0.54, CA.z + 0.66); boss.material = P("#8a2a2a");
+    const drape = add(MB.CreateBox("ih-cairnCloak", { width: 0.7, height: 0.46, depth: 0.12 }, scene), 0.012); drape.parent = cairn; drape.position.set(CA.x - 0.05, 0.92, CA.z - 0.02); drape.rotation.z = 0.12; drape.material = P("#6a7280");
+    const cord = K.when("$EP23_DONE"); // Juno's knot, from the vigil
+    const knot = add(MB.CreateTorus("ih-cairnCord", { diameter: 0.34, thickness: 0.03, tessellation: 10 }, scene)); knot.parent = cord; knot.position.set(CA.x - 0.04, 1.08, CA.z); knot.material = P("#c8414f"); }
   // The enemy on the horizon: red banners, siege towers and smoke over the Ashfall camp.
   const red = P("#a02a2a");
   for (let i = 0; i < 9; i++) { const x = -40 + i * 10 + (rng() - 0.5) * 4, hz = 52 + rng() * 6;
     const p2 = add(MB.CreateCylinder("ih-farPole", { height: 7, diameter: 0.2, tessellation: 4 }, scene)); p2.position.set(x, 3.5, hz); p2.material = P("#3a2a22");
     const b = add(MB.CreateBox("ih-farBanner", { width: 1.6, height: 2.6, depth: 0.05 }, scene)); b.position.set(x + 0.9, 5.4, hz); b.material = red; }
   for (const [x, hz] of [[-24, 60], [10, 64], [30, 58]]) { const t = add(MB.CreateBox("ih-farTower", { width: 3, height: 10, depth: 3 }, scene), 0.04); t.position.set(x, 5, hz); t.material = P("#4a3a2a"); }
+  // The east ridge: a long flat-topped rise of red-brown rock just past the field's edge, scrub on its crest.
+  const RG = L.ridge, rock = toon(scene, "ih-ridgeRock", "#7a6650");
+  { const r = add(MB.CreateCylinder("ih-ridge", { height: RG.h, diameterTop: 7, diameterBottom: 18, tessellation: 9 }, scene), 0.05); r.position.set(RG.x, RG.h / 2, RG.z); r.scaling.z = 2.6; r.material = rock;
+    for (const [dx, dz, d] of [[-6, -14, 3.2], [-7.5, 3, 2.4], [-5.5, 16, 2.8], [2, -10, 2.2], [1, 12, 2.6]]) { const b = add(MB.CreateSphere("ih-ridgeBoulder", { diameter: d, segments: 6 }, scene), 0.03); b.position.set(RG.x + dx, d * 0.3, RG.z + dz); b.scaling.y = 0.7; b.material = rock; }
+    const scrub = P("#5a5a3a");
+    for (const [dx, dz] of [[1.5, -6], [2.4, -2], [1.8, 5], [2.6, 8.5], [1, -8.5]]) { const s = add(MB.CreateSphere("ih-ridgeScrub", { diameter: 0.9, segments: 5 }, scene), 0.015); s.position.set(RG.x + dx, RG.h + 0.25, RG.z + dz); s.scaling.y = 0.6; s.material = scrub; } }
+  // The Cindermaw (Ep 24): Ashfall's last war engine, a wheeled siege tower with a battering ram cast as a jaw,
+  // embers in its mouth. It rolls up the field (cue "engineRoll"), drops through a black tear opened under it
+  // (cue "tear") and falls out of the sky onto the Ashfall camp (cue "sky"). After that only its wreck stays,
+  // out on the horizon ($CINDERMAW_DOWN).
+  const EN = L.engine, iron = P("#34363e"), timber = P("#4a3226"), emberM = glow(scene, "ih-mawEmber", "#ff7a2a");
+  const buildMaw = (parent, name) => {
+    const n = new BB.TransformNode(name, scene); n.parent = parent;
+    const put = (m, mat, x, y, z, o = 0.03) => { const mm = add(m, o); mm.parent = n; mm.position.set(x, y, z); mm.material = mat; return mm; };
+    put(MB.CreateBox("ih-mawDeck", { width: 4.2, height: 0.7, depth: 5.4 }, scene), timber, 0, 1.0, 0);
+    const wheels = [];
+    for (const x of [-2.2, 2.2]) for (const z of [-1.9, 0, 1.9]) { const w = put(MB.CreateCylinder("ih-mawWheel", { height: 0.4, diameter: 1.5, tessellation: 12 }, scene), iron, x, 0.75, z, 0.02); w.rotation.z = Math.PI / 2; wheels.push(w); }
+    put(MB.CreateBox("ih-mawTower", { width: 3.4, height: 4.2, depth: 3.6 }, scene), timber, 0, 3.4, -0.4);
+    for (const y of [2.0, 3.3, 4.6]) put(MB.CreateBox("ih-mawPlate", { width: 3.5, height: 0.32, depth: 3.7 }, scene), iron, 0, y, -0.4, 0.015);
+    const jaw = put(MB.CreateCylinder("ih-mawJaw", { height: 2.6, diameterTop: 0.3, diameterBottom: 1.6, tessellation: 4 }, scene), iron, 0, 1.7, 3.2, 0.03); jaw.rotation.x = Math.PI / 2;
+    for (const x of [-0.45, 0, 0.45]) { const tooth = put(MB.CreateCylinder("ih-mawTooth", { height: 0.5, diameterTop: 0, diameterBottom: 0.2, tessellation: 4 }, scene), P("#d8d0c0"), x, 2.15, 3.4, 0.01); tooth.rotation.x = Math.PI; }
+    put(MB.CreateSphere("ih-mawEmbers", { diameter: 0.7, segments: 6 }, scene), emberM, 0, 1.8, 2.4, 0);
+    for (const x of [-1.2, 1.2]) put(MB.CreateBox("ih-mawBanner", { width: 0.8, height: 1.9, depth: 0.05 }, scene), red, x, 3.6, 1.45, 0.012);
+    n.metadata = { wheels };
+    return n;
+  };
+  const maw = buildMaw(K.root, "ih-maw"); maw.setEnabled(false);
+  const wreck = K.when("$CINDERMAW_DOWN"); // the wreck, where it landed on the Ashfall camp
+  { const w = buildMaw(wreck, "ih-mawWreck"); w.position.set(EN.crash.x, -0.9, EN.crash.z); w.rotation.set(0.35, 0.6, 0.45);
+    for (const [dx, dz] of [[-1.6, 0.8], [1.2, -1], [0.3, 1.9]]) { const f = add(MB.CreateCylinder("ih-wreckFire", { height: 1.6, diameterTop: 0, diameterBottom: 1.1, tessellation: 7 }, scene)); f.parent = wreck; f.position.set(EN.crash.x + dx, 0.8, EN.crash.z + dz); f.material = glow(scene, "ih-wreckFireGlow", "#ff8a3a"); fires.push(f); } }
+  const holeTear = makeTear(scene, "ih-blackTear", { r: 3.6, kind: "black", seed: 24, ground: true }); holeTear.parent = K.root; holeTear.setEnabled(false);
+  const skyTear = makeTear(scene, "ih-skyTear", { r: 3.8, kind: "black", seed: 42, ground: true }); skyTear.parent = K.root; skyTear.setEnabled(false);
+  const dust = add(MB.CreateDisc("ih-mawDust", { radius: 1, tessellation: 18 }, scene)); dust.rotation.x = Math.PI / 2; dust.material = glow(scene, "ih-mawDustM", "#c8b49a", 0.5); dust.setEnabled(false);
+  const anim = { mode: "idle", t: 0 };
+  const tearScale = (node, open, close, t) => { const k = Math.max(0, Math.min(1, t / open, (close - t) / 0.35)); node.scaling.setAll(Math.max(0.01, k)); node.setEnabled(k > 0.01); };
+  const engineCue = (name) => {
+    if (name === "enginePark" || name === "engineRoll") { // parked far up the field, or rolling from there toward the wall
+      anim.mode = name === "engineRoll" ? "roll" : "idle"; anim.t = 0;
+      maw.setEnabled(true); maw.position.set(0, 0, EN.from); maw.rotation.set(0, Math.PI, 0); wreck.setEnabled(false);
+    }
+    if (name === "tear") { anim.mode = "drop"; anim.t = 0; holeTear.position.set(maw.position.x, 0.06, maw.position.z); }
+    if (name === "sky") { anim.mode = "fall"; anim.t = 0; skyTear.position.set(EN.crash.x, 26, EN.crash.z); maw.position.set(EN.crash.x, 26, EN.crash.z); maw.rotation.set(0.1, 0.6, 0.2); maw.setEnabled(true); }
+    if (name === "engineReset") { anim.mode = "idle"; for (const n of [maw, holeTear, skyTear, dust]) n.setEnabled(false); }
+  };
+  const engineStep = (dt) => {
+    if (anim.mode === "idle" || anim.mode === "down") { if (anim.mode === "down" && dust.isEnabled()) { anim.t += dt; const k = Math.min(1, anim.t / 1.4); dust.scaling.setAll(2 + k * 14); dust.material.alpha = 0.5 * (1 - k); if (k >= 1) dust.setEnabled(false); } return; }
+    anim.t += dt; const t = anim.t;
+    if (anim.mode === "roll") { // up the field at a walk, wheels turning, the whole thing rocking
+      const k = Math.min(1, t / 8.2); maw.position.z = EN.from + (EN.to - EN.from) * k; maw.position.y = Math.abs(Math.sin(t * 5)) * 0.06;
+      for (const w of maw.metadata.wheels) w.rotation.x -= dt * 1.6 * (k < 1 ? 1 : 0);
+    } else if (anim.mode === "drop") { // the ground opens under it, it goes through, the tear seals
+      tearScale(holeTear, 0.3, 1.5, t);
+      if (t > 0.25) maw.position.y = -0.5 * 40 * (t - 0.25) * (t - 0.25);
+      if (maw.position.y < -9) maw.setEnabled(false);
+      if (t > 1.6) { anim.mode = "idle"; holeTear.setEnabled(false); }
+    } else if (anim.mode === "fall") { // out of a tear in the sky over the Ashfall camp, and down
+      tearScale(skyTear, 0.3, 1.9, t);
+      if (t > 0.3) { maw.position.y = Math.max(0, 26 - 0.5 * 32 * (t - 0.3) * (t - 0.3)); maw.rotation.x = 0.1 + (t - 0.3) * 0.3; }
+      if (maw.position.y <= 0) { // impact: the wreck takes its place
+        maw.setEnabled(false); wreck.setEnabled(true); skyTear.setEnabled(false);
+        dust.position.set(EN.crash.x, 0.3, EN.crash.z); dust.scaling.setAll(2); dust.material.alpha = 0.5; dust.setEnabled(true);
+        anim.mode = "down"; anim.t = 0;
+      }
+    }
+  };
   const smoke = new BB.ParticleSystem("ih-smoke", mobile ? 40 : 90, scene);
   smoke.particleTexture = softTexture(scene); smoke.emitter = new BB.Vector3(0, 2, 58);
   smoke.minEmitBox = new BB.Vector3(-40, 0, -4); smoke.maxEmitBox = new BB.Vector3(40, 2, 6);
@@ -1362,6 +1440,7 @@ function buildIronhold(scene, mobile) {
   const toonEnv = { lightDir: [-0.5, 0.8, -0.5], fogColor: "#a8846a", fogDensity: 0.009, sky: [1.08, 0.98, 0.92], ground: [0.88, 0.78, 0.7], rim: [1.0, 0.82, 0.62] };
   return {
     env, toon: toonEnv, outdoor: true, windows: K.windows, lamps: K.lamps, conditions: K.conditions, show: K.show,
-    update(dt, t) { for (let i = 0; i < fires.length; i++) fires[i].scaling.set(1, 0.85 + Math.sin(t * 9 + i * 1.3) * 0.15, 1); },
+    cue: engineCue,
+    update(dt, t) { for (let i = 0; i < fires.length; i++) fires[i].scaling.set(1, 0.85 + Math.sin(t * 9 + i * 1.3) * 0.15, 1); engineStep(dt); },
   };
 }

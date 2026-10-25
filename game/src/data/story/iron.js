@@ -24,6 +24,14 @@ title: W_Warden
 <<endif>>
 ===
 
+title: W_IronCairn
+---
+Field stones, piled waist-high where the gate field meets the wall. Brannoc's shield leans against them, his grey cloak over the top.
+<<if $EP23_DONE>>
+    A red cord is knotted around the top stone in a Quill knot. Every Warden on the wall wears one like it.
+<<endif>>
+===
+
 title: W_IronMemorial
 ---
 CAPTAIN BRANNOC STEELHART · IRON WARDENS
