@@ -19,6 +19,9 @@ import { WRAITHE_STATS, WRAITHE_HITBOXES, wraitheOptions } from "../data/wraithe
 import { WraitheController } from "./wraithe.js";
 import { MASKED_STATS, MASKED_HITBOXES, maskedOptions } from "../data/masked.js";
 import { MaskedController } from "./masked.js";
+import { ECLIPSED_STATS, ECLIPSED_FINAL_STATS, ECLIPSED_HITBOXES, eclipsedOptions, eclipsedFinalOptions } from "../data/eclipse.js";
+import { EclipseController, EclipseFinalController } from "./eclipse.js";
+import { INSCRIPTION, INSCRIPTION_HITBOXES } from "../data/inscription.js";
 const OBJECTS = { ...OBJECTS2, ...ASH_OBJECTS }, OBJECT_HITBOXES = { ...OBJECT_HITBOXES2, ...ASH_OBJECT_HITBOXES };
 import { CAL_STATS, CAL_HITBOXES, calOptions } from "../data/cal.js";
 import { SEVERIN_STATS, SEVERIN_HITBOXES, severinOptions } from "../data/severin.js";
@@ -61,6 +64,8 @@ const BOSSES = {
   gullmaw: { stats: GULLMAW_STATS, hitboxes: GULLMAW_HITBOXES, options: gullmawOptions, traits: { heavy: true, armoredAttacks: true }, Controller: GullmawController, z: 7 },
   wraithe: { stats: WRAITHE_STATS, hitboxes: WRAITHE_HITBOXES, options: wraitheOptions, traits: {}, Controller: WraitheController, z: 6 },
   masked: { stats: MASKED_STATS, hitboxes: MASKED_HITBOXES, options: maskedOptions, traits: { heavy: true }, Controller: MaskedController, z: 7 },
+  eclipsed: { stats: ECLIPSED_STATS, hitboxes: ECLIPSED_HITBOXES, options: eclipsedOptions, traits: {}, Controller: EclipseController, z: 6 },
+  eclipsedFinal: { stats: ECLIPSED_FINAL_STATS, hitboxes: ECLIPSED_HITBOXES, options: eclipsedFinalOptions, traits: {}, Controller: EclipseFinalController, z: 5 },
 };
 export const BOSS_KINDS = Object.freeze(Object.keys(BOSSES));
 
@@ -296,7 +301,7 @@ export class World {
     this._fitLoadout();
     this.zones = [];
     this.player = this.add(new Fighter(this, {
-      id: "rook", kind: "player", team: Team.Player, stats: this.playerStats, hitboxes: { ...ROOK_HITBOXES, ...PAGE_HITBOXES },
+      id: "rook", kind: "player", team: Team.Player, stats: this.playerStats, hitboxes: { ...ROOK_HITBOXES, ...PAGE_HITBOXES, ...INSCRIPTION_HITBOXES },
       graph: buildRookGraph(() => this.player.context(), ROOK_ABILITIES, this.loadout, { ultimate: this.ultimate }), x: 0, z: -4,
     }));
     this.assist = !!o.assist;
@@ -313,6 +318,8 @@ export class World {
     this.companions = [];
     this.projectiles = [];
     this.injured = new Set(o.injured ?? []); // squadmates fighting hurt (Bas's arm after Ep 26)
+    this.annotation = !!o.annotation; // the Palimpsest's Annotation stage (after Ep 28): Rook's spells write ink
+    this.surgeLock = 0;               // frames with no Surge at all (the Eclipse clause)
     if (o.companions) for (const kind of Array.isArray(o.companions) ? o.companions : ["bas", "juno"]) this.addCompanion(kind); // the squad by default; guests (Brannoc) by name
   }
 
@@ -832,6 +839,7 @@ export class World {
     const frame = this.frame;
     if (this.slowFrames > 0) this.slowFrames--;
     if (this.stopFrames > 0) this.stopFrames--;
+    if (this.surgeLock > 0) this.surgeLock--;
     const enemyScale = this.stopFrames > 0 ? 0 : this.slowFrames > 0 ? Tuning.afterimageScale : 1;
 
     for (const f of this.fighters) {
@@ -982,6 +990,7 @@ export class World {
         for (const def of this.fighters) {
           if (def === att || def.team === att.team || !def.alive || hb.hitSet.has(def)) continue;
           // Wind tears Hask out of the bog (mid-dive or from its mound); otherwise a submerged boss can't be touched.
+          if (def.traits.mirror) { hb.hitSet.add(def); this.emit({ type: "mirrorHit", attacker: att, defender: def, at: { x: def.pos.x, y: 1.2, z: def.pos.z } }); continue; } // a reflection: nothing touches it
           if (def.boss?.untouchable) {
             if (hb.ability.tags.includes("gust") && boxHitsCapsule(hb.def, att.pos, att.yaw, def.pos, def.stats.radius + 0.6, 2.5) && def.boss.uproot(att)) hb.hitSet.add(def);
             if (def.submerged) continue;
@@ -1048,6 +1057,7 @@ export class World {
     }
     const pd = att === this.player && hb.ability ? this.pageDmg[hb.ability.id] : 0;
     if (pd && pd !== 1) spec = { ...spec, damage: spec.damage * pd };
+    if (att === this.player && this.annotation && spec.damage > 0 && def.tags.has("INSCRIBED")) spec = { ...spec, damage: spec.damage * INSCRIPTION.bonus }; // ink marks it
     if (att === this.player && (this.mods.attack || this.mods.posture)) spec = { ...spec, damage: spec.damage * (1 + this.mods.attack), posture: spec.posture * (1 + this.mods.posture) };
     if (def === this.player && this.mods.defense) spec = { ...spec, damage: spec.damage * (1 - this.mods.defense) };
     if (def.tags.has("RUSTED")) spec = { ...spec, damage: spec.damage * GALEN_TUNING.rustFactor }; // Galen's rot eats your guard
@@ -1099,6 +1109,11 @@ export class World {
         if (spec !== hb.spec) this.emit({ type: "shieldBlock", defender: def, at });
         if (def === this.player) this._surge(def.stats.surgeGain.taken * r.healthDamage);
         if (def.alive) this._react(att, def, hb, at);
+        if (def.alive && att === this.player && this.annotation && (hb.ability?.manaCost ?? 0) > 0 && !def.tags.has("INSCRIBED")) { // a spell writes on what it hits
+          def.tags.add("INSCRIBED", INSCRIPTION.frames);
+          this.emit({ type: "inscribed", attacker: att, defender: def, at: { x: def.pos.x, y: 1.4, z: def.pos.z } });
+        }
+        def.boss?.onHit?.(att, hb.ability, HitOutcome.Hit);
         if (spec.pull > 0 && !heavyBody) this._pull(att, def, spec.pull);
         if (def === this.player) { this.comboCount = 0; def.buffer.clear(); }
         this.emit({ type: "hit", ...base });
@@ -1149,7 +1164,7 @@ export class World {
 
   _surge(amount) {
     const s = this.player.surge;
-    if (!s || amount <= 0 || !this.ultimate) return;
+    if (!s || amount <= 0 || !this.ultimate || this.surgeLock > 0) return;
     amount *= 1 + this.mods.surge;
     const was = s.isFull;
     s.add(amount);

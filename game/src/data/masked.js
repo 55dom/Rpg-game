@@ -47,7 +47,7 @@ export const maskedLabel = (flags) => (!flags ? MASKED_NAMES.seen : truthy(NAMED
 /** The Crown's bounty poster (Ep 26 onward, on the Aurelin notice board). */
 export const MASKED_BOUNTY = Object.freeze({
   head: "WANTED BY THE CROWN", name: "THE SABLE KNIGHT", reward: "5,000 MARKS",
-  lines: ["For the theft of Crown property from the vault beneath Ironhold.", "Masked. Armed with a black glaive. Do not engage."],
+  lines: ["For theft of Crown property", "from the vault beneath Ironhold.", "Masked. A black glaive. Do not engage."],
 });
 
 /**

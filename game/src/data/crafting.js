@@ -11,6 +11,7 @@ export const MATERIALS = Object.freeze({
   tail: { name: "Rat Tail", desc: "From the Undercroft. Nobody asks what it's for." },
   gear: { name: "Brass Gear", desc: "Clockwork teeth. Still turning, a little." },
   strap: { name: "Leather Strap", desc: "From road bandits' kit." },
+  starglass: { name: "Starglass", desc: "A shard of a dark star. Cold to the touch, and it doesn't reflect your face." },
 });
 
 /** What each foe drops (always one, plus a chance of a second). Bosses drop several. */
@@ -19,6 +20,7 @@ export const DROPS = Object.freeze({
   rat: ["tail", 0.2], clockwork: ["gear", 0.5], bandit: ["strap", 0.3],
   hask: ["heart", 2], ilse: ["thread", 4], galen: ["plate", 4], gullmaw: ["heart", 5],
   ashLegion: ["plate", 0.35], ashMage: ["gear", 0.3], varka: ["plate", 5],
+  lion: ["starglass", 0.5], reflection: ["starglass", 0], // a reflection never falls: it fades
 });
 
 /** Tempering: what each level adds, by kind of gear, and what it costs. Charms grow their own effect by 30% a level. */

@@ -49,6 +49,8 @@ export function tearMaterials(scene) {
     pale: { edge: glow(scene, "tear-paleEdge", "#f6f2ff", 0.95, true), hole: glow(scene, "tear-paleHole", "#c4bce6", 0.6) },
     black: { edge: glow(scene, "tear-coldEdge", "#9cb8ff", 0.9, true), hole },
   };
+  // The hole always draws over its own edge, from either side (a depth bias, not a nudge in space).
+  m.pale.hole.zOffset = -4; hole.zOffset = -4;
   MATS.set(scene, m);
   return m;
 }
@@ -64,8 +66,7 @@ export function makeTear(scene, name, { r = 1.5, kind = "pale", seed = 1, ground
   const hole = tearMesh(scene, `${name}-hole`, tearOutline(r, 13, seed, stretch));
   edge.material = mats.edge; hole.material = mats.hole;
   edge.parent = node; hole.parent = node;
-  hole.position.z = -0.012; // in front of its edge, whichever way it faces
-  if (ground) { edge.rotation.x = hole.rotation.x = Math.PI / 2; hole.position.z = 0; hole.position.y = 0.012; }
+  if (ground) { edge.rotation.x = hole.rotation.x = Math.PI / 2; hole.position.y = 0.012; }
   return node;
 }
 

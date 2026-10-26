@@ -1460,7 +1460,7 @@ function noticeBoard(scene, K, P, at) {
   const roof = add(MB.CreateBox("au-noticeRoof", { width: 2.2, height: 0.08, depth: 0.45 }, scene), 0.015); roof.parent = node; roof.position.set(0, 2.5, 0.02); roof.rotation.x = -0.2; roof.material = wood;
   const paper = P("#e6dcc4"), paper2 = P("#d8ccb0");
   for (const [x, y, w, h, r, m] of [[-0.62, 1.95, 0.42, 0.52, 0.06, paper], [-0.6, 1.4, 0.38, 0.3, -0.04, paper2], [0.66, 1.62, 0.36, 0.6, -0.05, paper2]]) {
-    const n = add(MB.CreateBox("au-notePaper", { width: w, height: h, depth: 0.01 }, scene)); n.parent = node; n.position.set(x, y, 0.05); n.rotation.z = r; n.material = m;
+    const n = add(MB.CreateBox("au-notePaper", { width: w, height: h, depth: 0.01 }, scene)); n.parent = node; n.position.set(x, y, -0.07); n.rotation.z = r; n.material = m; // on the board's front (-z)
   }
   // The bounty: drawn once onto a texture (a masked figure, the name, the reward).
   const wanted = K.when("$SABLE_NAMED");
@@ -1476,13 +1476,14 @@ function noticeBoard(scene, K, P, at) {
   c.lineWidth = 5; c.strokeStyle = "#1c1c22"; c.beginPath(); c.moveTo(60, 260); c.lineTo(202, 74); c.stroke();
   c.fillStyle = "#3a4a6a"; c.beginPath(); c.moveTo(196, 82); c.lineTo(214, 54); c.lineTo(206, 92); c.closePath(); c.fill();
   c.fillStyle = "#ece2c8"; for (const x of [117, 124, 132, 139]) c.fillRect(x, 96, 3, 14);
-  c.fillStyle = "#1c1c22"; c.font = "bold 26px serif"; c.fillText(T.name, W / 2, 286);
-  c.fillStyle = "#8a2420"; c.font = "bold 18px serif"; c.fillText(T.reward, W / 2, 310);
-  c.fillStyle = "#3a3026"; c.font = "11px serif"; T.lines.forEach((l, i) => c.fillText(l, W / 2, 330 + i * 13));
+  c.fillStyle = "#1c1c22"; c.font = "bold 26px serif"; c.fillText(T.name, W / 2, 272);
+  c.fillStyle = "#8a2420"; c.font = "bold 18px serif"; c.fillText(T.reward, W / 2, 294);
+  c.fillStyle = "#3a3026"; c.font = "12px serif"; T.lines.forEach((l, i) => c.fillText(l, W / 2, 310 + i * 13));
   tex.update();
-  const mat = new BB.StandardMaterial("au-bountyMat", scene); mat.diffuseTexture = tex; mat.emissiveColor = new BB.Color3(0.55, 0.52, 0.48); mat.specularColor = BB.Color3.Black();
+  const mat = new BB.StandardMaterial("au-bountyMat", scene); mat.emissiveTexture = tex; mat.disableLighting = true; mat.specularColor = BB.Color3.Black();
   const poster = MB.CreatePlane("au-bounty", { width: 0.72, height: 0.99 }, scene); poster.parent = wanted; poster.isPickable = false; poster.material = mat;
-  poster.position.set(at.x + Math.sin(at.yaw ?? 0) * 0.06, 1.74, at.z + Math.cos(at.yaw ?? 0) * 0.06); poster.rotation.y = (at.yaw ?? 0) + Math.PI; // facing out from the board's front
+  K.noGlow(poster); // paper, not a lamp
+  poster.position.set(at.x - Math.sin(at.yaw ?? 0) * 0.09, 1.74, at.z - Math.cos(at.yaw ?? 0) * 0.09); poster.rotation.y = at.yaw ?? 0; // on the board's front, facing out
   return node;
 }
 

@@ -111,14 +111,14 @@ export const CUTSCENES = {
       { t: 2.6, pos: [0.8, 1.6, 17.6], look: [0, 1.5, 22.4], fov: 0.52, ease: "linear" },
       { t: 2.6, cut: true, pos: [4.4, 1.5, 20.4], look: [0, 1.4, 20.8], fov: 0.6 },                // the doorway, side on
       { t: 5.2, pos: [4.2, 1.5, 20.4], look: [0, 1.3, 20.6], fov: 0.58, ease: "linear" },
-      { t: 5.2, cut: true, pos: [-1.3, 1.2, 17.6], look: [0.3, 1.1, 19.7], fov: 0.5 },             // Bas, folded over his arm
-      { t: 7, pos: [-1.2, 1.25, 17.8], look: [0.3, 1.1, 19.7], fov: 0.48, ease: "linear" },
+      { t: 5.2, cut: true, pos: [-2.8, 1.6, 16.2], look: [0.3, 1.2, 19.5], fov: 0.55 },             // Bas, folded over his arm
+      { t: 7, pos: [-2.6, 1.6, 16.5], look: [0.3, 1.2, 19.5], fov: 0.52, ease: "linear" },
       { t: 7, cut: true, pos: [0, 3.2, 9], look: [0.4, 1.4, 19], fov: 0.6 },                        // from the room: he walks out
       { t: 9.4, pos: [0.2, 3, 9.6], look: [0.8, 1.4, 18.4], fov: 0.58, ease: "linear" },
       { t: 9.4, cut: true, pos: [2.7, 1.7, 13.4], look: [1.2, 1.6, 18.2], fov: 0.5 },              // over Rook's shoulder
       { t: 11, pos: [2.6, 1.7, 13.6], look: [1.2, 1.7, 18.2], fov: 0.48, ease: "linear" },
-      { t: 11, cut: true, pos: [1.55, 1.9, 16.5], look: [1.2, 1.85, 18.2], fov: 0.36 },            // the mask
-      { t: 13.6, pos: [1.55, 1.9, 16.7], look: [1.2, 1.85, 18.2], fov: 0.34, ease: "linear" },
+      { t: 11, cut: true, pos: [2.1, 2.0, 15.4], look: [1.2, 1.85, 18.2], fov: 0.42 },             // the mask: head and shoulders
+      { t: 13.6, pos: [2.0, 2.0, 15.7], look: [1.2, 1.85, 18.2], fov: 0.4, ease: "linear" },
       { t: 13.6, cut: true, pos: [6.6, 2, 17.2], look: [1.2, 1.4, 18.6], fov: 0.55 },              // side on: the way out
       { t: 16.2, pos: [6.4, 2, 17.4], look: [1.2, 1.4, 18.8], fov: 0.55, ease: "linear" },
       { t: 16.2, cut: true, pos: [0.4, 1.6, 11], look: [0.6, 1.3, 17.5], fov: 0.55 },              // the squad, and Bas in the doorway

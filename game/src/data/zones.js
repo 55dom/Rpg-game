@@ -30,7 +30,7 @@ export const AURELIN_LAYOUT = (() => {
     grate: { x: 30, z: -24 }, // the way down to the Undercroft
     chapel: { x: 16, z: 12, w: 6, d: 9 },
     tavern: { x: -16, z: -8 },  // "The Lantern & Anchor", in the west-street house nearest the gate
-    notice: { x: -6.2, z: -16, yaw: 0.5 }, // the Crown's notice board on the gate road (bounties go up here)
+    notice: { x: -6.2, z: -16, yaw: 0 }, // the Crown's notice board on the gate road, its face toward the gate (bounties go up here)
     // The poor quarter by the grate: shacks of patched planks.
     shacks: [{ x: 37, z: -27, w: 4, d: 4 }, { x: 37, z: -20.5, w: 4, d: 3.6 }, { x: 24.5, z: -29.6, w: 4, d: 3 }],
     // The Gilded Spoon, a café at the top of the Lowmarket. Its door faces the stalls (south).

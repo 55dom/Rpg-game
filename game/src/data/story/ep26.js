@@ -241,12 +241,12 @@ export const EPISODE_26 = {
       ],
       set: { SABLE_NAMED: 1 } },
     { id: "posters", type: "scene", node: "Ep26_Posters", stage: "aurelin",
-      rook: { x: -5.15, z: -14.05, yaw: 0.5 + Math.PI },
+      rook: { x: -6.0, z: -18.3, yaw: 0 }, // in front of the notice board on the gate road
       cast: [
-        { id: "tamsin", look: "tamsin", x: -6.6, z: -13.8, yaw: 0.5 + Math.PI * 0.9 },
-        { id: "juno", look: "juno", x: -4.2, z: -15.2, yaw: -1.9 },
-        { id: "bas", look: "basSling", x: -4.4, z: -12.6, yaw: Math.PI * 1.05 },
-        { id: "gossip", look: "gossip", x: -7.8, z: -12.4, yaw: 2.4 },
+        { id: "tamsin", look: "tamsin", x: -7.5, z: -17.8, yaw: 0.4 },
+        { id: "juno", look: "juno", x: -4.6, z: -17.9, yaw: -0.5 },
+        { id: "bas", look: "basSling", x: -5.2, z: -19.6, yaw: -0.2 },
+        { id: "gossip", look: "gossip", x: -8.6, z: -19.4, yaw: 0.9 },
       ],
       set: { EP26_DONE: 1 } },
     { id: "preview", type: "preview", next: "Episode 27 · Elodie's Price",
