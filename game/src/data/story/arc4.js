@@ -12,3 +12,9 @@ export const AFTER_EP29 = Object.freeze({ ...AFTER_EP28, EP29_DONE: 1, SEVERIN_A
 
 /** By the end of Episode 30: the Storm Warden sleeps again, and the Lances have the Writ. */
 export const AFTER_EP30 = Object.freeze({ ...AFTER_EP29, EP30_DONE: 1, WARDEN_DEFEATED: 1, WRIT_TAKEN: 1 });
+
+/** By the end of Episode 31: the poor quarter's children are home, Wraithe is dead, and the masked knight was there. */
+export const AFTER_EP31 = Object.freeze({ ...AFTER_EP30, EP31_DONE: 1, SABLE_ENCOUNTER: 3, CLUE_B4: 1, WRAITHE_DEAD: 1, KIDS_HOME: 1, RUMOR_FERRYMAN: 1 });
+
+/** By the end of Episode 32: Aldric showed Severin the Writ (a map of a door under the Lowmarket), and Hesper has his ear. */
+export const AFTER_EP32 = Object.freeze({ ...AFTER_EP31, EP32_DONE: 1, HESPER_ALDRIC: 1, WRIT_MAP: 1 });

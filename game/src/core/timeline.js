@@ -6,7 +6,8 @@
 //   id, stage, duration,
 //   actors: [{ id, look, x, z, yaw, hidden?, carry? }],
 //   camera: [{ t, pos: [x,y,z], look: [x,y,z], fov?, ease?: "linear"|"in"|"out"|"inOut", cut?, ots? }],
-//   events: [{ t, caption? | sfx? | fx? | move?: { id, to: [x,z], dur } | show? | hide? | fade?: "in"|"out" }],
+//   events: [{ t, caption? | sfx? | fx? | move?: { id, to: [x,z], dur } | show? | hide? | fade?: "in"|"out" | pose?: { id, name }
+//              | cue? | tear?: { at: [x,y,z], kind?: "pale"|"black", r?, yaw?, life?, ground? } }],
 // }
 // Camera keys interpolate toward the next key unless that key is a `cut` (a hard cut to a new shot).
 // `ots: id` on a shot's first key marks it as over that actor's shoulder (core/framing.js lets them fill the foreground).
@@ -18,7 +19,7 @@ export const EASE = Object.freeze({
   inOut: (k) => (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2),
 });
 
-const EVENT_KEYS = ["caption", "sfx", "fx", "move", "show", "hide", "fade", "pose", "cue"];
+const EVENT_KEYS = ["caption", "sfx", "fx", "move", "show", "hide", "fade", "pose", "cue", "tear"];
 
 export function validateCutscene(cs) {
   if (!cs?.id) throw new Error("cutscene needs an id");

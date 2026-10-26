@@ -18,6 +18,7 @@ export const RUMOR_BOARD = Object.freeze({
     { when: "$SABLE_ENCOUNTER >= 1", text: "Ironhold, the gate field: a black tear opened under the Cindermaw, and it fell out of the sky onto the Ashfall camp. A masked figure with a long glaive watched from the east ridge, then walked away." },
     { when: "$SABLE_ENCOUNTER >= 2", text: "The vault beneath Ironhold: he stepped out of the wall, cut the Crown's door open, and fought the whole squad. He broke Bas's arm, took a sealed reliquary, and let you live. He spoke twice." },
     { when: "$SABLE_NAMED", text: "Aurelin: the Crown's bounty is on every notice board. Five thousand Marks for the Sable Knight." },
+    { when: "$SABLE_ENCOUNTER >= 3", text: "Aurelin, the poor quarter: Wraithe slipped away through a tear, and he was waiting on the other side. One cut. Then he reached into the Choir's seam and lifted out the three missing children, and left the way he came." },
   ]),
   /** Theories, in the order they can be heard (the flag is set by whoever says it). */
   rumors: Object.freeze([
@@ -33,6 +34,8 @@ export const RUMOR_BOARD = Object.freeze({
       text: "\"Father's guards saw him leave our family's crypt. He'd left a flower on my brother's grave.\"" },
     { flag: "RUMOR_CROWN", theory: "One of the Crown's own", who: "a townsperson at the notice board",
       text: "\"He walked through the vault's wards like he'd been taught them. You don't learn that outside the Crown.\"" },
+    { flag: "RUMOR_FERRYMAN", theory: "The Ferryman, out of a Lowmarket story", who: "Mag",
+      text: "\"My gran used to say the Ferryman takes bad men across the river and sends the children home.\"" },
   ]),
 });
 

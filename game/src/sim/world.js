@@ -277,6 +277,7 @@ export class World {
   constructor(o = {}) {
     this.frame = 0;
     this.bounds = o.bounds ?? YARD; // where fighters may stand (zones swap this)
+    this.hunted = !!o.hunted; // Ep 31: somebody else is after Wraithe tonight (sim/wraithe.js)
     // Equipment (core/inventory.js mods): folded into Rook's stats here and into damage in _resolve.
     this.mods = { attack: 0, defense: 0, health: 0, mana: 0, manaRegen: 0, posture: 0, surge: 0, speed: 0, ...(o.mods ?? {}) };
     const m = this.mods;

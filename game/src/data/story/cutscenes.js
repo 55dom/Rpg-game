@@ -12,6 +12,11 @@ export const SQUAD = Object.freeze({
 });
 const VT = VAULT_LAYOUT;
 const OUT = { x: VT.exit.x + 0.2, z: VT.exit.z - 0.6 }; // where he waits for his way out (Ep 26): clear of Bas, knocked down by the door
+// Ep 31, Aurelin's poor quarter by the grate: where Wraithe comes out of his last tear, where the knight waits for him,
+// and the Choir's seam by the shack door where the children were kept.
+export const QUARTER = Object.freeze({ out: { x: 29.4, z: -20.8 }, step: { x: 30.4, z: -22.0 }, lunge: { x: 31.5, z: -23.4 },
+  knight: { x: 32.4, z: -24.6 }, seam: { x: 34.0, z: -26.6 }, reach: { x: 33.2, z: -25.9 }, boy: { x: 32.0, z: -26.8 } });
+const Q = QUARTER;
 
 export const CUTSCENES = {
   // Episode 1 cold open.
@@ -149,6 +154,63 @@ export const CUTSCENES = {
       { t: 14.6, move: { id: "knight", to: [VT.exit.x + 0.1, VT.exit.z + 0.1], dur: 1 } },
       { t: 15.6, hide: "knight" }, { t: 15.6, cue: "seamShut" }, { t: 15.6, sfx: "tear" },
       { t: 16.4, move: { id: "juno", to: [-0.6, 18.8], dur: 1.8 } },
+    ],
+  },
+
+  // Episode 31: Wraithe steps out of his last tear into the poor quarter, and the masked knight is waiting for him. One
+  // cut. What's left of a rift-walker goes back through the seam he made. Then the knight reaches into the Choir's seam
+  // by the shack door, where the missing children were kept, and lifts the first of them out.
+  ep31_step: {
+    id: "ep31_step",
+    stage: "aurelin",
+    sky: { daylight: 0.05 },
+    duration: 16.5,
+    actors: [
+      { id: "wraithe", look: "wraithe", x: Q.out.x, z: Q.out.z, yaw: 2.5, hidden: true },
+      { id: "knight", look: "masked", x: Q.knight.x, z: Q.knight.z, yaw: -0.65, hidden: true },
+      { id: "pip", look: "pip", x: Q.seam.x + 0.4, z: Q.seam.z - 0.8, yaw: -1.4, hidden: true },
+    ],
+    camera: [
+      { t: 0, pos: [24.6, 3.0, -15.2], look: [Q.out.x, 1.3, Q.out.z], fov: 0.62 },                  // down the lane from the street: a pale tear opens
+      { t: 2.0, pos: [24.7, 3.0, -15.3], look: [Q.out.x, 1.3, Q.out.z], fov: 0.61, ease: "linear" },
+      { t: 3.2, pos: [24.9, 3.0, -15.6], look: [Q.step.x, 1.3, Q.step.z], fov: 0.6, ease: "linear" },
+      { t: 3.2, cut: true, pos: [28.6, 2.05, -21.6], look: [Q.knight.x, 1.65, Q.knight.z], fov: 0.5, ots: "wraithe" }, // past his shoulder: somebody's there
+      { t: 5.2, pos: [28.7, 2.0, -21.75], look: [Q.knight.x, 1.7, Q.knight.z], fov: 0.46, ease: "linear" },
+      { t: 5.2, cut: true, pos: [27.0, 1.8, -26.6], look: [31.6, 1.4, -23.4], fov: 0.64 },            // side on: the lunge, and one cut
+      { t: 6.8, pos: [27.1, 1.8, -26.4], look: [31.7, 1.3, -23.5], fov: 0.64, ease: "linear" },
+      { t: 6.8, cut: true, pos: [27.9, 6.6, -18.4], look: [31.8, 0.6, -23.8], fov: 0.62 },            // high: what's left of him
+      { t: 9.6, pos: [28.2, 6.2, -18.9], look: [31.9, 0.6, -23.9], fov: 0.6, ease: "linear" },
+      { t: 9.6, cut: true, pos: [29.0, 2.2, -27.8], look: [Q.reach.x + 0.2, 1.45, Q.reach.z + 0.1], fov: 0.64 }, // the Choir's seam by the door
+      { t: 13.4, pos: [29.2, 2.15, -27.7], look: [Q.reach.x + 0.1, 1.45, Q.reach.z + 0.2], fov: 0.62, ease: "linear" },
+      { t: 13.4, cut: true, pos: [27.4, 1.65, -23.9], look: [32.6, 1.2, -26.4], fov: 0.62 },           // the boy, and the knight over him
+      { t: 16.5, pos: [27.6, 1.65, -24.0], look: [32.6, 1.2, -26.4], fov: 0.6, ease: "linear" },
+    ],
+    events: [
+      { t: 0.3, tear: { at: [Q.out.x, 1.1, Q.out.z], kind: "pale", r: 0.9, yaw: -0.95, life: 1.4 } },
+      { t: 0.6, show: "wraithe" }, { t: 0.6, pose: { id: "wraithe", name: "bow" } },
+      { t: 0.8, caption: "Somewhere across the city, a pale seam opens in a lane nobody uses after dark." },
+      { t: 2.0, pose: { id: "wraithe", name: "none" } },
+      { t: 2.0, move: { id: "wraithe", to: [Q.step.x, Q.step.z], dur: 1.2 } },
+      { t: 3.2, show: "knight" },
+      { t: 3.6, caption: "" },
+      { t: 5.6, pose: { id: "wraithe", name: "raise" } },
+      { t: 5.9, move: { id: "wraithe", to: [Q.lunge.x, Q.lunge.z], dur: 0.35 } }, { t: 5.9, sfx: "swing" },
+      { t: 6.05, pose: { id: "knight", name: "raise" } }, { t: 6.2, sfx: "swingHeavy" },
+      { t: 6.45, pose: { id: "knight", name: "none" } }, { t: 6.5, sfx: "slam" },
+      { t: 6.8, pose: { id: "wraithe", name: "down" } },
+      { t: 7.0, caption: "One cut. He doesn't look at what he's done." },
+      { t: 8.4, tear: { at: [Q.lunge.x, 0.05, Q.lunge.z], kind: "pale", r: 1.1, life: 1.6, ground: true } },
+      { t: 8.6, caption: "What's left of a rift-walker goes back through the last seam he made." },
+      { t: 9.0, hide: "wraithe" },
+      { t: 9.4, tear: { at: [Q.seam.x, 1.15, Q.seam.z], kind: "pale", r: 0.8, yaw: -1.08, life: 6.6 } },
+      { t: 9.6, move: { id: "knight", to: [Q.reach.x, Q.reach.z], dur: 1.4 } },
+      { t: 9.8, caption: "" },
+      { t: 11.2, pose: { id: "knight", name: "hand" } }, { t: 11.2, caption: "He reaches into the Choir's seam, up to the shoulder." },
+      { t: 12.4, show: "pip" }, { t: 12.4, sfx: "rift" },
+      { t: 12.5, move: { id: "pip", to: [Q.boy.x, Q.boy.z], dur: 1.1 } },
+      { t: 13.2, pose: { id: "knight", name: "none" } },
+      { t: 13.6, caption: "A boy in a man's coat. He sets him down on the cobbles as if he weighed nothing." },
+      { t: 16.2, caption: "" },
     ],
   },
 

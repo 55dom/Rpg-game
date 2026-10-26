@@ -38,7 +38,7 @@ test("Eps 27–28 close Arc 3: chained from Ep 26, each starting from the menu w
     for (const b of ep.beats) if (b.cutscene) validateCutscene(CUTSCENES[b.cutscene]);
   }
   const next = (ep) => ep.beats.find((b) => b.type === "preview").nextEpisode;
-  assert.deepEqual([next(EPISODE_26), next(EPISODE_27), next(EPISODE_28)], ["ep27", "ep28", undefined], "Arc 4 isn't written yet");
+  assert.deepEqual([next(EPISODE_26), next(EPISODE_27), next(EPISODE_28)], ["ep27", "ep28", "ep29"], "and on into Arc 4");
   assert.deepEqual(EPISODE_27.setup, { ...AFTER_EP26 }); assert.deepEqual(EPISODE_28.setup, { ...AFTER_EP27 });
   for (const who of ["Elodie", "Aldric", "Hesper"]) assert.ok(CAST[who] && LOOKS[CAST[who].actor], who);
 });

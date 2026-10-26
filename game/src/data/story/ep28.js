@@ -178,7 +178,7 @@ export const EPISODE_28 = {
     { id: "crypt", type: "cutscene", cutscene: "ep28_crypt", set: { CRYPT_FLOWER: 1, CRYPT_SEEN: 1 } },
     { id: "survey", type: "scene", node: "Ep28_Survey", ...ML, rook: null, cast: [],
       set: { EP28_DONE: 1, ARC3_DONE: 1 } },
-    { id: "preview", type: "preview", next: "Arc 4 · The Unanswered Door",
+    { id: "preview", type: "preview", next: "Arc 4 · The Unanswered Door", nextEpisode: "ep29",
       lines: [
         "Next on UNWRITTEN:",
         "Severin goes looking for a brother who was lost six years ago.",

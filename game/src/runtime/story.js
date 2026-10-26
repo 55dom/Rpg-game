@@ -11,7 +11,7 @@ import { maskIntegrity } from "../data/masked.js";
 import { CUTSCENES } from "../data/story/cutscenes.js";
 import { validateCutscene, sampleCamera, eventsBetween, sampleMove } from "../core/timeline.js";
 import { wideShot } from "../core/framing.js";
-import { B, toon2, glow } from "./look.js";
+import { B, toon2, glow, color3 } from "./look.js";
 import { makeTear } from "./tears.js";
 import { GuideTrail } from "./trail.js";
 import { theatreMark, theatreNotes } from "../data/theatre.js";
@@ -32,6 +32,7 @@ import { Ambient } from "./ambient.js";
 import { WorldClock } from "../sim/weather.js";
 import { RainFX } from "./weather.js";
 import { LawWatch } from "./law.js";
+import { makeSentries, stepSentries, SENTRY } from "../sim/sentry.js";
 
 /** Gesture poses for dialogue: weapon-arm and off-arm rotations, a bow, a head tilt. */
 const GESTURES = Object.freeze({
@@ -84,13 +85,17 @@ class Stage {
       p.yaw = p.prevYaw = r.yaw ?? 0; p.vel.x = p.vel.y = p.vel.z = 0;
     }
     p.relaxed = true;
-    for (const c of (beat.cast ?? beat.actors ?? []).filter((c) => !c.when || !this.when || this.when(c.when))) { // `when`: only if the story says they're here
-      const actor = makeActor(c.x, c.z, c.yaw ?? 0, c.down);
-      actor.pos.y = actor.prev.y = c.y ?? 0;
-      const rig = new Rig(this.scene, c.look, `story-${c.id}`);
-      if (c.hidden) { rig.setVisible(false); actor.hiddenActor = true; }
-      this.actors.set(c.id, { actor, rig, look: c.look, crowd: !!c.crowd });
-    }
+    for (const c of (beat.cast ?? beat.actors ?? []).filter((c) => !c.when || !this.when || this.when(c.when))) this.add(c); // `when`: only if the story says they're here
+  }
+
+  /** Put someone on the set: { id, look, x, z, yaw?, y?, down?, hidden?, crowd? }. */
+  add(c) {
+    const actor = makeActor(c.x, c.z, c.yaw ?? 0, c.down);
+    actor.pos.y = actor.prev.y = c.y ?? 0;
+    const rig = new Rig(this.scene, c.look, `story-${c.id}`);
+    if (c.hidden) { rig.setVisible(false); actor.hiddenActor = true; }
+    this.actors.set(c.id, { actor, rig, look: c.look, crowd: !!c.crowd });
+    return actor;
   }
 
   /** Walk an actor to (x, z) over `dur` seconds (or at walking pace). */
@@ -109,6 +114,7 @@ class Stage {
     const a = this.get(id);
     const g = GESTURES[name] ?? GESTURES.none;
     if (!a) return;
+    if (name === "down" || name === "up") { a.down = name === "down"; return; } // on the ground, flat on their back (and up again)
     a.armPose = g.arm ?? null; a.offPose = g.off ?? null; a.bow = g.bow ?? 0; a.headTilt = g.tilt ?? 0;
   }
 
@@ -805,13 +811,19 @@ export class StoryPlayer {
   riftAt(id, kind = "pale") {
     const a = this.stage.get(id);
     if (!a) return;
-    const node = makeTear(this.ctx.scene, "story-rift", { r: 0.85, kind, seed: kind === "black" ? 13 : 7, ground: false });
-    node.position.set(a.pos.x, (a.pos.y ?? 0) + 1.15, a.pos.z);
-    node.rotation.y = a.yaw;
+    const sc = this.stage.actors.get(id)?.rig.look.scale ?? 1; // a child's seam is a child's size
+    this.tearAt({ x: a.pos.x, y: (a.pos.y ?? 0) + 1.15 * sc, z: a.pos.z }, a.yaw, { kind, r: 0.85 * sc });
+  }
+
+  /** A tear at a point: it opens fast, hangs for `life` seconds, and seals (cutscenes place them with `tear` events). */
+  tearAt(at, yaw, { kind = "pale", r = 0.85, life = 3, ground = false } = {}) {
+    const node = makeTear(this.ctx.scene, "story-rift", { r, kind, seed: kind === "black" ? 13 : 7, ground });
+    node.position.set(at.x, at.y ?? 0, at.z);
+    if (!ground) node.rotation.y = yaw;
     node.scaling.setAll(0.01);
     this.ctx.sfx.play(kind === "black" ? "tear" : "rift");
-    const dur = this.skipping ? 0.05 : 3;
-    this.tweens.push({ t: 0, dur, fn: (k) => node.scaling.setAll(Math.max(0.01, Math.min(1, k * 6, (1 - k) * 4))), done: () => node.dispose(false, false) });
+    const dur = this.skipping ? 0.05 : life;
+    this.tweens.push({ t: 0, dur, fn: (k) => node.scaling.setAll(Math.max(0.01, Math.min(1, k * dur * 2, (1 - k) * dur * 1.3))), done: () => node.dispose(false, false) });
   }
 
   /** A grimoire floats down out of the light into someone's hands. */
@@ -894,6 +906,7 @@ export class StoryPlayer {
     this.exploring = { beat, talked: new Set(), near: null, busy: false, pickups: this._makePickups(beat.pickups ?? []),
       encounters: (beat.encounters ?? []).map((e) => ({ ...e, cond: compileExpr(e.when ?? "1"), armed: true, done: false })), combat: null };
     if (this.roaming) this.law.enter(); // its steal spots, and how big the Watch has grown
+    if (beat.sentries) this._makeSentries(beat);
     this._objective();
     const done = new Promise((res) => { this.exploring.resolve = res; });
     if (beat.zone?.intro) this.sleep(0.4).then(() => this._intro(beat.zone));
@@ -911,6 +924,7 @@ export class StoryPlayer {
       w.fighters = w.fighters.filter((f) => !f.traits.dummy);
     }
     for (const pk of this.exploring?.pickups ?? []) pk.node.dispose(false, true);
+    for (const s of this.exploring?.sentries ?? []) s.cone.dispose(false, true);
     this.exploring = null;
     this.ambient = null;
     this.ctx.root.classList.remove("exploring");
@@ -977,7 +991,7 @@ export class StoryPlayer {
       for (const e of x.beat.exits ?? []) if (inRect(pp, e.rect) && this._exitOpen(e)) { x.busy = true; x.resolve({ exit: e }); return; }
       return;
     }
-    if (x.encounters.length && this._encounterTick(x, pp)) { // fighting: no talking, no leaving
+    if ((x.encounters.length || x.combat) && this._encounterTick(x, pp)) { // fighting (an encounter, or a sentry who saw you): no talking, no leaving
       if (!this.ui.talk.hidden) this.ui.talk.hidden = true;
       x.near = null;
       return;
@@ -986,6 +1000,7 @@ export class StoryPlayer {
       if (!inRect(pp, e.rect) || !this._exitOpen(e)) continue;
       x.busy = true; x.resolve({ exit: e }); return; // leaving the zone
     }
+    if (x.sentries && this._sentryTick(x, dt)) return; // spotted: a fight
     const p = this.ctx.getWorld().player;
     if (p.seated && (Math.abs(p.moveInput?.x ?? 0) + Math.abs(p.moveInput?.z ?? 0) > 0.1 || p.current)) p.seated = 0; // up from the chair
     let near = null, best = 2.4;
@@ -1015,6 +1030,67 @@ export class StoryPlayer {
       }
     }
     if (near && !near.pickup) { const a = this.stage.get(near.id); if (!a.down) a.targetYaw = Math.atan2(p.pos.x - a.pos.x, p.pos.z - a.pos.z); }
+  }
+
+  // ---- Sentries (sim/sentry.js): Lances on their beats, each with a lantern's cone of sight on the ground ----
+  _makeSentries(beat) {
+    const BB = B(), scene = this.ctx.scene, x = this.exploring;
+    x.sentries = makeSentries(beat.sentries).map((s, i) => {
+      const def = beat.sentries[i];
+      s.actor = this.stage.add({ id: s.id, look: def.look ?? "lance", x: s.x, z: s.z, yaw: s.yaw });
+      // The cone: a flat fan on the ground, as far and as wide as they can see; it warms to red as they notice you.
+      const n = 16, pos = [0, 0, 0], idx = [];
+      for (let k = 0; k <= n; k++) { const a = -s.pov.half + (2 * s.pov.half * k) / n; pos.push(Math.sin(a) * s.pov.radius, 0, Math.cos(a) * s.pov.radius); }
+      for (let k = 1; k <= n; k++) idx.push(0, k, k + 1);
+      const cone = new BB.Mesh(`sentry-cone-${s.id}`, scene), vd = new BB.VertexData();
+      vd.positions = pos; vd.indices = idx; vd.applyToMesh(cone);
+      cone.material = glow(scene, `sentry-cone-${s.id}-m`, "#ffd36a", 0.3);
+      cone.isPickable = false; cone.position.y = 0.04;
+      // Its edge, drawn as a line, so the light reads on pale stone too.
+      const edge = [];
+      for (let k = 0; k < pos.length; k += 3) edge.push(new BB.Vector3(pos[k], 0.02, pos[k + 2]));
+      edge.push(edge[0].clone());
+      const rim = BB.MeshBuilder.CreateLines(`sentry-rim-${s.id}`, { points: edge }, scene);
+      rim.parent = cone; rim.isPickable = false; rim.color = color3("#ffb43a").clone();
+      s.cone = cone; s.rim = rim;
+      return s;
+    });
+    x.spotted = 0;
+  }
+
+  /** Walk the sentries and look for Rook. True if one of them just shouted (a fight starts). */
+  _sentryTick(x, dt) {
+    const world = this.ctx.getWorld(), p = world.player;
+    const spotted = stepSentries(x.sentries, dt, p.pos, world.bounds.solids ?? []);
+    const idle = color3("#ffd36a"), alarm = color3("#ff3a2a");
+    for (const s of x.sentries) {
+      const a = s.actor;
+      a.prev.x = a.pos.x = s.x; a.prev.z = a.pos.z = s.z; a.targetYaw = s.yaw;
+      a.vel.x = s.moving ? Math.sin(s.yaw) * SENTRY.speed : 0; a.vel.z = s.moving ? Math.cos(s.yaw) * SENTRY.speed : 0;
+      s.cone.position.x = s.x; s.cone.position.z = s.z; s.cone.rotation.y = a.yaw;
+      const k = Math.min(1, s.seen / SENTRY.notice);
+      B().Color3.LerpToRef(idle, alarm, k, s.cone.material.emissiveColor); s.cone.material.alpha = 0.3 + 0.25 * k;
+      B().Color3.LerpToRef(color3("#ffb43a"), alarm, k, s.rim.color);
+      const d = Math.hypot(s.x - p.pos.x, s.z - p.pos.z); // don't walk through them
+      if (!s.out && d < 0.95 && d > 0.01) { const m = (0.95 - d) / d; p.pos.x += (p.pos.x - s.x) * m; p.pos.z += (p.pos.z - s.z) * m; }
+    }
+    if (!spotted) return false;
+    // "There!": he's the fight now (a Lance where he stood, and any friends the beat sends), and his lantern goes out.
+    const b = x.beat;
+    spotted.out = true; spotted.cone.setEnabled(false); this.stage.show(spotted.id, false);
+    x.spotted++;
+    if (b.spottedFlag) this.flags.set(b.spottedFlag, (Number(this.flags.get(b.spottedFlag)) || 0) + 1);
+    this.ctx.sfx.play("guardWhistle");
+    this.ui.talk.hidden = true; x.near = null;
+    this._startCombat(x, { id: `sentry-${spotted.id}`, at: { x: spotted.x, z: spotted.z, r: 2 }, wave: b.spotted?.wave ?? ["lance"],
+      label: b.spotted?.label ?? "SPOTTED", leash: b.spotted?.leash ?? 14, sentry: spotted });
+    return true;
+  }
+
+  /** Got away from a sentry's fight: he goes back to his beat from the start, and he's forgotten you. */
+  _sentryBack(s) {
+    s.out = false; s.seen = 0; s.x = s.route[0][0]; s.z = s.route[0][1]; s.leg = s.route.length > 1 ? 1 : 0; s.dir = 1; s.pause = s.route.length > 1 ? 0 : Infinity;
+    s.cone.setEnabled(true); this.stage.show(s.id, true);
   }
 
   /** A door that opens with the story (`when`), like Luke's house in the Fens. */
@@ -1217,6 +1293,7 @@ export class StoryPlayer {
     } else {
       world.clearEnemies();
       this.ctx.onEvents(world.drainEvents());
+      if (e.sentry) this._sentryBack(e.sentry);
     }
     world.player.relaxed = true;
   }
@@ -1314,6 +1391,7 @@ export class StoryPlayer {
       if (e.move) this.stage.move(e.move.id, e.move.to[0], e.move.to[1], e.move.dur);
       if (e.pose) this.stage.pose(e.pose.id, e.pose.name);
       if (e.cue) this.ctx.sets?.cue(e.cue);
+      if (e.tear) { const [x, y, z] = e.tear.at; this.tearAt({ x, y, z }, e.tear.yaw ?? 0, e.tear); }
       if (e.fade) this._fade(e.fade === "out", 1);
     }
     c.prev = c.t;

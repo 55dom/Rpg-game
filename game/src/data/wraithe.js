@@ -13,6 +13,7 @@
 // P2 (65%): two Choir acolytes step out of tears to help him; tears come quicker, and the Undertow takes
 //   a squadmate as well as you.
 // At 30% he escapes through a tear (and takes his acolytes with him). That ends the fight.
+// Hunted (Ep 31): black tears take his acolytes out from under him, one at a time (sim/wraithe.js).
 
 import { hitSpec } from "../core/combat.js";
 import { defineAbility, EventType as E } from "../core/abilities.js";
@@ -45,6 +46,7 @@ export const WRAITHE_TUNING = Object.freeze({
   undertowRadius: 1.5, undertowDelay: 54, dropHeight: 7,
   undertow: hitSpec({ damage: 12, posture: 10, hitstop: 4, hitstun: 44, knockback: 0, unblockable: true }),
   acolytes: 2,
+  takenAfter: 240, takenGap: 150, // hunted (Ep 31): frames after they arrive until the first black tear takes one, then the next
 });
 
 export const WRAITHE_ABILITIES = Object.freeze({

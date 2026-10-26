@@ -14,6 +14,7 @@ export const THEATRE = Object.freeze([
   { id: "ep26_arm", title: "Reliquary Seven", episode: 26 },
   { id: "ep28_lake", title: "Under the Lake", episode: 28 },
   { id: "ep28_crypt", title: "The Valcourt Crypt", episode: 28 },
+  { id: "ep31_step", title: "The Poor Quarter", episode: 31 },
 ]);
 
 /** When the Annotated Edition opens (and the notes it carries). */
@@ -24,6 +25,7 @@ export const ANNOTATED = Object.freeze({
     ep24_tear: [{ t: 8.4, text: "Not a tear in front of it. Under it." }, { t: 17, text: "He'd been standing there the whole time." }],
     ep26_arm: [{ t: 11.8, text: "He listened before he left. Like he was waiting for me to finish." }],
     ep28_crypt: [{ t: 9.5, text: "A flower. Somebody here is missed." }],
+    ep31_step: [{ t: 13.6, text: "He set the boy down like he'd done it a hundred times." }],
   }),
 });
 

@@ -1,6 +1,9 @@
 // Wraithe's controller (data/wraithe.js): the tears he steps through, the Undertow under your feet, the
 // acolytes he calls in, and his escape. While he's inside a tear he's `submerged`: nothing can touch him,
 // and the view hides him (LOOKS.wraithe.riftwalk).
+//
+// Hunted (Ep 31, `world.hunted`): somebody else is out tonight. A little after his acolytes arrive, black tears
+// open under them one at a time and they're gone ("taken"). Nobody on the field made those.
 
 import { PhasedBoss } from "./boss.js";
 import { constrain } from "./bounds.js";
@@ -9,7 +12,7 @@ import { WRAITHE_PHASES, WRAITHE_TUNING, UNDERTOW, wraitheOptions } from "../dat
 export class WraitheController extends PhasedBoss {
   constructor(world, f) {
     super(world, f, WRAITHE_PHASES, wraitheOptions);
-    this.exit = null; this.called = []; this.escaped = false;
+    this.exit = null; this.called = []; this.escaped = false; this.hunt = [];
     f.combatant.floor = Math.ceil(f.stats.maxHealth * WRAITHE_TUNING.escapeAt); // the fight can't finish him
   }
 
@@ -72,6 +75,7 @@ export class WraitheController extends PhasedBoss {
         return w.spawnEnemy("acolyte", at.x, at.z, 80 + i);
       });
       w.emit({ type: "riftCall", fighter: f, called: this.called });
+      if (w.hunted) this.hunt = this.called.map((e, i) => ({ e, at: T.takenAfter + i * T.takenGap }));
     }
     if (p === 3) this.escape();
   }
@@ -92,8 +96,19 @@ export class WraitheController extends PhasedBoss {
     }
   }
 
+  /** A black tear under one of his acolytes, and they're gone. Not his doing: his tears are pale. */
+  _taken(e) {
+    const w = this.world;
+    e.runner.interrupt();
+    w.emit({ type: "taken", fighter: e, at: { x: e.pos.x, y: 0, z: e.pos.z } });
+    e.vanished = true;
+    e.combatant.floor = 0;
+    e.combatant.health.set(0);
+  }
+
   step() {
     const f = this.f;
     if (f.submerged && f.runner.current?.id !== "RiftStep") this._emerge(); // interrupted inside a tear: come back out
+    for (const h of this.hunt) if (--h.at === 0 && h.e.alive && !this.escaped) this._taken(h.e);
   }
 }
