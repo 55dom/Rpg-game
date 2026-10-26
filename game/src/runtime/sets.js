@@ -1627,7 +1627,8 @@ function buildMirrorlake(scene, mobile) {
   const stoneM = toon(scene, "ml-standing", "#7e7c8c");
   for (let i = 0; i < 9; i++) {
     const a = (i / 9) * Math.PI * 2 + 0.2;
-    if (Math.abs(Math.atan2(Math.sin(a), Math.cos(a))) < 0.35) continue;
+    const ang = Math.abs(Math.atan2(Math.sin(a), Math.cos(a)));
+    if (ang < 0.35 || ang > Math.PI - 0.75) continue; // the arch's side, and the shore side the cameras look in from
     const h = 2.6 + rng() * 1.6, st = add(MB.CreateBox("ml-stone", { width: 0.9, height: h, depth: 0.6 }, scene), 0.04);
     st.position.set(Math.sin(a) * 17.8, h / 2 - 0.1, Math.cos(a) * 17.8); st.rotation.set((rng() - 0.5) * 0.12, a, (rng() - 0.5) * 0.12); st.material = stoneM;
   }

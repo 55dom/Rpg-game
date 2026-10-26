@@ -72,7 +72,7 @@ export class Constellation {
  * the lines between them, a faint violet haze where its body would be. Same interface as a Rig for main.js.
  */
 export class StarFigure {
-  constructor(scene, id, figure, { color = "#c9a4ff", core = "#f4ecff", scale = 1.35 } = {}) {
+  constructor(scene, id, figure, { color = "#a87ae8", core = "#e2d4ff", scale = 1.35 } = {}) {
     const BB = B(), MB = BB.MeshBuilder;
     this.figure = figure; this.scale = scale; this.time = 0; this.flash = 0; this.dead = 0; this.swinging = false;
     this.root = new BB.TransformNode(`${id}-stars`, scene);
@@ -86,13 +86,16 @@ export class StarFigure {
       m.parent = this.body; m.position.set(x, y, z); m.material = this.starMat; m.isPickable = false; return m;
     });
     this.lines = figure.lines.map(([a, b], i) => {
-      const m = MB.CreateCylinder(`${id}-line${i}`, { height: 1, diameter: 0.035, tessellation: 5 }, scene);
+      const m = MB.CreateCylinder(`${id}-line${i}`, { height: 1, diameter: 0.045, tessellation: 5 }, scene);
       m.parent = this.body; m.material = this.lineMat; m.isPickable = false; return { m, a, b };
     });
     const haze = MB.CreateSphere(`${id}-haze`, { diameter: 1, segments: 8 }, scene);
     haze.parent = this.body; haze.position.set(0, 1.15, 0.1); haze.scaling.set(0.9, 0.7, 2.2); haze.material = this.hazeMat; haze.isPickable = false;
     this.haze = haze;
     this.meshes = [...this.stars, ...this.lines.map((l) => l.m), haze];
+    // Out of the glow layer, or the bloom swallows the drawing: it should read as points and lines.
+    const glowLayer = scene.effectLayers?.find((l) => l.name === "glow");
+    for (const m of this.meshes) { glowLayer?.addExcludedMesh(m); m.metadata = { ...m.metadata, noGlow: true }; }
     this._layLines();
   }
 

@@ -202,6 +202,14 @@ export const SHEETS = Object.freeze({
   // ---- Creatures and constructs (bodies, not clothes) --------------------------------------------------------
   beast: { build: "brute", gait: "heavy", idle: "still", outfit: { top: "#4e5a37", hem: null, sleeves: "long", legs: "#4e5a37", boots: "bare", bootColor: "#3a4129", moss: true } },
   hask: { build: "brute", gait: "heavy", idle: "still", outfit: { top: "#3d4934", hem: null, sleeves: "long", legs: "#3d4934", boots: "bare", bootColor: "#2c3524", moss: true } },
+  // Severin Eclipsed (Ep 28): the same cut of clothes, the white gone ash-violet and the gold gone dark.
+  eclipsed: { build: "slim", gait: "confident", idle: "proud",
+    outfit: { top: "#5a5468", hem: "thigh", sleeves: "long", legs: "#3a344a", boots: "tall", bootColor: "#140f24",
+      belt: "#3a2a5a", brooch: "#7a4ab0", bracers: "#3a2a5a", collar: true, grime: 0.15 } },
+  // His reflection in Mirrorlake: pale water-blue.
+  reflection: { build: "slim", gait: "confident", idle: "proud",
+    outfit: { top: "#a8b8e8", hem: "thigh", sleeves: "long", legs: "#8898c8", boots: "tall", bootColor: "#3a4a80",
+      belt: "#6a7ab0", brooch: "#c8d8ff", bracers: "#6a7ab0", collar: true, grime: 0 } },
   elodie: { build: "lithe", gait: "graceful", idle: "still",
     outfit: { top: "#f2ead2", hem: "ankle", sleeves: "long", legs: "#e8dcc0", boots: "shoes", bootColor: "#d4ad4f", collar: true, brooch: "#d4ad4f", grime: 0 } },
   aldric: { build: "broad", gait: "confident", idle: "proud",
@@ -221,7 +229,7 @@ export const SHEETS = Object.freeze({
 
 /** The sheet for a look, with sensible defaults for anything new. */
 export function sheetFor(kind, look = {}) {
-  const s = SHEETS[kind] ?? SHEETS[{ severinAlly: "severin", junoMaid: "junoMaid", brannocSpar: "brannoc", basSling: "bas", quartermaster: "guard", eclipsed: "severin", eclipsedFinal: "severin", reflection: "severin", severinDuel: "severin" }[kind]];
+  const s = SHEETS[kind] ?? SHEETS[{ severinAlly: "severin", junoMaid: "junoMaid", brannocSpar: "brannoc", basSling: "bas", quartermaster: "guard", eclipsedFinal: "eclipsed", severinDuel: "severin" }[kind]];
   if (s) return s;
   return { build: "athletic", gait: "confident", idle: "relaxed",
     outfit: { top: look.coat ?? "#6a6a6a", hem: "thigh", sleeves: "long", legs: "#3a3a40", boots: "ankle", bootColor: "#3a2a22", belt: look.trim ?? "#5a3a22" } };
