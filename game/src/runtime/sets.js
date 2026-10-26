@@ -1,12 +1,13 @@
 // Story sets (Phase 3): each one is built on first use from primitives, carries its own sky, fog,
 // and lighting, and can be swapped in and out. "yard" is the original training yard (arena.js).
 
-import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT } from "../data/zones.js";
+import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT } from "../data/zones.js";
 import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } from "./look.js";
 import { buildCrowd } from "./crowd.js";
 import { buildCritters } from "./critters.js";
 import { palette, props } from "./props.js";
 import { makeTear } from "./tears.js";
+import { MASKED_BOUNTY } from "../data/masked.js";
 
 const mulberry = (seed) => () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 
@@ -52,7 +53,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, ironhold: buildIronhold }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, ironhold: buildIronhold, vault: buildVault }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -834,6 +835,7 @@ function buildAurelin(scene, mobile) {
   const crowd = buildCrowd(scene, K, { count: 22, rng, mobile,
     paths: [{ cx: 0, cz: 0, r: 8, dir: 1 }, { cx: 0, cz: 0, r: 11, dir: -1 }, { line: [[-23, -26], [-23, 34]] }, { line: [[23, -26], [23, 34]] }, { line: [[-20, 20], [20, 20]] }, { line: [[8, -28], [8, 18]] }],
     chatters: [[-9, -14, 0.6], [14, 9, -1.2], [-20, 24, 2.1], [26, 10, 3.0]] });
+  noticeBoard(scene, K, P, L.notice);
   K.bake([]);
   const env = { clear: "#a8cdf0", fog: "#c4dbf2", fogDensity: 0.008, hemi: [0.6, "#fff6e6", "#7a86a8"], sun: [0.8, "#fff1d0", [-0.4, -1, 0.55]], warm: 0 };
   const toonEnv = { lightDir: [0.4, 1, -0.55], fogColor: "#c4dbf2", fogDensity: 0.005, sky: [1.1, 1.08, 1.04], ground: [0.9, 0.88, 0.9], rim: [0.75, 0.85, 1] };
@@ -1443,4 +1445,148 @@ function buildIronhold(scene, mobile) {
     cue: engineCue,
     update(dt, t) { for (let i = 0; i < fires.length; i++) fires[i].scaling.set(1, 0.85 + Math.sin(t * 9 + i * 1.3) * 0.15, 1); engineStep(dt); },
   };
+}
+
+/**
+ * The Crown's notice board on Aurelin's gate road: a few old notices, and (once the Crown has named him, Ep 26)
+ * the bounty poster for the masked knight. The poster's words come from data/masked.js.
+ */
+function noticeBoard(scene, K, P, at) {
+  const BB = B(), MB = BB.MeshBuilder, add = K.add;
+  const node = new BB.TransformNode("au-notice", scene); node.parent = K.root; node.position.set(at.x, 0, at.z); node.rotation.y = at.yaw ?? 0;
+  const wood = P("#5a3e28");
+  for (const x of [-0.85, 0.85]) { const post = add(MB.CreateBox("au-noticePost", { width: 0.12, height: 2.6, depth: 0.12 }, scene), 0.015); post.parent = node; post.position.set(x, 1.3, 0); post.material = wood; }
+  const panel = add(MB.CreateBox("au-noticePanel", { width: 1.9, height: 1.3, depth: 0.08 }, scene), 0.02); panel.parent = node; panel.position.set(0, 1.75, 0); panel.material = P("#8a6a48");
+  const roof = add(MB.CreateBox("au-noticeRoof", { width: 2.2, height: 0.08, depth: 0.45 }, scene), 0.015); roof.parent = node; roof.position.set(0, 2.5, 0.02); roof.rotation.x = -0.2; roof.material = wood;
+  const paper = P("#e6dcc4"), paper2 = P("#d8ccb0");
+  for (const [x, y, w, h, r, m] of [[-0.62, 1.95, 0.42, 0.52, 0.06, paper], [-0.6, 1.4, 0.38, 0.3, -0.04, paper2], [0.66, 1.62, 0.36, 0.6, -0.05, paper2]]) {
+    const n = add(MB.CreateBox("au-notePaper", { width: w, height: h, depth: 0.01 }, scene)); n.parent = node; n.position.set(x, y, 0.05); n.rotation.z = r; n.material = m;
+  }
+  // The bounty: drawn once onto a texture (a masked figure, the name, the reward).
+  const wanted = K.when("$SABLE_NAMED");
+  const tex = new BB.DynamicTexture("au-bountyTex", { width: 256, height: 352 }, scene, true);
+  const c = tex.getContext(), W = 256, H = 352, T = MASKED_BOUNTY;
+  c.fillStyle = "#ece2c8"; c.fillRect(0, 0, W, H);
+  c.strokeStyle = "#7a5a3a"; c.lineWidth = 6; c.strokeRect(8, 8, W - 16, H - 16);
+  c.fillStyle = "#8a2420"; c.font = "bold 22px serif"; c.textAlign = "center"; c.fillText(T.head, W / 2, 44);
+  c.fillStyle = "#1c1c22"; // the figure: a tall cloak, one heavy shoulder, a smooth mask with slits, the glaive
+  c.beginPath(); c.moveTo(78, 250); c.lineTo(96, 132); c.lineTo(160, 132); c.lineTo(178, 250); c.closePath(); c.fill();
+  c.beginPath(); c.ellipse(128, 104, 26, 32, 0, 0, Math.PI * 2); c.fill();
+  c.beginPath(); c.ellipse(158, 136, 26, 15, -0.25, 0, Math.PI * 2); c.fill();
+  c.lineWidth = 5; c.strokeStyle = "#1c1c22"; c.beginPath(); c.moveTo(60, 260); c.lineTo(202, 74); c.stroke();
+  c.fillStyle = "#3a4a6a"; c.beginPath(); c.moveTo(196, 82); c.lineTo(214, 54); c.lineTo(206, 92); c.closePath(); c.fill();
+  c.fillStyle = "#ece2c8"; for (const x of [117, 124, 132, 139]) c.fillRect(x, 96, 3, 14);
+  c.fillStyle = "#1c1c22"; c.font = "bold 26px serif"; c.fillText(T.name, W / 2, 286);
+  c.fillStyle = "#8a2420"; c.font = "bold 18px serif"; c.fillText(T.reward, W / 2, 310);
+  c.fillStyle = "#3a3026"; c.font = "11px serif"; T.lines.forEach((l, i) => c.fillText(l, W / 2, 330 + i * 13));
+  tex.update();
+  const mat = new BB.StandardMaterial("au-bountyMat", scene); mat.diffuseTexture = tex; mat.emissiveColor = new BB.Color3(0.55, 0.52, 0.48); mat.specularColor = BB.Color3.Black();
+  const poster = MB.CreatePlane("au-bounty", { width: 0.72, height: 0.99 }, scene); poster.parent = wanted; poster.isPickable = false; poster.material = mat;
+  poster.position.set(at.x + Math.sin(at.yaw ?? 0) * 0.06, 1.74, at.z + Math.cos(at.yaw ?? 0) * 0.06); poster.rotation.y = (at.yaw ?? 0) + Math.PI; // facing out from the board's front
+  return node;
+}
+
+/**
+ * The vault beneath Ironhold (Ep 26): a round stone rotunda lit by braziers, the Crown's wards inlaid in the floor
+ * in gold, the sealed door to the north (cut open by a black seam once he's come, $VAULT_BREACHED; its plinth
+ * empty once he's gone, $VAULT_TAKEN) and four corridors on the diagonals. The wall between the camera and the
+ * fight is cut away so it never blocks the view.
+ */
+function buildVault(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, V = VAULT_LAYOUT;
+  const P = palette(scene, "vt");
+  const floor = add(MB.CreateDisc("vt-floor", { radius: V.radius + 3, tessellation: 48 }, scene)); floor.rotation.x = Math.PI / 2; floor.position.y = 0.004; floor.material = toon(scene, "vt-stone", "#4a4852");
+  const inner = add(MB.CreateDisc("vt-inner", { radius: 16.5, tessellation: 48 }, scene)); inner.rotation.x = Math.PI / 2; inner.position.y = 0.008; inner.material = toon(scene, "vt-stoneIn", "#56545e");
+  for (const r of [8, 16.5]) { const ring = add(MB.CreateTorus("vt-ring", { diameter: r * 2, thickness: 0.12, tessellation: 64 }, scene)); ring.position.y = 0.012; ring.material = P("#36343c"); }
+  // The wards: a gold circle and eight spokes, bright while they hold.
+  const wards = K.when("not $VAULT_BREACHED"), spent = K.when("$VAULT_BREACHED");
+  const wardLit = glow(scene, "vt-ward", "#e6b54e", 0.85), wardDim = P("#6a5a3a");
+  for (const [parent, mat] of [[wards, wardLit], [spent, wardDim]]) {
+    const ring = MB.CreateTorus("vt-wardRing", { diameter: 7.4, thickness: 0.07, tessellation: 48 }, scene); ring.parent = parent; ring.position.y = 0.02; ring.material = mat; ring.isPickable = false;
+    for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; const sp = MB.CreateBox("vt-wardSpoke", { width: 0.06, height: 0.02, depth: 4.6 }, scene); sp.parent = parent; sp.position.set(Math.sin(a) * 6, 0.02, Math.cos(a) * 6); sp.rotation.y = a; sp.material = mat; sp.isPickable = false; }
+  }
+  // The wall: segments round the room, gaps for the four corridors and the door alcove. Not baked: cut away per frame.
+  const wallM = toon(scene, "vt-wall", "#5e5a66"), capM = toon(scene, "vt-cap", "#3e3c46"), segs = [];
+  const gapAt = (a) => V.mouths.some((m) => Math.abs(Math.atan2(Math.sin(a - m), Math.cos(a - m))) < V.mouthHalf) || Math.abs(Math.atan2(Math.sin(a), Math.cos(a))) < 0.14;
+  for (let i = 0; i < V.segments; i++) {
+    const a = (i / V.segments) * Math.PI * 2; // a segment centred on each corridor (and the door) is left out
+    if (gapAt(a)) continue;
+    const w = (2 * Math.PI * V.radius) / V.segments + 0.15;
+    const seg = new BB.TransformNode(`vt-seg${i}`, scene); seg.parent = K.root; seg.position.set(Math.sin(a) * V.radius, 0, Math.cos(a) * V.radius); seg.rotation.y = a;
+    const wall = add(MB.CreateBox("vt-wallSeg", { width: w, height: V.wallHeight, depth: 1.2 }, scene), 0.04); wall.parent = seg; wall.position.y = V.wallHeight / 2; wall.material = wallM;
+    const cap = add(MB.CreateBox("vt-wallCap", { width: w, height: 0.5, depth: 1.5 }, scene), 0.02); cap.parent = seg; cap.position.y = V.wallHeight; cap.material = capM;
+    segs.push({ node: seg, a });
+  }
+  // The corridors: dark passages leaving on the diagonals, their mouths framed in heavier stone.
+  const dark = P("#1a1820");
+  for (const a of V.mouths) {
+    const n = new BB.TransformNode("vt-corridor", scene); n.parent = K.root; n.position.set(Math.sin(a) * (V.radius + 4), 0, Math.cos(a) * (V.radius + 4)); n.rotation.y = a;
+    const fl = add(MB.CreateBox("vt-corrFloor", { width: 4.2, height: 0.05, depth: 9 }, scene)); fl.parent = n; fl.material = dark;
+    for (const sx of [-2.4, 2.4]) { const w = add(MB.CreateBox("vt-corrWall", { width: 0.8, height: 5, depth: 9 }, scene), 0.03); w.parent = n; w.position.set(sx, 2.5, 0); w.material = wallM; }
+    const lintel = add(MB.CreateBox("vt-lintel", { width: 5.8, height: 0.9, depth: 1.6 }, scene), 0.03); lintel.parent = n; lintel.position.set(0, 4.9, -4); lintel.material = capM;
+    const back = add(MB.CreateBox("vt-corrBack", { width: 4.2, height: 5, depth: 0.2 }, scene)); back.parent = n; back.position.set(0, 2.5, 4.4); back.material = dark;
+  }
+  // Pillars and braziers round the edge of the floor.
+  const pil = toon(scene, "vt-pillar", "#6a6672");
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    if (gapAt(a) || Math.abs(Math.atan2(Math.sin(a), Math.cos(a))) < 0.3) continue;
+    const c = add(MB.CreateCylinder("vt-pillar", { height: V.wallHeight, diameter: 1.1, tessellation: 10 }, scene), 0.04); c.position.set(Math.sin(a) * V.pillars, V.wallHeight / 2, Math.cos(a) * V.pillars); c.material = pil;
+    const base = add(MB.CreateBox("vt-pillarBase", { width: 1.5, height: 0.4, depth: 1.5 }, scene), 0.02); base.position.set(c.position.x, 0.2, c.position.z); base.rotation.y = a; base.material = capM;
+  }
+  const fires = [], fireM = glow(scene, "vt-fire", "#ff9a3a");
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2 + Math.PI / 8 + Math.PI / 4;
+    if (gapAt(a)) continue;
+    const x = Math.sin(a) * V.braziers, z = Math.cos(a) * V.braziers;
+    const bowl = add(MB.CreateCylinder("vt-brazier", { height: 0.5, diameterTop: 0.9, diameterBottom: 0.4, tessellation: 10 }, scene), 0.02); bowl.position.set(x, 1.05, z); bowl.material = P("#2e2c34");
+    const leg = add(MB.CreateCylinder("vt-brazierLeg", { height: 0.85, diameter: 0.12, tessellation: 5 }, scene), 0.01); leg.position.set(x, 0.42, z); leg.material = bowl.material;
+    const f = add(MB.CreateCylinder("vt-fire", { height: 0.8, diameterTop: 0, diameterBottom: 0.6, tessellation: 7 }, scene)); f.position.set(x, 1.6, z); f.material = fireM; fires.push(f);
+  }
+  // The Crown's door: a great slab with the Paragon's sun. Sealed, then cut open by a black seam.
+  const D = V.door, doorStone = toon(scene, "vt-door", "#7a7480"), gold = glow(scene, "vt-sun", "#e6b54e", 0.9);
+  for (const sx of [-1, 1]) { const jamb = add(MB.CreateBox("vt-doorJamb", { width: 0.9, height: D.h + 1, depth: 1.6 }, scene), 0.04); jamb.position.set(D.x + sx * (D.w / 2 + 0.45), (D.h + 1) / 2, D.z + 0.9); jamb.material = capM; }
+  const lintel = add(MB.CreateBox("vt-doorLintel", { width: D.w + 1.8, height: 1, depth: 1.6 }, scene), 0.04); lintel.position.set(D.x, D.h + 0.5, D.z + 0.9); lintel.material = capM;
+  // The alcove behind the door: three walls and a floor, the plinth in the middle of it.
+  const alc = dark;
+  const back = add(MB.CreateBox("vt-alcoveBack", { width: D.w + 1.8, height: D.h + 1, depth: 0.4 }, scene)); back.position.set(D.x, (D.h + 1) / 2, V.plinth.z + 2.2); back.material = alc;
+  for (const sx of [-1, 1]) { const side = add(MB.CreateBox("vt-alcoveSide", { width: 0.4, height: D.h + 1, depth: 4 }, scene)); side.position.set(D.x + sx * (D.w / 2 + 0.7), (D.h + 1) / 2, V.plinth.z); side.material = alc; }
+  const sealed = K.when("not $VAULT_BREACHED"), cut = K.when("$VAULT_BREACHED");
+  const slab = MB.CreateBox("vt-doorSlab", { width: D.w, height: D.h, depth: 0.5 }, scene); slab.parent = sealed; slab.position.set(D.x, D.h / 2, D.z + 0.4); slab.material = doorStone; inkOutline(slab, 0.04); slab.isPickable = false;
+  const sun = MB.CreateDisc("vt-doorSun", { radius: 0.8, tessellation: 24 }, scene); sun.parent = sealed; sun.position.set(D.x, D.h * 0.62, D.z + 0.13); sun.rotation.y = Math.PI; sun.material = gold; sun.isPickable = false;
+  for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; const ray = MB.CreateBox("vt-doorRay", { width: 0.08, height: 0.55, depth: 0.02 }, scene); ray.parent = sealed; ray.position.set(D.x + Math.sin(a) * 1.2, D.h * 0.62 + Math.cos(a) * 1.2, D.z + 0.13); ray.rotation.z = -a; ray.material = gold; ray.isPickable = false; }
+  // Breached: the slab split in two halves pushed apart, a black seam hanging where they met, the plinth behind.
+  for (const sx of [-1, 1]) { const half = MB.CreateBox("vt-doorHalf", { width: D.w / 2 - 0.25, height: D.h, depth: 0.5 }, scene); half.parent = cut; half.position.set(D.x + sx * (D.w / 4 + 0.55), D.h / 2, D.z + 0.4); half.rotation.y = sx * 0.12; half.material = doorStone; inkOutline(half, 0.04); half.isPickable = false; }
+  const seam = makeTear(scene, "vt-doorSeam", { r: 2.2, kind: "black", seed: 26, ground: false, stretch: [0.45, 1.25] }); seam.parent = cut; seam.position.set(D.x, D.h * 0.48, D.z + 0.05); seam.rotation.y = Math.PI;
+  const plinth = add(MB.CreateCylinder("vt-plinth", { height: 1.1, diameter: 1.1, tessellation: 8 }, scene), 0.03); plinth.position.set(V.plinth.x, 0.55, V.plinth.z); plinth.material = capM;
+  const relic = K.when("$VAULT_BREACHED and not $VAULT_TAKEN");
+  const box = MB.CreateBox("vt-reliquary", { width: 0.5, height: 0.36, depth: 0.36 }, scene); box.parent = relic; box.position.set(V.plinth.x, 1.3, V.plinth.z); box.material = toon(scene, "vt-reliquaryMat", "#8a6a3a"); inkOutline(box, 0.02); box.isPickable = false;
+  const seal = MB.CreateBox("vt-reliquarySeal", { width: 0.16, height: 0.16, depth: 0.04 }, scene); seal.parent = relic; seal.position.set(V.plinth.x, 1.3, V.plinth.z - 0.2); seal.material = gold; seal.isPickable = false;
+  const warm = new BB.PointLight("vt-warm", new BB.Vector3(0, 6, 0), scene); warm.diffuse = color3("#ffb070").clone(); warm.intensity = 0.55; warm.range = 34; K.lights.push(warm);
+  // Cutscene cues: the door cut open, the reliquary sent through a small seam, his way out opening and closing.
+  const seams = [];
+  const openSeam = (x, y, z, r, life) => { const t = makeTear(scene, "vt-seam", { r, kind: "black", seed: seams.length + 61, ground: false }); t.parent = K.root; t.position.set(x, y, z); t.scaling.setAll(0.01); seams.push({ t, age: 0, life }); return t; };
+  const cue = (name) => {
+    if (name === "doorCut") { sealed.setEnabled(false); cut.setEnabled(true); wards.setEnabled(false); spent.setEnabled(true); relic.setEnabled(true); openSeam(D.x, D.h * 0.48, D.z - 0.3, 2.2, 0.8); }
+    if (name === "take") { relic.setEnabled(false); openSeam(V.plinth.x, 1.35, V.plinth.z - 0.4, 0.5, 0.9); }
+    if (name === "seamOpen") openSeam(V.exit.x, 1.25, V.exit.z, 1.15, 99);
+    if (name === "seamShut") for (const sm of seams) sm.life = Math.min(sm.life, sm.age + 0.3);
+  };
+  K.bake([]);
+  const env = { clear: "#0e0d12", fog: "#0e0d12", fogDensity: 0.012, hemi: [0.5, "#c8c4e0", "#2a2630"], sun: [0.38, "#ffd0a0", [0.2, -1, 0.35]], warm: 0 };
+  const toonEnv = { lightDir: [-0.2, 1, -0.4], fogColor: "#0e0d12", fogDensity: 0.006, sky: [0.92, 0.9, 1], ground: [0.66, 0.62, 0.7], rim: [0.75, 0.82, 1] };
+  const self = { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true, cue,
+    update(dt, t) {
+      for (const sm of seams) { sm.age += dt; const k = Math.max(0.01, Math.min(1, sm.age / 0.3, (sm.life - sm.age) / 0.3)); sm.t.scaling.setAll(k); if (sm.age >= sm.life) sm.t.dispose(false, false); }
+      for (let i = seams.length - 1; i >= 0; i--) if (seams[i].age >= seams[i].life) seams.splice(i, 1);
+      // Cut away any stretch of wall standing between the camera and the room.
+      const cam = scene.activeCamera?.position;
+      if (cam) {
+        const cd = Math.hypot(cam.x, cam.z), ca = Math.atan2(cam.x, cam.z);
+        for (const sg of segs) { const near = cd > V.radius - 3 && Math.abs(Math.atan2(Math.sin(sg.a - ca), Math.cos(sg.a - ca))) < 0.85; if (sg.node.isEnabled() === near) sg.node.setEnabled(!near); }
+      }
+      for (let i = 0; i < fires.length; i++) fires[i].scaling.y = 0.88 + Math.sin(t * 8 + i * 1.7) * 0.12;
+      warm.intensity = 0.52 + Math.sin(t * 5) * 0.04;
+    } };
+  return self;
 }

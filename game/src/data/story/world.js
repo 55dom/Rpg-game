@@ -49,7 +49,12 @@ Juno: If you're going to the capital, don't buy anything in the Lowmarket that's
 
 title: W_Bas
 ---
-Bas: I've been practicing a new stance. It's mostly standing still, but harder.
+<<if $BAS_ARM_BROKEN>>
+    Bas: The healer says six weeks. I said three. She said six again, louder.
+    Bas: I can still hold a wall one-handed. I just can't hit anything very hard with it.
+<<else>>
+    Bas: I've been practicing a new stance. It's mostly standing still, but harder.
+<<endif>>
 ===
 
 title: W_Tamsin
@@ -65,7 +70,18 @@ Cal: ...Probably not.
 
 title: W_Lio
 ---
-Lio: The library has a book on lost villages. It's three pages long. Someone tore the rest out.
+<<if $LIO_SECRET>>
+    Lio: Juno still reads over my shoulder when I write. I've started writing her notes. "Hello, Juno." She hasn't laughed yet.
+    Lio: Thank you for letting me stay, {name}. I'm going to find out what's under your page. For you this time. Not for them.
+<<else>>
+    Lio: The library has a book on lost villages. It's three pages long. Someone tore the rest out.
+<<endif>>
+===
+
+title: W_LioHall
+---
+Lio: {name}. You came. ...The Keeper lets me sleep in the archive. It's quiet. Everyone here is either reading or dead.
+Lio: I'm still looking for what's under your page. When I find something, you'll be the first to know. The only one, if you want.
 ===
 
 title: W_HallKeeper

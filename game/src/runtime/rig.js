@@ -117,7 +117,8 @@ export const LOOKS = {
   dagrun: { poses: ACOLYTE_POSES, scale: 1.3, skirt: 1.35, coat: "#2a3346", trim: "#e6b54e", hairColor: "#5a3d2b", skin: "#e2b894",
     head: "face", hair: "crop", beard: "#5a3d2b", collar: true, weapon: "none", shoulders: 1.5, eyeColor: "#3a2618", trail: "#e6b54e" },
   cal: { poses: CAL_POSES, scale: 1.06, skirt: 0.8, coat: "#d9d3c4", trim: "#e6b54e", hairColor: "#2f2a36", skin: "#efd2b8",
-    head: "face", hair: "loose", jaw: 0.18, collar: true, weapon: "sword", eyeColor: "#2a2a3a", trail: "#ffd98a" },
+    head: "face", hair: "loose", jaw: 0.18, collar: true, weapon: "sword", eyeColor: "#2a2a3a", trail: "#ffd98a",
+    listenTilt: -0.2 }, // listening, his head tips to the right
   corvina: { poses: ACOLYTE_POSES, scale: 1.04, skirt: 1.05, coat: "#f2efe6", trim: "#d4ad4f", hairColor: "#b8d0ec", skin: "#f3dcc8",
     head: "face", hair: "long", weapon: "none", eyeColor: "#4a6aa0", trail: "#e9f2ff" },
   brannoc: { poses: BRANNOC_POSES, scale: 1.16, skirt: 1.1, coat: "#6b7280", trim: "#8a3a2a", hairColor: "#9a9a9a", skin: "#d8a888",
@@ -199,6 +200,13 @@ export const LOOKS = {
   junoMaid: { poses: ACOLYTE_POSES, scale: 0.93, skirt: 1.25, coat: "#2b3a5c", trim: "#f6f1e8", hairColor: "#b04a26", skin: "#f3d5bf",
     head: "face", hair: "sidetail", headband: "#f6f1e8", weapon: "none", holds: "notepad", accent: "#c8414f", eyeColor: "#6a2a1a", trail: "#ff6f86" },
 };
+// Bas with his left arm broken and bound in a sling (after Ep 26, until it heals).
+LOOKS.basSling = { ...LOOKS.bas, sling: true };
+// The Crown Archivist (Eps 25–26): grey robes, ink on her fingers, a ledger under her arm.
+LOOKS.archivist = { poses: ACOLYTE_POSES, scale: 0.95, skirt: 1.25, coat: "#5e5e68", trim: "#c8c8d0", hairColor: "#2e2a30", skin: "#ecd0b8",
+  head: "face", hair: "long", weapon: "none", holds: "scroll", sash: true, eyeColor: "#3a3a4a", trail: "#c8c8d0" };
+// Quartermaster Hale of the Iron Wardens (Ep 26): a Warden's steel and a keyring, grey in the beard.
+LOOKS.quartermaster = { ...LOOKS.guard, coat: "#4a5462", trim: "#9aa2ae", hairColor: "#6a6a6a", beard: "#6a6a6a", hair: "crop", shoulders: 1.2 };
 
 export class Rig {
   /** @param {*} scene @param {string} kind a LOOKS key @param {string} id */
@@ -513,6 +521,13 @@ export class Rig {
       const back = add(MB.CreateBox("sashBack", { width: 0.1, height: T * 1.2, depth: 0.025 }, scene), this.body, 0, T * 0.5, -front(this.build.cw), 0.02);
       back.rotation.z = -0.55;
       sash.material = back.material = trim;
+    }
+    if (L.sling) { // a broken off arm: the forearm cradled in a cloth sling, its strap over the other shoulder
+      const cloth = M("sling", "#e6e0d2");
+      const cradle = add(MB.CreateBox("slingCradle", { width: 0.2, height: 0.4, depth: 0.18 }, scene), this.offElbow, 0, -0.18, 0.01, 0.015);
+      const strap = add(MB.CreateBox("slingStrap", { width: 0.08, height: T * 1.15, depth: 0.025 }, scene), this.body, 0.02, T * 0.52, front(this.build.cw) + 0.01, 0.015);
+      strap.rotation.z = -0.62;
+      cradle.material = strap.material = cloth;
     }
     if (L.collar) { // the Lantern Knights' gold stand collar (per the sheets: a band, no hanging tail)
       const col = add(MB.CreateCylinder("goldCollar", { height: 0.085, diameterTop: 0.2, diameterBottom: 0.24, tessellation: 12 }, scene), this.body, 0, T + 0.035, -0.005, 0.02);
@@ -1058,7 +1073,8 @@ export class Rig {
       const o = fighter.offPose ?? [-1.15, 0, -0.35]; this.offArm.rotation.set(o[0], o[1], o[2]);
       if (this.offElbow) this.offElbow.rotation.x = this.look.carry ? -1.3 : -0.9;
     }
-    if (this.head !== this.shoulder) this.head.rotation.z = fighter.headTilt ?? 0;
+    if (this.look.sling && !fighter.offPose && this.offArm) { this.offArm.rotation.set(-1.2, 0, -0.3); this.offElbow.rotation.x = -1.45; } // held still in the sling
+    if (this.head !== this.shoulder) this.head.rotation.z += ((fighter.headTilt ?? 0) - this.head.rotation.z) * Math.min(1, dt * 8);
 
     if (this.grimoire) {
       // In a fight the grimoire floats at the shoulder; outside one it hangs closed at the hip, so it never

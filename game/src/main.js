@@ -22,7 +22,7 @@ import { buildArena } from "./runtime/arena.js";
 import { StoryPlayer } from "./runtime/story.js";
 import { Sets } from "./runtime/sets.js";
 import { Constellation } from "./runtime/constellation.js";
-import { TearFx, makeTear } from "./runtime/tears.js";
+import { TearFx, makeTear, tearMaterials } from "./runtime/tears.js";
 import { SaveStore, cleanName } from "./core/save.js";
 import { EPISODE_1, EP1_SCRIPT } from "./data/story/ep1.js";
 import { EPISODE_2, EP2_SCRIPT } from "./data/story/ep2.js";
@@ -34,6 +34,8 @@ import { EPISODE_21, EP21_SCRIPT } from "./data/story/ep21.js";
 import { EPISODE_22, EP22_SCRIPT } from "./data/story/ep22.js";
 import { EPISODE_23, EP23_SCRIPT } from "./data/story/ep23.js";
 import { EPISODE_24, EP24_SCRIPT } from "./data/story/ep24.js";
+import { EPISODE_25, EP25_SCRIPT } from "./data/story/ep25.js";
+import { EPISODE_26, EP26_SCRIPT } from "./data/story/ep26.js";
 import { keyItemsHeld } from "./data/keyItems.js";
 import { WORLD_SCRIPT } from "./data/story/world.js";
 import { compileExpr, truthy } from "./core/flags.js";
@@ -120,7 +122,7 @@ export function boot(doc = document) {
   const addView = (f) => {
     if (views.has(f) || f.traits?.dummy) return; // training dummies are part of the set (they rock on their posts)
     if (LOOKS[f.kind]?.form === "object") { views.set(f, new ObjectView(scene, f.kind, f.id, LOOKS[f.kind])); return; } // bells, seals, egg sacs, bubbles
-    const rig = new Rig(scene, f.kind, f.id);
+    const rig = new Rig(scene, f.look ?? f.kind, f.id); // a look of its own if it has one (Bas in a sling)
     views.set(f, rig);
     trails.set(f, new Trail(scene, `${f.id}-trail`, LOOKS[f.kind]?.trail ?? (f.team === Team.Player ? TRAIL_COLORS.default : TRAIL_COLORS.enemy)));
   };
@@ -316,7 +318,45 @@ export function boot(doc = document) {
           sfx.play("rift", ev.role === "mark" ? 0.6 : 1);
           break;
         }
-        case "riftDrop": tearFx.open({ x: ev.at.x, y: ev.at.y + 0.8, z: ev.at.z }, { r: 1.2, kind: "pale", life: 0.6, ground: true }); if (ev.fighter === world.player) camera.shake(0.25); break;
+        case "riftDrop": tearFx.open({ x: ev.at.x, y: ev.at.y + 0.8, z: ev.at.z }, { r: 1.2, kind: ev.kind === "sever" ? "black" : "pale", life: 0.6, ground: true }); if (ev.fighter === world.player) camera.shake(0.25); break;
+        case "hardLanding": vfx.ring({ x: ev.at.x, y: 0.06, z: ev.at.z }, 2.2, "#c8b49a", 0.3); camera.shake(0.35); sfx.play("slam", 0.7); if (ev.fighter === world.player) hud.toast("HARD LANDING", "danger"); break;
+        case "airRecover": if (ev.fighter === world.player) { hud.toast("RECOVERED", "clear"); sfx.play("dodge"); } break;
+        // ---- The masked knight: black tears, the room's mouths, the Sever Line ----
+        case "severOpen": {
+          const p = world.player.pos, yaw = Math.atan2(p.x - ev.at.x, p.z - ev.at.z);
+          tearFx.open({ x: ev.at.x, y: 1.15, z: ev.at.z }, { r: 0.8, kind: "black", life: ev.role === "mark" ? 0.5 : ev.role === "in" ? 1.2 : 0.42, yaw });
+          if (ev.role !== "out") vfx.flash({ x: ev.at.x, y: 1.15, z: ev.at.z }, 1.2, "#9cb8ff", 0.08);
+          sfx.play("tear", ev.role === "mark" ? 0.6 : 1);
+          break;
+        }
+        case "severExposed": vfx.flash({ x: ev.fighter.pos.x, y: 1.2, z: ev.fighter.pos.z }, 1.6, "#9cb8ff", 0.1); break;
+        case "severMouths":
+          mouthTears = ev.mouths.map((m) => tearFx.open({ x: m.x, y: 1.4, z: m.z }, { r: 1.25, kind: "black", life: 9999, grow: 0.5, yaw: Math.atan2(-m.x, -m.z) }));
+          sfx.play("tear");
+          break;
+        case "severLoop": vfx.flash({ x: ev.from.x, y: 1.2, z: ev.from.z }, 1.4, "#9cb8ff", 0.1); vfx.flash({ x: ev.to.x, y: 1.2, z: ev.to.z }, 1.4, "#9cb8ff", 0.1); sfx.play("tear", 0.6); if (ev.fighter === world.player) camera.shake(0.2); break;
+        case "severLine": {
+          lineWall?.dispose();
+          const L = ev.halfLength * 2, yaw = Math.atan2(-ev.dir.z, ev.dir.x);
+          lineWall = new BB.TransformNode("severLine", scene);
+          lineWall.position.set(ev.mid.x, 0, ev.mid.z); lineWall.rotation.y = yaw;
+          const { hole, edge } = tearMaterials(scene).black;
+          const slab = BB.MeshBuilder.CreateBox("severLineSlab", { width: L, height: 3.2, depth: 0.14 }, scene); slab.position.y = 1.6; slab.material = hole;
+          for (const y of [0.05, 3.2]) { const e = BB.MeshBuilder.CreateBox("severLineEdge", { width: L, height: 0.07, depth: 0.2 }, scene); e.position.y = y; e.material = edge; e.parent = lineWall; e.isPickable = false; }
+          slab.parent = lineWall; slab.isPickable = false;
+          vfx.flash({ x: ev.mid.x, y: 1.6, z: ev.mid.z }, 5, "#9cb8ff", 0.2); camera.shake(0.5); sfx.play("tear"); sfx.play("slam", 0.6);
+          hud.toast("SEVER LINE", "danger"); hud.banner(ev.isolated ? `THE ROOM IS CUT IN TWO · ${(ev.isolated.stats?.name ?? "A SQUADMATE").toUpperCase()} IS SHUT OUT` : "THE ROOM IS CUT IN TWO");
+          break;
+        }
+        case "severLineClose": lineWall?.dispose(); lineWall = null; sfx.play("tear", 0.5); break;
+        case "severLeave":
+          tearFx.open({ x: ev.at.x, y: 1.2, z: ev.at.z }, { r: 1.3, kind: "black", life: 1.4, yaw: Math.atan2(world.player.pos.x - ev.at.x, world.player.pos.z - ev.at.z) });
+          vfx.flash({ x: ev.at.x, y: 1.2, z: ev.at.z }, 2.4, "#9cb8ff", 0.18);
+          for (const t of mouthTears) tearFx.close(t); mouthTears = [];
+          lineWall?.dispose(); lineWall = null;
+          removeView(ev.fighter); if (hud.focus === ev.fighter) hud.focus = null;
+          sfx.play("tear"); camera.shake(0.4);
+          break;
         case "riftCall": hud.pushLog(`Wraithe calls ${ev.called.length} acolytes through the air`); break;
         case "riftEscape":
           tearFx.open({ x: ev.at.x, y: 1.1, z: ev.at.z }, { r: 1, kind: "pale", life: 0.8, yaw: Math.atan2(world.player.pos.x - ev.at.x, world.player.pos.z - ev.at.z) });
@@ -626,10 +666,11 @@ export function boot(doc = document) {
 
   /** A fresh world for a new run or sandbox session (views rebuilt, settings kept). */
   let resetBossFx = null; // set once the boss visuals exist (below)
+  let injuredNow = () => []; // squadmates fighting hurt, from the story's flags (set once the story exists)
   const newWorld = (opts = {}) => {
     for (const f of [...views.keys()]) removeView(f);
     walls.clear(); setBog(false, true); constellation.clear(true);
-    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, companions: true, ...opts });
+    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, companions: true, injured: injuredNow(), ...opts });
     if (opts.tokens == null) world.tokens.capacity = mobile ? 1 : 2;
     world.pageDefs = PAGES;
     root.classList.toggle("has-tag", !!world.members.severin); root.classList.remove("tag-severin", "hushed");
@@ -713,7 +754,9 @@ export function boot(doc = document) {
     onEvents: (evs) => onEvents(evs),
   }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }, { episode: EPISODE_3, script: EP3_SCRIPT }, { episode: EPISODE_4_STORY, script: EP4_SCRIPT }, { episode: EPISODE_19, script: EP19_SCRIPT }, { episode: EPISODE_20, script: EP20_SCRIPT },
     { episode: EPISODE_21, script: EP21_SCRIPT }, { episode: EPISODE_22, script: EP22_SCRIPT },
-    { episode: EPISODE_23, script: EP23_SCRIPT }, { episode: EPISODE_24, script: EP24_SCRIPT }], [WORLD_SCRIPT]);
+    { episode: EPISODE_23, script: EP23_SCRIPT }, { episode: EPISODE_24, script: EP24_SCRIPT },
+    { episode: EPISODE_25, script: EP25_SCRIPT }, { episode: EPISODE_26, script: EP26_SCRIPT }], [WORLD_SCRIPT]);
+  injuredNow = () => (story.flags.get("BAS_ARM_BROKEN") ? ["bas"] : []); // Bas fights one-armed after the vault
   const playerName = root.querySelector(".player-card .name");
   const showName = (n) => { if (playerName?.firstChild) playerName.firstChild.textContent = `${n.toUpperCase()} `; };
   const backToTitle = () => {
@@ -900,6 +943,8 @@ export function boot(doc = document) {
     ilse: { 2: ["THE CHOIR PIT", "PHASE 2 · SHE CALLS HER ACOLYTES · WARDED WHILE THEY STAND"], 3: ["THE BELLS", "PHASE 3 · BREAK THE BELLS"], 4: ["HUSH", "PHASE 4 · SHE CAN SILENCE YOUR DODGE"] },
     galen: { 2: ["ROT", "PHASE 2 · RINGS OF RUST · JUMP THEM"], 3: ["THE OATH", "PHASE 3 · BREAK THE VOW-SEALS"], 4: ["DESPERATION", "PHASE 4 · THE LAST CHARGE"] },
     gullmaw: { 2: ["THE FLOOD", "PHASE 2 · THE WATER JET · JUMP IT"], 3: ["SWALLOWED", "PHASE 3 · BURST THE SLIME BUBBLE"] },
+    masked: { 2: ["THE FLOOR OPENS", "PHASE 2 · A BLACK TEAR UNDER YOU · STEP OFF, OR JUMP OR DASH BEFORE YOU LAND"],
+      3: ["NO WAY OUT", "PHASE 3 · EVERY WAY OUT LEADS BACK IN"], 4: ["…", "PHASE 4"] },
     varka: { 2: ["THE IRONSONG ROLLS", "PHASE 2 · THE ENGINE CHARGES DOWN A LANE · GET OUT OF IT"], 3: ["THE ENGINE BREAKS", "PHASE 3 · FALLING WRECKAGE · WATCH THE RINGS"],
       4: ["RAILGUN", "PHASE 4 · SHE FIRES HERSELF DOWN THE FIELD · DODGE"] },
   };
@@ -909,9 +954,10 @@ export function boot(doc = document) {
     const thunderMat = glow(scene, "strikeThunder", "#9ad8ff", 0.28, true), debrisMat = glow(scene, "strikeDebris", "#ff7a3a", 0.3, true), laneMat = glow(scene, "laneMat", "#ff3a2a", 0.22, true);
     return {
       warn(s) {
-        if (s.kind === "rift") { // Wraithe's Undertow: a pale tear opening in the ground, not a ring
-          const t = makeTear(scene, "riftWarn", { r: s.r, kind: "pale", seed: Math.round(s.x * 31 + s.z * 17), ground: true });
-          t.position.set(s.x, 0.05, s.z); t.scaling.setAll(0.2); strikes.set(s, t); sfx.play("rift", 0.5); return;
+        if (s.kind === "rift" || s.kind === "sever") { // the floor opening: a tear in the ground (pale: Wraithe; black: the masked knight), not a ring
+          const black = s.kind === "sever";
+          const t = makeTear(scene, "riftWarn", { r: s.r, kind: black ? "black" : "pale", seed: Math.round(s.x * 31 + s.z * 17), ground: true });
+          t.position.set(s.x, 0.05, s.z); t.scaling.setAll(0.2); strikes.set(s, t); sfx.play(black ? "tear" : "rift", 0.5); return;
         }
         const d = BB.MeshBuilder.CreateDisc("strikeWarn", { radius: s.r, tessellation: 28 }, scene); d.rotation.x = Math.PI / 2; d.position.set(s.x, 0.05, s.z);
         d.material = s.kind === "debris" ? debrisMat : thunderMat; d.isPickable = false; d.scaling.setAll(0.2); strikes.set(s, d);
@@ -920,6 +966,7 @@ export function boot(doc = document) {
         strikes.get(s)?.dispose(); strikes.delete(s);
         const at = { x: s.x, y: 0.1, z: s.z };
         if (s.kind === "rift") { vfx.flash({ x: s.x, y: 0.3, z: s.z }, 1.8, "#f0ecff", 0.12); sfx.play("rift", 0.8); return; } // it seals
+        if (s.kind === "sever") { vfx.flash({ x: s.x, y: 0.3, z: s.z }, 1.8, "#9cb8ff", 0.12); sfx.play("tear", 0.8); return; }
         if (s.kind === "debris") { vfx.ring(at, s.r * 2.2, "#ff9a5a", 0.3); vfx.sparksAt({ x: s.x, y: 0.4, z: s.z }, 10, "gold", 8, 6); vfx.flash({ x: s.x, y: 0.8, z: s.z }, 2.2, "#ffb070", 0.12); sfx.play("slam", 0.55); }
         else { vfx.pillar(at, 6, 0.35); vfx.flash({ x: s.x, y: 1.4, z: s.z }, 2.6, "#cfeaff", 0.1); vfx.sparksAt({ x: s.x, y: 0.5, z: s.z }, 10, "white", 9, 5); sfx.play("ultActivate", 0.5); }
         camera.shake(0.18);
@@ -933,7 +980,8 @@ export function boot(doc = document) {
       clear() { for (const d of strikes.values()) d.dispose(); strikes.clear(); this.clearLanes(); },
     };
   })();
-  const tearFx = new TearFx(scene); // Wraithe's pale tears in the air
+  const tearFx = new TearFx(scene); // Wraithe's pale tears in the air, the masked knight's black ones
+  let mouthTears = [], lineWall = null; // the knight's P3 tears in the room's mouths, and his Sever Line
   const silenceFx = (() => {
     const zones = new Map(), mat = glow(scene, "silenceMat", "#9a7aff", 0.28, true), fieldMat = glow(scene, "silenceAllMat", "#5a3a9a", 0.12);
     let field = null;
@@ -1017,7 +1065,7 @@ export function boot(doc = document) {
     };
   })();
   const hopGhostMat = glow(scene, "hopGhost", "#8affc8", 0.3, true);
-  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); lilyFx.clear(); groundFx.clear(); tearFx.clear(); root.classList.remove("leaping", "hopblur"); };
+  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); lilyFx.clear(); groundFx.clear(); tearFx.clear(); mouthTears = []; lineWall?.dispose(); lineWall = null; root.classList.remove("leaping", "hopblur"); };
 
   // Squad HQ: the board (rooms to build) and the workbench (tempering gear). One screen, two modes.
   const hqModal = root.querySelector("[data-hq]");

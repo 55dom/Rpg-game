@@ -318,7 +318,7 @@ title: W_CafeMenu
 ---
 THE GILDED SPOON · TODAY: Tea, 4 Marks. Honey Bun, 6. Lantern Latte, 8. Lemon Cake: ask at the counter.
 <<if $CAKE_FOUND>>
-    Someone has added in chalk: "Lemon cake: please don't ask."
+    Someone has added in chalk, "Lemon cake (please don't ask)."
 <<endif>>
 ===
 

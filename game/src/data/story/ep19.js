@@ -256,7 +256,7 @@ export const EPISODE_19 = {
       objective: "The **Lanterns' shelf** is on the far wall. Stand with **Dagrun**.",
       required: ["dagrun"],
       cast: [
-        { id: "dagrun", look: "dagrun", x: -2.5, z: SHELF_Z, yaw: 0, node: "Ep19_HallDagrun" },
+        { id: "dagrun", look: "dagrun", x: -3.1, z: SHELF_Z - 0.4, yaw: 0.3, node: "Ep19_HallDagrun" }, // a step back from the shelf, so Cal's lantern can be looked at on its own
         { id: "juno", look: "juno", x: 3.4, z: 5.4, yaw: -0.6, node: "Ep19_HallSquad" },
         { id: "bas", look: "bas", x: -3.8, z: 6.6, yaw: 0.6 },
         { id: "tamsin", look: "tamsin", x: 1.6, z: 6.6, yaw: -0.2 },

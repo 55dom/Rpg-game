@@ -41,7 +41,7 @@ test("Eps 23–24 are whole episodes chained from Ep 22, each starting Arc 3 fro
   const next = (ep) => ep.beats.find((b) => b.type === "preview").nextEpisode;
   assert.deepEqual([next(EPISODE_22), next(EPISODE_23)], ["ep23", "ep24"]);
   assert.equal(EPISODE_23.beats.find((b) => b.type === "preview").next, undefined, "Ep 23's preview takes Ep 24's own title");
-  assert.equal(next(EPISODE_24), undefined, "Episode 25 isn't written yet");
+  assert.equal(next(EPISODE_24), "ep25", "on to What Lio Knew");
   assert.deepEqual(EPISODE_23.setup, { ...AFTER_EP22 });
   assert.deepEqual(EPISODE_24.setup, { ...AFTER_EP23 });
   assert.equal(AFTER_EP22.BRANNOC_DEAD, 1); assert.equal(AFTER_EP23.EP23_DONE, 1);
@@ -170,9 +170,11 @@ test("the rumor board: hidden until Encounter I, then every theory the camp tell
   for (const id of camp.required) play(camp.cast.find((c) => c.id === id).node, f);
   const board = rumorBoard(f);
   assert.equal(board.title, "WHO IS THE MASKED KNIGHT?");
-  assert.deepEqual(board.rumors.map((r) => r.theory), RUMOR_BOARD.rumors.map((r) => r.theory), "four theories, four people");
+  assert.deepEqual(board.rumors.map((r) => r.theory), RUMOR_BOARD.rumors.slice(0, 4).map((r) => r.theory), "four theories, four people");
   assert.equal(board.seen.length, 1);
   f.set("SABLE_ENCOUNTER", 2);
+  assert.equal(rumorBoard(f).title, "WHO IS THE MASKED KNIGHT?", "seen again, still nameless");
+  f.set("SABLE_NAMED", 1);
   assert.equal(rumorBoard(f).title, "WHO IS THE SABLE KNIGHT?");
   const all = JSON.stringify(RUMOR_BOARD);
   assert.ok(!/\bcal\b|calder|lantern knight who died/i.test(all), "in-world, he's dead and mourned: nobody suggests it");
@@ -195,7 +197,7 @@ const SRC = files(new URL("../src", import.meta.url).pathname);
 
 test("leak test: only the knight's own files carry his name; everything else calls him 'masked'", () => {
   const named = SRC.filter((p) => /\bsable\b/i.test(readFileSync(p, "utf8"))).map((p) => p.split("/src/")[1]).sort();
-  assert.deepEqual(named, ["data/masked.js", "data/rumors.js", "data/story/ep24.js"]);
+  assert.deepEqual(named, ["data/masked.js", "data/rumors.js", "data/story/ep24.js", "data/story/ep26.js"]);
   for (const p of SRC.filter((p) => /story\/(arc3|ep23)\.js$/.test(p))) assert.ok(!/\bsable\b|masked/i.test(readFileSync(p, "utf8")), p);
 });
 

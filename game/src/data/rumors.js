@@ -10,12 +10,14 @@ import { compileExpr, truthy } from "../core/flags.js";
 export const RUMOR_BOARD = Object.freeze({
   show: "$SABLE_ENCOUNTER >= 1",
   titles: Object.freeze([
-    { when: "$SABLE_ENCOUNTER >= 2", text: "WHO IS THE SABLE KNIGHT?" },
+    { when: "$SABLE_NAMED", text: "WHO IS THE SABLE KNIGHT?" },
     { text: "WHO IS THE MASKED KNIGHT?" },
   ]),
   /** What Rook has seen of him, one line per encounter. */
   seen: Object.freeze([
     { when: "$SABLE_ENCOUNTER >= 1", text: "Ironhold, the gate field: a black tear opened under the Cindermaw, and it fell out of the sky onto the Ashfall camp. A masked figure with a long glaive watched from the east ridge, then walked away." },
+    { when: "$SABLE_ENCOUNTER >= 2", text: "The vault beneath Ironhold: he stepped out of the wall, cut the Crown's door open, and fought the whole squad. He broke Bas's arm, took a sealed reliquary, and let you live. He spoke twice." },
+    { when: "$SABLE_NAMED", text: "Aurelin: the Crown's bounty is on every notice board. Five thousand Marks for the Sable Knight." },
   ]),
   /** Theories, in the order they can be heard (the flag is set by whoever says it). */
   rumors: Object.freeze([
@@ -27,6 +29,8 @@ export const RUMOR_BOARD = Object.freeze({
       text: "\"Nothing alive cuts a hole in the world. And the Hollowmarch is full of armor with nobody inside it.\"" },
     { flag: "RUMOR_PARAGON", theory: "The Paragon's secret executioner", who: "Dagrun",
       text: "\"The Paragon keeps one knight off the rolls. No squad, no lantern, no name.\"" },
+    { flag: "RUMOR_CROWN", theory: "One of the Crown's own", who: "a townsperson at the notice board",
+      text: "\"He walked through the vault's wards like he'd been taught them. You don't learn that outside the Crown.\"" },
   ]),
 });
 

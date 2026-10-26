@@ -1,10 +1,11 @@
 // Cutscene timelines (see core/timeline.js for the format). Times are in seconds.
 
-import { IRONHOLD_LAYOUT } from "../zones.js";
+import { IRONHOLD_LAYOUT, VAULT_LAYOUT } from "../zones.js";
 
 const PI = Math.PI;
 const RG = IRONHOLD_LAYOUT.ridge, EN = IRONHOLD_LAYOUT.engine;
 const KNIGHT = { x: RG.x - 1.5, z: RG.z - 4 }; // on the ridge's flat top
+const VT = VAULT_LAYOUT;
 
 export const CUTSCENES = {
   // Episode 1 cold open.
@@ -88,6 +89,58 @@ export const CUTSCENES = {
       { t: 14.6, pose: { id: "juno", name: "point" } },
       { t: 18.6, move: { id: "knight", to: [KNIGHT.x, KNIGHT.z + 8], dur: 4.6 } },
       { t: 22.9, hide: "knight" },
+    ],
+  },
+
+  // Episode 26: the reliquary goes through a seam; Bas won't leave the doorway, and the knight breaks his arm;
+  // Rook gets up; the knight looks at Rook, tilts his head, and steps back through a tear that closes behind him.
+  ep26_arm: {
+    id: "ep26_arm",
+    stage: "vault",
+    duration: 18.5,
+    actors: [
+      { id: "knight", look: "masked", x: VT.plinth.x, z: VT.plinth.z - 0.6, yaw: PI },
+      { id: "bas", look: "bas", x: 0, z: 20.2, yaw: 0 },
+      { id: "rook", look: "player", x: 1.8, z: 15.2, yaw: -0.15 },
+      { id: "juno", look: "juno", x: -2.4, z: 15, yaw: 0.4 },
+      { id: "tamsin", look: "tamsin", x: -3.8, z: 13.6, yaw: 0.6 },
+      { id: "dagrun", look: "dagrun", x: 3.6, z: 13.4, yaw: -0.5 },
+    ],
+    camera: [
+      { t: 0, pos: [0.9, 1.6, 17.2], look: [0, 1.5, 22.6], fov: 0.55 },                            // past Bas, into the alcove
+      { t: 2.6, pos: [0.8, 1.6, 17.6], look: [0, 1.5, 22.4], fov: 0.52, ease: "linear" },
+      { t: 2.6, cut: true, pos: [4.4, 1.5, 20.4], look: [0, 1.4, 20.8], fov: 0.6 },                // the doorway, side on
+      { t: 5.2, pos: [4.2, 1.5, 20.4], look: [0, 1.3, 20.6], fov: 0.58, ease: "linear" },
+      { t: 5.2, cut: true, pos: [-1.3, 1.2, 17.6], look: [0.3, 1.1, 19.7], fov: 0.5 },             // Bas, folded over his arm
+      { t: 7, pos: [-1.2, 1.25, 17.8], look: [0.3, 1.1, 19.7], fov: 0.48, ease: "linear" },
+      { t: 7, cut: true, pos: [0, 3.2, 9], look: [0.4, 1.4, 19], fov: 0.6 },                        // from the room: he walks out
+      { t: 9.4, pos: [0.2, 3, 9.6], look: [0.8, 1.4, 18.4], fov: 0.58, ease: "linear" },
+      { t: 9.4, cut: true, pos: [2.7, 1.7, 13.4], look: [1.2, 1.6, 18.2], fov: 0.5 },              // over Rook's shoulder
+      { t: 11, pos: [2.6, 1.7, 13.6], look: [1.2, 1.7, 18.2], fov: 0.48, ease: "linear" },
+      { t: 11, cut: true, pos: [1.55, 1.9, 16.5], look: [1.2, 1.85, 18.2], fov: 0.36 },            // the mask
+      { t: 13.6, pos: [1.55, 1.9, 16.7], look: [1.2, 1.85, 18.2], fov: 0.34, ease: "linear" },
+      { t: 13.6, cut: true, pos: [6.6, 2, 17.2], look: [1.2, 1.4, 18.6], fov: 0.55 },              // side on: the way out
+      { t: 16.2, pos: [6.4, 2, 17.4], look: [1.2, 1.4, 18.8], fov: 0.55, ease: "linear" },
+      { t: 16.2, cut: true, pos: [0.4, 1.6, 11], look: [0.6, 1.3, 17.5], fov: 0.55 },              // the squad, and Bas in the doorway
+      { t: 18.5, pos: [0.4, 1.6, 11.4], look: [0.4, 1.3, 18], fov: 0.55, ease: "linear" },
+    ],
+    events: [
+      { t: 0, pose: { id: "rook", name: "bow" } },                        // Rook, down on one knee
+      { t: 0.6, cue: "take" }, { t: 0.6, sfx: "tear" },                     // the reliquary, through a seam the size of a hand
+      { t: 2.6, move: { id: "knight", to: [0, 21.3], dur: 1.2 } },
+      { t: 3.6, pose: { id: "bas", name: "fist" } },
+      { t: 4.2, pose: { id: "knight", name: "raise" } }, { t: 4.2, sfx: "swingHeavy" },
+      { t: 4.6, pose: { id: "knight", name: "none" } }, { t: 4.6, sfx: "slam" }, { t: 4.65, sfx: "postureBreak" },
+      { t: 4.7, pose: { id: "bas", name: "bow" } }, { t: 4.7, move: { id: "bas", to: [0.35, 19.5], dur: 0.5 } },
+      { t: 7.2, move: { id: "knight", to: [VT.exit.x - 0.2, VT.exit.z - 0.7], dur: 2.2 } },
+      { t: 9.6, pose: { id: "rook", name: "none" } },
+      { t: 10.2, pose: { id: "rook", name: "point" } },
+      { t: 11.6, pose: { id: "knight", name: "tilt" } },
+      { t: 13.4, pose: { id: "knight", name: "none" } },
+      { t: 13.8, cue: "seamOpen" }, { t: 13.8, sfx: "tear" },
+      { t: 14.6, move: { id: "knight", to: [VT.exit.x, VT.exit.z + 0.3], dur: 1 } },
+      { t: 15.6, hide: "knight" }, { t: 15.6, cue: "seamShut" }, { t: 15.6, sfx: "tear" },
+      { t: 16.4, move: { id: "juno", to: [-0.6, 18.8], dur: 1.8 } },
     ],
   },
 };

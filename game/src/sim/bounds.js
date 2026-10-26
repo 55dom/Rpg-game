@@ -10,12 +10,12 @@ export function constrain(pos, r, b) {
   if (b.radius != null) {
     const d = Math.hypot(pos.x, pos.z), max = b.radius;
     if (d > max) { pos.x *= max / d; pos.z *= max / d; }
-    return pos;
+  } else {
+    const [x0, z0, x1, z1] = b.rect;
+    pos.x = Math.min(x1 - r, Math.max(x0 + r, pos.x));
+    pos.z = Math.min(z1 - r, Math.max(z0 + r, pos.z));
   }
-  const [x0, z0, x1, z1] = b.rect;
-  pos.x = Math.min(x1 - r, Math.max(x0 + r, pos.x));
-  pos.z = Math.min(z1 - r, Math.max(z0 + r, pos.z));
-  for (const s of b.solids ?? []) {
+  for (const s of b.solids ?? []) { // a round arena can have solids too (the Sever Line)
     if (s.circle) {
       const [cx, cz, cr] = s.circle, dx = pos.x - cx, dz = pos.z - cz, d = Math.hypot(dx, dz), min = cr + r;
       if (d < min) { const k = d > 1e-6 ? min / d : 0; pos.x = d > 1e-6 ? cx + dx * k : cx + min; pos.z = d > 1e-6 ? cz + dz * k : pos.z; }

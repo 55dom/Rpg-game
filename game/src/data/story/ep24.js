@@ -189,7 +189,7 @@ export const EPISODE_24 = {
       rook: { x: -3.8, z: -31.6, yaw: -Math.PI / 2 }, // either side of a brazier in the camp, so the wide shot looks between them
       cast: [{ id: "dagrun", look: "dagrun", x: -5.8, z: -31.6, yaw: Math.PI / 2 }],
       set: { EP24_DONE: 1 } },
-    { id: "preview", type: "preview", next: "Episode 25 · What Lio Knew",
+    { id: "preview", type: "preview", nextEpisode: "ep25",
       lines: [
         "Next time on UNWRITTEN:",
         "Lio has kept a secret since the day he joined the Lanterns.",

@@ -169,4 +169,36 @@ export class Sfx {
       default: break;
     }
   }
+
+  /**
+   * A voice heard through a mask (GDD §15.10 MaskIntegrity): a few murmured syllables, pitched down and ringing
+   * in a small hard space. `integrity` 1 is fully processed; lower, and less of the mask is left in it.
+   */
+  maskVoice(integrity = 1, syllables = 3) {
+    if (!this.ctx || !this.enabled) return;
+    const c = this.ctx, k = Math.max(0, Math.min(1, integrity)), t0 = c.currentTime + 0.02;
+    const pitch = 1 - 0.3 * k;                 // how far down it's pushed
+    const out = c.createGain(); out.gain.value = 0.5;
+    // The mask itself: a resonant band, and a short comb (a few centimetres of hard shell) that rings.
+    const ring = c.createBiquadFilter(); ring.type = "peaking"; ring.frequency.value = 850; ring.Q.value = 1 + 9 * k; ring.gain.value = 4 + 10 * k;
+    const delay = c.createDelay(0.05); delay.delayTime.value = 0.0045 + 0.004 * k;
+    const fb = c.createGain(); fb.gain.value = 0.15 + 0.6 * k;
+    const dry = c.createGain(); dry.gain.value = 1 - 0.4 * k;
+    ring.connect(dry).connect(out);
+    ring.connect(delay); delay.connect(fb).connect(delay); delay.connect(out);
+    out.connect(this.master);
+    let t = t0;
+    for (let i = 0; i < syllables; i++) {
+      const dur = 0.11 + Math.random() * 0.1, f = (118 + Math.random() * 18) * pitch;
+      const o = c.createOscillator(); o.type = "sawtooth";
+      o.frequency.setValueAtTime(f * 1.04, t); o.frequency.linearRampToValueAtTime(f * (i === syllables - 1 ? 0.86 : 0.97), t + dur);
+      const formant = c.createBiquadFilter(); formant.type = "bandpass"; formant.frequency.value = (520 + Math.random() * 380) * (0.85 + 0.15 * pitch); formant.Q.value = 3;
+      const g = c.createGain();
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18, t + 0.025); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(formant).connect(g).connect(ring);
+      o.start(t); o.stop(t + dur + 0.05);
+      t += dur + 0.04 + Math.random() * 0.05;
+    }
+    setTimeout(() => { try { out.disconnect(); } catch { /* already gone */ } }, (t - t0 + 0.8) * 1000);
+  }
 }

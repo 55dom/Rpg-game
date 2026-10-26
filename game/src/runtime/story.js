@@ -7,6 +7,7 @@ import { FlagStore } from "../core/flags.js";
 import { parseScript, DialogueRunner, fillText } from "../core/script.js";
 import { EpisodeDirector, validateEpisode, BeatType } from "../sim/episode.js";
 import { CAST, speakerName } from "../data/story/cast.js";
+import { maskIntegrity } from "../data/masked.js";
 import { CUTSCENES } from "../data/story/cutscenes.js";
 import { validateCutscene, sampleCamera, eventsBetween, sampleMove } from "../core/timeline.js";
 import { B, toon2, glow } from "./look.js";
@@ -24,7 +25,7 @@ import { EPISODE_REWARD } from "../data/items.js";
 import { QuestLog } from "../core/quests.js";
 import { QUESTS } from "../data/quests.js";
 import { compileExpr, truthy } from "../core/flags.js";
-import { inRect } from "../sim/bounds.js";
+import { inRect, YARD } from "../sim/bounds.js";
 import { Ambient } from "./ambient.js";
 import { WorldClock } from "../sim/weather.js";
 import { RainFX } from "./weather.js";
@@ -80,7 +81,7 @@ class Stage {
       p.yaw = p.prevYaw = r.yaw ?? 0; p.vel.x = p.vel.y = p.vel.z = 0;
     }
     p.relaxed = true;
-    for (const c of beat.cast ?? beat.actors ?? []) {
+    for (const c of (beat.cast ?? beat.actors ?? []).filter((c) => !c.when || !this.when || this.when(c.when))) { // `when`: only if the story says they're here
       const actor = makeActor(c.x, c.z, c.yaw ?? 0, c.down);
       actor.pos.y = actor.prev.y = c.y ?? 0;
       const rig = new Rig(this.scene, c.look, `story-${c.id}`);
@@ -338,6 +339,7 @@ export class StoryPlayer {
     for (const cs of Object.values(CUTSCENES)) validateCutscene(cs);
     for (const { episode } of episodes) for (const b of episode.beats) if (b.cutscene && !CUTSCENES[b.cutscene]) throw new Error(`${episode.id}/${b.id}: no cutscene ${b.cutscene}`);
     this.stage = new Stage(ctx.scene, ctx.getWorld);
+    this.stage.when = (cond) => truthy(compileExpr(cond)(this.flags));
     this.stage.setPlayerVisible = (on) => ctx.setPlayerVisible?.(on);
     this.stage.setSquadVisible = (on) => ctx.setSquadVisible?.(on);
     this.tweens = [];
@@ -607,7 +609,8 @@ export class StoryPlayer {
       this.stage.lookAt(cast.actor, other);
     }
     if (s.speaker) this._autoFrame(cast?.actor);
-    const name = s.speaker ? speakerName(s.speaker, this.player.name).toUpperCase() : null;
+    const name = s.speaker ? speakerName(s.speaker, this.player.name, this.flags).toUpperCase() : null;
+    if (cast?.voice === "mask" && !this.skipping) this.ctx.sfx?.maskVoice?.(maskIntegrity(Number(this.flags.get("SABLE_ENCOUNTER")) || 0), 2 + Math.min(3, Math.floor(s.text.length / 28)));
     await this.view.line(name, cast?.color, s.text);
   }
 
@@ -737,18 +740,19 @@ export class StoryPlayer {
     }
     if (kind === "door") { await this.doorOfLight(CAST[who]?.actor ?? who); return; }
     if (kind === "rift") { this.riftAt(CAST[who]?.actor ?? who); return; } // a pale seam where someone is about to step out
+    if (kind === "tear") { this.riftAt(CAST[who]?.actor ?? who, "black"); return; } // a black one
     if (kind === "book") await this.bookDescends(CAST[who]?.actor ?? who, who === "Severin" ? "tome" : "thin");
   }
 
-  /** A pale tear in the air at an actor's spot, facing where they face. It doesn't hold up the script. */
-  riftAt(id) {
+  /** A tear in the air at an actor's spot (pale, or black), facing where they face. It doesn't hold up the script. */
+  riftAt(id, kind = "pale") {
     const a = this.stage.get(id);
     if (!a) return;
-    const node = makeTear(this.ctx.scene, "story-rift", { r: 0.85, kind: "pale", seed: 7, ground: false });
+    const node = makeTear(this.ctx.scene, "story-rift", { r: 0.85, kind, seed: kind === "black" ? 13 : 7, ground: false });
     node.position.set(a.pos.x, (a.pos.y ?? 0) + 1.15, a.pos.z);
     node.rotation.y = a.yaw;
     node.scaling.setAll(0.01);
-    this.ctx.sfx.play("rift");
+    this.ctx.sfx.play(kind === "black" ? "tear" : "rift");
     const dur = this.skipping ? 0.05 : 3;
     this.tweens.push({ t: 0, dur, fn: (k) => node.scaling.setAll(Math.max(0.01, Math.min(1, k * 6, (1 - k) * 4))), done: () => node.dispose(false, false) });
   }
@@ -819,6 +823,7 @@ export class StoryPlayer {
     // Episode beats on a zone's set use that zone's walls and buildings, so nothing can be walked through.
     const zone = beat.zone ?? Object.values(ZONES).find((z) => z.stage === beat.stage && !z.roamOnly);
     if (zone && !beat.zone) { world.bounds = zone.bounds; this.ctx.camera.bounds = zone.bounds; }
+    else if (!zone && !beat.zone) { world.bounds = YARD; this.ctx.camera.bounds = null; } // a set with no zone (the vault): its round floor
     // The Lighthouse's straw dummies are real targets: hit them as long as you like.
     const set = this.ctx.sets?.get?.(beat.stage);
     if (set?.dummies) {
@@ -1305,7 +1310,7 @@ export class StoryPlayer {
   }
 
   /** A subtitle line during a fight, with the player's name and pronouns filled in. */
-  say(speakerId, text) { this.ctx.hud.say(speakerName(speakerId, this.player.name), fillText(text, { ...this.player, flags: this.flags })); }
+  say(speakerId, text) { this.ctx.hud.say(speakerName(speakerId, this.player.name, this.flags), fillText(text, { ...this.player, flags: this.flags })); }
 
   /** A tutorial pill; {Light}, {Dodge}… become the current device's buttons. */
   _showHint(text) {

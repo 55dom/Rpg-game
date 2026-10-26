@@ -48,6 +48,14 @@ export const basOptions = () => [
 ];
 export const basSupports = () => [{ ability: BAS_ABILITIES.BastionWall, kind: "shield", cooldownFrames: 600 }];
 
+// Bas with his left arm broken (BAS_ARM_BROKEN, after the vault in Ep 26): one-handed, slower, no Boulder Fist.
+// He still holds the wall (Bastion Wall) and still calls the pillar; he just can't throw his weight behind a punch.
+export const BAS_INJURED = Object.freeze({
+  stats: Object.freeze({ ...BAS_STATS, maxHealth: 240, maxPosture: 100, runSpeed: 5 }),
+  options: () => [new AttackOption(BAS_ABILITIES.StoneJab, 0, 2.3, 2, 55)],
+  look: "basSling",
+});
+
 // ---- Juno ---------------------------------------------------------------------------------
 export const JUNO_STATS = Object.freeze({
   name: "Juno", maxHealth: 180, maxPosture: 80, runSpeed: 7, turnRate: 0.3, radius: 0.42, height: 1.75,
@@ -90,7 +98,7 @@ export const junoSupports = () => [{ ability: JUNO_ABILITIES.Stitch, kind: "heal
 
 /** Party roster: how each companion is built and which move their Assist call performs. */
 export const COMPANIONS = Object.freeze({
-  bas: { stats: BAS_STATS, hitboxes: BAS_HITBOXES, options: basOptions, supports: basSupports, assist: BAS_ABILITIES.PillarUppercut, slot: [1.8, -1.4] },
+  bas: { stats: BAS_STATS, hitboxes: BAS_HITBOXES, options: basOptions, supports: basSupports, assist: BAS_ABILITIES.PillarUppercut, slot: [1.8, -1.4], injured: BAS_INJURED },
   brannoc: BRANNOC_COMPANION, // fights beside the Lanterns on the Iron Front (Eps 20–22)
   juno: { stats: JUNO_STATS, hitboxes: JUNO_HITBOXES, options: junoOptions, supports: junoSupports, assist: JUNO_ABILITIES.SnareLine, slot: [-1.8, -1.4] },
 });

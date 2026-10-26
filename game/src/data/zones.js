@@ -30,6 +30,7 @@ export const AURELIN_LAYOUT = (() => {
     grate: { x: 30, z: -24 }, // the way down to the Undercroft
     chapel: { x: 16, z: 12, w: 6, d: 9 },
     tavern: { x: -16, z: -8 },  // "The Lantern & Anchor", in the west-street house nearest the gate
+    notice: { x: -6.2, z: -16, yaw: 0.5 }, // the Crown's notice board on the gate road (bounties go up here)
     // The poor quarter by the grate: shacks of patched planks.
     shacks: [{ x: 37, z: -27, w: 4, d: 4 }, { x: 37, z: -20.5, w: 4, d: 3.6 }, { x: 24.5, z: -29.6, w: 4, d: 3 }],
     // The Gilded Spoon, a café at the top of the Lowmarket. Its door faces the stalls (south).
@@ -84,6 +85,18 @@ export const IRONHOLD_LAYOUT = {
   braziers: [[-4.5, -24.5], [4.5, -24.5], [-6, -33], [6, -33], [-8.5, -23.5]],
   barricades: [[-14, 18, 0.2], [-5, 20, -0.1], [6, 19.5, 0.15], [15, 17, -0.25], [-22, 10, 0.9], [22, 8, -0.9]],
 };
+/**
+ * The vault beneath Ironhold (Ep 26): a round stone rotunda with the Crown's sealed door to the north and four
+ * corridors leaving on the diagonals. Fights use the 17 m circle at its centre; walls and pillars stand outside it.
+ */
+export const VAULT_LAYOUT = {
+  radius: 21.5, wallHeight: 7.5, segments: 24,
+  door: { x: 0, z: 21, w: 5, h: 6 }, plinth: { x: 0, z: 23.4 },
+  exit: { x: 1.4, z: 18.9 }, // where he leaves the room (Ep 26's cutscene)
+  mouths: [0.25, 0.75, 1.25, 1.75].map((k) => k * Math.PI), // the corridors' angles (sin a, cos a): the diagonals
+  mouthHalf: 0.16, // half the angle each corridor's gap takes out of the wall
+  pillars: 18.8, braziers: 19.6,
+};
 export const HOME_LAYOUT = { half: [5, 4], door: { x: 0, z: -4 }, table: { x: 1.6, z: 0.4 }, bed: { x0: -4.9, z0: 1, x1: -2.4, z1: 3.9 }, hearth: { x0: 1.2, z0: 3.3, x1: 3.4, z1: 4 } };
 
 // ---- Thornwick, the home village ------------------------------------------------------------
@@ -116,6 +129,7 @@ const aurelinSolids = [
   box(A.chapel.x - A.chapel.w / 2, A.chapel.z - A.chapel.d / 2, A.chapel.x + A.chapel.w / 2, A.chapel.z + A.chapel.d / 2),
   ...A.shacks.map((h) => box(h.x - h.w / 2, h.z - h.d / 2, h.x + h.w / 2, h.z + h.d / 2)),
   circle(-8.5, -27.5, 1.3), circle(-8.5, -25.2, 0.9), // the cart by the gate, and its horse
+  circle(A.notice.x, A.notice.z, 0.9), // the notice board
   // City walls on either side of the south gate, and the gate's two towers.
   box(-42, -36, -4, -33), box(4, -36, 42, -33), circle(-5, -34.5, 2.1), circle(5, -34.5, 2.1),
   // The Hall's colonnade, the Crown Ward's front hedges, the street lamps.
@@ -169,14 +183,16 @@ export const ZONES = {
       { id: "dagrun", look: "dagrun", x: -7, z: 5.6, yaw: 0.8, node: "W_Dagrun" }, // asleep in his chair: no routine
       { id: "juno", look: "juno", x: 3.6, z: 5, yaw: -1.4, node: "W_Juno",
         routine: { steps: [{ do: "work", at: [3.6, 5], face: -1.4, anim: "sew", dur: [8, 12] }, { do: "wander", around: [4, 3], r: 2, dur: [6, 9] }] } },
-      { id: "bas", look: "bas", x: -5.6, z: -2.6, yaw: 0.6, node: "W_Bas",
+      { id: "bas", look: "bas", x: -5.6, z: -2.6, yaw: 0.6, node: "W_Bas", when: "not $BAS_ARM_BROKEN",
         routine: { steps: [{ do: "work", at: [-5.3, -3.4], face: -1.75, anim: "punch", dur: [10, 14] }, { do: "idle", at: [-4.2, -1.6], face: 0.8, dur: [4, 6] }] } },
+      { id: "bas", look: "basSling", x: -5.6, z: -2.6, yaw: 0.6, node: "W_Bas", when: "$BAS_ARM_BROKEN", // after the vault: one-armed, watching the others train
+        routine: { steps: [{ do: "idle", at: [-4.2, -1.6], face: -1.75, dur: [10, 14] }, { do: "wander", around: [-4, -1], r: 1.5, dur: [5, 7] }] } },
       { id: "tamsin", look: "tamsin", x: 6.4, z: 7.2, yaw: -1.6, node: "W_Tamsin",
         routine: { steps: [{ do: "work", at: [6.4, 7.2], face: -1.6, anim: "strum", dur: [12, 18] }, { do: "idle", at: [2.5, 10.9], face: 0, dur: [5, 7] }] } },
       { id: "cal", look: "cal", x: 1.6, z: -3.4, yaw: -0.6, node: "W_Cal", when: "not $CAL_STATE", // gone after Ep 18
         routine: { steps: [{ do: "idle", at: [1.6, -3.4], face: -0.6, dur: [8, 12] }, { do: "work", at: [0.4, -6.2], face: Math.PI, anim: "practice", dur: [7, 10] },
           { do: "idle", at: [-1.2, 3.2], face: Math.PI * 0.8, dur: [5, 8] }] } },
-      { id: "lio", look: "lio", x: -2.6, z: 9.6, yaw: Math.PI * 0.9, node: "W_Lio",
+      { id: "lio", look: "lio", x: -2.6, z: 9.6, yaw: Math.PI * 0.9, node: "W_Lio", when: "$LIO_STATUS != 1", // sent away for now: at the Hall's archive instead
         routine: { role: "civilian", steps: [{ do: "work", at: [-2.6, 9.6], face: Math.PI * 0.9, anim: "read", dur: [14, 20] }, { do: "idle", at: [1.6, 10.9], face: 0, dur: [4, 6] }] } },
     ],
     shelters: [[-5, 9.6], [-3, 9.6], [-1.8, 9.8]], // under the keeper's house eaves
@@ -413,7 +429,8 @@ export const ZONES = {
     ] },
     spawn: { x: 0, z: -8.6, yaw: 0 },
     cast: [{ id: "keeper", look: "keeper", x: 1.6, z: -7.4, yaw: -2.6, node: "W_HallKeeperIn",
-      routine: { role: "elder", steps: [{ do: "idle", at: [1.6, -7.4], face: -2.6, dur: [10, 14] }, { do: "work", at: [-4.2, 2.2], face: -Math.PI / 2, anim: "light", dur: [6, 8] }, { do: "work", at: [4.2, -2.2], face: Math.PI / 2, anim: "light", dur: [6, 8] }] } }],
+      routine: { role: "elder", steps: [{ do: "idle", at: [1.6, -7.4], face: -2.6, dur: [10, 14] }, { do: "work", at: [-4.2, 2.2], face: -Math.PI / 2, anim: "light", dur: [6, 8] }, { do: "work", at: [4.2, -2.2], face: Math.PI / 2, anim: "light", dur: [6, 8] }] } },
+      { id: "lio", look: "lio", x: 3.4, z: 6.6, yaw: -Math.PI / 2, node: "W_LioHall", when: "$LIO_STATUS == 1" }], // the archive corner, while he's sent away
     pickups: [
       { id: "calLantern", x: HL.lanternX(1), z: HL.half[1] - 1.7, marker: false, node: "W_Hall_CalLantern", label: "Cal's lantern" },
       { id: "myLantern", x: HL.lanternX(6), z: HL.half[1] - 1.7, marker: false, node: "W_Hall_MyLantern", label: "Your lantern" },

@@ -6,9 +6,8 @@
 
 /** Is a point (with body radius r) inside the bounds and clear of every solid? */
 export function isFree(x, z, r, b) {
-  if (b.radius != null) return Math.hypot(x, z) <= b.radius - r;
-  const [x0, z0, x1, z1] = b.rect;
-  if (x < x0 + r || x > x1 - r || z < z0 + r || z > z1 - r) return false;
+  if (b.radius != null) { if (Math.hypot(x, z) > b.radius - r) return false; }
+  else { const [x0, z0, x1, z1] = b.rect; if (x < x0 + r || x > x1 - r || z < z0 + r || z > z1 - r) return false; }
   for (const s of b.solids ?? []) {
     if (s.circle) { const [cx, cz, cr] = s.circle; if (Math.hypot(x - cx, z - cz) < cr + r) return false; }
     else if (s.box) { const [bx0, bz0, bx1, bz1] = s.box; if (x > bx0 - r && x < bx1 + r && z > bz0 - r && z < bz1 + r) return false; }
@@ -36,9 +35,8 @@ function hitsBox(ax, az, bx, bz, x0, z0, x1, z1) {
 
 /** Can a body of radius r walk straight from a to b? */
 export function lineClear(a, b, r, bounds) {
-  if (bounds.radius != null) return isFree(a.x, a.z, r, bounds) && isFree(b.x, b.z, r, bounds); // a disc is convex
-  const [x0, z0, x1, z1] = bounds.rect;
-  for (const p of [a, b]) if (p.x < x0 + r || p.x > x1 - r || p.z < z0 + r || p.z > z1 - r) return false;
+  if (bounds.radius != null) { for (const p of [a, b]) if (Math.hypot(p.x, p.z) > bounds.radius - r) return false; } // a disc is convex
+  else { const [x0, z0, x1, z1] = bounds.rect; for (const p of [a, b]) if (p.x < x0 + r || p.x > x1 - r || p.z < z0 + r || p.z > z1 - r) return false; }
   for (const s of bounds.solids ?? []) {
     if (s.circle) { if (hitsCircle(a.x, a.z, b.x, b.z, s.circle[0], s.circle[1], s.circle[2] + r)) return false; }
     else if (s.box && hitsBox(a.x, a.z, b.x, b.z, s.box[0] - r, s.box[1] - r, s.box[2] + r, s.box[3] + r)) return false;

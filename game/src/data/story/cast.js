@@ -1,5 +1,9 @@
 // Who can speak in dialogue: display name, name-plate color, and the stage actor they belong to.
 // "Rook" is the player: the display name is whatever the player chose.
+// `label(flags)`: a name that follows the story (the masked knight is "???" until he's named).
+// `voice: "mask"`: his lines are heard through the mask (runtime/audio.js maskVoice).
+
+import { maskedLabel } from "../masked.js";
 
 export const CAST = Object.freeze({
   Rook: { name: null, color: "#ffd98a", actor: "player" },
@@ -23,6 +27,9 @@ export const CAST = Object.freeze({
   Scout: { name: "Warden Scout", color: "#c9d2dc", actor: "scout" },
   Varka: { name: "General Varka Ironsong", color: "#9ad8ff", actor: "varka" },
   Wraithe: { name: "Wraithe", color: "#e8e4f4", actor: "wraithe" }, // never speaks: the Choir's silent school
+  Masked: { name: "Masked Knight", color: "#9cb8ff", actor: "masked", label: maskedLabel, voice: "mask" },
+  Hale: { name: "Quartermaster Hale", color: "#c9d2dc", actor: "hale" },
+  Archivist: { name: "Crown Archivist", color: "#d8dce8", actor: "archivist" },
   Vendor: { name: "Lowmarket Vendor", color: "#ffb38a", actor: "vendor" },
   Guard: { name: "Gate Guard", color: "#c9d2dc", actor: "guard" },
   Guard2: { name: "Hall Guard", color: "#c9d2dc", actor: "guard2" },
@@ -49,4 +56,4 @@ export const CAST = Object.freeze({
   Crowd: { name: "Candidates", color: "#aab4cc", actor: null },
 });
 
-export const speakerName = (id, playerName) => (id === "Rook" ? playerName : CAST[id]?.name ?? id);
+export const speakerName = (id, playerName, flags = null) => (id === "Rook" ? playerName : CAST[id]?.label ? CAST[id].label(flags) : CAST[id]?.name ?? id);

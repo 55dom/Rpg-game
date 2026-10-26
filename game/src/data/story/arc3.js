@@ -9,3 +9,14 @@ export const AFTER_EP22 = Object.freeze({ ...ARC3_BASE, HAS_SUMMONS: 1, EP19_DON
 
 /** By the end of Episode 23: the notebook is found (Juno keeps it unless she has shared it), Wraithe has been seen. */
 export const AFTER_EP23 = Object.freeze({ ...AFTER_EP22, EP23_DONE: 1, NOTEBOOK_FOUND: 1, JUNO_HAS_NOTEBOOK: 1, WRAITHE_SEEN: 1 });
+
+/** By the end of Episode 24: the Cindermaw fell out of the sky, and the camp told its theories. */
+export const AFTER_EP24 = Object.freeze({ ...AFTER_EP23, EP24_DONE: 1, CLUE_B1: 1, SABLE_ENCOUNTER: 1, CINDERMAW_DOWN: 1,
+  RUMOR_DEFECTOR: 1, RUMOR_ASHFALL: 1, RUMOR_HOLLOW: 1, RUMOR_PARAGON: 1 });
+
+/** By the end of Episode 25: Lio's secret is out (forgiven, unless a save says he was sent away). */
+export const AFTER_EP25 = Object.freeze({ ...AFTER_EP24, EP25_DONE: 1, LIO_SECRET: 1, LIO_STATUS: 2, HAS_VAULT_ORDERS: 1 });
+
+/** By the end of Episode 26: the vault was opened and robbed, Bas's arm is broken, and the Crown has posted a bounty. */
+export const AFTER_EP26 = Object.freeze({ ...AFTER_EP25, EP26_DONE: 1, SABLE_ENCOUNTER: 2, SABLE_NAMED: 1, VAULT_BREACHED: 1, VAULT_TAKEN: 1,
+  BAS_ARM_BROKEN: 1, CLUE_B2: 1, CLUE_B3: 1, RUMOR_CROWN: 1 });

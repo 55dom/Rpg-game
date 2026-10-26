@@ -73,3 +73,19 @@ test("every episode walk-around: each person or thing it needs can be reached on
   }
   assert.ok(checked >= 15, `checked ${checked}`);
 });
+
+test("every episode walk-around: people you can talk to stand far enough apart (1.4 m) that you can pick who to talk to", async () => {
+  const files = readdirSync(new URL("../src/data/story/", import.meta.url)).filter((f) => /^ep\d+\.js$/.test(f));
+  for (const f of files) {
+    const mod = await import(`../src/data/story/${f}`);
+    for (const ep of Object.values(mod).filter((v) => v?.beats)) {
+      for (const b of ep.beats.filter((x) => x.type === "explore")) {
+        const talk = [...(b.cast ?? []).filter((c) => c.node), ...(b.pickups ?? [])];
+        for (let i = 0; i < talk.length; i++) for (let j = i + 1; j < talk.length; j++) {
+          const d = Math.hypot(talk[i].x - talk[j].x, talk[i].z - talk[j].z);
+          assert.ok(d >= 1.4, `${ep.id}/${b.id}: ${talk[i].id} and ${talk[j].id} are ${d.toFixed(2)} m apart`);
+        }
+      }
+    }
+  }
+});

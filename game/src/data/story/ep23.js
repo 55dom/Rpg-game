@@ -239,7 +239,7 @@ export const EPISODE_23 = {
       objective: "**The foot of the tower**, on the side that faces the Dry Sea. Juno is already there.",
       required: ["towerStone"],
       cast: [
-        { id: "juno", look: "juno", x: STONE.x + 1.1, z: STONE.z - 0.8, yaw: -0.94, node: "Ep23_JunoAtTower" },
+        { id: "juno", look: "juno", x: STONE.x + 1.4, z: STONE.z - 1.1, yaw: -0.9, node: "Ep23_JunoAtTower" },
         { id: "tamsin", look: "tamsin", x: 6.4, z: 7.2, yaw: -1.6, node: "Ep23_Tamsin_Again" },
         { id: "dagrun", look: "dagrun", x: -7, z: 5.6, yaw: 0.8, node: "Ep23_Dagrun_Again" },
       ],

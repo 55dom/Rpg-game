@@ -17,6 +17,8 @@ import { VARKA_STATS, VARKA_HITBOXES, varkaOptions, ASH_OBJECTS, ASH_OBJECT_HITB
 import { VarkaController, SparBoss } from "./varka.js";
 import { WRAITHE_STATS, WRAITHE_HITBOXES, wraitheOptions } from "../data/wraithe.js";
 import { WraitheController } from "./wraithe.js";
+import { MASKED_STATS, MASKED_HITBOXES, maskedOptions } from "../data/masked.js";
+import { MaskedController } from "./masked.js";
 const OBJECTS = { ...OBJECTS2, ...ASH_OBJECTS }, OBJECT_HITBOXES = { ...OBJECT_HITBOXES2, ...ASH_OBJECT_HITBOXES };
 import { CAL_STATS, CAL_HITBOXES, calOptions } from "../data/cal.js";
 import { SEVERIN_STATS, SEVERIN_HITBOXES, severinOptions } from "../data/severin.js";
@@ -58,6 +60,7 @@ const BOSSES = {
   varka: { stats: VARKA_STATS, hitboxes: VARKA_HITBOXES, options: varkaOptions, traits: { heavy: true, armoredAttacks: true }, Controller: VarkaController, z: 6 },
   gullmaw: { stats: GULLMAW_STATS, hitboxes: GULLMAW_HITBOXES, options: gullmawOptions, traits: { heavy: true, armoredAttacks: true }, Controller: GullmawController, z: 7 },
   wraithe: { stats: WRAITHE_STATS, hitboxes: WRAITHE_HITBOXES, options: wraitheOptions, traits: {}, Controller: WraitheController, z: 6 },
+  masked: { stats: MASKED_STATS, hitboxes: MASKED_HITBOXES, options: maskedOptions, traits: { heavy: true }, Controller: MaskedController, z: 7 },
 };
 export const BOSS_KINDS = Object.freeze(Object.keys(BOSSES));
 
@@ -309,16 +312,18 @@ export class World {
     this.silences = []; this.silenceAll = false; this.dodgeHush = 0; this.waves = []; this.strikes = [];
     this.companions = [];
     this.projectiles = [];
+    this.injured = new Set(o.injured ?? []); // squadmates fighting hurt (Bas's arm after Ep 26)
     if (o.companions) for (const kind of Array.isArray(o.companions) ? o.companions : ["bas", "juno"]) this.addCompanion(kind); // the squad by default; guests (Brannoc) by name
   }
 
   addCompanion(kind) {
-    const c = COMPANIONS[kind];
+    const c = COMPANIONS[kind], hurt = this.injured?.has(kind) ? c.injured : null;
     const p = this.player;
     const f = new Fighter(this, {
-      id: kind, kind, team: Team.Player, stats: c.stats, hitboxes: c.hitboxes, companion: true, slot: c.slot,
-      brain: new CompanionBrain(kind, c.options(), c.supports(), this.rng), x: p.pos.x + c.slot[0], z: p.pos.z + c.slot[1],
+      id: kind, kind, team: Team.Player, stats: hurt?.stats ?? c.stats, hitboxes: c.hitboxes, companion: true, slot: c.slot,
+      brain: new CompanionBrain(kind, (hurt?.options ?? c.options)(), c.supports(), this.rng), x: p.pos.x + c.slot[0], z: p.pos.z + c.slot[1],
     });
+    if (hurt) { f.injured = true; f.look = hurt.look; }
     f.assistAbility = c.assist;
     this.companions.push(f);
     this.emit({ type: "spawn", fighter: f });
@@ -502,10 +507,11 @@ export class World {
    * A strike from above (Thunderheads, falling wreckage): a ring on the ground now, the hit after `delay` frames.
    * Anyone of the other side inside the ring when it lands is hit. Step out of it.
    * `lift` (Wraithe's Undertow): the ground opens instead, and whoever it catches drops out of the air that high up.
+   * `landing`: and lands hard for that much (never the last of their health), unless they jump or dash in the air first.
    */
-  addStrike(owner, x, z, { delay = 60, r = 1.7, spec, ability, kind = "thunder", lift = 0 }) {
+  addStrike(owner, x, z, { delay = 60, r = 1.7, spec, ability, kind = "thunder", lift = 0, landing = 0 }) {
     ({ x, z } = constrain({ x, z }, 0.3, this.bounds));
-    const s = { owner, x, z, r, t: delay, delay, spec, ability, kind, lift };
+    const s = { owner, x, z, r, t: delay, delay, spec, ability, kind, lift, landing };
     this.strikes.push(s);
     this.emit({ type: "strikeWarn", strike: s });
     return s;
@@ -519,7 +525,8 @@ export class World {
         const outcome = this._resolve(s.owner, t, { spec: s.spec, ability: s.ability, hitSet: new Set(), origin: { x: s.x, y: 0.5, z: s.z }, projectile: true });
         if (s.lift && outcome === HitOutcome.Hit && t.alive) { // through the floor, and out of the air above it
           t.pos.y = t.prev.y = s.lift; t.vel.y = 0; t.grounded = false; t.knock.x = t.knock.z = 0;
-          this.emit({ type: "riftDrop", fighter: t, at: { x: t.pos.x, y: s.lift, z: t.pos.z }, from: { x: s.x, z: s.z } });
+          if (s.landing) { t.dropLanding = s.landing; t.airJumps = 1; t.airDashes = 1; } // an air jump or dash before landing saves you
+          this.emit({ type: "riftDrop", fighter: t, at: { x: t.pos.x, y: s.lift, z: t.pos.z }, from: { x: s.x, z: s.z }, kind: s.kind });
         }
       }
       this.emit({ type: "strike", strike: s });
@@ -957,7 +964,7 @@ export class World {
         if (f.mana) f.mana.add(f.stats.manaRegenPerSecond * SECONDS_PER_TICK);
       }
       f.controller.tick(frame);
-      c.superArmor = (f.traits.armoredAttacks && f.runner.isRunning) || f.tags.has("WARDED") || !!f.boss?.oath; // Galen's Oath: nothing staggers him
+      c.superArmor = (f.traits.armoredAttacks && f.runner.isRunning) || f.tags.has("WARDED") || !!f.boss?.oath || !!f.boss?.armored; // Galen's Oath: nothing staggers him; a controller's own moments (the Sever Line)
       if (f === this.player) {
         c.blocking = f.holdBlock && !f.runner.isRunning && f.grounded && c.canAct;
       }
@@ -1241,6 +1248,12 @@ export class World {
       f.pos.y += f.vel.y * dt;
       if (f.pos.y <= 0) {
         f.pos.y = 0; f.vel.y = 0; f.grounded = true;
+        if (f.dropLanding) { // dropped out of the sky: did they right themselves in the air?
+          const recovered = f.airJumps === 0 || f.airDashes === 0, hp = f.combatant.health.current;
+          if (!recovered) { f.combatant.takeDamage(Math.min(f.dropLanding, hp - 1)); f.combatant.stagger(30); }
+          this.emit({ type: recovered ? "airRecover" : "hardLanding", fighter: f, at: { x: f.pos.x, y: 0, z: f.pos.z } });
+          f.dropLanding = 0;
+        }
         f.airJumps = 1; f.airDashes = 1; f.hoverFrames = 0; f.juggleHits = 0;
         const slam = f.slamming; f.slamming = false;
         if (f.runner.isRunning && AIR.has(f.current.id)) f.runner.interrupt();
