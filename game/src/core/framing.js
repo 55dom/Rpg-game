@@ -69,7 +69,8 @@ export function shotProblems(cs, t, scaleOf = () => 1) {
     let covered = 0, face = 0, by = null, most = 0;
     for (const near of seen) {
       if (near === far || near.along >= far.along - 0.3) continue;
-      if (Math.hypot(near.x - qx, near.z - qz) < 0.7) continue; // the subject of a close shot may stand in front of anyone
+      const closeUp = (near.hi - near.lo) > 1.2 * half * 2; // their body runs well off the frame: a close-up, so whoever's behind is just background
+      if (closeUp && Math.hypot(near.x - qx, near.z - qz) < 0.7) continue; // the subject of a close-up may stand in front of anyone
       const across = overlap(near.ang - near.w, near.ang + near.w, far.ang - far.w, far.ang + far.w) / (2 * far.w);
       const up = overlap(near.lo, near.hi, far.lo, far.hi) / Math.max(1e-6, far.hi - far.lo); // a camera up high sees over people
       covered += across * up; // two or three people in a column hide the one at the back between them

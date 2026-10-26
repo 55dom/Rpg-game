@@ -66,8 +66,8 @@ export const CUTSCENES = {
       { t: 3.2, pos: [1.2, 3.5, -5.4], look: [0, 2.8, 22], fov: 0.6, ease: "linear" },
       { t: 3.2, cut: true, pos: [0.9, 0.35, 5.4], look: [0, 4.5, 16], fov: 0.7 },              // low in front of Bas, looking up at the jaw
       { t: 6, pos: [0.8, 0.4, 5.8], look: [0, 4.8, 15], fov: 0.72, ease: "linear" },
-      { t: 6, cut: true, pos: [-2.2, 2.0, 6.85], look: [0.3, 1.8, 3.2], fov: 0.6 },              // Bas, planting his feet
-      { t: 7.4, pos: [-2.1, 2.0, 6.55], look: [0.3, 1.8, 3.2], fov: 0.58, ease: "linear" },
+      { t: 6, cut: true, pos: [-0.95, 2.0, 7.7], look: [0.3, 1.8, 3.2], fov: 0.64 },              // Bas, planting his feet
+      { t: 7.4, pos: [-0.85, 2.0, 7.4], look: [0.3, 1.8, 3.2], fov: 0.62, ease: "linear" },
       { t: 7.4, cut: true, pos: [-20.5, 6.6, 10.8], look: [1, 1.4, 5], fov: 0.62 },            // high, from out on the field (the ridge far behind)
       { t: 9, pos: [-20.1, 6.6, 10.5], look: [1, 1.4, 5.2], fov: 0.62, ease: "linear" },
       { t: 9, cut: true, pos: [-4, 9, -1], look: [0, 0, 8], fov: 0.66 },                        // high, down onto the tear sealing
@@ -126,8 +126,8 @@ export const CUTSCENES = {
       { t: 11, pos: [0.65, 2.0, 13.0], look: [OUT.x, 1.7, OUT.z], fov: 0.48, ease: "linear" },
       { t: 11, cut: true, pos: [-2.2, 1.9, 15.6], look: [OUT.x, 1.75, OUT.z], fov: 0.58 },             // the mask: head and shoulders
       { t: 13.6, pos: [-2.1, 1.9, 15.7], look: [OUT.x, 1.75, OUT.z], fov: 0.56, ease: "linear" },
-      { t: 13.6, cut: true, pos: [6.0, 2.2, 15.45], look: [OUT.x, 1.4, OUT.z + 0.5], fov: 0.58 },            // side on: the way out
-      { t: 16.2, pos: [5.8, 2.2, 15.65], look: [OUT.x, 1.4, OUT.z + 0.7], fov: 0.58, ease: "linear" },
+      { t: 13.6, cut: true, pos: [4.2, 4.6, 14.35], look: [OUT.x - 0.2, 1.4, OUT.z + 0.6], fov: 0.58 }, // from above: the way out
+      { t: 16.2, pos: [4.1, 4.5, 14.6], look: [OUT.x - 0.2, 1.4, OUT.z + 0.7], fov: 0.58, ease: "linear" },
       { t: 16.2, cut: true, pos: [0.4, 1.6, 10.4], look: [0.6, 1.3, 17.5], fov: 0.63 },              // the squad, and Bas in the doorway
       { t: 18.5, pos: [0.4, 1.6, 10.8], look: [0.4, 1.3, 18], fov: 0.63, ease: "linear" },
     ],
