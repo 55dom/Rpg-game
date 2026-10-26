@@ -5,6 +5,11 @@ import { IRONHOLD_LAYOUT, VAULT_LAYOUT } from "../zones.js";
 const PI = Math.PI;
 const RG = IRONHOLD_LAYOUT.ridge, EN = IRONHOLD_LAYOUT.engine;
 const KNIGHT = { x: RG.x - 1.5, z: RG.z - 4 }; // on the ridge's flat top
+/** Where the squad stands to meet the Cindermaw (Ep 24's engine scene uses the same places). */
+export const SQUAD = Object.freeze({
+  bas: { x: 0.3, z: 3.2 }, rook: { x: -1.1, z: 1.3 }, dagrun: { x: -2.8, z: 0.7 }, juno: { x: 1.9, z: 1.5 },
+  tamsin: { x: -4.3, z: -0.8 }, lio: { x: 3.7, z: 0.1 },
+});
 const VT = VAULT_LAYOUT;
 
 export const CUTSCENES = {
@@ -20,8 +25,8 @@ export const CUTSCENES = {
       { t: 5.6, cut: true, pos: [-1.4, 0.45, -5], look: [0.4, 2.4, 12], fov: 0.6 },        // low angle: the street on fire
       { t: 9, pos: [-1.1, 0.5, -3.8], look: [0.4, 2.4, 12], fov: 0.56, ease: "linear" },   // slow push
       { t: 9, cut: true, pos: [0.9, 1.6, -7], look: [0, 1.7, 14], fov: 0.36 },             // long lens down the street
-      { t: 15, pos: [0.7, 1.5, -5.5], look: [0, 1.6, 4], fov: 0.46, ease: "inOut" },       // the figure comes toward us
-      { t: 18, pos: [0.7, 1.5, -5.5], look: [0, 1.6, 2], fov: 0.46 },
+      { t: 15, pos: [0.7, 1.5, -5.5], look: [0, 1.6, 3.6], fov: 0.46, ease: "inOut" },     // the figure comes toward us
+      { t: 18, pos: [0.7, 1.5, -5.5], look: [0, 1.6, 1.2], fov: 0.5, ease: "linear" },
     ],
     events: [
       { t: 0, sfx: "fire" },
@@ -45,38 +50,39 @@ export const CUTSCENES = {
     id: "ep24_tear",
     stage: "ironhold",
     duration: 24.5,
+    // The squad in a loose arc (Bas out in front), so no camera angle stacks them one behind another.
     actors: [
-      { id: "rook", look: "player", x: 0, z: 1, yaw: 0 },
-      { id: "bas", look: "bas", x: 0.4, z: 3, yaw: 0 },
-      { id: "dagrun", look: "dagrun", x: -1.8, z: 0.6, yaw: 0.1 },
-      { id: "juno", look: "juno", x: 1.8, z: 0.4, yaw: -0.1 },
-      { id: "tamsin", look: "tamsin", x: -3, z: -0.6, yaw: 0.15 },
-      { id: "lio", look: "lio", x: 3, z: -0.8, yaw: -0.15 },
+      { id: "rook", look: "player", x: SQUAD.rook.x, z: SQUAD.rook.z, yaw: 0.1 },
+      { id: "bas", look: "bas", x: SQUAD.bas.x, z: SQUAD.bas.z, yaw: 0 },
+      { id: "dagrun", look: "dagrun", x: SQUAD.dagrun.x, z: SQUAD.dagrun.z, yaw: 0.2 },
+      { id: "juno", look: "juno", x: SQUAD.juno.x, z: SQUAD.juno.z, yaw: -0.15 },
+      { id: "tamsin", look: "tamsin", x: SQUAD.tamsin.x, z: SQUAD.tamsin.z, yaw: 0.3 },
+      { id: "lio", look: "lio", x: SQUAD.lio.x, z: SQUAD.lio.z, yaw: -0.3 },
       { id: "knight", look: "masked", x: KNIGHT.x, z: KNIGHT.z, y: RG.h, yaw: -PI / 2 },
     ],
     camera: [
-      { t: 0, pos: [-3.5, 1.4, -4.5], look: [0, 3.2, 24], fov: 0.62 },                       // behind the squad: it's coming
-      { t: 3.2, pos: [-3.3, 1.5, -3.6], look: [0, 3.4, 22], fov: 0.6, ease: "linear" },
-      { t: 3.2, cut: true, pos: [2.2, 0.35, 0.5], look: [0, 4.5, 14], fov: 0.7 },               // low, looking up at the jaw
-      { t: 6, pos: [2.0, 0.4, 0.9], look: [0, 4.8, 13], fov: 0.72, ease: "linear" },
-      { t: 6, cut: true, pos: [-1.2, 1.7, 5.6], look: [0.2, 1.6, 2.6], fov: 0.5 },              // Bas, planting his feet
-      { t: 7.4, pos: [-1.1, 1.7, 5.3], look: [0.2, 1.6, 2.6], fov: 0.48, ease: "linear" },
-      { t: 7.4, cut: true, pos: [-17, 3.5, 2], look: [0, 2.5, 6], fov: 0.62 },                  // wide from the side (the ridge far behind)
-      { t: 9, pos: [-16.5, 3.6, 2.2], look: [0, 2.2, 6], fov: 0.62, ease: "linear" },
+      { t: 0, pos: [1.6, 3.6, -6.2], look: [0, 2.6, 24], fov: 0.62 },                         // high behind the squad: it's coming
+      { t: 3.2, pos: [1.5, 3.5, -5.4], look: [0, 2.8, 22], fov: 0.6, ease: "linear" },
+      { t: 3.2, cut: true, pos: [0.9, 0.35, 5.4], look: [0, 4.5, 16], fov: 0.7 },              // low in front of Bas, looking up at the jaw
+      { t: 6, pos: [0.8, 0.4, 5.8], look: [0, 4.8, 15], fov: 0.72, ease: "linear" },
+      { t: 6, cut: true, pos: [-1.4, 2.0, 7.2], look: [0.3, 1.8, 3.2], fov: 0.6 },              // Bas, planting his feet
+      { t: 7.4, pos: [-1.3, 2.0, 6.9], look: [0.3, 1.8, 3.2], fov: 0.58, ease: "linear" },
+      { t: 7.4, cut: true, pos: [-15, 7, -7], look: [4, 1.6, 5], fov: 0.62 },                  // high from the side (the ridge far behind)
+      { t: 9, pos: [-14.6, 7, -6.6], look: [4, 1.5, 5.4], fov: 0.62, ease: "linear" },
       { t: 9, cut: true, pos: [-4, 9, -1], look: [0, 0, 8], fov: 0.66 },                        // high, down onto the tear sealing
       { t: 10.4, pos: [-3.8, 9.4, -0.6], look: [0, 0, 8], fov: 0.64, ease: "linear" },
-      { t: 10.4, cut: true, pos: [0.6, 1.6, 6.5], look: [0, 1.5, 1.5], fov: 0.55 },             // the squad: where did it go?
-      { t: 11.6, pos: [0.6, 1.6, 6.3], look: [0, 1.5, 1.5], fov: 0.55, ease: "linear" },
+      { t: 10.4, cut: true, pos: [-1.6, 3.4, 10.4], look: [-0.6, 1.3, 1.2], fov: 0.66 },        // the squad: where did it go?
+      { t: 11.6, pos: [-1.6, 3.4, 10.1], look: [-0.6, 1.3, 1.2], fov: 0.64, ease: "linear" },
       { t: 11.6, cut: true, pos: [-2, 4, -2], look: [EN.crash.x, 14, EN.crash.z], fov: 0.5 },   // the sky over the Ashfall camp
       { t: 14.6, pos: [-2, 3.6, -2], look: [EN.crash.x, 4, EN.crash.z], fov: 0.5, ease: "inOut" },
-      { t: 14.6, cut: true, pos: [3.2, 1.6, 3], look: [1.8, 1.5, 0.4], fov: 0.5 },              // Juno points
-      { t: 15.8, pos: [3.2, 1.6, 3], look: [1.8, 1.5, 0.4], fov: 0.5 },
+      { t: 14.6, cut: true, pos: [3.2, 1.8, 4.9], look: [SQUAD.juno.x, 1.45, SQUAD.juno.z], fov: 0.52 }, // Juno points
+      { t: 15.8, pos: [3.2, 1.8, 4.9], look: [SQUAD.juno.x, 1.45, SQUAD.juno.z], fov: 0.52 },
       { t: 15.8, cut: true, pos: [27, 4.6, 2], look: [KNIGHT.x, RG.h + 1.3, KNIGHT.z], fov: 0.42 }, // the ridge: a masked figure
       { t: 18.4, pos: [29, 4.8, 2.6], look: [KNIGHT.x, RG.h + 1.4, KNIGHT.z], fov: 0.36, ease: "linear" },
-      { t: 18.4, cut: true, pos: [31, 5.5, -4], look: [KNIGHT.x, RG.h + 1, KNIGHT.z + 5], fov: 0.5 }, // he turns, and walks
-      { t: 21.6, pos: [31, 5.5, -3.4], look: [KNIGHT.x, RG.h + 1, KNIGHT.z + 7], fov: 0.5, ease: "linear" },
-      { t: 21.6, cut: true, pos: [0.2, 1.7, 0.8], look: [KNIGHT.x, RG.h + 1, KNIGHT.z + 7.5], fov: 0.38 }, // from where we stand
-      { t: 24.5, pos: [0.2, 1.7, 0.8], look: [KNIGHT.x, RG.h + 1, KNIGHT.z + 8], fov: 0.38 },
+      { t: 18.4, cut: true, pos: [30, 6, -6], look: [KNIGHT.x, RG.h + 1, KNIGHT.z + 4], fov: 0.5 }, // he turns, and walks
+      { t: 21.6, pos: [30, 6, -6], look: [KNIGHT.x, RG.h + 1, KNIGHT.z + 8], fov: 0.5, ease: "linear" },
+      { t: 21.6, cut: true, pos: [SQUAD.rook.x - 0.4, 1.9, SQUAD.rook.z - 1.6], look: [KNIGHT.x, RG.h + 1, KNIGHT.z + 7.5], fov: 0.38 }, // from where we stand
+      { t: 24.5, pos: [SQUAD.rook.x - 0.4, 1.9, SQUAD.rook.z - 1.6], look: [KNIGHT.x, RG.h + 1, KNIGHT.z + 8], fov: 0.38 },
     ],
     events: [
       { t: 0, cue: "engineRoll" },
@@ -107,20 +113,20 @@ export const CUTSCENES = {
       { id: "dagrun", look: "dagrun", x: 3.6, z: 13.4, yaw: -0.5 },
     ],
     camera: [
-      { t: 0, pos: [0.9, 1.6, 17.2], look: [0, 1.5, 22.6], fov: 0.55 },                            // past Bas, into the alcove
-      { t: 2.6, pos: [0.8, 1.6, 17.6], look: [0, 1.5, 22.4], fov: 0.52, ease: "linear" },
+      { t: 0, pos: [2.4, 2.0, 18.0], look: [0, 1.4, 22.6], fov: 0.58 },                            // beside Bas, into the alcove
+      { t: 2.6, pos: [2.3, 2.0, 18.3], look: [0, 1.4, 22.4], fov: 0.55, ease: "linear" },
       { t: 2.6, cut: true, pos: [4.4, 1.5, 20.4], look: [0, 1.4, 20.8], fov: 0.6 },                // the doorway, side on
       { t: 5.2, pos: [4.2, 1.5, 20.4], look: [0, 1.3, 20.6], fov: 0.58, ease: "linear" },
-      { t: 5.2, cut: true, pos: [-2.8, 1.6, 16.2], look: [0.3, 1.2, 19.5], fov: 0.55 },             // Bas, folded over his arm
-      { t: 7, pos: [-2.6, 1.6, 16.5], look: [0.3, 1.2, 19.5], fov: 0.52, ease: "linear" },
-      { t: 7, cut: true, pos: [0, 3.2, 9], look: [0.4, 1.4, 19], fov: 0.6 },                        // from the room: he walks out
-      { t: 9.4, pos: [0.2, 3, 9.6], look: [0.8, 1.4, 18.4], fov: 0.58, ease: "linear" },
-      { t: 9.4, cut: true, pos: [2.7, 1.7, 13.4], look: [1.2, 1.6, 18.2], fov: 0.5 },              // over Rook's shoulder
-      { t: 11, pos: [2.6, 1.7, 13.6], look: [1.2, 1.7, 18.2], fov: 0.48, ease: "linear" },
-      { t: 11, cut: true, pos: [2.1, 2.0, 15.4], look: [1.2, 1.85, 18.2], fov: 0.42 },             // the mask: head and shoulders
-      { t: 13.6, pos: [2.0, 2.0, 15.7], look: [1.2, 1.85, 18.2], fov: 0.4, ease: "linear" },
-      { t: 13.6, cut: true, pos: [6.6, 2, 17.2], look: [1.2, 1.4, 18.6], fov: 0.55 },              // side on: the way out
-      { t: 16.2, pos: [6.4, 2, 17.4], look: [1.2, 1.4, 18.8], fov: 0.55, ease: "linear" },
+      { t: 5.2, cut: true, pos: [-2.9, 2.1, 15.9], look: [0.3, 1.4, 19.5], fov: 0.6 },              // Bas, folded over his arm
+      { t: 7, pos: [-2.7, 2.1, 16.2], look: [0.3, 1.4, 19.5], fov: 0.58, ease: "linear" },
+      { t: 7, cut: true, pos: [4.6, 3.2, 11], look: [0.6, 1.4, 19.4], fov: 0.6 },                   // from the room: he walks out
+      { t: 9.4, pos: [4.4, 3, 11.6], look: [0.9, 1.4, 18.6], fov: 0.58, ease: "linear" },
+      { t: 9.4, cut: true, pos: [0.6, 2.0, 12.8], look: [1.2, 1.6, 18.2], fov: 0.5 },              // over Rook's shoulder
+      { t: 11, pos: [0.65, 2.0, 13.0], look: [1.2, 1.7, 18.2], fov: 0.48, ease: "linear" },
+      { t: 11, cut: true, pos: [2.6, 2.0, 16.2], look: [1.2, 1.85, 18.2], fov: 0.46 },             // the mask: head and shoulders
+      { t: 13.6, pos: [2.5, 2.0, 16.4], look: [1.2, 1.85, 18.2], fov: 0.44, ease: "linear" },
+      { t: 13.6, cut: true, pos: [5.8, 2.2, 15.2], look: [1.2, 1.4, 18.8], fov: 0.58 },            // side on: the way out
+      { t: 16.2, pos: [5.6, 2.2, 15.4], look: [1.2, 1.4, 19], fov: 0.58, ease: "linear" },
       { t: 16.2, cut: true, pos: [0.4, 1.6, 11], look: [0.6, 1.3, 17.5], fov: 0.55 },              // the squad, and Bas in the doorway
       { t: 18.5, pos: [0.4, 1.6, 11.4], look: [0.4, 1.3, 18], fov: 0.55, ease: "linear" },
     ],
@@ -158,14 +164,14 @@ export const CUTSCENES = {
     camera: [
       { t: 0, pos: [2.4, 1.8, -10.4], look: [0, 1.1, -17.2], fov: 0.55 },                   // past Severin: Rook at the edge
       { t: 2, pos: [2.2, 1.7, -10.9], look: [0, 0.9, -17.4], fov: 0.52, ease: "linear" },
-      { t: 2, cut: true, pos: [3, 0.25, -19.8], look: [0, 0.2, -17.6], fov: 0.6 },              // low on the water: the fall
-      { t: 3, pos: [3, 0.2, -19.8], look: [0, -0.4, -18.4], fov: 0.6, ease: "linear" },
-      { t: 3, cut: true, pos: [2.6, -5.6, -23.4], look: [0, -4, -26], fov: 0.62 },              // under: sinking
-      { t: 7.4, pos: [2.2, -6.2, -23.8], look: [0, -4.4, -26], fov: 0.56, ease: "linear" },
+      { t: 2, cut: true, pos: [3.4, 0.5, -20.4], look: [0, 1, -17.6], fov: 0.72 },              // low on the water: the fall
+      { t: 3, pos: [3.4, 0.45, -20.4], look: [0, 0.7, -18.0], fov: 0.72, ease: "linear" },
+      { t: 3, cut: true, pos: [3.2, -4.6, -22.6], look: [0, -3.3, -26], fov: 0.7 },             // under: sinking
+      { t: 7.4, pos: [2.8, -5.0, -23.0], look: [0, -3.4, -26], fov: 0.66, ease: "linear" },
       { t: 7.4, cut: true, pos: [0.4, -7, -24.6], look: [0, -2, -26.6], fov: 0.7 },             // looking up past Rook: the script rising
       { t: 11.2, pos: [0.2, -7.4, -24.4], look: [0, -1, -26.4], fov: 0.74, ease: "linear" },
-      { t: 11.2, cut: true, pos: [-3, 1.6, -13.6], look: [0, 0.6, -17.2], fov: 0.55 },          // back up: the edge of the island
-      { t: 15, pos: [-2.8, 1.6, -13.9], look: [0, 1, -17.2], fov: 0.52, ease: "linear" },
+      { t: 11.2, cut: true, pos: [-3.2, 1.9, -13.2], look: [0, 1.1, -17], fov: 0.62 },          // back up: the edge of the island
+      { t: 15, pos: [-3, 1.9, -13.5], look: [0, 1.2, -16.6], fov: 0.58, ease: "linear" },
     ],
     events: [
       { t: 0.2, pose: { id: "rook", name: "bow" } },                     // staggered back to the edge…

@@ -5,6 +5,7 @@
 // Who the hell is that? The camp has theories, and the Journal starts collecting them (data/rumors.js).
 
 import { AFTER_EP23 } from "./arc3.js";
+import { SQUAD } from "./cutscenes.js";
 
 export const EP24_SCRIPT = `
 title: Ep24_Dawn
@@ -126,14 +127,9 @@ Dagrun: But one of them won't be, and I want to know which one before he decides
 `;
 
 const IH = { stage: "ironhold" };
-// Where the squad stands to meet the engine (the cutscene stages them the same way).
-const LINE = [
-  { id: "bas", look: "bas", x: 0.4, z: 3, yaw: 0 },
-  { id: "dagrun", look: "dagrun", x: -1.8, z: 0.6, yaw: 0.1 },
-  { id: "juno", look: "juno", x: 1.8, z: 0.4, yaw: -0.1 },
-  { id: "tamsin", look: "tamsin", x: -3, z: -0.6, yaw: 0.15 },
-  { id: "lio", look: "lio", x: 3, z: -0.8, yaw: -0.15 },
-];
+// Where the squad stands to meet the engine: a loose arc, Bas out in front (the cutscene stages them the same way).
+const at = (id, yaw) => ({ id, look: id, x: SQUAD[id].x, z: SQUAD[id].z, yaw });
+const LINE = [at("bas", 0), at("dagrun", 0.2), at("juno", -0.15), at("tamsin", 0.3), at("lio", -0.3)];
 
 export const EPISODE_24 = {
   id: "ep24",
@@ -160,18 +156,12 @@ export const EPISODE_24 = {
       lines: [["Bas", "Wardens, with me!"], ["Juno", "Break them before that thing gets here!"]],
       retry: "Up. The engine's still coming." },
     { id: "engine", type: "scene", node: "Ep24_Engine", ...IH,
-      rook: { x: 0, z: 1, yaw: 0 }, cast: LINE },
+      rook: { ...SQUAD.rook, yaw: 0.1 }, cast: LINE },
     { id: "tear", type: "cutscene", cutscene: "ep24_tear",
       set: { CLUE_B1: 1, SABLE_ENCOUNTER: 1, CINDERMAW_DOWN: 1 } },
     { id: "ridge", type: "scene", node: "Ep24_Ridge", ...IH,
-      rook: { x: 0, z: 1, yaw: 0.6 },
-      cast: [
-        { id: "bas", look: "bas", x: 0.4, z: 3, yaw: 1.2 },
-        { id: "dagrun", look: "dagrun", x: -1.8, z: 0.6, yaw: 1.0 },
-        { id: "juno", look: "juno", x: 1.8, z: 0.4, yaw: 1.1 },
-        { id: "tamsin", look: "tamsin", x: -3, z: -0.6, yaw: 0.4 },
-        { id: "lio", look: "lio", x: 3, z: -0.8, yaw: 1.3 },
-      ] },
+      rook: { ...SQUAD.rook, yaw: 0.9 }, // everyone still looking out toward the ridge
+      cast: [at("bas", 1.2), at("dagrun", 1.0), at("juno", 1.1), at("tamsin", 0.8), at("lio", 1.3)] },
     { id: "camp", type: "explore", ...IH,
       rook: { x: 0, z: -6, yaw: Math.PI },
       objective: "The whole camp is talking about the masked knight. Hear what they think ({n}/{total}). Your Journal keeps every rumor.",
