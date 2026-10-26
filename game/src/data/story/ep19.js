@@ -258,7 +258,7 @@ export const EPISODE_19 = {
       cast: [
         { id: "dagrun", look: "dagrun", x: -3.1, z: SHELF_Z - 0.4, yaw: 0.3, node: "Ep19_HallDagrun" }, // a step back from the shelf, so Cal's lantern can be looked at on its own
         { id: "juno", look: "juno", x: 3.4, z: 5.4, yaw: -0.6, node: "Ep19_HallSquad" },
-        { id: "bas", look: "bas", x: -3.8, z: 6.6, yaw: 0.6 },
+        { id: "bas", look: "bas", x: -4.4, z: 6.4, yaw: 0.6 },
         { id: "tamsin", look: "tamsin", x: 1.6, z: 6.6, yaw: -0.2 },
         { id: "lio", look: "lio", x: -0.2, z: 5.2, yaw: 0.2 },
         { id: "keeper", look: "keeper", x: 1.6, z: -7.4, yaw: -2.6, node: "W_HallKeeperIn" },
@@ -274,7 +274,7 @@ export const EPISODE_19 = {
       cast: [
         { id: "dagrun", look: "dagrun", x: -2.5, z: SHELF_Z, yaw: Math.PI },
         { id: "juno", look: "juno", x: 2.2, z: 7.2, yaw: -2.6 },
-        { id: "bas", look: "bas", x: -2.6, z: 7, yaw: 2.6 },
+        { id: "bas", look: "bas", x: -3.6, z: 6.8, yaw: 2.4 },
         { id: "tamsin", look: "tamsin", x: 1.4, z: 6.4, yaw: Math.PI },
         { id: "lio", look: "lio", x: -0.4, z: 6.2, yaw: Math.PI },
         { id: "warden", look: "guard", x: 0.2, z: -8.6, yaw: 0 },

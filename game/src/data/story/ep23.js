@@ -224,7 +224,7 @@ export const EPISODE_23 = {
       rook: { x: TABLE.x + 1.35, z: TABLE.z - 0.2, yaw: -Math.PI / 2 },
       cast: [{ id: "juno", look: "juno", x: TABLE.x - 1.35, z: TABLE.z - 0.2, yaw: Math.PI / 2 }] },
     { id: "ask", type: "explore", ...LH,
-      rook: { x: TABLE.x + 1.35, z: TABLE.z + 1.6, yaw: Math.PI },
+      rook: { x: TABLE.x + 1.6, z: TABLE.z - 1.0, yaw: Math.PI / 2 }, // up from the table, clear of Tamsin at her post
       objective: "Ask the squad where Cal went at night ({n}/{total}).",
       required: ["dagrun", "bas", "tamsin"], counts: "required",
       cast: [

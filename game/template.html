@@ -429,6 +429,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .cut-skip { position: absolute; right: 16px; top: calc(7vh + 12px); display: none; pointer-events: auto; font: 600 11px/1 var(--font-mono); letter-spacing: 0.14em;
   color: var(--muted); background: rgba(10, 11, 16, 0.6); border: 1px solid #343a50; border-radius: 999px; padding: 7px 11px; cursor: pointer; }
 .in-cut .cut-skip { display: block; }
+.in-cut .menu { visibility: hidden; } /* a cutscene has nothing to save mid-shot, and SKIP sits where SAVE would be on a phone */
 .hint-pill { position: absolute; left: 50%; top: 18%; transform: translate(-50%, -6px); opacity: 0; transition: opacity 260ms, transform 260ms;
   font: 400 14px/1.4 var(--font-body); background: rgba(15, 17, 23, 0.9); border: 1px solid var(--gale); color: var(--text); padding: 9px 16px; border-radius: 999px;
   max-width: calc(100vw - 32px); text-align: center; }
