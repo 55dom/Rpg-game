@@ -168,6 +168,21 @@ export class Sfx {
         this._tone(t + 0.15, 1.4, { type: "sine", f0: 2600, f1: 2400, gain: 0.025 * p, attack: 0.3 });
         break;
       case "glint": this._tone(t, 0.12, { f0: 2400, gain: 0.12 }); this._tone(t + 0.1, 0.18, { f0: 3200, gain: 0.1 }); break;
+      case "drums": // far off and under the floor: a slow march, four beats, the last one heaviest
+        for (let k = 0; k < 4; k++) {
+          this._tone(t + k * 0.62, 0.38, { f0: 74, f1: 44, gain: (k === 3 ? 0.3 : 0.2) * p, attack: 0.01 });
+          this._noise(t + k * 0.62, 0.16, { type: "lowpass", f0: 420, f1: 120, gain: 0.08 * p });
+        }
+        break;
+      case "hum": // the door under the Lowmarket: two low notes that won't quite agree
+        this._tone(t, 2.6, { type: "sine", f0: 55, gain: 0.16 * p, attack: 0.6 });
+        this._tone(t, 2.6, { type: "sine", f0: 57.5, gain: 0.12 * p, attack: 0.6 });
+        this._tone(t + 0.4, 2.0, { type: "triangle", f0: 220, gain: 0.025 * p, attack: 0.5 });
+        break;
+      case "reform": // empty armor dragging itself back together
+        for (let k = 0; k < 5; k++) this._noise(t + k * 0.09, 0.08, { type: "bandpass", f0: 2200 - k * 200, f1: 900, q: 3, gain: 0.12 });
+        this._tone(t + 0.45, 0.5, { type: "triangle", f0: 180, f1: 240, gain: 0.08 });
+        break;
       case "slam": this._tone(t, 0.4, { f0: 110, f1: 30, gain: 0.6 }); this._noise(t, 0.3, { type: "lowpass", f0: 1500, f1: 200, gain: 0.4 }); break;
       case "kill": this._tone(t, 0.6, { f0: 330, f1: 165, gain: 0.08 }); break;
       case "wave": for (const [i, f] of [392, 523, 659].entries()) this._tone(t + i * 0.09, 0.4, { type: "triangle", f0: f, gain: 0.1 }); break;

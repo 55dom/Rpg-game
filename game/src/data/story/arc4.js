@@ -18,3 +18,9 @@ export const AFTER_EP31 = Object.freeze({ ...AFTER_EP30, EP31_DONE: 1, SABLE_ENC
 
 /** By the end of Episode 32: Aldric showed Severin the Writ (a map of a door under the Lowmarket), and Hesper has his ear. */
 export const AFTER_EP32 = Object.freeze({ ...AFTER_EP31, EP32_DONE: 1, HESPER_ALDRIC: 1, WRIT_MAP: 1 });
+
+/** By the end of Episode 33: Elodie found the door under the Lowmarket (it knew her name), and Halvard gave away the route. */
+export const AFTER_EP33 = Object.freeze({ ...AFTER_EP32, EP33_DONE: 1, ELODIE_DOOR: 1, HOLLOW_DOOR: 1, CONVOY_ROUTE: 1 });
+
+/** By the end of Episode 34: the masked knight took the Writ from Aldric, and stopped when Severin said his brother's name. */
+export const AFTER_EP34 = Object.freeze({ ...AFTER_EP33, EP34_DONE: 1, SABLE_ENCOUNTER: 4, WRIT_STOLEN: 1, SEVERIN_SAVED_ALDRIC: 1 });

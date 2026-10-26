@@ -8,6 +8,7 @@ import { BAS_POSES, JUNO_POSES } from "../data/companions.js";
 import { ENEMIES } from "../data/enemies.js";
 import { HASK_POSES } from "../data/hask.js";
 import { LANCE_POSES, WARDEN_POSES } from "../data/isles.js";
+import { SHELL_POSES } from "../data/hollow.js";
 import { SEVERIN_POSES } from "../data/severin.js";
 import { SEVERIN_KIT_POSES } from "../data/severinKit.js";
 import { ILSE_POSES, GALEN_POSES, GULLMAW_POSES } from "../data/bosses2.js";
@@ -221,6 +222,10 @@ LOOKS.brawler = LOOKS.laborer;
 LOOKS.lance = { poses: LANCE_POSES, scale: 1.08, skirt: 1.0, coat: "#22305a", trim: "#d4ad4f", hairColor: "#3a2a20", skin: PALETTE.mask,
   head: "helm", helm: "#c9d2dc", weapon: "spear", shield: "heater", shieldColor: "#2b4f8f", shoulders: 1.25, trail: "#d4ad4f" };
 LOOKS.halvard = { ...LOOKS.lance, scale: 1.14, coat: "#1a2448", helm: "#e6c060", shoulders: 1.35, menace: true, trail: "#e6c060" };
+// The Hollow Shell (Ep 33): old armor walking with nobody in it. Pitted iron, a closed helm, a faint violet light where
+// the eyes should be, and a long sword.
+LOOKS.shell = { poses: SHELL_POSES, scale: 1.12, skirt: 0.9, coat: "#4a4a52", trim: "#7a6a8a", hairColor: "#2a2a30", skin: "#3a3a42",
+  head: "helm", helm: "#5a5a64", eyes: "#c9a4ff", menace: true, weapon: "sword", shoulders: 1.35, stoop: 0.05, trail: "#c9a4ff" };
 LOOKS.halvardFace = { poses: ACOLYTE_POSES, scale: 1.14, skirt: 1.0, coat: "#1a2448", trim: "#d4ad4f", hairColor: "#5a4a3a", beard: "#5a4a3a", skin: "#e8c8a8",
   head: "face", hair: "crop", weapon: "spear", shoulders: 1.35, eyeColor: "#3a3a4a", trail: "#e6c060" };
 LOOKS.rider = { poses: LANCE_POSES, scale: 1.0, skirt: 1.1, coat: "#3a5a7a", trim: "#e8f4ff", hairColor: "#e8e4f0", skin: "#d8c0a8",
@@ -1069,7 +1074,7 @@ export class Rig {
     else if (!fighter.alive) {
       this.deathT = (this.deathT ?? 0) + dt;
       bodyLean = this.legs ? 0 : -Math.min(1.45, this.deathT * 3.5); // humanoids fall from the hips (motion.js)
-      this.visibility = 1 - clamp01((fighter.deadFrames - 50) / 50);
+      this.visibility = fighter.traits?.reform && !fighter.reformed ? 1 : 1 - clamp01((fighter.deadFrames - 50) / 50); // Hollow armor lies there, waiting
     }
     // Secondary motion (hair, scarf, cape, coat tails) is held for two frames at a time: drawn on twos, like animation.
     const held = Math.floor(this.time * 12) / 12;

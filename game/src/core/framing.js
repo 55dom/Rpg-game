@@ -18,6 +18,7 @@ export function actorsAt(cs, t, scaleOf = () => 1) {
     if (e.t > t) break;
     if (e.show && out.has(e.show)) out.get(e.show).shown = true;
     if (e.hide && out.has(e.hide)) out.get(e.hide).shown = false;
+    if (e.pose && out.has(e.pose.id) && (e.pose.name === "down" || e.pose.name === "up")) out.get(e.pose.id).down = e.pose.name === "down";
     if (e.move && out.has(e.move.id)) {
       const a = out.get(e.move.id), dur = e.move.dur ?? Math.hypot(e.move.to[0] - a.x, e.move.to[1] - a.z) / 2.4;
       [a.x, a.z] = sampleMove([a.x, a.z], e.move.to, e.t, dur, t);
@@ -41,7 +42,7 @@ export function shotProblems(cs, t, scaleOf = () => 1) {
   const pitch = Math.atan2(qy - py, L), half = (cam.fov / 2) * LETTERBOX;
   const out = [];
   for (const a of actorsAt(cs, t, scaleOf)) {
-    if (!a.shown) continue;
+    if (!a.shown || a.down) continue; // someone lying on the ground is in nobody's way
     const h = BODY * a.scale, ax = a.x - px, az = a.z - pz;
     const along = ax * ux + az * uz, side = Math.abs(ax * -uz + az * ux), dist = Math.hypot(ax, az);
     const camInBody = py > a.y - 0.2 && py < a.y + h + 0.2;
@@ -58,7 +59,7 @@ export function shotProblems(cs, t, scaleOf = () => 1) {
   }
   // Hidden: someone standing almost exactly behind someone else, as the camera sees them (in frame, both on their feet).
   const aspect = 20 / 9, halfW = Math.atan(Math.tan(cam.fov / 2) * aspect); // a phone held sideways: the widest screen it plays on
-  const seen = actorsAt(cs, t, scaleOf).filter((a) => a.shown).map((a) => {
+  const seen = actorsAt(cs, t, scaleOf).filter((a) => a.shown && !a.down).map((a) => {
     const ax = a.x - px, az = a.z - pz, along = ax * ux + az * uz, side = ax * -uz + az * ux;
     const lo = Math.atan2(a.y - py, Math.max(0.1, along)), hi = Math.atan2(a.y + BODY * a.scale - py, Math.max(0.1, along));
     const headLo = Math.atan2(a.y + (BODY - HEAD) * a.scale - py, Math.max(0.1, along)); // where their head starts

@@ -43,6 +43,8 @@ import { EPISODE_29, EP29_SCRIPT } from "./data/story/ep29.js";
 import { EPISODE_30, EP30_SCRIPT } from "./data/story/ep30.js";
 import { EPISODE_31, EP31_SCRIPT } from "./data/story/ep31.js";
 import { EPISODE_32, EP32_SCRIPT } from "./data/story/ep32.js";
+import { EPISODE_33, EP33_SCRIPT } from "./data/story/ep33.js";
+import { EPISODE_34, EP34_SCRIPT } from "./data/story/ep34.js";
 import { theatreList } from "./data/theatre.js";
 import { PlaytestLog, SURVEYS } from "./core/playtest.js";
 import { keyItemsHeld } from "./data/keyItems.js";
@@ -394,6 +396,10 @@ export function boot(doc = document) {
           sfx.play("tear"); camera.shake(0.4);
           break;
         case "riftCall": hud.pushLog(`Wraithe calls ${ev.called.length} acolytes through the air`); break;
+        case "reform": // Hollow armor (Ep 33) pulls itself back together, once
+          vfx.flash({ x: ev.at.x, y: 1, z: ev.at.z }, 1.8, "#c9a4ff", 0.14); sfx.play("reform");
+          hud.pushLog("The empty armor drags itself back together.");
+          break;
         case "taken": // hunted (Ep 31): a black tear opens under one of his acolytes, and they're gone
           tearFx.open({ x: ev.at.x, y: 0.05, z: ev.at.z }, { r: 1.1, kind: "black", life: 0.7, ground: true });
           vfx.flash({ x: ev.at.x, y: 1, z: ev.at.z }, 1.6, "#9cb8ff", 0.12);
@@ -806,7 +812,8 @@ export function boot(doc = document) {
     { episode: EPISODE_25, script: EP25_SCRIPT }, { episode: EPISODE_26, script: EP26_SCRIPT },
     { episode: EPISODE_27, script: EP27_SCRIPT }, { episode: EPISODE_28, script: EP28_SCRIPT },
     { episode: EPISODE_29, script: EP29_SCRIPT }, { episode: EPISODE_30, script: EP30_SCRIPT }, { episode: EPISODE_31, script: EP31_SCRIPT },
-    { episode: EPISODE_32, script: EP32_SCRIPT }], [WORLD_SCRIPT]);
+    { episode: EPISODE_32, script: EP32_SCRIPT }, { episode: EPISODE_33, script: EP33_SCRIPT },
+    { episode: EPISODE_34, script: EP34_SCRIPT }], [WORLD_SCRIPT]);
   annotationNow = () => !!story.flags.get("ANNOTATION"); // after Mirrorlake, Rook's spells write ink
   const playtest = new PlaytestLog(story.flags, { where: () => ({ episode: story.ep?.id ?? null, beat: story.director?.beat?.id ?? null }) });
   injuredNow = () => (story.flags.get("BAS_ARM_BROKEN") ? ["bas"] : []); // Bas fights one-armed after the vault

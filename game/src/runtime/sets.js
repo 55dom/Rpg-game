@@ -1,7 +1,7 @@
 // Story sets (Phase 3): each one is built on first use from primitives, carries its own sky, fog,
 // and lighting, and can be swapped in and out. "yard" is the original training yard (arena.js).
 
-import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT, ISLES_LAYOUT } from "../data/zones.js";
+import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT, ISLES_LAYOUT, OLDCITY_LAYOUT } from "../data/zones.js";
 import { WARDEN_STARS } from "../data/isles.js";
 import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } from "./look.js";
 import { buildCrowd } from "./crowd.js";
@@ -54,7 +54,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, watchhouse: buildWatchhouse, fenhome: buildFenhome, isles: buildIsles, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, watchhouse: buildWatchhouse, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -1051,6 +1051,9 @@ function buildUndercroft(scene, mobile) {
   PR.statue(-9, 39, { broken: true }); PR.statue(9, 44); PR.statue(-6, -31, { broken: true });
   PR.bones(-7, -8); PR.bones(6, -1); PR.bones(-3, 0.5); PR.bones(8, 20);
   for (const [x, z] of [[-8.5, -11], [8.5, -2.5], [-10.5, 22]]) { const nest = add(MB.CreateSphere("uc-nest", { diameter: 1.2, segments: 6 }, scene), 0.02); nest.position.set(x, 0.1, z); nest.scaling.y = 0.3; nest.material = P("#8a7a4a"); }
+  // After Ep 33: the crack in the last passage's wall, a thread of pale light, down to the old city.
+  const crack = K.when("$EP33_DONE"), crackM = glow(scene, "uc-crack", "#d8c8ff", 0.85);
+  for (const [dy, h, tilt] of [[0.2, 1.1, 0.12], [1.0, 0.9, -0.2]]) { const c = MB.CreatePlane("uc-crack", { width: 0.1, height: h, sideOrientation: BB.Mesh.DOUBLESIDE }, scene); c.parent = crack; c.position.set(-1.98, dy + h / 2, 29.3); c.rotation.set(0, Math.PI / 2, tilt); c.material = crackM; c.isPickable = false; }
   PR.crate(-10, 12.4, { ry: 0.2 }); PR.crate(-10.6, 13.4, { ry: 0.8, s: 0.6 }); PR.crate(9.5, 24, { broken: true }); PR.droppedBlade(-4, 40.5, { ry: 1.2 }); PR.barrel(10.6, 12, { tipped: true, ry: 0.9 });
   K.bake([]);
   const env = { clear: "#0a0b0f", fog: "#14151b", fogDensity: 0.028, hemi: [0.5, "#ffd9a8", "#2a2420"], sun: [0.35, "#ffcf9a", [0.2, -1, 0.3]], warm: 0 };
@@ -1275,6 +1278,83 @@ function buildIsles(scene, mobile) {
     update(dt, t) {
       for (const k of clouds) { k.a += k.s * dt; k.c.position.x = Math.sin(k.a) * k.d; k.c.position.z = Math.cos(k.a) * k.d; }
       gondola.position.y = -0.4 + Math.sin(t * 0.8) * 0.08;
+    } };
+}
+
+/**
+ * The old city under the Lowmarket (Ep 33): a street of houses the city above was built on, half-buried, a dry canal
+ * with one stone bridge, braziers, broken pillars, and at the north end a door in the rock: a slab carved with the
+ * Paragon's sun, split down the middle by a crack of pale light. It hums. Cues: doorOpen (the crack widens and the
+ * light comes through), doorShut.
+ */
+function buildOldCity(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, L = OLDCITY_LAYOUT, P = palette(scene, "oc"), PR = props(scene, K, P);
+  const H = L.half, len = L.north - L.south, midZ = (L.north + L.south) / 2;
+  const paving = toon(scene, "oc-paving", "#3e3a42"), plazaM = toon(scene, "oc-plaza", "#4a4652"), rock = toon(scene, "oc-rock", "#26232a");
+  const houseM = toon(scene, "oc-house", "#5a5048"), roofM = toon(scene, "oc-roof", "#3a3230"), dark = P("#121016"), stone = toon(scene, "oc-stone", "#6a6470");
+  const hollowLight = glow(scene, "oc-hollow", "#d8c8ff", 0.92), carve = glow(scene, "oc-carve", "#9a7ad8", 0.75);
+  const floor = add(MB.CreateGround("oc-floor", { width: H * 2 + 2, height: len + 2 }, scene)); floor.position.set(0, 0, midZ); floor.material = paving;
+  const plaza = add(MB.CreateDisc("oc-plazaDisc", { radius: 12, tessellation: 40 }, scene)); plaza.rotation.x = Math.PI / 2; plaza.position.set(0, 0.006, 0); plaza.material = plazaM;
+  for (const r of [6, 12]) { const ring = add(MB.CreateTorus("oc-ring", { diameter: r * 2, thickness: 0.1, tessellation: 48 }, scene)); ring.position.y = 0.012; ring.material = P("#2e2a34"); }
+  // Rock walls either side and behind the stairs; the cavern has no sky.
+  for (const side of [-1, 1]) { const w = add(MB.CreateBox("oc-wall", { width: 2, height: 9, depth: len + 2 }, scene), 0.04); w.position.set(side * (H + 1), 4.5, midZ); w.material = rock; }
+  const back = add(MB.CreateBox("oc-back", { width: H * 2 + 4, height: 9, depth: 2 }, scene), 0.04); back.position.set(0, 4.5, L.south - 1); back.material = rock;
+  for (let i = 0; i < 4; i++) { const st = add(MB.CreateBox("oc-stair", { width: 4.4, height: 0.35, depth: 0.7 }, scene), 0.03); st.position.set(0, 0.17 + i * 0.35, L.south + 0.35 - i * 0.6 + 0.6); st.material = stone; }
+  // The buried street: house fronts sunk to their upper windows, windows dark, doorways full of earth.
+  for (const [x, z, w, d] of L.houses) {
+    const hgt = 3 + (Math.abs(z) % 3) * 0.4, face = x < 0 ? 1 : -1;
+    const body = add(MB.CreateBox("oc-house", { width: w, height: hgt, depth: d }, scene), 0.04); body.position.set(x, hgt / 2, z); body.material = houseM;
+    const cap = add(MB.CreateBox("oc-cap", { width: w + 0.3, height: 0.3, depth: d + 0.3 }, scene), 0.03); cap.position.set(x, hgt + 0.15, z); cap.material = roofM;
+    for (const dz of [-d / 4, d / 4]) { const win = add(MB.CreatePlane("oc-win", { width: 0.9, height: 1.1, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); win.position.set(x + face * (w / 2 + 0.02), hgt - 1.1, z + dz); win.rotation.y = Math.PI / 2; win.material = dark; }
+    const earth = add(MB.CreateBox("oc-earth", { width: 0.6, height: 0.9, depth: 1.6 }, scene), 0.02); earth.position.set(x + face * (w / 2 + 0.2), 0.45, z); earth.material = P("#4a3e34");
+  }
+  // The dry canal and its bridge.
+  for (const [x0, x1] of [[-H - 1, -L.canal.bridge], [L.canal.bridge, H + 1]]) {
+    const trench = add(MB.CreateBox("oc-trench", { width: x1 - x0, height: 0.04, depth: L.canal.z1 - L.canal.z0 }, scene)); trench.position.set((x0 + x1) / 2, 0.02, (L.canal.z0 + L.canal.z1) / 2); trench.material = dark;
+    for (const z of [L.canal.z0, L.canal.z1]) { const lip = add(MB.CreateBox("oc-lip", { width: x1 - x0, height: 0.3, depth: 0.3 }, scene), 0.02); lip.position.set((x0 + x1) / 2, 0.15, z); lip.material = stone; }
+  }
+  for (const sx of [-1, 1]) { const par = add(MB.CreateBox("oc-parapet", { width: 0.3, height: 0.7, depth: L.canal.z1 - L.canal.z0 + 0.6 }, scene), 0.03); par.position.set(sx * L.canal.bridge, 0.35, (L.canal.z0 + L.canal.z1) / 2); par.material = stone; }
+  // Pillars round the plaza (some broken off short), the Paragon's statues by the door, braziers.
+  for (const [i, [x, z]] of L.pillars.entries()) { const h = i % 3 === 1 ? 2.6 : 6.5; const c = add(MB.CreateCylinder("oc-pillar", { height: h, diameter: 1.2, tessellation: 10 }, scene), 0.04); c.position.set(x, h / 2, z); c.material = stone; }
+  L.statues.forEach(([x, z], i) => PR.statue(x, z, { broken: i === 0 }));
+  const fires = [], fireM = glow(scene, "oc-fire", "#ff9a3a");
+  for (const [x, z] of L.braziers) {
+    const bowl = add(MB.CreateCylinder("oc-bowl", { height: 0.5, diameterTop: 0.9, diameterBottom: 0.5, tessellation: 10 }, scene), 0.03); bowl.position.set(x, 0.95, z); bowl.material = toon(scene, "oc-iron", "#2e2c32");
+    const leg = add(MB.CreateCylinder("oc-leg", { height: 0.8, diameter: 0.18, tessellation: 6 }, scene)); leg.position.set(x, 0.4, z); leg.material = bowl.material;
+    const f = add(MB.CreateCylinder("oc-fire", { height: 0.7, diameterTop: 0, diameterBottom: 0.55, tessellation: 7 }, scene)); f.position.set(x, 1.5, z); f.material = fireM; fires.push(f);
+  }
+  // The door: a slab in the rock, the Paragon's sun carved on it, and a crack of pale light down the middle.
+  const D = L.door;
+  const face = add(MB.CreateBox("oc-doorWall", { width: H * 2 + 2, height: 10, depth: 1.6 }, scene), 0.05); face.position.set(0, 5, D.z + 1); face.material = rock;
+  const slab = add(MB.CreateBox("oc-door", { width: D.w, height: D.h, depth: 0.4 }, scene), 0.05); slab.position.set(D.x, D.h / 2, D.z + 0.05); slab.material = toon(scene, "oc-doorStone", "#5a5660");
+  const frame = add(MB.CreateBox("oc-lintel", { width: D.w + 1.6, height: 1, depth: 0.8 }, scene), 0.04); frame.position.set(D.x, D.h + 0.4, D.z); frame.material = stone;
+  for (const sx of [-1, 1]) { const jamb = add(MB.CreateBox("oc-jamb", { width: 0.8, height: D.h, depth: 0.8 }, scene), 0.04); jamb.position.set(D.x + sx * (D.w / 2 + 0.4), D.h / 2, D.z); jamb.material = stone; }
+  const sun = MB.CreateTorus("oc-sun", { diameter: 2.4, thickness: 0.1, tessellation: 32 }, scene); sun.parent = K.root; sun.rotation.x = Math.PI / 2; sun.position.set(D.x, D.h * 0.62, D.z - 0.17); sun.material = carve;
+  for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; const ray = MB.CreateBox("oc-ray", { width: 0.08, height: 0.7, depth: 0.04 }, scene); ray.parent = K.root; ray.position.set(D.x + Math.sin(a) * 1.75, D.h * 0.62 + Math.cos(a) * 1.75, D.z - 0.17); ray.rotation.z = -a; ray.material = carve; }
+  const crack = MB.CreatePlane("oc-crack", { width: 0.14, height: D.h - 0.4, sideOrientation: BB.Mesh.DOUBLESIDE }, scene); crack.parent = K.root; crack.position.set(D.x, D.h / 2, D.z - 0.17); crack.material = hollowLight; crack.isPickable = false;
+  const hollow = new BB.PointLight("oc-hollowLight", new BB.Vector3(D.x, 3, D.z - 2), scene); hollow.diffuse = color3("#c9a4ff").clone(); hollow.intensity = 0.35; hollow.range = 18; K.lights.push(hollow);
+  const warm = new BB.PointLight("oc-warm", new BB.Vector3(0, 5, -6), scene); warm.diffuse = color3("#ffb070").clone(); warm.intensity = 0.5; warm.range = 30; K.lights.push(warm);
+  // Pale motes drifting out of the crack.
+  const motes = new BB.ParticleSystem("oc-motes", mobile ? 20 : 40, scene);
+  motes.particleTexture = softTexture(scene); motes.emitter = new BB.Vector3(D.x, D.h / 2, D.z - 0.4);
+  motes.minEmitBox = new BB.Vector3(-0.2, -3.4, 0); motes.maxEmitBox = new BB.Vector3(0.2, 3.4, 0);
+  motes.color1 = new BB.Color4(0.85, 0.78, 1, 0.5); motes.color2 = new BB.Color4(0.7, 0.6, 1, 0.3); motes.colorDead = new BB.Color4(1, 1, 1, 0);
+  motes.minSize = 0.05; motes.maxSize = 0.14; motes.minLifeTime = 3; motes.maxLifeTime = 6; motes.emitRate = mobile ? 4 : 8;
+  motes.direction1 = new BB.Vector3(-0.3, 0.1, -1); motes.direction2 = new BB.Vector3(0.3, 0.3, -0.6); motes.minEmitPower = 0.1; motes.maxEmitPower = 0.3; motes.blendMode = BB.ParticleSystem.BLENDMODE_ADD;
+  K.systems.push(motes);
+  PR.bones(-6, -24); PR.bones(7, -8); PR.crate(-8.6, -33, { ry: 0.3 }); PR.crate(8.8, -15.8, { broken: true }); PR.droppedBlade(3.2, 4.6, { ry: 0.7 });
+  K.bake([]);
+  let open = 0, want = 0;
+  const cue = (name) => { if (name === "doorOpen") want = 1; if (name === "doorShut") want = 0; };
+  const env = { clear: "#07060a", fog: "#110f18", fogDensity: 0.022, hemi: [0.48, "#d8ccff", "#2a2430"], sun: [0.3, "#ffcf9a", [0.2, -1, 0.3]], warm: 0 };
+  const toonEnv = { lightDir: [-0.2, 1, -0.3], fogColor: "#110f18", fogDensity: 0.016, sky: [0.9, 0.86, 1], ground: [0.56, 0.52, 0.62], rim: [0.8, 0.72, 1.0] };
+  return { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true, cue,
+    update(dt, t) {
+      open += (want - open) * Math.min(1, dt * (want ? 0.8 : 3)); // it opens slowly and shuts fast
+      crack.scaling.x = 1 + open * 18; hollowLight.alpha = 0.92 - open * 0.25;
+      hollow.intensity = 0.35 + open * 1.4 + Math.sin(t * 2.2) * 0.05;
+      for (let i = 0; i < fires.length; i++) fires[i].scaling.y = 0.88 + Math.sin(t * 8 + i * 1.7) * 0.12;
+      warm.intensity = 0.48 + Math.sin(t * 5) * 0.04;
     } };
 }
 

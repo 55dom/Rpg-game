@@ -110,6 +110,19 @@ export const ISLES_LAYOUT = {
   dock: { x: 0, z: -21 },
   waystones: [[-12, -2], [12.5, -1], [0, -14]],
 };
+// The old city under the Lowmarket (Ep 33): a street of houses the city above was built on top of, a dry canal with one
+// bridge, and a plaza in front of a door in the rock that hums. The plaza sits round the middle of the set, so a fight
+// there (the story's ring around the origin) happens in front of the door.
+export const OLDCITY_LAYOUT = {
+  half: 14, south: -44, north: 15,
+  door: { x: 0, z: 15.2, w: 6, h: 8 },
+  canal: { z0: -17, z1: -14, bridge: 2.2 },
+  houses: [[-11.5, -39, 5, 7], [11.5, -37, 5, 8], [-11.5, -29, 5, 8], [11.5, -27, 5, 6], [-11.5, -21.5, 5, 5], [11.5, -20.5, 5, 4]], // [x, z, w, d]
+  pillars: [[-9.5, -7], [9.5, -7], [-10.5, 3], [10.5, 3], [-7.5, 10.5], [7.5, 10.5]],
+  statues: [[-4.2, 13.2], [4.2, 13.2]],
+  braziers: [[-3.4, -11], [3.4, -11], [-6, 7.5], [6, 7.5]],
+  stairs: { x: 0, z: -43.2 },
+};
 // The Watch House by Aurelin's south gate (data/law.js): the sergeant's desk by the door, the wanted board,
 // and two cells along the back wall (bars along z = cellZ; cell one's door stands open, cell two has a guest).
 export const WATCH_LAYOUT = {
@@ -149,6 +162,7 @@ const rect = (r) => box(r.x0, r.z0, r.x1, r.z1);
 // The City Watch's patrols (data/law.js): one more walks the streets for every step $WATCH_STRENGTH takes.
 const patrol = (n, a, b) => ({ id: `patrol${n}`, name: "City Watch", look: "guard", x: a[0], z: a[1], yaw: 0, node: "W_Patrol", when: `$WATCH_STRENGTH >= ${n}`,
   routine: { role: "guard", steps: [{ do: "walk", to: a }, { do: "idle", at: a, face: Math.atan2(b[0] - a[0], b[1] - a[1]), dur: [4, 7] }, { do: "walk", to: b }, { do: "idle", at: b, face: Math.atan2(a[0] - b[0], a[1] - b[1]), dur: [4, 7] }] } });
+const OC = OLDCITY_LAYOUT;
 const aurelinSolids = [
   ...A.houses.map((h) => box(h.x - h.w / 2, h.z - h.d / 2, h.x + h.w / 2, h.z + h.d / 2)),
   ...A.stalls.map((s) => box(s.x - 1.4, s.z - 1, s.x + 1.4, s.z + 1)),
@@ -392,8 +406,9 @@ export const ZONES = {
       // B5: once Galen has fallen, the Gear Hall becomes a courtroom.
       { id: "gullmaw", rect: [-14, 35, 14, 46], at: { x: 0, z: 38, r: 5 }, wave: ["gullmaw"], boss: true, squad: ["bas", "juno"], when: "$UNDERCROFT_CLEARED and $GALEN_DEFEATED", flag: "GULLMAW_DEFEATED", lock: [gate(32)], label: "THE DROWNED CISTERN" },
     ],
-    exits: [{ id: "stairs", rect: [-3, -34, 3, -33], to: "aurelin", spawn: "undercroft", label: "The stairs up to the Lowmarket" }],
-    arrivals: { aurelin: { x: 0, z: -30, yaw: 0 } },
+    exits: [{ id: "stairs", rect: [-3, -34, 3, -33], to: "aurelin", spawn: "undercroft", label: "The stairs up to the Lowmarket" },
+      { id: "crack", rect: [-2.0, 28.4, -1.5, 30.2], to: "oldcity", spawn: "undercroft", when: "$EP33_DONE", label: "The crack in the passage wall" }],
+    arrivals: { aurelin: { x: 0, z: -30, yaw: 0 }, oldcity: { x: 0.8, z: 29.3, yaw: -Math.PI / 2 } },
   },
   // The Tower of Choosing, its great hall (reached by the world map). Where Galen rises (B4).
   tower: {
@@ -525,6 +540,23 @@ export const ZONES = {
     ],
     exits: [{ id: "dock", rect: [-2, -22.5, 2, -21.5], to: "lighthouse", spawn: "isles", label: "The gondola down to the Lighthouse" }],
     arrivals: { lighthouse: { x: SI.dock.x, z: SI.dock.z + 2.4, yaw: 0 } },
+  },
+  // The old city under the Lowmarket (Ep 33), through a crack in the passage before the Gear Hall once the door's been found.
+  oldcity: {
+    id: "oldcity", name: "The Old City", region: "Beneath the Lowmarket", stage: "oldcity", dungeon: true,
+    bounds: { rect: [-OC.half, OC.south, OC.half, OC.north], solids: [
+      ...OC.houses.map(([x, z, w, d]) => box(x - w / 2, z - d / 2, x + w / 2, z + d / 2)),
+      box(-OC.half - 1, OC.canal.z0, -OC.canal.bridge, OC.canal.z1), box(OC.canal.bridge, OC.canal.z0, OC.half + 1, OC.canal.z1),
+      ...OC.pillars.map(([x, z]) => circle(x, z, 0.7)), ...OC.statues.map(([x, z]) => circle(x, z, 0.9)), ...OC.braziers.map(([x, z]) => circle(x, z, 0.45)),
+    ] },
+    spawn: { x: 0, z: OC.stairs.z + 2, yaw: 0 },
+    cast: [],
+    pickups: [{ id: "door", x: OC.door.x, z: OC.door.z - 2.2, show: "1", marker: false, node: "W_HollowDoor", label: "Put your hand on the door" }],
+    encounters: [
+      { id: "shells", rect: [-12, -12, 12, 12], at: { x: 0, z: 0, r: 5 }, wave: ["shell", "shell"], label: "EMPTY ARMOR" },
+    ],
+    exits: [{ id: "stairs", rect: [-2.2, OC.south, 2.2, OC.south + 0.8], to: "undercroft", spawn: "oldcity", label: "The steps up to the Undercroft" }],
+    arrivals: { undercroft: { x: 0, z: OC.stairs.z + 2, yaw: 0 } },
   },
   // The Watch House (data/law.js): where you pay a bounty, or wake up in a cell having not paid it.
   watchhouse: {

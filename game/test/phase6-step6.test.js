@@ -7,7 +7,10 @@ import { EPISODE_29, EP29_SCRIPT } from "../src/data/story/ep29.js";
 import { EPISODE_30, EP30_SCRIPT } from "../src/data/story/ep30.js";
 import { EPISODE_31, EP31_SCRIPT } from "../src/data/story/ep31.js";
 import { EPISODE_32, EP32_SCRIPT } from "../src/data/story/ep32.js";
-import { AFTER_EP28, AFTER_EP29, AFTER_EP30, AFTER_EP31 } from "../src/data/story/arc4.js";
+import { EPISODE_33, EP33_SCRIPT, OLDCITY_SCRIPT } from "../src/data/story/ep33.js";
+import { EPISODE_34, EP34_SCRIPT } from "../src/data/story/ep34.js";
+import { AFTER_EP28, AFTER_EP29, AFTER_EP30, AFTER_EP31, AFTER_EP32, AFTER_EP33, AFTER_EP34 } from "../src/data/story/arc4.js";
+import { REFORM } from "../src/data/hollow.js";
 import { makeSentries, stepSentries, blocked, sees, SENTRY } from "../src/sim/sentry.js";
 import { ZONES } from "../src/data/zones.js";
 import { constrain } from "../src/sim/bounds.js";
@@ -24,7 +27,8 @@ import { found } from "../src/core/clues.js";
 import { THEATRE } from "../src/data/theatre.js";
 import { LOOKS } from "../src/runtime/rig.js";
 
-const nodes = { ...parseScript(EP29_SCRIPT, "e29"), ...parseScript(EP30_SCRIPT, "e30"), ...parseScript(EP31_SCRIPT, "e31"), ...parseScript(EP32_SCRIPT, "e32") };
+const nodes = { ...parseScript(EP29_SCRIPT, "e29"), ...parseScript(EP30_SCRIPT, "e30"), ...parseScript(EP31_SCRIPT, "e31"), ...parseScript(EP32_SCRIPT, "e32"),
+  ...parseScript(EP33_SCRIPT, "e33"), ...parseScript(EP34_SCRIPT, "e34"), ...parseScript(OLDCITY_SCRIPT, "oc") };
 const play = (node, f = new FlagStore(), pick = 0) => {
   const r = new DialogueRunner(nodes, f, { name: "Rook" }).start(node), lines = [], cmds = [];
   for (let s = r.next(); s.type !== "end"; s = r.next()) { if (s.type === "line") lines.push(s); if (s.type === "options") r.choose(pick); if (s.type === "command") cmds.push(s); }
@@ -36,15 +40,15 @@ const boss = (kind, seed = 3, opts = {}) => { const w = new World({ seed, ...opt
 const to = (b, frac) => b.combatant.health.set(b.stats.maxHealth * frac);
 
 test("Arc 4 opens after Arc 3 and chains episode to episode, each startable from the menu with what came before", () => {
-  const eps = [EPISODE_29, EPISODE_30, EPISODE_31, EPISODE_32];
+  const eps = [EPISODE_29, EPISODE_30, EPISODE_31, EPISODE_32, EPISODE_33, EPISODE_34];
   for (const ep of eps) {
     validateEpisode(ep);
     for (const b of ep.beats) { if (b.node) assert.ok(nodes[b.node], b.node); for (const c of b.cast ?? []) if (c.node) assert.ok(nodes[c.node], c.node); for (const p of b.pickups ?? []) if (p.node) assert.ok(nodes[p.node], p.node); }
     for (const b of ep.beats) if (b.cutscene) validateCutscene(CUTSCENES[b.cutscene]);
   }
   const next = (ep) => ep.beats.find((b) => b.type === "preview").nextEpisode;
-  assert.deepEqual([EPISODE_28, ...eps].map(next), ["ep29", "ep30", "ep31", "ep32", "ep33"]);
-  assert.deepEqual(eps.map((e) => e.setup), [{ ...AFTER_EP28 }, { ...AFTER_EP29 }, { ...AFTER_EP30 }, { ...AFTER_EP31 }]);
+  assert.deepEqual([EPISODE_28, ...eps].map(next), ["ep29", "ep30", "ep31", "ep32", "ep33", "ep34", "ep35"]);
+  assert.deepEqual(eps.map((e) => e.setup), [AFTER_EP28, AFTER_EP29, AFTER_EP30, AFTER_EP31, AFTER_EP32, AFTER_EP33].map((s) => ({ ...s })));
   for (const who of ["Halvard", "Mag", "Pip", "Luke"]) assert.ok(CAST[who] && LOOKS[CAST[who].actor], who);
   for (const look of ["nell", "tobin", "lance", "warden"]) assert.ok(LOOKS[look], look);
 });
@@ -180,9 +184,70 @@ test("The Crown Ward: Lances on every way in, each beat clear of the walls, and 
   assert.ok(!/mind the/i.test(EP32_SCRIPT), "nobody else borrows his line");
 });
 
+test("Hollow Shells: knocked apart, they lie there, then get up once at less than half strength; the second time they stay down", () => {
+  const w = new World({ seed: 9 }); w.drainEvents(); tough(w);
+  w.spawnWave(["shell"]); w.drainEvents();
+  const s = w.liveEnemies[0];
+  s.brain.aggroRange = 0;
+  s.combatant.takeDamage(1e6);
+  const down = run(w, REFORM.after - 5);
+  assert.ok(!s.alive && w.fighters.includes(s) && !down.some((e) => e.type === "waveClear"), "in pieces, still there, the fight not over");
+  const up = run(w, 10);
+  assert.ok(s.alive && up.some((e) => e.type === "reform" && e.fighter === s));
+  assert.ok(Math.abs(s.combatant.health.current - s.combatant.health.max * REFORM.health) < 1e-6);
+  s.combatant.takeDamage(1e6);
+  const gone = run(w, REFORM.after + 120);
+  assert.ok(!gone.some((e) => e.type === "reform") && gone.some((e) => e.type === "waveClear"), "the second time, it stays down");
+});
+
+test("a story fight can stand anywhere on its set: Rook starts south of the fight's centre and the wave rings it", () => {
+  const ep34 = EPISODE_34.beats.find((b) => b.type === "fight");
+  const w = new World({ seed: 2, ...ep34.world }); w.drainEvents();
+  w.resetPlayer(); w.spawnWave(ep34.wave); w.drainEvents();
+  const O = ep34.world.origin;
+  assert.deepEqual([w.player.pos.x, w.player.pos.z], [O.x, O.z - 4]);
+  for (const e of w.liveEnemies) {
+    assert.ok(Math.hypot(e.pos.x - O.x, e.pos.z - O.z) < 11, `${e.kind} rings the fight's centre`);
+    const p = constrain({ x: e.pos.x, z: e.pos.z }, e.stats.radius, w.bounds);
+    assert.ok(Math.hypot(p.x - e.pos.x, p.z - e.pos.z) < 1e-6, "and stands clear of walls");
+  }
+  const yard = new World({ seed: 2 }); yard.resetPlayer();
+  assert.deepEqual([yard.player.pos.x, yard.player.pos.z], [0, -4], "everywhere else, the middle of the set as before");
+});
+
+test("The Room Before the Door: Elodie's footprints through the old city, the door that knows her name, and the route Halvard gives away", () => {
+  const under = EPISODE_33.beats.find((b) => b.id === "under");
+  assert.deepEqual(under.required, ["print1", "print2", "print3", "severin"]);
+  assert.ok(under.encounters.every((e) => e.wave.every((k) => k === "shell")));
+  assert.ok(EPISODE_33.beats.some((b) => b.type === "fight" && b.stage === "oldcity" && b.wave.length === 3));
+  assert.ok(play("Ep33_Door").f.get("ELODIE_DOOR"));
+  const after = play("Ep33_After");
+  assert.ok(after.f.get("CONVOY_ROUTE") && after.f.get("HOLLOW_DOOR"));
+  assert.ok(after.cmds.some((c) => c.name === "cue" && c.args[0] === "doorShut"));
+  const crack = ZONES.undercroft.exits.find((e) => e.to === "oldcity");
+  assert.equal(crack.when, "$EP33_DONE", "the way down opens once you've been");
+  assert.ok(ZONES.oldcity.dungeon && ZONES.oldcity.exits.some((e) => e.to === "undercroft"));
+  assert.match(play("W_HollowDoor", new FlagStore({ ELODIE_DOOR: 1 })).text, /said her name/);
+});
+
+test("Encounter IV: he takes the Writ from the Chancellor; Severin stands in front of his father, and says it; the knight says nothing", () => {
+  const b = play("Ep34_Brother");
+  assert.ok(b.lines.some((l) => l.speaker === "Severin" && l.text === "...Brother?"));
+  assert.ok(!b.lines.some((l) => l.speaker === "Masked"), "not a word, this time");
+  assert.deepEqual([b.f.get("SABLE_ENCOUNTER"), b.f.get("WRIT_STOLEN")], [4, 1]);
+  assert.match(play("Ep34_After").text, /empty box with his name on it/);
+  const cs = CUTSCENES.ep34_brother;
+  validateCutscene(cs);
+  assert.ok(cs.events.some((e) => e.move?.id === "severin") && cs.events.some((e) => e.pose?.id === "knight" && e.pose.name === "raise"));
+  assert.ok(cs.events.filter((e) => e.tear).every((e) => e.tear.kind === "black"));
+  const board = rumorBoard(new FlagStore(AFTER_EP34));
+  assert.equal(board.seen.length, 5);
+  assert.match(board.seen[4], /said his brother's name, he stopped/);
+});
+
 test("leak test: the poor quarter's files never name him, or anyone he might be", () => {
   const src = (p) => readFileSync(new URL(`../src/${p}`, import.meta.url), "utf8");
-  for (const p of ["data/story/ep31.js", "data/story/ep32.js", "data/story/arc4.js", "sim/wraithe.js", "data/wraithe.js", "sim/sentry.js"]) {
+  for (const p of ["data/story/ep31.js", "data/story/ep32.js", "data/story/ep33.js", "data/story/ep34.js", "data/story/arc4.js", "sim/wraithe.js", "data/wraithe.js", "sim/sentry.js", "data/hollow.js"]) {
     assert.ok(!/\bsable\b/i.test(src(p)), `${p} calls him "masked"`);
     assert.ok(!/\bcal\b|calder|CAL_[A-Z]|\bdemons?\b/i.test(src(p)), p);
   }

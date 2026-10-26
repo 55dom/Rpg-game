@@ -17,6 +17,11 @@ const OUT = { x: VT.exit.x + 0.2, z: VT.exit.z - 0.6 }; // where he waits for hi
 export const QUARTER = Object.freeze({ out: { x: 29.4, z: -20.8 }, step: { x: 30.4, z: -22.0 }, lunge: { x: 31.5, z: -23.4 },
   knight: { x: 32.4, z: -24.6 }, seam: { x: 34.0, z: -26.6 }, reach: { x: 33.2, z: -25.9 }, boy: { x: 32.0, z: -26.8 } });
 const Q = QUARTER;
+// Ep 34, the Lowmarket south of the stalls, by the grate: where the Chancellor stands with the Writ, where the knight
+// comes out of the dark, and where Severin ends up, between them.
+export const CONVOY = Object.freeze({ aldric: { x: 23.4, z: -15.0 }, back: { x: 23.6, z: -12.8 }, tear: { x: 23.4, z: -20.4 }, knight: { x: 23.4, z: -16.4 },
+  halvard: { x: 21.0, z: -15.8 }, block: { x: 22.0, z: -17.4 }, severin: { x: 19.6, z: -13.0 }, between: { x: 23.25, z: -15.25 } });
+const CV = CONVOY;
 
 export const CUTSCENES = {
   // Episode 1 cold open.
@@ -211,6 +216,52 @@ export const CUTSCENES = {
       { t: 13.2, pose: { id: "knight", name: "none" } },
       { t: 13.6, caption: "A boy in a man's coat. He sets him down on the cobbles as if he weighed nothing." },
       { t: 16.2, caption: "" },
+    ],
+  },
+
+  // Episode 34: a black tear opens in the street. Halvard steps into the knight's way and goes down; the knight takes
+  // the Writ out of the Chancellor's hands and raises the glaive over him; Severin gets there first, rapier up.
+  ep34_brother: {
+    id: "ep34_brother",
+    stage: "aurelin",
+    sky: { daylight: 0.05 },
+    duration: 13.5,
+    actors: [
+      { id: "aldric", look: "aldric", x: CV.aldric.x, z: CV.aldric.z, yaw: PI },
+      { id: "halvard", look: "halvardFace", x: CV.halvard.x, z: CV.halvard.z, yaw: 2.6 },
+      { id: "severin", look: "severin", x: CV.severin.x, z: CV.severin.z, yaw: 2.2 },
+      { id: "knight", look: "masked", x: CV.tear.x, z: CV.tear.z, yaw: 0, hidden: true },
+    ],
+    camera: [
+      { t: 0, pos: [29.6, 4.6, -9.6], look: [CV.tear.x, 1.2, CV.tear.z + 2.0], fov: 0.66 },                // high up the street: a tear opens
+      { t: 2.6, pos: [29.5, 4.55, -9.8], look: [CV.tear.x, 1.2, CV.tear.z + 2.4], fov: 0.65, ease: "linear" },
+      { t: 2.6, cut: true, pos: [21.3, 2.2, -11.85], look: [22.8, 1.3, -17.4], fov: 0.62 },                // from behind the convoy: Halvard steps in
+      { t: 4.8, pos: [21.35, 2.2, -12.0], look: [22.9, 1.3, -17.3], fov: 0.62, ease: "linear" },
+      { t: 4.8, cut: true, pos: [25.2, 2.1, -12.6], look: [CV.knight.x, 1.6, CV.knight.z], fov: 0.52, ots: "aldric" }, // past the Chancellor
+      { t: 7.3, pos: [25.1, 2.1, -12.7], look: [CV.knight.x, 1.7, CV.knight.z], fov: 0.5, ease: "linear" },
+      { t: 7.3, cut: true, pos: [27.6, 2.2, -16.4], look: [23.2, 1.5, -14.6], fov: 0.62 },                 // from the side: Severin runs in between them
+      { t: 9.6, pos: [27.5, 2.1, -16.3], look: [23.2, 1.55, -14.6], fov: 0.6, ease: "linear" },
+      { t: 9.6, cut: true, pos: [21.9, 2.0, -14.3], look: [CV.knight.x, 1.9, CV.knight.z], fov: 0.5, ots: "severin" }, // over Severin's shoulder: the mask
+      { t: 11.6, pos: [21.95, 2.0, -14.4], look: [CV.knight.x, 1.95, CV.knight.z], fov: 0.48, ease: "linear" },
+      { t: 11.6, cut: true, pos: [24.8, 1.9, -17.8], look: [CV.between.x, 1.85, CV.between.z], fov: 0.5, ots: "knight" }, // over his: Severin's face
+      { t: 13.5, pos: [24.75, 1.9, -17.7], look: [CV.between.x, 1.85, CV.between.z], fov: 0.48, ease: "linear" },
+    ],
+    events: [
+      { t: 0.4, tear: { at: [CV.tear.x, 1.2, CV.tear.z], kind: "black", r: 1.0, yaw: 0, life: 2.4 } },
+      { t: 0.5, caption: "A black tear opens in the middle of the street." },
+      { t: 0.9, show: "knight" },
+      { t: 1.8, move: { id: "knight", to: [CV.tear.x, -18.2], dur: 1.6 } },
+      { t: 2.6, move: { id: "halvard", to: [CV.block.x, CV.block.z], dur: 0.9 } }, { t: 2.6, pose: { id: "halvard", name: "raise" } },
+      { t: 3.2, caption: "" },
+      { t: 3.7, pose: { id: "knight", name: "raise" } }, { t: 3.9, sfx: "swingHeavy" },
+      { t: 4.1, pose: { id: "knight", name: "none" } }, { t: 4.15, sfx: "slam" }, { t: 4.2, pose: { id: "halvard", name: "down" } },
+      { t: 4.4, move: { id: "knight", to: [CV.knight.x, CV.knight.z], dur: 0.9 } },
+      { t: 5.4, pose: { id: "knight", name: "hand" } }, { t: 5.5, caption: "He takes the Writ out of the Chancellor's hands as if it had been offered to him." },
+      { t: 6.6, pose: { id: "knight", name: "none" } }, { t: 6.6, pose: { id: "aldric", name: "bow" } }, { t: 6.6, move: { id: "aldric", to: [CV.back.x, CV.back.z], dur: 1.0 } },
+      { t: 7.0, caption: "" },
+      { t: 7.4, pose: { id: "knight", name: "raise" } },
+      { t: 7.5, move: { id: "severin", to: [CV.between.x, CV.between.z], dur: 1.1 } },
+      { t: 8.6, pose: { id: "severin", name: "raise" } }, { t: 8.6, sfx: "block" },
     ],
   },
 

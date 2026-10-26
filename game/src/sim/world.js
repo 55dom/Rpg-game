@@ -18,6 +18,7 @@ import { StormWardenController } from "./warden.js";
 import { VARKA_STATS, VARKA_HITBOXES, varkaOptions, ASH_OBJECTS, ASH_OBJECT_HITBOXES, THUNDER, BRANNOC_SPAR_STATS, BRANNOC_HITBOXES, brannocSparOptions } from "../data/ashfall.js";
 import { VarkaController, SparBoss } from "./varka.js";
 import { WRAITHE_STATS, WRAITHE_HITBOXES, wraitheOptions } from "../data/wraithe.js";
+import { REFORM } from "../data/hollow.js";
 import { WraitheController } from "./wraithe.js";
 import { MASKED_STATS, MASKED_HITBOXES, maskedOptions } from "../data/masked.js";
 import { MaskedController } from "./masked.js";
@@ -277,6 +278,7 @@ export class World {
   constructor(o = {}) {
     this.frame = 0;
     this.bounds = o.bounds ?? YARD; // where fighters may stand (zones swap this)
+    this.origin = o.origin ?? { x: 0, z: 0 }; // where a fight is centred on its set (Rook starts 4 m south of it; waves ring it)
     this.hunted = !!o.hunted; // Ep 31: somebody else is after Wraithe tonight (sim/wraithe.js)
     // Equipment (core/inventory.js mods): folded into Rook's stats here and into damage in _resolve.
     this.mods = { attack: 0, defense: 0, health: 0, mana: 0, manaRegen: 0, posture: 0, surge: 0, speed: 0, ...(o.mods ?? {}) };
@@ -603,7 +605,8 @@ export class World {
     const kinds = Array.isArray(spec) ? spec : typeof spec === "number" ? Array(spec).fill("acolyte") : WAVES[(this.wave - 1) % WAVES.length];
     this.boss = null;
     kinds.forEach((kind, i) => {
-      if (BOSSES[kind]) { if (at) this.spawnBoss(kind, at.x, at.z + 2); else this.spawnBoss(kind, 0, BOSSES[kind].z); return; }
+      const O = this.origin;
+      if (BOSSES[kind]) { if (at) this.spawnBoss(kind, at.x, at.z + 2); else this.spawnBoss(kind, O.x, O.z + BOSSES[kind].z); return; }
       const a = (i / kinds.length) * Math.PI * 2 + 0.6;
       if (at) { // around the encounter point, kept out of walls
         const r = (at.r ?? 5) * (ENEMIES[kind].traits.ranged ? 1.4 : 1);
@@ -612,7 +615,8 @@ export class World {
         return;
       }
       const r = ENEMIES[kind].traits.ranged ? 11 : 8;
-      this.spawnEnemy(kind, Math.sin(a) * r, Math.cos(a) * r + 2, i);
+      const pos = constrain({ x: O.x + Math.sin(a) * r, z: O.z + Math.cos(a) * r + 2 }, ENEMIES[kind].stats.radius, this.bounds);
+      this.spawnEnemy(kind, pos.x, pos.z, i);
     });
     this.emit({ type: "wave", wave: this.wave, kinds });
   }
@@ -776,7 +780,8 @@ export class World {
   resetPlayer() {
     const p = this.player;
     p.combatant.reset(); p.mana?.fill(); p.runner.interrupt(); p.buffer.clear();
-    p.pos = v3(0, 0, -4); p.prev = v3(0, 0, -4); p.vel = v3(); p.knock = v3(); p.grounded = true; p.yaw = 0;
+    const O = this.origin;
+    p.pos = v3(O.x, 0, O.z - 4); p.prev = v3(O.x, 0, O.z - 4); p.vel = v3(); p.knock = v3(); p.grounded = true; p.yaw = 0;
     p.counterFrames = 0; p.hitstop = 0; this.lockTarget = null; this.slowFrames = 0; this.stopFrames = 0;
     p.surge?.set(0); p.tags.clear();
     for (const c of this.companions) {
@@ -1319,6 +1324,11 @@ export class World {
       if (f.afterDashFrames > 0) f.afterDashFrames--;
       if (f.counterFrames > 0) f.counterFrames--;
       if (!f.alive) f.deadFrames++;
+      // Hollow armor that's been knocked apart pulls itself back together, once, weaker (data/hollow.js).
+      if (f.traits.reform && !f.reformed && !f.alive && f.deadFrames >= REFORM.after) {
+        f.reformed = true; f.combatant.reset(); f.combatant.health.set(f.combatant.health.max * REFORM.health); f.deadFrames = 0; f.tags.clear();
+        this.emit({ type: "reform", fighter: f, at: { x: f.pos.x, y: 0, z: f.pos.z } });
+      }
       // Downed companions get back up (no permanent losses mid-fight).
       if (f.companion && !f.alive && f.deadFrames >= f.stats.reviveFrames) {
         f.combatant.reset(); f.combatant.health.set(f.combatant.health.max * 0.5); f.deadFrames = 0; f.tags.clear();
@@ -1363,9 +1373,10 @@ export class World {
       const hp = f.combatant.health; if (hp.current < hp.max) hp.fill();
     }
 
-    // Bodies fade, then the wave can end.
-    if (!this.fighters.some((f) => f.team === Team.Enemy && f.deadFrames > Tuning.corpseFrames)) return;
-    const gone = this.fighters.filter((f) => f.team === Team.Enemy && f.deadFrames > Tuning.corpseFrames);
+    // Bodies fade, then the wave can end. (Hollow armor lies where it fell until it's had its one chance to get up.)
+    const fading = (f) => f.team === Team.Enemy && f.deadFrames > Tuning.corpseFrames && !(f.traits.reform && !f.reformed);
+    if (!this.fighters.some(fading)) return;
+    const gone = this.fighters.filter(fading);
     {
       for (const f of gone) this.emit({ type: "despawn", fighter: f });
       this.fighters = this.fighters.filter((f) => !gone.includes(f));
