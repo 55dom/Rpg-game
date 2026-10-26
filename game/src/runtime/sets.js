@@ -1405,6 +1405,7 @@ function buildIronhold(scene, mobile) {
     if (name === "enginePark" || name === "engineRoll") { // parked far up the field, or rolling from there toward the wall
       anim.mode = name === "engineRoll" ? "roll" : "idle"; anim.t = 0;
       maw.setEnabled(true); maw.position.set(0, 0, EN.from); maw.rotation.set(0, Math.PI, 0); wreck.setEnabled(false);
+      for (const n of [holeTear, skyTear, dust]) n.setEnabled(false); // a replay starts clean
     }
     if (name === "tear") { anim.mode = "drop"; anim.t = 0; holeTear.position.set(maw.position.x, 0.06, maw.position.z); }
     if (name === "sky") { anim.mode = "fall"; anim.t = 0; skyTear.position.set(EN.crash.x, 26, EN.crash.z); maw.position.set(EN.crash.x, 26, EN.crash.z); maw.rotation.set(0.1, 0.6, 0.2); maw.setEnabled(true); }

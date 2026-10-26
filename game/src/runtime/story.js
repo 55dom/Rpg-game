@@ -450,6 +450,7 @@ export class StoryPlayer {
     const th = this.theatre = { id, speed: 1, paused: false, step: 0, restart: false, exit: false, notes: theatreNotes(id, this.flags) };
     theatreMark(id, "rewatch");
     this.active = true;
+    this._enterScene(true); // no fight controls or HUD over the scene
     this.ctx.root.classList.add("theatre");
     this.ctx.onTheatre?.(th);
     for (;;) {
@@ -458,6 +459,7 @@ export class StoryPlayer {
       break;
     }
     this.theatre = null; this.active = false;
+    this._enterScene(false);
     this.ctx.root.classList.remove("theatre");
     this.ctx.onTheatre?.(null);
   }
