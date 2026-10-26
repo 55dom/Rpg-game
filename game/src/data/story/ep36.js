@@ -73,7 +73,7 @@ The Lighthouse, after midnight. Everyone is asleep except the drums.
 <<shot on Elodie>>
 Elodie is out on the sand in her nightdress again, and this time she isn't listening for anything. She's waiting.
 <<fx rift Elodie>>
-In front of her, in the empty air, a door opens. No wall and no frame, just a door-shaped piece of pale light standing on the dry sea.
+In front of her, in the empty air, the light tears open, ragged and pale, and exactly as tall as a door.
 Elodie: I know. I'm coming.
 <<hide Elodie>>
 <<show Severin>>

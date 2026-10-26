@@ -53,6 +53,7 @@ You know that door. You close it very gently.
 
 title: Ep38_Arms
 ---
+<<pose Rook cross>>
 <<shot two Rook Severin>>
 You're holding Elodie. She's asleep, and warm, and much lighter than you expected.
 <<shot on Severin>>
@@ -89,6 +90,7 @@ Dagrun: Later. Out. Now.
 
 title: Ep38_Out
 ---
+<<pose Severin cross>>
 <<cue doorShut>>
 <<shot wide>>
 The door under the Lowmarket lets them out one at a time, and shuts behind the last of them, and the humming stops.
@@ -159,7 +161,7 @@ export const EPISODE_38 = {
     { id: "arms", type: "scene", node: "Ep38_Arms", ...HO,
       rook: { x: 0, z: -2, yaw: 0 },
       cast: [
-        { id: "elodie", look: "elodie", x: 0.05, z: -1.6, y: 0.75, yaw: Math.PI / 2, down: true },
+        { id: "elodie", look: "elodie", x: 0, z: -1.58, y: 0.72, yaw: Math.PI / 2, down: true }, // in Rook's arms
         { id: "severin", look: "severin", x: -2.0, z: -1.0, yaw: 0.9 },
         { id: "juno", look: "juno", x: 2.6, z: -4.4, yaw: -0.6, hidden: true },
         { id: "dagrun", look: "dagrun", x: 1.0, z: -5.4, yaw: -0.2, hidden: true },
@@ -170,7 +172,7 @@ export const EPISODE_38 = {
       cast: [
         { id: "halvard", look: "halvardFace", x: 0.6, z: 5.4, yaw: 0 },
         { id: "severin", look: "severin", x: -1.2, z: 9.8, yaw: Math.PI },
-        { id: "elodie", look: "elodie", x: -1.0, z: 8.6, y: 0.6, yaw: Math.PI / 2, down: true },
+        { id: "elodie", look: "elodie", x: -1.2, z: 9.38, y: 0.72, yaw: Math.PI / 2, down: true }, // in his arms
         { id: "lio", look: "lio", x: 0.6, z: D.z - 2.4, yaw: 0 },
         { id: "juno", look: "juno", x: 3.4, z: 8.4, yaw: -2.6 },
         { id: "dagrun", look: "dagrun", x: -3.4, z: 8.0, yaw: 2.6 },

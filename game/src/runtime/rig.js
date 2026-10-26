@@ -229,7 +229,7 @@ LOOKS.halvard = { ...LOOKS.lance, scale: 1.14, coat: "#1a2448", helm: "#e6c060",
 LOOKS.eraser = { poses: ERASER_POSES, scale: 1.6, skirt: 1.35, coat: "#ecebf2", trim: "#d6d4e0", hairColor: "#f4f2fa", skin: "#f2f0f8",
   head: "blank", weapon: "claw", talon: "#e2e0ea", shoulders: 1.05, stoop: 0.12, menace: true, trail: "#ffffff" };
 // The masked knight seen close (Ep 38, one shot): the same, with what's round his wrist under the gauntlet's edge.
-LOOKS.maskedClose = { ...LOOKS.masked, wristCord: "#7a1e1c" };
+LOOKS.maskedClose = { ...LOOKS.masked, wristCord: "#5e1715" };
 LOOKS.shell = { poses: SHELL_POSES, scale: 1.12, skirt: 0.9, coat: "#4a4a52", trim: "#7a6a8a", hairColor: "#2a2a30", skin: "#3a3a42",
   head: "helm", helm: "#5a5a64", eyes: "#c9a4ff", menace: true, weapon: "sword", shoulders: 1.35, stoop: 0.05, trail: "#c9a4ff" };
 LOOKS.halvardFace = { poses: ACOLYTE_POSES, scale: 1.14, skirt: 1.0, coat: "#1a2448", trim: "#d4ad4f", hairColor: "#5a4a3a", beard: "#5a4a3a", skin: "#e8c8a8",
