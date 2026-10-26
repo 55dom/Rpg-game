@@ -341,7 +341,10 @@ export const ZONES = {
         routines: [
           { when: "not $ELSIE_SAVED", role: "child", steps: [{ do: "work", at: [-4.4, 15.6], face: Math.PI, anim: "cower", dur: [30, 40] }] },
           { role: "child", steps: [{ do: "work", at: [10.2, -6.4], face: 2.4, anim: "play", dur: [10, 14] }, { do: "wander", around: [9.6, -5.6], r: 1.4, dur: [5, 8] }] },
-        ] }],
+        ] },
+      // The Watch's man at the village, once Luke has brought Elsie home (data/law.js: the Fens have a watch now).
+      { id: "fenpost", look: "guard", x: 1.4, z: 9.6, yaw: Math.PI, node: "W_Patrol", when: "$LUKE_HOME_OPEN",
+        routine: { role: "guard", steps: [{ do: "idle", at: [1.4, 9.6], face: Math.PI, dur: [8, 12] }, { do: "walk", to: [-2.6, 13.6] }, { do: "idle", at: [-2.6, 13.6], face: 2.6, dur: [6, 9] }, { do: "walk", to: [1.4, 9.6] }] } }],
     pickups: [{ id: "hymn", x: -1.4, z: 15.2, show: "1", flag: "HYMN_READ", node: "W_Hymn", label: "Read the hymn nailed to the well" }, frag(4, -10.4, 9.5)],
     // Field fights: they come back each visit. Run far enough and they give up the chase.
     encounters: [
