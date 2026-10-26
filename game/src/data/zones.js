@@ -99,6 +99,17 @@ export const VAULT_LAYOUT = {
   pillars: 18.8, braziers: 19.6,
 };
 export const HOME_LAYOUT = { half: [5, 4], door: { x: 0, z: -4 }, table: { x: 1.6, z: 0.4 }, bed: { x0: -4.9, z0: 1, x1: -2.4, z1: 3.9 }, hearth: { x0: 1.2, z0: 3.3, x1: 3.4, z1: 4 } };
+// The Severed Isles (Arc 4, Ep 30): a plateau of rock adrift in the sky. The middle is the old sky temple's floor
+// (where the Storm Warden fights: fights use the round arena, so nothing stands inside 17 m); pillars, the star mural
+// and the places where the rim has fallen away into the clouds are all further out.
+export const ISLES_LAYOUT = {
+  radius: 22.5,
+  chasms: [[-17, -10, 2.8], [16.5, -12, 2.4], [-15, 13, 2.2]],
+  pillars: Array.from({ length: 8 }, (_, i) => { const a = (i / 8) * Math.PI * 2 + Math.PI / 8; return [Math.sin(a) * 19, Math.cos(a) * 19]; }).filter(([x, z]) => z < 15 || Math.abs(x) > 6),
+  mural: { x: 0, z: 20.6, w: 9 },
+  dock: { x: 0, z: -21 },
+  waystones: [[-12, -2], [12.5, -1], [0, -14]],
+};
 // The Watch House by Aurelin's south gate (data/law.js): the sergeant's desk by the door, the wanted board,
 // and two cells along the back wall (bars along z = cellZ; cell one's door stands open, cell two has a guest).
 export const WATCH_LAYOUT = {
@@ -133,7 +144,7 @@ export const THORNWICK_LAYOUT = {
 export const UNDERCROFT_BANDS = [[-34, -22, 6], [-22, -14, 2], [-14, 2, 10], [2, 10, 2], [10, 26, 12], [26, 32, 2], [32, 46, 14]];
 const UC_HALF = 14;
 
-const A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT, IH = IRONHOLD_LAYOUT, WH = WATCH_LAYOUT, FH = FENHOME_LAYOUT;
+const A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT, IH = IRONHOLD_LAYOUT, WH = WATCH_LAYOUT, FH = FENHOME_LAYOUT, SI = ISLES_LAYOUT;
 const rect = (r) => box(r.x0, r.z0, r.x1, r.z1);
 // The City Watch's patrols (data/law.js): one more walks the streets for every step $WATCH_STRENGTH takes.
 const patrol = (n, a, b) => ({ id: `patrol${n}`, name: "City Watch", look: "guard", x: a[0], z: a[1], yaw: 0, node: "W_Patrol", when: `$WATCH_STRENGTH >= ${n}`,
@@ -224,7 +235,7 @@ export const ZONES = {
       { id: "road", rect: [-17, -17, 17, -15.5], to: "aurelin", spawn: "gate", label: "The road to Aurelin" },
       { id: "west", rect: [-17, -12, -15.5, 4], to: "thornwick", spawn: "lighthouse", label: "West across the Dry Sea to Thornwick" },
     ],
-    arrivals: { aurelin: { x: 0, z: -13, yaw: 0 }, thornwick: { x: -13, z: -3, yaw: Math.PI / 2 } },
+    arrivals: { aurelin: { x: 0, z: -13, yaw: 0 }, thornwick: { x: -13, z: -3, yaw: Math.PI / 2 }, isles: { x: 2, z: -11, yaw: 0 } },
   },
   aurelin: {
     id: "aurelin", name: "Aurelin", region: "The Capital", stage: "aurelin",
@@ -498,6 +509,22 @@ export const ZONES = {
     ],
     exits: [{ id: "door", rect: [-0.9, -HL.half[1], 0.9, -HL.half[1] + 0.75], to: "aurelin", spawn: "hall", label: "Out to the plaza" }],
     arrivals: { aurelin: { x: 0, z: -8.6, yaw: 0 } },
+  },
+  // The Severed Isles (Arc 4): adrift over the Spindle Peaks. On the map once the Lanterns have been (after Ep 30).
+  isles: {
+    id: "isles", name: "The Severed Isles", region: "Over the Spindle Peaks", stage: "isles", mapWhen: "$EP30_DONE",
+    bounds: { radius: SI.radius, solids: [
+      ...SI.chasms.map(([x, z, r]) => circle(x, z, r)), ...SI.pillars.map(([x, z]) => circle(x, z, 0.9)),
+      box(SI.mural.x - SI.mural.w / 2, SI.mural.z - 0.6, SI.mural.x + SI.mural.w / 2, SI.mural.z + 0.6),
+    ] },
+    spawn: { x: SI.dock.x, z: SI.dock.z + 2.4, yaw: 0 },
+    cast: [],
+    pickups: [{ id: "mural", x: SI.mural.x, z: SI.mural.z - 1.6, show: "1", marker: false, node: "W_Mural", label: "Look at the star mural" }],
+    encounters: [
+      { id: "riders", rect: [-14, -12, 14, 2], at: { x: 0, z: -5, r: 5 }, wave: ["rider", "rider", "wisp"], label: "TEMPEST RIDERS" },
+    ],
+    exits: [{ id: "dock", rect: [-2, -22.5, 2, -21.5], to: "lighthouse", spawn: "isles", label: "The gondola down to the Lighthouse" }],
+    arrivals: { lighthouse: { x: SI.dock.x, z: SI.dock.z + 2.4, yaw: 0 } },
   },
   // The Watch House (data/law.js): where you pay a bounty, or wake up in a cell having not paid it.
   watchhouse: {

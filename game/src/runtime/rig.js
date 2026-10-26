@@ -7,6 +7,7 @@ import { ACOLYTE_POSES } from "../data/acolyte.js";
 import { BAS_POSES, JUNO_POSES } from "../data/companions.js";
 import { ENEMIES } from "../data/enemies.js";
 import { HASK_POSES } from "../data/hask.js";
+import { LANCE_POSES, WARDEN_POSES } from "../data/isles.js";
 import { SEVERIN_POSES } from "../data/severin.js";
 import { SEVERIN_KIT_POSES } from "../data/severinKit.js";
 import { ILSE_POSES, GALEN_POSES, GULLMAW_POSES } from "../data/bosses2.js";
@@ -214,6 +215,20 @@ LOOKS.elsie = { poses: ACOLYTE_POSES, scale: 0.64, skirt: 1.05, coat: "#5a7a4a",
 LOOKS.sergeant = { ...LOOKS.guard, coat: "#24407e", hairColor: "#7a7a7a", beard: "#7a7a7a", hair: "crop", shoulders: 1.22, weapon: "none" };
 // Someone who fights back in the street, if the fighter has no look of its own (it always should: their own).
 LOOKS.brawler = LOOKS.laborer;
+// Arc 4 (data/isles.js): Aldric's Lances in Valcourt blue and gold, their Commander, the Severed Isles' sky raiders,
+// the storm wisps (a ball of weather), the Warden's lightning rods, and B11, the Storm Warden: a temple guardian of grey
+// stone with storm-blue runes and a stone helm.
+LOOKS.lance = { poses: LANCE_POSES, scale: 1.08, skirt: 1.0, coat: "#22305a", trim: "#d4ad4f", hairColor: "#3a2a20", skin: PALETTE.mask,
+  head: "helm", helm: "#c9d2dc", weapon: "spear", shield: "heater", shieldColor: "#2b4f8f", shoulders: 1.25, trail: "#d4ad4f" };
+LOOKS.halvard = { ...LOOKS.lance, scale: 1.14, coat: "#1a2448", helm: "#e6c060", shoulders: 1.35, menace: true, trail: "#e6c060" };
+LOOKS.halvardFace = { poses: ACOLYTE_POSES, scale: 1.14, skirt: 1.0, coat: "#1a2448", trim: "#d4ad4f", hairColor: "#5a4a3a", beard: "#5a4a3a", skin: "#e8c8a8",
+  head: "face", hair: "crop", weapon: "spear", shoulders: 1.35, eyeColor: "#3a3a4a", trail: "#e6c060" };
+LOOKS.rider = { poses: LANCE_POSES, scale: 1.0, skirt: 1.1, coat: "#3a5a7a", trim: "#e8f4ff", hairColor: "#e8e4f0", skin: "#d8c0a8",
+  head: "hood", weapon: "sword", sash: true, trail: "#9ad8ff" };
+LOOKS.wisp = { form: "object", shape: "wisp", trail: "#bfe8ff" };
+LOOKS.rod = { form: "object", shape: "rod", trail: "#bfe8ff" };
+LOOKS.warden = { poses: WARDEN_POSES, scale: 1.95, skirt: 0.9, coat: "#8a8a94", trim: "#5aa8e8", hairColor: "#6a6a74", skin: "#7a7a84",
+  head: "helm", helm: "#9a9aa4", menace: true, weapon: "claw", talon: "#5a5a64", shoulders: 1.5, stoop: 0.08, eyes: "#9ad8ff", trail: "#9ad8ff" };
 // One of the admirers at the south gate since Luke joined: her best dress, for no reason at all.
 LOOKS.admirer = { ...LOOKS.townswoman, coat: "#c0507a", trim: "#f2d4dc", hairColor: "#3a2a20" };
 // The Crown Archivist (Eps 25–26): grey robes, ink on her fingers, a ledger under her arm.

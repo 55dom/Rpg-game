@@ -8,6 +8,7 @@ import { CRAFT_SCRIPT } from "../crafting.js";
 import { LORE_SCRIPT } from "../lore.js";
 import { NOTEBOOK_READ } from "./ep23.js";
 import { LAW_SCRIPT, LUKE_SCRIPT } from "./law.js";
+import { ISLES_SCRIPT } from "./ep30.js";
 
 const BASE_SCRIPT = `
 title: W_Dagrun
@@ -367,4 +368,4 @@ ${NOTEBOOK_READ}
 `;
 
 /** Every free-roam talk node: the towns, the Gilded Spoon café (data/story/cafe.js), and bonds (data/bonds.js). */
-export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT + CRAFT_SCRIPT + LORE_SCRIPT + HALL_SCRIPT + IRON_SCRIPT + NOTEBOOK_SCRIPT + LAW_SCRIPT + LUKE_SCRIPT;
+export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT + CRAFT_SCRIPT + LORE_SCRIPT + HALL_SCRIPT + IRON_SCRIPT + NOTEBOOK_SCRIPT + LAW_SCRIPT + LUKE_SCRIPT + ISLES_SCRIPT;

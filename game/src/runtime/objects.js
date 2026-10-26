@@ -52,6 +52,20 @@ export class ObjectView {
         this.glowPart = part(MB.CreateTorus("ring", { diameter: 1.9, thickness: 0.05, tessellation: 20 }, scene), "#8ae0d0", 0, 1.0, 0, 0, true);
         break;
       }
+      case "wisp": { // a storm wisp (Arc 4): a ball of weather on a string of lightning, hanging at head height
+        part(MB.CreateSphere("cloud", { diameter: 0.9, segments: 10 }, scene), "#c8d4e0", 0, 1.45, 0, 0.02).scaling.set(1.1, 0.8, 1.1);
+        this.glowPart = part(MB.CreateSphere("core", { diameter: 0.42, segments: 8 }, scene), "#bfe8ff", 0, 1.38, 0, 0, true);
+        part(MB.CreateCylinder("string", { height: 1.1, diameter: 0.04, tessellation: 4 }, scene), "#e8f4ff", 0, 0.62, 0, 0, true);
+        this.float = true;
+        break;
+      }
+      case "rod": { // the Storm Warden's lightning rod: a tall iron spike on a stone foot, its tip crackling
+        part(MB.CreateCylinder("foot", { height: 0.5, diameterTop: 0.7, diameterBottom: 0.95, tessellation: 8 }, scene), "#6a6a74", 0, 0.25, 0);
+        part(MB.CreateCylinder("spike", { height: 2.8, diameterTop: 0.04, diameterBottom: 0.2, tessellation: 6 }, scene), "#3a3f48", 0, 1.9, 0, 0.015);
+        for (const y of [1.2, 2.0]) part(MB.CreateTorus("coil", { diameter: 0.32, thickness: 0.05, tessellation: 12 }, scene), "#b08a3a", 0, y, 0, 0.01);
+        this.glowPart = part(MB.CreateSphere("tip", { diameter: 0.3, segments: 8 }, scene), "#bfe8ff", 0, 3.3, 0, 0, true);
+        break;
+      }
       case "engine": { // the Ironsong: a wheeled war tower, iron-plated, a storm-charged ballista on top
         const wood = "#5a3a22", iron = "#3a3f48";
         part(MB.CreateBox("deck", { width: 2.8, height: 0.5, depth: 3.6 }, scene), wood, 0, 0.75, 0, 0.03);
@@ -77,7 +91,7 @@ export class ObjectView {
   update(f, t, dt) {
     this.time += dt;
     if (this.wheels) { const moved = Math.hypot(f.pos.x - this.root.position.x, f.pos.z - this.root.position.z); for (const w of this.wheels) w.rotation.x += moved / 0.55; } // rolling
-    this.root.position.set(f.pos.x, 0, f.pos.z);
+    this.root.position.set(f.pos.x, this.float ? Math.sin(this.time * 2.4) * 0.15 : 0, f.pos.z); // a wisp bobs on its string
     if (this.head) this.head.rotation.y = f.yaw; else this.root.rotation.y = f.yaw;
     const shake = this.flash > 0 ? Math.sin(this.time * 60) * 0.06 : 0;
     this.flash = Math.max(0, this.flash - dt);

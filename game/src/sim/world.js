@@ -13,6 +13,8 @@ import { HASK_STATS, HASK_HITBOXES, HASK_TUNING, haskOptions } from "../data/has
 import { HaskController, SeverinController, SparController, IlseController, GalenController, GullmawController } from "./boss.js";
 import { ILSE_STATS, ILSE_HITBOXES, ilseOptions, GALEN_STATS, GALEN_HITBOXES, galenOptions, GULLMAW_STATS, GULLMAW_HITBOXES, gullmawOptions,
   OBJECTS as OBJECTS2, OBJECT_HITBOXES as OBJECT_HITBOXES2, GALEN_TUNING } from "../data/bosses2.js";
+import { WARDEN_STATS, WARDEN_HITBOXES, wardenOptions, ISLES_OBJECTS } from "../data/isles.js";
+import { StormWardenController } from "./warden.js";
 import { VARKA_STATS, VARKA_HITBOXES, varkaOptions, ASH_OBJECTS, ASH_OBJECT_HITBOXES, THUNDER, BRANNOC_SPAR_STATS, BRANNOC_HITBOXES, brannocSparOptions } from "../data/ashfall.js";
 import { VarkaController, SparBoss } from "./varka.js";
 import { WRAITHE_STATS, WRAITHE_HITBOXES, wraitheOptions } from "../data/wraithe.js";
@@ -22,7 +24,7 @@ import { MaskedController } from "./masked.js";
 import { ECLIPSED_STATS, ECLIPSED_FINAL_STATS, ECLIPSED_HITBOXES, eclipsedOptions, eclipsedFinalOptions } from "../data/eclipse.js";
 import { EclipseController, EclipseFinalController } from "./eclipse.js";
 import { INSCRIPTION, INSCRIPTION_HITBOXES } from "../data/inscription.js";
-const OBJECTS = { ...OBJECTS2, ...ASH_OBJECTS }, OBJECT_HITBOXES = { ...OBJECT_HITBOXES2, ...ASH_OBJECT_HITBOXES };
+const OBJECTS = { ...OBJECTS2, ...ASH_OBJECTS, ...ISLES_OBJECTS }, OBJECT_HITBOXES = { ...OBJECT_HITBOXES2, ...ASH_OBJECT_HITBOXES };
 import { CAL_STATS, CAL_HITBOXES, calOptions } from "../data/cal.js";
 import { SEVERIN_STATS, SEVERIN_HITBOXES, severinOptions } from "../data/severin.js";
 import { RunDirector } from "./run.js";
@@ -68,6 +70,8 @@ const BOSSES = {
   severinDuel: { stats: { ...SEVERIN_STATS, maxHealth: 1400, bossTitle: "SEVERIN VALCOURT · THE TOWER STEPS", defeatText: "SEVERIN YIELDS" }, hitboxes: SEVERIN_HITBOXES, options: severinOptions, traits: {}, Controller: SeverinController, z: 6 },
   eclipsed: { stats: ECLIPSED_STATS, hitboxes: ECLIPSED_HITBOXES, options: eclipsedOptions, traits: {}, Controller: EclipseController, z: 6 },
   eclipsedFinal: { stats: ECLIPSED_FINAL_STATS, hitboxes: ECLIPSED_HITBOXES, options: eclipsedFinalOptions, traits: {}, Controller: EclipseFinalController, z: 5 },
+  // Arc 4: B11, the sky temple's guardian (Ep 30).
+  warden: { stats: WARDEN_STATS, hitboxes: WARDEN_HITBOXES, options: wardenOptions, traits: { heavy: true, armoredAttacks: true }, Controller: StormWardenController, z: 7 },
 };
 export const BOSS_KINDS = Object.freeze(Object.keys(BOSSES));
 

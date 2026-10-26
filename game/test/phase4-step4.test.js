@@ -18,7 +18,7 @@ const blocked = (b, x, z) => { const p = constrain({ x, z }, R, b); return Math.
 
 /** Flood-fill the walkable grid from a point; returns a lookup for reachability. */
 function reach(b, from, step = 0.5) {
-  const [x0, z0, x1, z1] = b.rect, W = Math.ceil((x1 - x0) / step), H = Math.ceil((z1 - z0) / step);
+  const [x0, z0, x1, z1] = b.rect ?? [-b.radius, -b.radius, b.radius, b.radius], W = Math.ceil((x1 - x0) / step), H = Math.ceil((z1 - z0) / step); // round zones (the Isles) too
   const seen = new Uint8Array(W * H), q = [];
   const idx = (x, z) => Math.floor((z - z0) / step) * W + Math.floor((x - x0) / step);
   const s = constrain({ ...from }, R, b);

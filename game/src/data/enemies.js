@@ -10,6 +10,7 @@ import { AttackOption } from "../core/ai.js";
 import { ACOLYTE_STATS, ACOLYTE_HITBOXES, ACOLYTE_ABILITIES, ACOLYTE_POSES, acolyteOptions } from "./acolyte.js";
 import { ASHFALL_ENEMIES } from "./ashfall.js";
 import { ECLIPSE_ENEMIES } from "./eclipse.js";
+import { ISLES_ENEMIES } from "./isles.js";
 
 const sound = (frame, key = "swing") => ({ frame, type: E.PlaySound, key });
 const box = (frame, key, frames) => ({ frame, type: E.SpawnHitbox, key, value: frames });
@@ -122,6 +123,7 @@ export const ENEMIES = Object.freeze({
     traits: { brawler: true },
   },
   ...ASHFALL_ENEMIES, // the Iron Front (Arc 3)
+  ...ISLES_ENEMIES, // Arc 4: Aldric's Lances, the Severed Isles' riders and wisps
   ...ECLIPSE_ENEMIES, // Mirrorlake (Ep 28): the Lion and the reflection
   acolyte: {
     stats: { ...ACOLYTE_STATS, name: "Choir Acolyte" }, hitboxes: ACOLYTE_HITBOXES, abilities: ACOLYTE_ABILITIES,

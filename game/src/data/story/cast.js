@@ -32,6 +32,7 @@ export const CAST = Object.freeze({
   Elodie: { name: "Elodie", color: "#fff1b8", actor: "elodie" },
   Aldric: { name: "High Chancellor Aldric", color: "#9ab0e8", actor: "aldric" },
   Hesper: { name: "Hesper Voss", color: "#c9a4ff", actor: "hesper" },
+  Halvard: { name: "Lance-Commander Halvard", color: "#e6c060", actor: "halvard" }, // Aldric's Lances (Arc 4)
   Archivist: { name: "Crown Archivist", color: "#d8dce8", actor: "archivist" },
   Vendor: { name: "Lowmarket Vendor", color: "#ffb38a", actor: "vendor" },
   Guard: { name: "Gate Guard", color: "#c9d2dc", actor: "guard" },

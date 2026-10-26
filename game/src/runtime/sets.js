@@ -1,7 +1,8 @@
 // Story sets (Phase 3): each one is built on first use from primitives, carries its own sky, fog,
 // and lighting, and can be swapped in and out. "yard" is the original training yard (arena.js).
 
-import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT } from "../data/zones.js";
+import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT, ISLES_LAYOUT } from "../data/zones.js";
+import { WARDEN_STARS } from "../data/isles.js";
 import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } from "./look.js";
 import { buildCrowd } from "./crowd.js";
 import { buildCritters } from "./critters.js";
@@ -53,7 +54,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, watchhouse: buildWatchhouse, fenhome: buildFenhome, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, watchhouse: buildWatchhouse, fenhome: buildFenhome, isles: buildIsles, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -1197,6 +1198,84 @@ function buildHome(scene, mobile) {
   const self = { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true,
     update(dt, t) { room.cutaway(scene.activeCamera, self.mood?.player); flame.scaling.y = 0.85 + Math.sin(t * 9) * 0.15; warm.intensity = 0.5 + Math.sin(t * 7) * 0.05; } };
   return self;
+}
+
+/**
+ * The Severed Isles (Arc 4, Ep 30): a plateau of rock adrift in a bright sky over a sea of cloud, the old sky temple's
+ * star floor inlaid in its middle, broken pillars round the rim, the star mural on its standing wall to the north, a
+ * gondola dock to the south, and the rest of the isles drifting all around, some tied on by rope bridges.
+ */
+function buildIsles(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, L = ISLES_LAYOUT;
+  const rng = mulberry(30), P = palette(scene, "si");
+  const rockM = toon(scene, "si-rock", "#8a8070"), rockDark = toon(scene, "si-rockDark", "#6a6052"), grassM = toon(scene, "si-grass", "#7aa86a");
+  const stoneM = toon(scene, "si-stone", "#d8d2c4"), runeM = glow(scene, "si-rune", "#9ad8ff", 0.9);
+  // An isle: a grassy top on a rough cone of rock tapering away underneath.
+  const isle = (x, y, z, r, grassy = true) => {
+    const top = add(MB.CreateCylinder("si-isleTop", { diameter: r * 2, height: 1.2, tessellation: mobile ? 22 : 32 }, scene), 0.05); top.position.set(x, y - 0.6, z); top.material = grassy ? grassM : rockM;
+    const under = add(MB.CreateCylinder("si-isleUnder", { diameterTop: r * 2, diameterBottom: r * 0.25, height: r * 1.3, tessellation: mobile ? 9 : 13 }, scene), 0.05);
+    under.position.set(x, y - 1.2 - r * 0.65, z); under.rotation.y = rng() * 3; under.material = rockDark;
+    for (let i = 0; i < 4; i++) { const a = rng() * Math.PI * 2, d = r * (0.6 + rng() * 0.3); const st = add(MB.CreateCylinder("si-stalactite", { diameterTop: 0.8 + rng(), diameterBottom: 0, height: 2 + rng() * 3, tessellation: 5 }, scene), 0.03); st.position.set(x + Math.sin(a) * d, y - 1.2 - r * 0.5 - rng() * 2, z + Math.cos(a) * d); st.material = rockDark; }
+    return top;
+  };
+  isle(0, 0, 0, L.radius + 1.5);
+  // Where the rim has fallen away: holes straight down to the clouds.
+  for (const [x, z, r] of L.chasms) { const hole = add(MB.CreateDisc("si-chasm", { radius: r, tessellation: 18 }, scene)); hole.rotation.x = Math.PI / 2; hole.position.set(x, 0.015, z); hole.material = toon(scene, "si-sky", "#bcd8f0"); for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2; const b = add(MB.CreateBox("si-rubble", { width: 0.6, height: 0.4, depth: 0.5 }, scene), 0.02); b.position.set(x + Math.sin(a) * (r + 0.3), 0.2, z + Math.cos(a) * (r + 0.3)); b.rotation.y = a; b.material = rockM; } }
+  // The temple floor: pale paving inlaid with the star chart (the same lines the Warden's thunder follows).
+  const floor = add(MB.CreateDisc("si-floor", { radius: 13, tessellation: 48 }, scene)); floor.rotation.x = Math.PI / 2; floor.position.y = 0.012; floor.material = stoneM;
+  for (const r of [6, 13]) { const ring = add(MB.CreateTorus("si-ring", { diameter: r * 2, thickness: 0.1, tessellation: 48 }, scene)); ring.position.y = 0.02; ring.material = P("#b0a890"); }
+  const lineM = P("#8a9ab8"), starM = runeM;
+  for (const stars of WARDEN_STARS) {
+    stars.forEach(([x, z], i) => {
+      const s0 = add(MB.CreateDisc("si-star", { radius: 0.32, tessellation: 5 }, scene)); s0.rotation.x = Math.PI / 2; s0.position.set(x, 0.025, z + 7); s0.material = starM;
+      if (i) { const [px, pz] = stars[i - 1], len = Math.hypot(x - px, z - pz); const ln = add(MB.CreateGround("si-starLine", { width: 0.08, height: len }, scene)); ln.position.set((x + px) / 2, 0.022, (z + pz) / 2 + 7); ln.rotation.y = Math.atan2(x - px, z - pz); ln.material = lineM; }
+    });
+  }
+  // Pillars round the rim, some broken off short.
+  for (const [i, [x, z]] of L.pillars.entries()) {
+    const h = i % 3 === 1 ? 2.2 : 5.5;
+    const c = add(MB.CreateCylinder("si-pillar", { diameter: 1.4, height: h, tessellation: 10 }, scene), 0.04); c.position.set(x, h / 2, z); c.material = stoneM;
+    if (h > 3) { const cap = add(MB.CreateBox("si-pillarCap", { width: 1.8, height: 0.4, depth: 1.8 }, scene), 0.03); cap.position.set(x, h + 0.2, z); cap.material = stoneM; }
+    const band = add(MB.CreateTorus("si-band", { diameter: 1.45, thickness: 0.08, tessellation: 14 }, scene)); band.position.set(x, 1.4, z); band.material = runeM;
+  }
+  // The star mural: a standing wall, the constellation drawn on it in light.
+  const M = L.mural;
+  const wall = add(MB.CreateBox("si-muralWall", { width: M.w, height: 5, depth: 1 }, scene), 0.05); wall.position.set(M.x, 2.5, M.z); wall.material = stoneM;
+  const face = add(MB.CreatePlane("si-muralFace", { width: M.w - 1, height: 3.6, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); face.position.set(M.x, 2.6, M.z - 0.52); face.material = P("#2a3450");
+  WARDEN_STARS.flat().forEach(([x, z], i) => { const d = add(MB.CreateDisc("si-muralStar", { radius: 0.09 + (i % 3) * 0.03, tessellation: 5 }, scene)); d.position.set(M.x + x * 0.42, 2.6 + z * 0.19, M.z - 0.54); d.rotation.y = Math.PI; d.material = starM; });
+  // The gondola dock at the south rim: planks, posts, and the chain that runs down into the clouds.
+  const D = L.dock;
+  const deck = add(MB.CreateBox("si-dock", { width: 4, height: 0.25, depth: 3 }, scene), 0.03); deck.position.set(D.x, 0.12, D.z - 0.5); deck.material = P("#7a5a3a");
+  for (const x of [-1.8, 1.8]) { const post = add(MB.CreateCylinder("si-dockPost", { diameter: 0.25, height: 2.4, tessellation: 6 }, scene), 0.02); post.position.set(D.x + x, 1.2, D.z - 1.8); post.material = P("#5a3a22"); }
+  const chain = add(MB.CreateCylinder("si-chain", { diameter: 0.18, height: 60, tessellation: 5 }, scene)); chain.position.set(D.x, -22, D.z - 6); chain.rotation.x = 0.55; chain.material = P("#3a3f48");
+  const gondola = add(MB.CreateBox("si-gondola", { width: 2.2, height: 1.4, depth: 1.6 }, scene), 0.03); gondola.position.set(D.x, -0.4, D.z - 3.2); gondola.material = P("#8a5a32");
+  // Waystones (the bridge-stones you wake to raise the way across): short stones with a rune.
+  for (const [x, z] of L.waystones) { const s0 = add(MB.CreateBox("si-waystone", { width: 0.8, height: 1.4, depth: 0.5 }, scene), 0.03); s0.position.set(x, 0.7, z); s0.material = stoneM; const r0 = add(MB.CreatePlane("si-wayRune", { width: 0.4, height: 0.5, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); r0.position.set(x, 0.9, z - 0.26); r0.material = runeM; }
+  // The other isles, drifting all round, two of them roped to this one.
+  const far = [[-44, -6, 18, 7], [40, 4, 22, 6], [-26, -3, -48, 5], [30, -8, 46, 8], [6, 10, 62, 9], [-58, 6, 30, 6]];
+  for (const [x, y, z, r] of far) isle(x, y, z, r, rng() > 0.3);
+  const rope = P("#c9a26a");
+  for (const [x0, z0, x1, y1, z1] of [[-21, 4, -38, -6, 16], [20, 6, 34, 4, 20]]) {
+    const len = Math.hypot(x1 - x0, y1, z1 - z0), mid = [(x0 + x1) / 2, y1 / 2 - 1.2, (z0 + z1) / 2];
+    for (const dx of [-0.7, 0.7]) { const r0 = add(MB.CreateCylinder("si-rope", { diameter: 0.06, height: len, tessellation: 4 }, scene)); r0.position.set(mid[0] + dx * Math.cos(Math.atan2(x1 - x0, z1 - z0)), mid[1] + 0.9, mid[2] - dx * Math.sin(Math.atan2(x1 - x0, z1 - z0))); r0.rotation.set(Math.PI / 2 - Math.atan2(y1, Math.hypot(x1 - x0, z1 - z0)), Math.atan2(x1 - x0, z1 - z0), 0); r0.material = rope; }
+    const planks = add(MB.CreateBox("si-bridge", { width: 1.2, height: 0.08, depth: len }, scene), 0.01); planks.position.set(...mid); planks.rotation.set(-Math.atan2(y1, Math.hypot(x1 - x0, z1 - z0)), Math.atan2(x1 - x0, z1 - z0), 0); planks.material = P("#8a6a46");
+  }
+  // A sea of cloud far below, and a few clouds drifting past at eye level.
+  const cloudM = toon(scene, "si-cloud", "#f4f6fa");
+  const clouds = [];
+  for (let i = 0; i < (mobile ? 14 : 24); i++) {
+    const a = rng() * Math.PI * 2, d = 30 + rng() * 70, low = i % 3 !== 0;
+    const c = add(MB.CreateSphere("si-cloud", { diameter: 10 + rng() * 14, segments: 6 }, scene)); c.scaling.set(1.6, 0.35, 1); c.position.set(Math.sin(a) * d, low ? -26 - rng() * 10 : -4 + rng() * 10, Math.cos(a) * d); c.material = cloudM;
+    clouds.push({ c, a, d, s: 0.004 + rng() * 0.006 });
+  }
+  K.bake([]);
+  const env = { clear: "#9ec8f0", fog: "#cfe2f4", fogDensity: 0.004, hemi: [0.85, "#ffffff", "#8aa0b8"], sun: [0.8, "#fff4e0", [0.4, -1, 0.3]], warm: 0 };
+  const toonEnv = { lightDir: [-0.4, 1, -0.3], fogColor: "#cfe2f4", fogDensity: 0.002, sky: [1.08, 1.08, 1.12], ground: [0.84, 0.86, 0.92], rim: [1.0, 1.0, 1.05] };
+  return { env, toon: toonEnv, show: K.show, conditions: K.conditions, outdoor: true,
+    update(dt, t) {
+      for (const k of clouds) { k.a += k.s * dt; k.c.position.x = Math.sin(k.a) * k.d; k.c.position.z = Math.cos(k.a) * k.d; }
+      gondola.position.y = -0.4 + Math.sin(t * 0.8) * 0.08;
+    } };
 }
 
 /** The Watch House (data/law.js): the sergeant's desk, the wanted board, a weapon rack, and two barred cells. */

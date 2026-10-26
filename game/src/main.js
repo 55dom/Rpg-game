@@ -39,6 +39,8 @@ import { EPISODE_25, EP25_SCRIPT } from "./data/story/ep25.js";
 import { EPISODE_26, EP26_SCRIPT } from "./data/story/ep26.js";
 import { EPISODE_27, EP27_SCRIPT } from "./data/story/ep27.js";
 import { EPISODE_28, EP28_SCRIPT } from "./data/story/ep28.js";
+import { EPISODE_29, EP29_SCRIPT } from "./data/story/ep29.js";
+import { EPISODE_30, EP30_SCRIPT } from "./data/story/ep30.js";
 import { theatreList } from "./data/theatre.js";
 import { PlaytestLog, SURVEYS } from "./core/playtest.js";
 import { keyItemsHeld } from "./data/keyItems.js";
@@ -310,7 +312,10 @@ export function boot(doc = document) {
         case "silenceZone": silenceFx.add(ev.zone); sfx.play("heal", 0.7); break;
         case "silenceEnd": silenceFx.remove(ev.zone); break;
         case "silenced": hud.toast(ev.what === "dodge" ? "DODGE SILENCED · PARRY!" : "SILENCED", "danger"); sfx.play("block", 0.5); break;
-        case "groundWave": vfx.ring({ x: ev.wave.x, y: 0.08, z: ev.wave.z }, ev.wave.maxR, { toll: "#c9b4ff", rot: "#c86a2a", splash: "#6ac8d8", shock: "#9ad8ff" }[ev.wave.kind] ?? "#ffffff", ev.wave.maxR / ev.wave.speed); sfx.play(ev.wave.kind === "rot" ? "mud" : "slam", 0.7); camera.shake(0.2); break;
+        case "groundWave": vfx.ring({ x: ev.wave.x, y: 0.08, z: ev.wave.z }, ev.wave.maxR, { toll: "#c9b4ff", rot: "#c86a2a", splash: "#6ac8d8", shock: "#9ad8ff", gale: "#e8f4ff" }[ev.wave.kind] ?? "#ffffff", ev.wave.maxR / ev.wave.speed); sfx.play(ev.wave.kind === "rot" ? "mud" : "slam", 0.7); camera.shake(0.2); break;
+        case "rodsRise": hud.toast("THE RODS RISE", "danger"); sfx.play("glint"); break;
+        case "rodsBroken": hud.toast("THE CHARGE GOES OUT OF IT", "break"); impact(3, true); sfx.play("postureBreak"); break;
+        case "constellation": hud.toast("THE STARS LIGHT UP", "danger"); break;
         case "bells": hud.toast("THE BELLS RING", "danger"); hud.banner("NO SPELLS ANYWHERE · BREAK THE THREE BELLS"); silenceFx.all(true); break;
         case "bellsBroken": hud.toast("SILENCE BROKEN", "break"); silenceFx.all(false); impact(3, true); sfx.play("postureBreak"); break;
         case "wardBroken": hud.toast("HER WARD FALLS", "break"); break;
@@ -790,7 +795,8 @@ export function boot(doc = document) {
     { episode: EPISODE_21, script: EP21_SCRIPT }, { episode: EPISODE_22, script: EP22_SCRIPT },
     { episode: EPISODE_23, script: EP23_SCRIPT }, { episode: EPISODE_24, script: EP24_SCRIPT },
     { episode: EPISODE_25, script: EP25_SCRIPT }, { episode: EPISODE_26, script: EP26_SCRIPT },
-    { episode: EPISODE_27, script: EP27_SCRIPT }, { episode: EPISODE_28, script: EP28_SCRIPT }], [WORLD_SCRIPT]);
+    { episode: EPISODE_27, script: EP27_SCRIPT }, { episode: EPISODE_28, script: EP28_SCRIPT },
+    { episode: EPISODE_29, script: EP29_SCRIPT }, { episode: EPISODE_30, script: EP30_SCRIPT }], [WORLD_SCRIPT]);
   annotationNow = () => !!story.flags.get("ANNOTATION"); // after Mirrorlake, Rook's spells write ink
   const playtest = new PlaytestLog(story.flags, { where: () => ({ episode: story.ep?.id ?? null, beat: story.director?.beat?.id ?? null }) });
   injuredNow = () => (story.flags.get("BAS_ARM_BROKEN") ? ["bas"] : []); // Bas fights one-armed after the vault
@@ -998,6 +1004,7 @@ export function boot(doc = document) {
       4: ["THE ECLIPSE", "PHASE 4 · HE READS A CLAUSE · YOUR SURGE IS GONE"] },
     masked: { 2: ["THE FLOOR OPENS", "PHASE 2 · A BLACK TEAR UNDER YOU · STEP OFF, OR JUMP OR DASH BEFORE YOU LAND"],
       3: ["NO WAY OUT", "PHASE 3 · EVERY WAY OUT LEADS BACK IN"], 4: ["…", "PHASE 4"] },
+    warden: { 2: ["THE RODS RISE", "PHASE 2 · IT'S CHARGED WHILE ANY ROD STANDS · BREAK THEM"], 3: ["THE STAR CHART", "PHASE 3 · THUNDER ALONG THE CONSTELLATION'S LINES"] },
     varka: { 2: ["THE IRONSONG ROLLS", "PHASE 2 · THE ENGINE CHARGES DOWN A LANE · GET OUT OF IT"], 3: ["THE ENGINE BREAKS", "PHASE 3 · FALLING WRECKAGE · WATCH THE RINGS"],
       4: ["RAILGUN", "PHASE 4 · SHE FIRES HERSELF DOWN THE FIELD · DODGE"] },
   };
