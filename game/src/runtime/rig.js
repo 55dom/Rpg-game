@@ -205,6 +205,23 @@ LOOKS.basSling = { ...LOOKS.bas, sling: true };
 // The Crown Archivist (Eps 25–26): grey robes, ink on her fingers, a ledger under her arm.
 LOOKS.archivist = { poses: ACOLYTE_POSES, scale: 0.95, skirt: 1.25, coat: "#5e5e68", trim: "#c8c8d0", hairColor: "#2e2a30", skin: "#ecd0b8",
   head: "face", hair: "long", weapon: "none", holds: "scroll", sash: true, eyeColor: "#3a3a4a", trail: "#c8c8d0" };
+// Arc 3's finale (Eps 27–28). Elodie Valcourt: Severin's sister, born without a grimoire; his hair, a pale gold dress.
+LOOKS.elodie = { poses: ACOLYTE_POSES, scale: 0.9, skirt: 1.35, coat: "#f2ead2", trim: "#d4ad4f", hairColor: "#ecd890", skin: "#f3dcc8",
+  head: "face", hair: "long", headband: "#d4ad4f", weapon: "none", eyeColor: "#3a6ab0", trail: "#fff1b8" };
+// High Chancellor Aldric Valcourt: the family's gold and blue, heavy and old-fashioned; iron rings.
+LOOKS.aldric = { poses: ACOLYTE_POSES, scale: 1.08, skirt: 1.2, coat: "#22305a", trim: "#d4ad4f", hairColor: "#c8c4b8", beard: "#c8c4b8", skin: "#ecd2bc",
+  head: "face", hair: "swept", weapon: "none", sash: true, cape: "#1a2244", shoulders: 1.1, stern: true, eyeColor: "#2a3a60", trail: "#d4ad4f" };
+// Hesper Voss, the Pale Choir's mother superior: white-violet vestments, a singing halo, and a smile.
+LOOKS.hesper = { poses: ACOLYTE_POSES, scale: 1.0, skirt: 1.4, coat: "#ece6f4", trim: "#7a4aa0", hairColor: "#d8d0e8", skin: "#f2e2dc",
+  head: "face", hair: "long", hood: "#d8cfe8", halo: true, weapon: "none", eyeColor: "#7a4aa0", trail: "#c9a4ff" };
+// Severin Eclipsed: the forbidden page writing on him. His whites gone grey-violet, the gold gone dark, black-violet light.
+LOOKS.eclipsed = { ...LOOKS.severin, coat: "#5a5468", trim: "#3a2a5a", accent: "#7a4ab0", cape: "#140f24", eyeColor: "#c9a4ff", trail: "#7a4ab0", angry: true };
+// His reflection in Mirrorlake: the same, pale and see-through.
+LOOKS.reflection = { ...LOOKS.eclipsed, coat: "#a8b8e8", trim: "#6a7ab0", cape: "#3a4a80", trail: "#a8c8ff", alpha: 0.5 };
+LOOKS.eclipsedFinal = LOOKS.eclipsed;
+LOOKS.severinDuel = LOOKS.severin;
+// The Lion he calls out of the sky: a zodiac figure of dark stars (runtime/constellation.js StarFigure).
+LOOKS.lion = { form: "stars" };
 // Quartermaster Hale of the Iron Wardens (Ep 26): a Warden's steel and a keyring, grey in the beard.
 LOOKS.quartermaster = { ...LOOKS.guard, coat: "#4a5462", trim: "#9aa2ae", hairColor: "#6a6a6a", beard: "#6a6a6a", hair: "crop", shoulders: 1.2 };
 
@@ -1098,7 +1115,7 @@ export class Rig {
     for (const m of this.meshes) {
       m.renderOverlay = f;
       if (f) { m.overlayColor = this.flashColor ?? BB.Color3.White(); m.overlayAlpha = 0.85; }
-      m.visibility = this.visibility;
+      m.visibility = this.visibility * (this.look.alpha ?? 1);
     }
 
     const tagsOn = fighter.alive;

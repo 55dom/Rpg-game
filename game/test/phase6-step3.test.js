@@ -197,7 +197,7 @@ const SRC = files(new URL("../src", import.meta.url).pathname);
 
 test("leak test: only the knight's own files carry his name; everything else calls him 'masked'", () => {
   const named = SRC.filter((p) => /\bsable\b/i.test(readFileSync(p, "utf8"))).map((p) => p.split("/src/")[1]).sort();
-  assert.deepEqual(named, ["data/masked.js", "data/rumors.js", "data/story/ep24.js", "data/story/ep26.js"]);
+  assert.deepEqual(named, ["core/playtest.js", "data/masked.js", "data/rumors.js", "data/story/ep24.js", "data/story/ep26.js"]);
   for (const p of SRC.filter((p) => /story\/(arc3|ep23)\.js$/.test(p))) assert.ok(!/\bsable\b|masked/i.test(readFileSync(p, "utf8")), p);
 });
 

@@ -2,6 +2,7 @@
 // and the frame-data panel (the designer's x-ray of the combat system).
 
 import { pageLevelProgress } from "../core/progress.js";
+import { SPELL_LABELS } from "../data/inscription.js";
 import { Phase } from "../core/abilities.js";
 import { MoveContext } from "../core/abilities.js";
 import { IntentName, maskNames } from "../core/input.js";
@@ -167,7 +168,7 @@ export class Hud {
       const ab = world.loadout[sp.slot], page = world.pages[sp.slot], def = world.pageDefs[sp.slot];
       this.set(`sph${i}`, el, "hidden", !ab); // a locked page has no chip
       if (!ab) return;
-      const name = page.branch ? def.branches.find((b) => b.key === page.branch).name : sp.short;
+      const name = page.branch ? def.branches.find((b) => b.key === page.branch).name : ab.id === def.base.id ? sp.short : SPELL_LABELS[ab.id] ?? ab.id; // another ability on the button (Inscribe)
       const cls = `spell${p.mana.current >= ab.manaCost ? "" : " low"}${page.ready ? " ready" : ""}${page.branch ? " evolved" : ""}`;
       this.set(`sp${i}`, el, "class", cls);
       this.set(`spk${i}`, el.firstChild, "text", this.label(device, sp.slot));

@@ -249,7 +249,7 @@ export const EPISODE_26 = {
         { id: "gossip", look: "gossip", x: -8.6, z: -19.4, yaw: 0.9 },
       ],
       set: { EP26_DONE: 1 } },
-    { id: "preview", type: "preview", next: "Episode 27 · Elodie's Price",
+    { id: "preview", type: "preview", nextEpisode: "ep27",
       lines: [
         "Next time on UNWRITTEN:",
         "Severin's sister has never had a grimoire. His father has found a page that might change that.",

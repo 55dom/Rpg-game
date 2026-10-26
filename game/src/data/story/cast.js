@@ -29,6 +29,9 @@ export const CAST = Object.freeze({
   Wraithe: { name: "Wraithe", color: "#e8e4f4", actor: "wraithe" }, // never speaks: the Choir's silent school
   Masked: { name: "Masked Knight", color: "#9cb8ff", actor: "masked", label: maskedLabel, voice: "mask" },
   Hale: { name: "Quartermaster Hale", color: "#c9d2dc", actor: "hale" },
+  Elodie: { name: "Elodie", color: "#fff1b8", actor: "elodie" },
+  Aldric: { name: "High Chancellor Aldric", color: "#9ab0e8", actor: "aldric" },
+  Hesper: { name: "Hesper Voss", color: "#c9a4ff", actor: "hesper" },
   Archivist: { name: "Crown Archivist", color: "#d8dce8", actor: "archivist" },
   Vendor: { name: "Lowmarket Vendor", color: "#ffb38a", actor: "vendor" },
   Guard: { name: "Gate Guard", color: "#c9d2dc", actor: "guard" },

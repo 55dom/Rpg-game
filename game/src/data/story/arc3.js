@@ -20,3 +20,6 @@ export const AFTER_EP25 = Object.freeze({ ...AFTER_EP24, EP25_DONE: 1, LIO_SECRE
 /** By the end of Episode 26: the vault was opened and robbed, Bas's arm is broken, and the Crown has posted a bounty. */
 export const AFTER_EP26 = Object.freeze({ ...AFTER_EP25, EP26_DONE: 1, SABLE_ENCOUNTER: 2, SABLE_NAMED: 1, VAULT_BREACHED: 1, VAULT_TAKEN: 1,
   BAS_ARM_BROKEN: 1, CLUE_B2: 1, CLUE_B3: 1, RUMOR_CROWN: 1 });
+
+/** By the end of Episode 27: Elodie met, Lio home again, and Severin has read the page. */
+export const AFTER_EP27 = Object.freeze({ ...AFTER_EP26, EP27_DONE: 1, ELODIE_MET: 1, SEVERIN_PAGE: 1, LIO_STATUS: 2 });

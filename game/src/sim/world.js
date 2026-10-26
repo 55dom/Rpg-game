@@ -64,6 +64,8 @@ const BOSSES = {
   gullmaw: { stats: GULLMAW_STATS, hitboxes: GULLMAW_HITBOXES, options: gullmawOptions, traits: { heavy: true, armoredAttacks: true }, Controller: GullmawController, z: 7 },
   wraithe: { stats: WRAITHE_STATS, hitboxes: WRAITHE_HITBOXES, options: wraitheOptions, traits: {}, Controller: WraitheController, z: 6 },
   masked: { stats: MASKED_STATS, hitboxes: MASKED_HITBOXES, options: maskedOptions, traits: { heavy: true }, Controller: MaskedController, z: 7 },
+  // Ep 27: Severin at the Tower steps, the night he reads the page (his exam kit, a harder fight).
+  severinDuel: { stats: { ...SEVERIN_STATS, maxHealth: 1400, bossTitle: "SEVERIN VALCOURT · THE TOWER STEPS", defeatText: "SEVERIN YIELDS" }, hitboxes: SEVERIN_HITBOXES, options: severinOptions, traits: {}, Controller: SeverinController, z: 6 },
   eclipsed: { stats: ECLIPSED_STATS, hitboxes: ECLIPSED_HITBOXES, options: eclipsedOptions, traits: {}, Controller: EclipseController, z: 6 },
   eclipsedFinal: { stats: ECLIPSED_FINAL_STATS, hitboxes: ECLIPSED_HITBOXES, options: eclipsedFinalOptions, traits: {}, Controller: EclipseFinalController, z: 5 },
 };

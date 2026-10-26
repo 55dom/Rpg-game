@@ -13,6 +13,7 @@ import { validateCutscene, sampleCamera, eventsBetween, sampleMove } from "../co
 import { B, toon2, glow } from "./look.js";
 import { makeTear } from "./tears.js";
 import { GuideTrail } from "./trail.js";
+import { theatreMark, theatreNotes } from "../data/theatre.js";
 import { findPath, trailMarks, guideTarget } from "../sim/guide.js";
 import { ZONES, arrivalPoint } from "../data/zones.js";
 import { Inventory } from "../core/inventory.js";
@@ -387,6 +388,7 @@ export class StoryPlayer {
       if (tw.t >= tw.dur) { this.tweens.splice(i, 1); tw.done?.(); }
     }
     if (this.cut) this._cutStep(dt);
+    if (this.theatre) this._theatreTick();
     if (this.fight) this._tutorial(dt);
     if (this.roaming && this.clock && this.exploring) this._weatherTick(dt);
     if (this.ambient && this.exploring) { // townsfolk go about their day (runtime/ambient.js)
@@ -433,8 +435,55 @@ export class StoryPlayer {
     this.trail.update(dt);
   }
 
+  // ---- Lore Archive · Theatre (GDD §15.10): replay a watched scene from its timeline ----
+  /** The scene clock this frame: the Theatre can slow it, pause it, or step it one frame at a time. */
+  sceneDt(dt) {
+    const th = this.theatre;
+    if (!th) return dt;
+    if (th.paused) { const s = th.step; th.step = 0; return s; }
+    return dt * th.speed;
+  }
+
+  /** Play a watched cutscene again (from the EPISODES & SAVES screen). Resolves when the viewer leaves. */
+  async replay(id) {
+    if (!CUTSCENES[id]) return;
+    const th = this.theatre = { id, speed: 1, paused: false, step: 0, restart: false, exit: false, notes: theatreNotes(id, this.flags) };
+    theatreMark(id, "rewatch");
+    this.active = true;
+    this.ctx.root.classList.add("theatre");
+    this.ctx.onTheatre?.(th);
+    for (;;) {
+      await this.playCutscene(id);
+      if (th.restart && !th.exit) { th.restart = false; continue; }
+      break;
+    }
+    this.theatre = null; this.active = false;
+    this.ctx.root.classList.remove("theatre");
+    this.ctx.onTheatre?.(null);
+  }
+
+  theatreControl(cmd, value) {
+    const th = this.theatre;
+    if (!th) return;
+    if (cmd === "pause") th.paused = !th.paused;
+    if (cmd === "step") { th.paused = true; th.step = 1 / 30; } // one frame forward
+    if (cmd === "speed") { th.speed = value; th.paused = false; }
+    if (cmd === "restart" && this.cut) { th.restart = true; this.cut.t = this.cut.cs.duration; th.paused = false; }
+    if (cmd === "exit" && this.cut) { th.exit = true; this.cut.t = this.cut.cs.duration; th.paused = false; th.step = 0; }
+    this.ctx.onTheatre?.(th);
+  }
+
+  /** Margin notes (the Annotated Edition) appear at their moments, if this edition is open. */
+  _theatreTick() {
+    const th = this.theatre, c = this.cut;
+    if (!c || !th.notes.length) return;
+    const note = th.notes.filter((n) => c.t >= n.t && c.t < n.t + (n.dur ?? 3)).at(-1) ?? null;
+    if (note !== th.note) { th.note = note; this.ctx.onTheatre?.(th); }
+  }
+
   /** Light / Enter / tap while a scene or card is up. */
   confirm() {
+    if (this.theatre) { this.theatreControl("pause"); return; } // in the Theatre, a tap pauses
     if (this.cut) { this.cut.t = this.cut.cs.duration; return; } // skip the cutscene
     if (this.waitingCard) { const r = this.waitingCard; this.waitingCard = null; r(); return; }
     this.view.advance();
@@ -692,6 +741,7 @@ export class StoryPlayer {
       case "wait": await this.sleep(this.skipping ? 0 : Number(args[0]) || 0.5); break;
       case "sfx": this.ctx.sfx.play(args[0]); break;
       case "fx": await this.fx(args); break;
+      case "survey": if (!this.skipping) await this.ctx.openSurvey?.(args[0]); break; // the playtest kit's end-of-arc survey (core/playtest.js)
       case "move": { // <<move Severin x z>> walks there; add "wait" to finish first
         const t = this.stage.move(actorOf(args[0]), Number(args[1]), Number(args[2]));
         if (args[3] === "wait") await this.sleep(this.skipping ? 0 : t);
@@ -1199,6 +1249,7 @@ export class StoryPlayer {
   playCutscene(id) {
     const cs = CUTSCENES[id];
     if (!cs) return Promise.resolve();
+    if (!this.theatre) theatreMark(id, "seen"); // the Lore Archive keeps every scene you've watched
     this.ctx.sets?.use(cs.stage ?? "yard"); this._refreshSet(); // set pieces follow the story (a cairn, a wreck…)
     this.stage.setup({ actors: cs.actors, rook: null });
     this.view.hide();
@@ -1255,7 +1306,7 @@ export class StoryPlayer {
     this._enterScene(false);
     this.stage.clear();
     this.ctx.sets?.use(beat.stage ?? "yard"); this._refreshSet(); // set pieces follow the story (a cairn, a wreck…)
-    const world = this.ctx.makeWorld({ ...this.ep.world, tokens: beat.tokens ?? this.ep.world?.tokens });
+    const world = this.ctx.makeWorld({ ...this.ep.world, ...(beat.world ?? {}), tokens: beat.tokens ?? this.ep.world?.tokens }); // a fight can change the rules (Mirrorlake: the margin)
     for (;;) {
       world.resetPlayer();
       world.spawnWave(beat.wave);

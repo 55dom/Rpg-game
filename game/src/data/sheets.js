@@ -202,6 +202,13 @@ export const SHEETS = Object.freeze({
   // ---- Creatures and constructs (bodies, not clothes) --------------------------------------------------------
   beast: { build: "brute", gait: "heavy", idle: "still", outfit: { top: "#4e5a37", hem: null, sleeves: "long", legs: "#4e5a37", boots: "bare", bootColor: "#3a4129", moss: true } },
   hask: { build: "brute", gait: "heavy", idle: "still", outfit: { top: "#3d4934", hem: null, sleeves: "long", legs: "#3d4934", boots: "bare", bootColor: "#2c3524", moss: true } },
+  elodie: { build: "lithe", gait: "graceful", idle: "still",
+    outfit: { top: "#f2ead2", hem: "ankle", sleeves: "long", legs: "#e8dcc0", boots: "shoes", bootColor: "#d4ad4f", collar: true, brooch: "#d4ad4f", grime: 0 } },
+  aldric: { build: "broad", gait: "confident", idle: "proud",
+    outfit: { top: "#22305a", hem: "ankle", sleeves: "long", legs: "#1a2244", boots: "tall", bootColor: "#1a1418", belt: "#d4ad4f", brooch: "#d4ad4f",
+      bracers: "#8a8e98", embroidery: "#d4ad4f", collar: true, grime: 0 } },
+  hesper: { build: "slim", gait: "graceful", idle: "proud",
+    outfit: { top: "#ece6f4", hem: "ankle", sleeves: "long", legs: "#d8cfe8", boots: "shoes", bootColor: "#ece6f4", belt: "#7a4aa0", embroidery: "#c9a4ff", stitch: "#7a4aa0", grime: 0 } },
   ilse: { build: "slim", gait: "graceful", idle: "proud",
     outfit: { top: "#d8d4e8", hem: "ankle", sleeves: "long", legs: "#3a3448", boots: "shoes", bootColor: "#3a3448", belt: "#8a7ac0", embroidery: "#c9b4ff", stitch: "#6a5a9a", grime: 0.1 } },
   galen: { build: "broad", gait: "soldier", idle: "still",
@@ -214,7 +221,7 @@ export const SHEETS = Object.freeze({
 
 /** The sheet for a look, with sensible defaults for anything new. */
 export function sheetFor(kind, look = {}) {
-  const s = SHEETS[kind] ?? SHEETS[{ severinAlly: "severin", junoMaid: "junoMaid", brannocSpar: "brannoc", basSling: "bas", quartermaster: "guard" }[kind]];
+  const s = SHEETS[kind] ?? SHEETS[{ severinAlly: "severin", junoMaid: "junoMaid", brannocSpar: "brannoc", basSling: "bas", quartermaster: "guard", eclipsed: "severin", eclipsedFinal: "severin", reflection: "severin", severinDuel: "severin" }[kind]];
   if (s) return s;
   return { build: "athletic", gait: "confident", idle: "relaxed",
     outfit: { top: look.coat ?? "#6a6a6a", hem: "thigh", sleeves: "long", legs: "#3a3a40", boots: "ankle", bootColor: "#3a2a22", belt: look.trim ?? "#5a3a22" } };

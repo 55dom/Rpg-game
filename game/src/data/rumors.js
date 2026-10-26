@@ -29,6 +29,8 @@ export const RUMOR_BOARD = Object.freeze({
       text: "\"Nothing alive cuts a hole in the world. And the Hollowmarch is full of armor with nobody inside it.\"" },
     { flag: "RUMOR_PARAGON", theory: "The Paragon's secret executioner", who: "Dagrun",
       text: "\"The Paragon keeps one knight off the rolls. No squad, no lantern, no name.\"" },
+    { flag: "RUMOR_AUREK", theory: "Aurek Valcourt, Severin's brother", who: "Severin",
+      text: "\"Father's guards saw him leave our family's crypt. He'd left a flower on my brother's grave.\"" },
     { flag: "RUMOR_CROWN", theory: "One of the Crown's own", who: "a townsperson at the notice board",
       text: "\"He walked through the vault's wards like he'd been taught them. You don't learn that outside the Crown.\"" },
   ]),

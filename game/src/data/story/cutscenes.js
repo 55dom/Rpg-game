@@ -143,4 +143,67 @@ export const CUTSCENES = {
       { t: 16.4, move: { id: "juno", to: [-0.6, 18.8], dur: 1.8 } },
     ],
   },
+
+  // Episode 28: the lake takes Rook. Under the water the under-text wakes, rising out of the dark in pale lines;
+  // the margin opens (Annotation); Rook comes back up at the island's edge.
+  ep28_lake: {
+    id: "ep28_lake",
+    stage: "mirrorlake",
+    duration: 15,
+    actors: [
+      { id: "rook", look: "player", x: 0, z: -17.2, yaw: PI },
+      { id: "severin", look: "eclipsed", x: 0, z: -12.6, yaw: PI },
+      { id: "under", look: "player", x: 0, z: -26, y: -4.2, yaw: PI },
+    ],
+    camera: [
+      { t: 0, pos: [2.4, 1.8, -10.4], look: [0, 1.1, -17.2], fov: 0.55 },                   // past Severin: Rook at the edge
+      { t: 2, pos: [2.2, 1.7, -10.9], look: [0, 0.9, -17.4], fov: 0.52, ease: "linear" },
+      { t: 2, cut: true, pos: [3, 0.25, -19.8], look: [0, 0.2, -17.6], fov: 0.6 },              // low on the water: the fall
+      { t: 3, pos: [3, 0.2, -19.8], look: [0, -0.4, -18.4], fov: 0.6, ease: "linear" },
+      { t: 3, cut: true, pos: [2.6, -5.6, -23.4], look: [0, -4, -26], fov: 0.62 },              // under: sinking
+      { t: 7.4, pos: [2.2, -6.2, -23.8], look: [0, -4.4, -26], fov: 0.56, ease: "linear" },
+      { t: 7.4, cut: true, pos: [0.4, -7, -24.6], look: [0, -2, -26.6], fov: 0.7 },             // looking up past Rook: the script rising
+      { t: 11.2, pos: [0.2, -7.4, -24.4], look: [0, -1, -26.4], fov: 0.74, ease: "linear" },
+      { t: 11.2, cut: true, pos: [-3, 1.6, -13.6], look: [0, 0.6, -17.2], fov: 0.55 },          // back up: the edge of the island
+      { t: 15, pos: [-2.8, 1.6, -13.9], look: [0, 1, -17.2], fov: 0.52, ease: "linear" },
+    ],
+    events: [
+      { t: 0.2, pose: { id: "rook", name: "bow" } },                     // staggered back to the edge…
+      { t: 1.6, move: { id: "rook", to: [0, -17.9], dur: 0.4 } },
+      { t: 2.6, sfx: "mud" }, { t: 2.7, hide: "rook" },                    // …and over it
+      { t: 3, cue: "under" }, { t: 3, pose: { id: "under", name: "bow" } }, { t: 3, hide: "severin" },
+      { t: 7.6, cue: "annotate" }, { t: 7.6, sfx: "bookDescend" }, { t: 7.8, pose: { id: "under", name: "raise" } },
+      { t: 10.6, sfx: "surgeFull" },
+      { t: 11.2, cue: "surface" }, { t: 11.2, hide: "under" }, { t: 11.2, show: "rook" }, { t: 11.2, pose: { id: "rook", name: "bow" } },
+      { t: 11.3, move: { id: "rook", to: [0, -16.4], dur: 1.6 } },
+      { t: 13, pose: { id: "rook", name: "none" } },
+    ],
+  },
+
+  // Episode 28, the arc's last scene: the Valcourt crypt at night. A masked figure kneels at Aurek Valcourt's grave,
+  // lays a white flower on it, stands, and leaves through a tear in the dark by the door.
+  ep28_crypt: {
+    id: "ep28_crypt",
+    stage: "crypt",
+    duration: 13.5,
+    actors: [{ id: "knight", look: "masked", x: 0, z: 4.4, yaw: 0 }],
+    camera: [
+      { t: 0, pos: [0, 1.7, -7.2], look: [0, 1, 4.6], fov: 0.6 },                              // from the door, down the aisle
+      { t: 4, pos: [0, 1.6, -4.6], look: [0, 0.9, 4.6], fov: 0.58, ease: "linear" },
+      { t: 4, cut: true, pos: [2.3, 1.1, 3.6], look: [0, 0.8, 4.9], fov: 0.5 },                 // beside him, kneeling
+      { t: 7.2, pos: [2.2, 1.1, 3.8], look: [0, 0.8, 5], fov: 0.48, ease: "linear" },
+      { t: 7.2, cut: true, pos: [0.7, 0.7, 4.3], look: [0, 0.8, 6.6], fov: 0.5 },                // the name, and the flower
+      { t: 10.4, pos: [0.6, 0.75, 4.5], look: [0, 0.85, 6.6], fov: 0.46, ease: "linear" },
+      { t: 10.4, cut: true, pos: [2.6, 1.6, -2.4], look: [-1.2, 1.2, -5.6], fov: 0.58 },         // he goes
+      { t: 13.5, pos: [2.6, 1.6, -2.2], look: [-1.2, 1.2, -5.6], fov: 0.58 },
+    ],
+    events: [
+      { t: 0, pose: { id: "knight", name: "bow" } },
+      { t: 5.4, pose: { id: "knight", name: "hand" } }, { t: 6.2, cue: "flower" }, { t: 6.4, pose: { id: "knight", name: "bow" } },
+      { t: 7.2, pose: { id: "knight", name: "none" } },
+      { t: 10, move: { id: "knight", to: [-1.2, -5], dur: 2.2 } },
+      { t: 11.6, cue: "seam" }, { t: 11.6, sfx: "tear" },
+      { t: 12.4, hide: "knight" },
+    ],
+  },
 };

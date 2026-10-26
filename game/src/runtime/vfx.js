@@ -78,6 +78,7 @@ export class Vfx {
     this.sparkMats = {
       gold: glow(scene, "spark-gold", "#ffd98a"), red: glow(scene, "spark-red", "#ff6a5a"),
       mint: glow(scene, "spark-mint", "#9ff0d0"), white: glow(scene, "spark-white", "#ffffff"),
+      violet: glow(scene, "spark-violet", "#c9a4ff"), ink: glow(scene, "spark-ink", "#5a7ad8"),
     };
     this.sparks = {};
     for (const [key, mat] of Object.entries(this.sparkMats)) {

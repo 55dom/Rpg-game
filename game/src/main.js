@@ -21,7 +21,8 @@ import { Hud } from "./runtime/hud.js";
 import { buildArena } from "./runtime/arena.js";
 import { StoryPlayer } from "./runtime/story.js";
 import { Sets } from "./runtime/sets.js";
-import { Constellation } from "./runtime/constellation.js";
+import { Constellation, StarFigure } from "./runtime/constellation.js";
+import { LION_FIGURE } from "./data/eclipse.js";
 import { TearFx, makeTear, tearMaterials } from "./runtime/tears.js";
 import { SaveStore, cleanName } from "./core/save.js";
 import { EPISODE_1, EP1_SCRIPT } from "./data/story/ep1.js";
@@ -36,6 +37,10 @@ import { EPISODE_23, EP23_SCRIPT } from "./data/story/ep23.js";
 import { EPISODE_24, EP24_SCRIPT } from "./data/story/ep24.js";
 import { EPISODE_25, EP25_SCRIPT } from "./data/story/ep25.js";
 import { EPISODE_26, EP26_SCRIPT } from "./data/story/ep26.js";
+import { EPISODE_27, EP27_SCRIPT } from "./data/story/ep27.js";
+import { EPISODE_28, EP28_SCRIPT } from "./data/story/ep28.js";
+import { theatreList } from "./data/theatre.js";
+import { PlaytestLog, SURVEYS } from "./core/playtest.js";
 import { keyItemsHeld } from "./data/keyItems.js";
 import { WORLD_SCRIPT } from "./data/story/world.js";
 import { compileExpr, truthy } from "./core/flags.js";
@@ -122,6 +127,7 @@ export function boot(doc = document) {
   const addView = (f) => {
     if (views.has(f) || f.traits?.dummy) return; // training dummies are part of the set (they rock on their posts)
     if (LOOKS[f.kind]?.form === "object") { views.set(f, new ObjectView(scene, f.kind, f.id, LOOKS[f.kind])); return; } // bells, seals, egg sacs, bubbles
+    if (LOOKS[f.kind]?.form === "stars") { views.set(f, new StarFigure(scene, f.id, LION_FIGURE)); return; } // the Eclipsed Lion: drawn in dark stars
     const rig = new Rig(scene, f.look ?? f.kind, f.id); // a look of its own if it has one (Bas in a sling)
     views.set(f, rig);
     trails.set(f, new Trail(scene, `${f.id}-trail`, LOOKS[f.kind]?.trail ?? (f.team === Team.Player ? TRAIL_COLORS.default : TRAIL_COLORS.enemy)));
@@ -192,6 +198,11 @@ export function boot(doc = document) {
             if (e.key === "starcharge") { vfx.flash({ x: f.pos.x, y: f.pos.y + 2.1, z: f.pos.z }, 1.6, "#fff1b8", 0.3); vfx.sparksAt({ x: f.pos.x, y: f.pos.y + 2, z: f.pos.z }, 8, "gold", 4, 2); }
             if (e.key === "sing") vfx.ring({ x: f.pos.x, y: f.pos.y + 2.2, z: f.pos.z }, 1.6, "#c9a4ff", 0.4);
             if (e.key === "mudwave") { vfx.ring({ x: f.pos.x, y: 0.08, z: f.pos.z }, 8, "#8a7a4a", 0.5); vfx.sparksAt({ x: f.pos.x, y: 0.3, z: f.pos.z }, 18, "gold", 10, 5); camera.shake(0.5); }
+            if (e.key === "ink") { // the quill stroke: a line of ink written in front of Rook
+              for (let i = 1; i <= 5; i++) vfx.ring({ x: f.pos.x + Math.sin(f.yaw) * i * 0.8, y: f.pos.y + 1.1, z: f.pos.z + Math.cos(f.yaw) * i * 0.8 }, 0.9 - i * 0.08, "#5a7ad8", 0.3);
+              vfx.sparksAt({ x: f.pos.x + Math.sin(f.yaw) * 2, y: f.pos.y + 1.1, z: f.pos.z + Math.cos(f.yaw) * 2 }, 8, "ink", 5, 1);
+              if (rig) rig.grimoireGlow = 1;
+            }
             if (e.key === "glint") { vfx.flash(head(f), 1.4, PALETTE.danger, 0.35); sfx.play("glint"); }
             if (e.key === "charge" && rig) { vfx.flash(rig.bladeWorld().tip, 2.2, PALETTE.lantern, 0.3); vfx.ring({ x: f.pos.x, y: 0.05, z: f.pos.z }, 4, PALETTE.lantern, 0.3); }
             if (e.key === "ultCharge") {
@@ -348,6 +359,23 @@ export function boot(doc = document) {
           hud.toast("SEVER LINE", "danger"); hud.banner(ev.isolated ? `THE ROOM IS CUT IN TWO · ${(ev.isolated.stats?.name ?? "A SQUADMATE").toUpperCase()} IS SHUT OUT` : "THE ROOM IS CUT IN TWO");
           break;
         }
+        // ---- Severin Eclipsed: dark stars, the Lion, the reflection, the clause, the lake ----
+        case "darkStar": darkFx.open(ev.well, ev.radius); sfx.play("tear", 0.6); break;
+        case "darkStarEnd": darkFx.close(ev.well); break;
+        case "lionCalled": vfx.flash({ x: ev.at.x, y: 2, z: ev.at.z }, 4, "#c9a4ff", 0.25); vfx.sparksAt({ x: ev.at.x, y: 1.4, z: ev.at.z }, 20, "violet", 8, 4); hud.toast("THE LION", "danger"); sfx.play("surgeFull"); camera.shake(0.4); break;
+        case "lionFalls": hud.toast("HIS WARD BREAKS", "break"); sfx.play("postureBreak"); break;
+        case "mirrorRise": vfx.ring({ x: ev.at.x, y: 0.06, z: ev.at.z }, 5, "#a8c8ff", 0.6); vfx.flash({ x: ev.at.x, y: 1.2, z: ev.at.z }, 3, "#a8c8ff", 0.2); hud.toast("A REFLECTION STANDS UP", "afterimage"); sfx.play("rift"); break;
+        case "mirrorSwap": for (const at of [ev.at, ev.from]) vfx.ring({ x: at.x, y: 0.06, z: at.z }, 3.2, "#a8c8ff", 0.35); sfx.play("rift", 0.7); break;
+        case "mirrorHit": vfx.sparksAt(ev.at, 4, "white", 4, 1); break;
+        case "mirrorFade": vfx.flash({ x: ev.at.x, y: 1.2, z: ev.at.z }, 2.4, "#a8c8ff", 0.25); removeView(ev.fighter); break;
+        case "eclipseClause": vfx.flash(head(ev.fighter), 3, "#7a4ab0", 0.4); camera.shake(0.5); hud.toast("ECLIPSE · SURGE ERASED", "danger"); sfx.play("tear"); impact(3, true); break;
+        case "eclipseSink": vfx.ring({ x: ev.at.x, y: 0.06, z: ev.at.z }, 7, "#3a2a6a", 0.8); camera.shake(0.6); darkFx.clear(); sfx.play("tear"); break;
+        case "inscribed": vfx.ring({ x: ev.at.x, y: ev.at.y, z: ev.at.z }, 1.4, "#5a7ad8", 0.3); vfx.sparksAt(ev.at, 5, "ink", 4, 1); break;
+        case "inscription": vfx.ring(ev.at, 3, "#5a7ad8", 0.45); vfx.sparksAt(ev.at, 12, "ink", 6, 3); hud.toast(`CLAUSE ${ev.n} / ${ev.of}`, "afterimage"); sfx.play("bookDescend"); camera.kick(0.4); break;
+        case "inkStarlight":
+          vfx.flash(ev.at, 7, "#fff1b8", 0.5); vfx.ring(ev.at, 10, "#5a7ad8", 0.8); vfx.ring(ev.at, 8, "#fff1b8", 0.7, true); vfx.sparksAt(ev.at, 30, "gold", 10, 6); vfx.sparksAt(ev.at, 24, "ink", 9, 5);
+          hud.toast("INK & STARLIGHT", "finisher"); hud.banner("THE CORRUPTION BREAKS"); sfx.play("ultActivate"); camera.shake(0.8); impact(6, true);
+          break;
         case "severLineClose": lineWall?.dispose(); lineWall = null; sfx.play("tear", 0.5); break;
         case "severLeave":
           tearFx.open({ x: ev.at.x, y: 1.2, z: ev.at.z }, { r: 1.3, kind: "black", life: 1.4, yaw: Math.atan2(world.player.pos.x - ev.at.x, world.player.pos.z - ev.at.z) });
@@ -667,10 +695,13 @@ export function boot(doc = document) {
   /** A fresh world for a new run or sandbox session (views rebuilt, settings kept). */
   let resetBossFx = null; // set once the boss visuals exist (below)
   let injuredNow = () => []; // squadmates fighting hurt, from the story's flags (set once the story exists)
+  let annotationNow = () => false; // the Palimpsest's Annotation stage (after Ep 28)
   const newWorld = (opts = {}) => {
     for (const f of [...views.keys()]) removeView(f);
     walls.clear(); setBog(false, true); constellation.clear(true);
-    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, companions: true, injured: injuredNow(), ...opts });
+    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, companions: true, injured: injuredNow(), annotation: annotationNow(), ...opts });
+    const ink = world.loadout.Spell1?.id === "Inscribe"; // the margin: Inscribe takes Gale's button
+    const galeBtn = root.querySelector('[data-intent="Spell1"]'); if (galeBtn) galeBtn.textContent = ink ? "INK" : "GALE";
     if (opts.tokens == null) world.tokens.capacity = mobile ? 1 : 2;
     world.pageDefs = PAGES;
     root.classList.toggle("has-tag", !!world.members.severin); root.classList.remove("tag-severin", "hushed");
@@ -752,10 +783,15 @@ export function boot(doc = document) {
       refreshGrimDot();
     },
     onEvents: (evs) => onEvents(evs),
+    openSurvey: (id) => openSurvey(id),
+    onTheatre: (th) => showTheatre(th),
   }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }, { episode: EPISODE_3, script: EP3_SCRIPT }, { episode: EPISODE_4_STORY, script: EP4_SCRIPT }, { episode: EPISODE_19, script: EP19_SCRIPT }, { episode: EPISODE_20, script: EP20_SCRIPT },
     { episode: EPISODE_21, script: EP21_SCRIPT }, { episode: EPISODE_22, script: EP22_SCRIPT },
     { episode: EPISODE_23, script: EP23_SCRIPT }, { episode: EPISODE_24, script: EP24_SCRIPT },
-    { episode: EPISODE_25, script: EP25_SCRIPT }, { episode: EPISODE_26, script: EP26_SCRIPT }], [WORLD_SCRIPT]);
+    { episode: EPISODE_25, script: EP25_SCRIPT }, { episode: EPISODE_26, script: EP26_SCRIPT },
+    { episode: EPISODE_27, script: EP27_SCRIPT }, { episode: EPISODE_28, script: EP28_SCRIPT }], [WORLD_SCRIPT]);
+  annotationNow = () => !!story.flags.get("ANNOTATION"); // after Mirrorlake, Rook's spells write ink
+  const playtest = new PlaytestLog(story.flags, { where: () => ({ episode: story.ep?.id ?? null, beat: story.director?.beat?.id ?? null }) });
   injuredNow = () => (story.flags.get("BAS_ARM_BROKEN") ? ["bas"] : []); // Bas fights one-armed after the vault
   const playerName = root.querySelector(".player-card .name");
   const showName = (n) => { if (playerName?.firstChild) playerName.firstChild.textContent = `${n.toUpperCase()} `; };
@@ -920,7 +956,17 @@ export function boot(doc = document) {
     journal.querySelector("[data-gifts]").textContent = gifts.length ? `Gifts in your bag: ${gifts.join(", ")}.` : "No gifts in your bag. The Gilded Spoon, the Lowmarket stall and the fish cook sell them.";
     const found = FRAGMENTS.filter((f) => story.flags.get(`FRAG_${f.n}`));
     journal.querySelector("[data-lore]").innerHTML = `<p class="mats"><b>Page fragments: ${found.length}/${FRAGMENTS.length}</b> · ${story.flags.get("CLAUSE_1") ? `<b>${CLAUSE.name}</b> restored: ${CLAUSE.desc}` : `Find ${CLAUSE.need} to restore a clause of the under-text.`}</p>` +
-      found.map((f) => `<p class="mats"><i>"${f.text}"</i> · ${f.where}</p>`).join("");
+      found.map((f) => `<p class="mats"><i>"${f.text}"</i> · ${f.where}</p>`).join("") +
+      (story.flags.get("ANNOTATION") ? `<p class="mats"><b>Annotation</b> (the first stage): the margin is open. Your spells leave ink on what they hit, and your hits land harder on anything inked.${story.flags.get("CLAUSE_I") ? ` <i>Written in the margin: "Severin comes home${story.flags.get("CLAUSE_I") === "home-anyway" ? ". Whether he likes it or not" : ""}."</i>` : ""}</p>` : "");
+    const pt = journal.querySelector("[data-playtest]");
+    pt.innerHTML = playtest.optIn
+      ? `<p class="hint">You're helping test the mystery. What's logged: when each clue was first seen, scenes rewatched in the Theatre, and your survey answers. It stays in this browser.</p>
+        <textarea readonly data-pt-log>${playtest.export().replace(/</g, "&lt;")}</textarea>
+        <div class="start-buttons"><button class="go" data-pt-copy>COPY LOG</button><button class="go alt" data-pt-off>STOP LOGGING</button></div>`
+      : `<p class="hint">Help test the mystery: log when clues are first seen and answer one question at the end of the arc. Optional; nothing leaves this browser unless you copy it.</p><div class="start-buttons"><button class="go alt" data-pt-on>OPT IN</button></div>`;
+    pt.querySelector("[data-pt-on]")?.addEventListener("click", () => { playtest.setOptIn(true); sfx.play("ui"); openJournal(); });
+    pt.querySelector("[data-pt-off]")?.addEventListener("click", () => { playtest.setOptIn(false); sfx.play("ui"); openJournal(); });
+    pt.querySelector("[data-pt-copy]")?.addEventListener("click", async () => { const t = pt.querySelector("[data-pt-log]"); try { await navigator.clipboard.writeText(t.value); } catch { t.select(); document.execCommand?.("copy"); } hud.toast("COPIED", "clear"); });
     // The rumor board: what people say about the stranger, once there's been one to talk about.
     const rb = rumorBoard(story.flags), rumorHead = journal.querySelector("[data-rumor-head]"), rumorList = journal.querySelector("[data-rumors]");
     rumorHead.hidden = rumorList.hidden = !rb.show;
@@ -943,6 +989,8 @@ export function boot(doc = document) {
     ilse: { 2: ["THE CHOIR PIT", "PHASE 2 · SHE CALLS HER ACOLYTES · WARDED WHILE THEY STAND"], 3: ["THE BELLS", "PHASE 3 · BREAK THE BELLS"], 4: ["HUSH", "PHASE 4 · SHE CAN SILENCE YOUR DODGE"] },
     galen: { 2: ["ROT", "PHASE 2 · RINGS OF RUST · JUMP THEM"], 3: ["THE OATH", "PHASE 3 · BREAK THE VOW-SEALS"], 4: ["DESPERATION", "PHASE 4 · THE LAST CHARGE"] },
     gullmaw: { 2: ["THE FLOOD", "PHASE 2 · THE WATER JET · JUMP IT"], 3: ["SWALLOWED", "PHASE 3 · BURST THE SLIME BUBBLE"] },
+    eclipsed: { 2: ["THE LION", "PHASE 2 · A ZODIAC BEAST · HE'S WARDED WHILE IT STANDS"], 3: ["MIRRORLAKE", "PHASE 3 · HIS REFLECTION · THE ONE IN THE WATER IS REAL"],
+      4: ["THE ECLIPSE", "PHASE 4 · HE READS A CLAUSE · YOUR SURGE IS GONE"] },
     masked: { 2: ["THE FLOOR OPENS", "PHASE 2 · A BLACK TEAR UNDER YOU · STEP OFF, OR JUMP OR DASH BEFORE YOU LAND"],
       3: ["NO WAY OUT", "PHASE 3 · EVERY WAY OUT LEADS BACK IN"], 4: ["…", "PHASE 4"] },
     varka: { 2: ["THE IRONSONG ROLLS", "PHASE 2 · THE ENGINE CHARGES DOWN A LANE · GET OUT OF IT"], 3: ["THE ENGINE BREAKS", "PHASE 3 · FALLING WRECKAGE · WATCH THE RINGS"],
@@ -982,6 +1030,24 @@ export function boot(doc = document) {
   })();
   const tearFx = new TearFx(scene); // Wraithe's pale tears in the air, the masked knight's black ones
   let mouthTears = [], lineWall = null; // the knight's P3 tears in the room's mouths, and his Sever Line
+  // Severin Eclipsed's dark stars: a slow violet whirl on the ground and a black star at its heart, for as long as the well lasts.
+  const darkFx = (() => {
+    const live = new Map(), whirl = glow(scene, "darkWhirl", "#5a2a8a", 0.32, true), core = glow(scene, "darkCore", "#140a24"), rim = glow(scene, "darkRim", "#c9a4ff", 0.9, true);
+    return {
+      open(w, r) {
+        const n = new BB.TransformNode("darkStar", scene); n.position.set(w.x, 0, w.z);
+        const d = BB.MeshBuilder.CreateDisc("darkWhirl", { radius: r, tessellation: 7 }, scene); d.rotation.x = Math.PI / 2; d.position.y = 0.05; d.material = whirl; d.parent = n; d.isPickable = false;
+        const c = BB.MeshBuilder.CreatePolyhedron("darkCore", { type: 1, size: 0.45 }, scene); c.position.y = 1.2; c.material = core; c.parent = n; c.isPickable = false;
+        const ring = BB.MeshBuilder.CreateTorus("darkRing", { diameter: 2, thickness: 0.06, tessellation: 24 }, scene); ring.position.y = 0.08; ring.material = rim; ring.parent = n; ring.isPickable = false;
+        live.set(w, { n, d, c, ring });
+      },
+      close(w) { live.get(w)?.n.dispose(false, false); live.delete(w); },
+      update(dt, t) { for (const { d, c, ring } of live.values()) { d.rotation.y += dt * 1.6; c.rotation.y += dt * 2.4; c.position.y = 1.2 + Math.sin(t * 3) * 0.08; ring.scaling.setAll(0.8 + 0.2 * Math.sin(t * 5)); } },
+      clear() { for (const { n } of live.values()) n.dispose(false, false); live.clear(); },
+    };
+  })();
+  // Annotation: anything Rook's ink has written on carries a small ring of ink over its head while it lasts.
+  const inkMarks = new Map(), inkMat = glow(scene, "inkMark", "#5a7ad8", 0.85, true);
   const silenceFx = (() => {
     const zones = new Map(), mat = glow(scene, "silenceMat", "#9a7aff", 0.28, true), fieldMat = glow(scene, "silenceAllMat", "#5a3a9a", 0.12);
     let field = null;
@@ -1065,7 +1131,8 @@ export function boot(doc = document) {
     };
   })();
   const hopGhostMat = glow(scene, "hopGhost", "#8affc8", 0.3, true);
-  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); lilyFx.clear(); groundFx.clear(); tearFx.clear(); mouthTears = []; lineWall?.dispose(); lineWall = null; root.classList.remove("leaping", "hopblur"); };
+  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); lilyFx.clear(); groundFx.clear(); tearFx.clear(); mouthTears = []; lineWall?.dispose(); lineWall = null; darkFx.clear();
+    for (const m of inkMarks.values()) m.dispose(); inkMarks.clear(); root.classList.remove("leaping", "hopblur", "surge-locked"); };
 
   // Squad HQ: the board (rooms to build) and the workbench (tempering gear). One screen, two modes.
   const hqModal = root.querySelector("[data-hq]");
@@ -1209,6 +1276,12 @@ export function boot(doc = document) {
       story.inventory = new Inventory(last?.inv); story.progress = new Progress(last?.prog);
       playStory(b.dataset.ep, 0);
     });
+    // Lore Archive · Theatre: every timeline scene you've watched, to replay.
+    const thList = slotsModal.querySelector("[data-theatre-list]"), thHead = slotsModal.querySelector("[data-theatre-head]");
+    const scenes = theatreList();
+    thList.hidden = thHead.hidden = saving || !scenes.some((x) => x.seen);
+    thList.innerHTML = scenes.filter((x) => x.seen).map((x) => `<button data-scene="${x.id}"><b>EP ${x.episode}</b><span>${x.title}<small>${x.rewatched ? `Watched again ${x.rewatched}×` : "Replay · pause · slow motion · frame-step"}</small></span></button>`).join("");
+    for (const b of thList.querySelectorAll("[data-scene]")) b.addEventListener("click", () => playTheatre(b.dataset.scene));
     const list = slotsModal.querySelector("[data-slot-list]");
     const slots = saving ? ["1", "2", "3"] : ["auto", "1", "2", "3"];
     list.innerHTML = slots.map((k) => `<button data-slot="${k}"><b>${k === "auto" ? "AUTO" : `SLOT ${k}`}</b>${slotLabel(saves.read(k))}</button>`).join("");
@@ -1225,6 +1298,60 @@ export function boot(doc = document) {
     slotsModal.hidden = false; state.modal = true;
   };
   slotsModal.querySelector("[data-slots-close]").addEventListener("click", () => { sfx.play("ui"); closeSlots(); });
+  // ---- The Theatre: replay a scene with the latest save's world (its cairns and wrecks), then back to this screen ----
+  const theatreBar = root.querySelector("[data-theatre]");
+  const playTheatre = async (id) => {
+    closeSlots();
+    const last = saves.latest()?.save;
+    story.player = last ? { name: last.player.name, pronouns: last.player.pronouns } : { name: "Rook", pronouns: "they" };
+    story.flags.load(last?.flags ?? {});
+    playtest.rewatch(id);
+    start("story");
+    await story.replay(id);
+    backToTitle();
+    openSlots("load");
+  };
+  const showTheatre = (th) => {
+    theatreBar.hidden = !th;
+    if (!th) return;
+    theatreBar.querySelector("[data-th-title]").textContent = `LORE ARCHIVE · ${(theatreList().find((x) => x.id === th.id)?.title ?? th.id).toUpperCase()}${th.notes.length ? " · ANNOTATED EDITION" : ""}`;
+    theatreBar.querySelector('[data-th="pause"]').textContent = th.paused ? "▶" : "❚❚";
+    for (const b of theatreBar.querySelectorAll('[data-th="speed"]')) b.setAttribute("aria-pressed", String(!th.paused && Number(b.dataset.v) === th.speed));
+    const note = theatreBar.querySelector("[data-th-note]");
+    note.hidden = !th.note; if (th.note) note.textContent = th.note.text;
+  };
+  for (const b of theatreBar.querySelectorAll("[data-th]")) b.addEventListener("click", (e) => { e.stopPropagation(); sfx.play("ui"); story.theatreControl(b.dataset.th, Number(b.dataset.v)); });
+  // ---- The playtest kit: the end-of-arc survey (opt-in; core/playtest.js) ----
+  const surveyModal = root.querySelector("[data-survey]");
+  const openSurvey = (id) => new Promise((done) => {
+    const S = SURVEYS[id];
+    if (!S) { done(); return; }
+    const body = surveyModal.querySelector("[data-sv-body]"), buttons = surveyModal.querySelector("[data-sv-buttons]");
+    surveyModal.querySelector("[data-sv-title]").textContent = S.title;
+    surveyModal.querySelector("[data-sv-intro]").textContent = S.intro;
+    const close = () => { surveyModal.hidden = true; state.modal = false; done(); };
+    const ask = () => {
+      const pick = { guess: null, sure: null };
+      body.innerHTML = `<p class="hint">${S.ask}</p><div class="survey-opts" data-g>${S.guesses.map((g, i) => `<button data-i="${i}">${g}</button>`).join("")}</div>
+        <p class="hint">${S.howSure}</p><div class="survey-opts" data-s>${S.sure.map((g, i) => `<button data-i="${i}">${g}</button>`).join("")}</div>
+        <textarea data-sv-own placeholder="In your own words (optional)"></textarea>`;
+      for (const [sel, key, list] of [["[data-g]", "guess", S.guesses], ["[data-s]", "sure", S.sure]]) for (const b of body.querySelectorAll(`${sel} button`)) b.addEventListener("click", () => {
+        pick[key] = list[Number(b.dataset.i)]; sfx.play("ui");
+        for (const o of body.querySelectorAll(`${sel} button`)) o.setAttribute("aria-pressed", String(o === b));
+      });
+      buttons.innerHTML = `<button class="go" data-sv-send>SAVE ANSWERS</button><button class="go alt" data-sv-skip>SKIP</button>`;
+      buttons.querySelector("[data-sv-send]").addEventListener("click", () => { playtest.survey(id, { ...pick, own: body.querySelector("[data-sv-own]").value.trim().slice(0, 600) }); hud.toast("THANK YOU", "clear"); close(); });
+      buttons.querySelector("[data-sv-skip]").addEventListener("click", close);
+    };
+    if (playtest.optIn) ask();
+    else {
+      body.innerHTML = `<p class="hint">You've finished Arc 3. Would you like to help test the mystery? It's one question, it's optional, and nothing leaves this browser unless you copy it out of the Journal.</p>`;
+      buttons.innerHTML = `<button class="go" data-sv-yes>YES, I'LL HELP</button><button class="go alt" data-sv-no>NO THANKS</button>`;
+      buttons.querySelector("[data-sv-yes]").addEventListener("click", () => { playtest.setOptIn(true); sfx.play("ui"); ask(); });
+      buttons.querySelector("[data-sv-no]").addEventListener("click", close);
+    }
+    surveyModal.hidden = false; state.modal = true;
+  });
   startScreen.querySelector("[data-episodes]")?.addEventListener("click", (e) => { e.stopPropagation(); openSlots("load"); });
   menu("save", () => { if (state.mode === "story") openSlots("save"); });
   refreshContinue();
@@ -1362,11 +1489,20 @@ export function boot(doc = document) {
     vfx.syncProjectiles(world.projectiles, dt);
     vfx.update(dt, camera.cam, engine);
     arena.update(dt, state.time);
-    sets.update(dt, state.time);
+    darkFx.update(dt, state.time);
+    for (const f of world.fighters) { // ink marks follow what they're written on
+      const on = f.alive && f.tags.has("INSCRIBED");
+      let m = inkMarks.get(f);
+      if (on && !m) { m = BB.MeshBuilder.CreateTorus("inkMark", { diameter: 0.7, thickness: 0.04, tessellation: 18 }, scene); m.material = inkMat; m.isPickable = false; inkMarks.set(f, m); }
+      if (m) { m.setEnabled(on); if (on) { m.position.set(f.pos.x, f.pos.y + (f.stats.height ?? 2) + 0.45, f.pos.z); m.rotation.y += dt * 2; } }
+    }
+    for (const [f, m] of inkMarks) if (!world.fighters.includes(f)) { m.dispose(); inkMarks.delete(f); }
+    root.classList.toggle("surge-locked", world.surgeLock > 0);
+    sets.update(dt * story.timeScale, state.time);
     constellation.update(dt, state.time);
     walls.update(state.time);
     hud.update(dt, world, controls.device);
-    story.update(dt, state.paused || state.help || state.frozen);
+    story.update(dt * story.timeScale, state.paused || state.help || state.frozen);
 
     if (impactLeft > 0) { impactLeft -= dt; if (impactLeft <= 0) canvas.style.filter = ""; }
     quality.update(dt);

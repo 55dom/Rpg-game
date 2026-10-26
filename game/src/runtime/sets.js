@@ -53,7 +53,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, ironhold: buildIronhold, vault: buildVault }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -1588,6 +1588,153 @@ function buildVault(scene, mobile) {
       }
       for (let i = 0; i < fires.length; i++) fires[i].scaling.y = 0.88 + Math.sin(t * 8 + i * 1.7) * 0.12;
       warm.intensity = 0.52 + Math.sin(t * 5) * 0.04;
+    } };
+  return self;
+}
+
+/** A page of under-text: strokes of a script nobody can read (drawn, never typed: it has no letters). */
+function underTextTexture(scene, name, seed) {
+  const BB = B(), tex = new BB.DynamicTexture(name, { width: 256, height: 128 }, scene, true), c = tex.getContext();
+  let st = seed * 9301 + 49297; const r = () => ((st = (st * 9301 + 49297) % 233280) / 233280);
+  c.clearRect(0, 0, 256, 128); c.strokeStyle = "#8ab4ff"; c.lineCap = "round";
+  for (let line = 0; line < 3; line++) {
+    let x = 12; const y = 30 + line * 36;
+    while (x < 240) {
+      c.lineWidth = 3 + r() * 2; c.beginPath(); c.moveTo(x, y + (r() - 0.5) * 10);
+      for (let k = 0; k < 3; k++) c.quadraticCurveTo(x + r() * 10, y - 14 + r() * 28, x + 4 + r() * 12, y + (r() - 0.5) * 18);
+      c.stroke(); x += 14 + r() * 16;
+    }
+  }
+  tex.hasAlpha = true; tex.update();
+  return tex;
+}
+
+/**
+ * Mirrorlake Saelith (Ep 28): a still black lake under a sky full of stars, and a flat island of pale stone in
+ * the middle of it where the fight happens. The water doubles the sky. Under it (the cutscene's cue "under"),
+ * the under-text: pale lines of script rising out of the dark. Cues: under, annotate, surface.
+ */
+function buildMirrorlake(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add;
+  const rng = mulberry(28), P = palette(scene, "ml");
+  // The lake: a dark mirror out to the mountains, seen from above and from below.
+  const lakeMat = toon(scene, "ml-water", "#0e1630"); lakeMat.backFaceCulling = false;
+  const lake = add(MB.CreateDisc("ml-lake", { radius: 90, tessellation: 64 }, scene)); lake.rotation.x = Math.PI / 2; lake.position.y = -0.25; lake.material = lakeMat;
+  const isle = add(MB.CreateCylinder("ml-isle", { diameter: 37, height: 1.2, tessellation: 40 }, scene), 0.05); isle.position.y = -0.6; isle.material = toon(scene, "ml-stone", "#9a98a8");
+  for (const r of [7, 12.5]) { const ring = add(MB.CreateTorus("ml-ring", { diameter: r * 2, thickness: 0.1, tessellation: 56 }, scene)); ring.position.y = 0.012; ring.material = P("#7a7890"); }
+  // Standing stones round the island's rim, and a shrine arch on the north side (where his mother's name is cut).
+  const stoneM = toon(scene, "ml-standing", "#7e7c8c");
+  for (let i = 0; i < 9; i++) {
+    const a = (i / 9) * Math.PI * 2 + 0.2;
+    if (Math.abs(Math.atan2(Math.sin(a), Math.cos(a))) < 0.35) continue;
+    const h = 2.6 + rng() * 1.6, st = add(MB.CreateBox("ml-stone", { width: 0.9, height: h, depth: 0.6 }, scene), 0.04);
+    st.position.set(Math.sin(a) * 17.8, h / 2 - 0.1, Math.cos(a) * 17.8); st.rotation.set((rng() - 0.5) * 0.12, a, (rng() - 0.5) * 0.12); st.material = stoneM;
+  }
+  for (const sx of [-1.6, 1.6]) { const post = add(MB.CreateBox("ml-archPost", { width: 0.6, height: 4.2, depth: 0.6 }, scene), 0.04); post.position.set(sx, 2.0, 17.6); post.material = stoneM; }
+  const lintel = add(MB.CreateBox("ml-archTop", { width: 4.4, height: 0.6, depth: 0.8 }, scene), 0.04); lintel.position.set(0, 4.3, 17.6); lintel.material = stoneM;
+  // Far shore: dark hills and a few pines.
+  const hill = toon(scene, "ml-hill", "#141a2c"), pine = toon(scene, "ml-pine", "#0e1a1e");
+  for (let i = 0; i < 10; i++) { const a = (i / 10) * Math.PI * 2 + rng(); const r = 70 + rng() * 12, h = 10 + rng() * 14;
+    const m = add(MB.CreateCylinder("ml-hill", { height: h, diameterTop: 0, diameterBottom: 30 + rng() * 20, tessellation: 6 }, scene)); m.position.set(Math.sin(a) * r, h / 2 - 1, Math.cos(a) * r); m.material = hill; }
+  for (let i = 0; i < (mobile ? 18 : 36); i++) { const a = rng() * Math.PI * 2, r = 48 + rng() * 14, h = 4 + rng() * 4;
+    const t = add(MB.CreateCylinder("ml-pine", { height: h, diameterTop: 0, diameterBottom: 1.8, tessellation: 5 }, scene)); t.position.set(Math.sin(a) * r, h / 2 - 0.3, Math.cos(a) * r); t.material = pine; }
+  // Stars: in the sky, and doubled in the water below the island's edge.
+  const starM = glow(scene, "ml-star", "#e8ecff"), starDim = glow(scene, "ml-starDim", "#7a88c8");
+  const starSrc = MB.CreatePolyhedron("ml-starSrc", { type: 1, size: 0.35 }, scene); starSrc.material = starM; starSrc.isPickable = false; starSrc.setEnabled(false); starSrc.parent = K.root;
+  const dimSrc = MB.CreatePolyhedron("ml-dimSrc", { type: 1, size: 0.25 }, scene); dimSrc.material = starDim; dimSrc.isPickable = false; dimSrc.setEnabled(false); dimSrc.parent = K.root;
+  for (let i = 0; i < (mobile ? 90 : 180); i++) {
+    const a = rng() * Math.PI * 2, el = 0.15 + rng() * 1.2, d = 120;
+    const st = starSrc.createInstance("ml-star"); st.parent = K.root; st.position.set(Math.sin(a) * Math.cos(el) * d, Math.sin(el) * d * 0.6 + 6, Math.cos(a) * Math.cos(el) * d); st.isPickable = false;
+    const rf = dimSrc.createInstance("ml-starR"); rf.parent = K.root; const rr = 22 + rng() * 60; rf.position.set(Math.sin(a) * rr, -0.22, Math.cos(a) * rr); rf.scaling.y = 0.2; rf.isPickable = false;
+  }
+  const moon = add(MB.CreateDisc("ml-moon", { radius: 6, tessellation: 32 }, scene)); moon.position.set(-30, 46, 95); moon.material = glow(scene, "ml-moonM", "#e8ecff");
+  // Under the water: a dark volume and the under-text, out past the island's south edge.
+  const UN = { x: 0, y: -4.2, z: -26 };
+  const under = new BB.TransformNode("ml-under", scene); under.parent = K.root; under.setEnabled(false); // shown only by the cutscene's cues
+  const deepM = glow(scene, "ml-deep", "#0a1640", 0.92); deepM.backFaceCulling = false;
+  const deep = MB.CreateSphere("ml-deep", { diameter: 22, segments: 12 }, scene); deep.parent = under; deep.position.set(UN.x, UN.y, UN.z); deep.material = deepM; deep.isPickable = false;
+  K.noGlow(deep);
+  const glyphs = [];
+  for (let i = 0; i < 14; i++) {
+    const mat = new BB.StandardMaterial(`ml-glyphM${i}`, scene); mat.emissiveTexture = underTextTexture(scene, `ml-glyph${i}`, i + 3); mat.opacityTexture = mat.emissiveTexture;
+    mat.disableLighting = true; mat.backFaceCulling = false; mat.alpha = 0;
+    const g = MB.CreatePlane(`ml-glyph${i}`, { width: 2.6, height: 1.3 }, scene); g.parent = under; g.material = mat; g.isPickable = false;
+    const a = (i / 14) * Math.PI * 2, r = 1.6 + (i % 3) * 0.9;
+    g.position.set(UN.x + Math.sin(a) * r, UN.y - 3 + (i % 5) * 0.9, UN.z + Math.cos(a) * r); g.rotation.y = a + Math.PI;
+    glyphs.push({ g, mat, a, r, y0: g.position.y, lit: 0 });
+  }
+  const light = { on: 0, target: 0, write: 0 };
+  const cue = (name) => {
+    if (name === "under") { under.setEnabled(true); light.target = 0.85; }
+    if (name === "annotate") { light.target = 1; light.write = 1; }
+    if (name === "surface") { under.setEnabled(false); light.target = 0; light.on = 0; light.write = 0; }
+  };
+  K.bake([]);
+  const env = { clear: "#070a18", fog: "#0a1028", fogDensity: 0.006, hemi: [0.5, "#b8c4ff", "#141a30"], sun: [0.55, "#d8e0ff", [0.3, -1, 0.6]], warm: 0 };
+  const toonEnv = { lightDir: [-0.3, 1, -0.6], fogColor: "#0a1028", fogDensity: 0.004, sky: [0.86, 0.9, 1.08], ground: [0.6, 0.62, 0.74], rim: [0.7, 0.8, 1.1] };
+  return { env, toon: toonEnv, show: K.show, conditions: K.conditions, outdoor: true, cue,
+    update(dt, t) {
+      light.on += (light.target - light.on) * Math.min(1, dt * 1.5);
+      for (const gl of glyphs) {
+        gl.g.position.y = gl.y0 + ((t * 0.5 + gl.a) % 4); // rising out of the dark
+        gl.g.rotation.y = gl.a + Math.PI + t * 0.15;
+        gl.mat.alpha = light.on * (0.55 + 0.45 * Math.sin(t * 2 + gl.a * 3)) * (light.write ? 1 : 0.7);
+        gl.mat.emissiveColor = light.write ? new BB.Color3(1, 0.95, 0.8) : new BB.Color3(1, 1, 1);
+      }
+      lake.rotation.y = Math.sin(t * 0.05) * 0.02;
+    } };
+}
+
+/**
+ * The Valcourt crypt (Ep 28's last scene): a low stone vault under the family chapel, the dead of House Valcourt
+ * in rows of slabs, and at the end one grave newer than the rest: Aurek's. A flower is left on it ($CRYPT_FLOWER).
+ */
+function buildCrypt(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add;
+  const P = palette(scene, "cr");
+  const room = buildRoom(scene, K, { prefix: "cr", half: [5, 8], height: 4.2, wall: "#5a5664", wainscot: "#3e3a46", floorA: "#4a4652", floorB: "#423e4a", door: { x: 0, z: -8 }, windows: [] });
+  const slabM = toon(scene, "cr-slab", "#6e6a78"), dark = P("#2e2a36");
+  for (const z of [-4.6, -1.8, 1.0]) for (const x of [-3, 3]) {
+    const sl = add(MB.CreateBox("cr-tomb", { width: 1.3, height: 0.7, depth: 2.2 }, scene), 0.03); sl.position.set(x, 0.35, z); sl.material = slabM;
+    const lid = add(MB.CreateBox("cr-lid", { width: 1.4, height: 0.1, depth: 2.3 }, scene), 0.02); lid.position.set(x, 0.75, z); lid.material = dark;
+  }
+  // Aurek's grave: a standing stone with his name and the Valcourt star, newer and cleaner than the rest.
+  const G = { x: 0, z: 5.6 };
+  const stone = add(MB.CreateBox("cr-headstone", { width: 1.6, height: 2.2, depth: 0.4 }, scene), 0.04); stone.position.set(G.x, 1.1, G.z + 1); stone.material = toon(scene, "cr-newStone", "#a8a4b4");
+  const tex = new BB.DynamicTexture("cr-nameTex", { width: 256, height: 352 }, scene, true), c = tex.getContext();
+  c.fillStyle = "#a8a4b4"; c.fillRect(0, 0, 256, 352); c.fillStyle = "#4a4656"; c.textAlign = "center";
+  c.font = "bold 30px serif"; c.fillText("AUREK", 128, 190); c.fillText("VALCOURT", 128, 228);
+  c.font = "16px serif"; c.fillText("Lost in the Hollowmarch", 128, 262);
+  c.beginPath(); for (let i = 0; i < 10; i++) { const a = (i / 10) * Math.PI * 2 - Math.PI / 2, r = i % 2 ? 22 : 52; c.lineTo(128 + Math.cos(a) * r, 110 + Math.sin(a) * r); } c.closePath(); c.fill();
+  tex.update();
+  const nameM = new BB.StandardMaterial("cr-nameM", scene); nameM.emissiveTexture = tex; nameM.disableLighting = true; nameM.emissiveColor = new BB.Color3(0.55, 0.55, 0.6);
+  const face = MB.CreatePlane("cr-name", { width: 1.3, height: 1.8 }, scene); face.parent = K.root; face.position.set(G.x, 1.15, G.z + 0.79); face.material = nameM; face.isPickable = false; K.noGlow(face);
+  const slab = add(MB.CreateBox("cr-graveSlab", { width: 1.4, height: 0.12, depth: 2.2 }, scene), 0.02); slab.position.set(G.x, 0.06, G.z - 0.4); slab.material = slabM;
+  // Candles, low and many.
+  const candles = [], flameM = glow(scene, "cr-flame", "#ffcf6a"), wax = P("#e8e0cc");
+  for (const [x, z] of [[-0.9, 6.2], [0.9, 6.2], [-1.2, 5.4], [1.2, 5.4], [-4.2, -5.6], [4.2, -5.6], [-4.2, 2], [4.2, 2]]) {
+    const w = add(MB.CreateCylinder("cr-candle", { height: 0.3, diameter: 0.1, tessellation: 6 }, scene)); w.position.set(x, 0.15, z); w.material = wax;
+    const f = add(MB.CreateSphere("cr-flame", { diameter: 0.09, segments: 4 }, scene)); f.position.set(x, 0.36, z); f.scaling.y = 1.8; f.material = flameM; candles.push(f);
+  }
+  const flower = K.when("$CRYPT_FLOWER");
+  const seams = [];
+  const cue = (name) => { // the cutscene: the flower laid down; his way out
+    if (name === "flower") flower.setEnabled(true);
+    if (name === "seam") { const t = makeTear(scene, "cr-seam", { r: 1.1, kind: "black", seed: 31, ground: false }); t.parent = K.root; t.position.set(-1.2, 1.2, -5.6); t.scaling.setAll(0.01); seams.push({ t, age: 0 }); }
+  };
+  { const stem = MB.CreateCylinder("cr-stem", { height: 0.5, diameter: 0.02, tessellation: 4 }, scene); stem.parent = flower; stem.position.set(G.x + 0.1, 0.16, G.z - 0.2); stem.rotation.z = Math.PI / 2.2; stem.material = P("#3a6a3a"); stem.isPickable = false;
+    for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2; const pt = MB.CreateSphere("cr-petal", { diameter: 0.09, segments: 4 }, scene); pt.parent = flower; pt.position.set(G.x - 0.16 + Math.cos(a) * 0.05, 0.16, G.z - 0.2 + Math.sin(a) * 0.05); pt.scaling.y = 0.4; pt.material = P("#f2f0ff"); pt.isPickable = false; } }
+  const warm = new BB.PointLight("cr-warm", new BB.Vector3(0, 2.6, 4.6), scene); warm.diffuse = color3("#ffc070").clone(); warm.intensity = 0.5; warm.range = 14; K.lights.push(warm);
+  K.bake([...room.keep]);
+  const env = { clear: "#0c0b10", fog: "#0c0b10", fogDensity: 0.02, hemi: [0.45, "#d8c8b8", "#1a1620"], sun: [0.3, "#ffd8a8", [0.2, -1, 0.4]], warm: 0 };
+  const toonEnv = { lightDir: [-0.2, 1, -0.4], fogColor: "#0c0b10", fogDensity: 0.01, sky: [0.9, 0.86, 0.84], ground: [0.6, 0.56, 0.6], rim: [1, 0.86, 0.7] };
+  const self = { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true, cue,
+    update(dt, t) {
+      room.cutaway(scene.activeCamera, self.mood?.player);
+      for (const sm of seams) { sm.age += dt; const k = Math.max(0.01, Math.min(1, sm.age / 0.3, (3 - sm.age) / 0.3)); sm.t.scaling.setAll(k); if (sm.age > 3) sm.t.dispose(false, false); }
+      for (let i = seams.length - 1; i >= 0; i--) if (seams[i].age > 3) seams.splice(i, 1);
+      for (let i = 0; i < candles.length; i++) candles[i].scaling.y = 1.8 * (0.85 + Math.sin(t * 9 + i * 2.1) * 0.15);
+      warm.intensity = 0.48 + Math.sin(t * 6) * 0.04;
     } };
   return self;
 }
