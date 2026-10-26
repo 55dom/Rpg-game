@@ -186,22 +186,22 @@ export const CUTSCENES = {
     id: "ep28_crypt",
     stage: "crypt",
     duration: 13.5,
-    actors: [{ id: "knight", look: "masked", x: 0, z: 4.4, yaw: 0 }],
+    actors: [{ id: "knight", look: "masked", x: -0.3, z: 3.7, yaw: 0 }], // at the foot of the grave
     camera: [
       { t: 0, pos: [0, 1.7, -7.2], look: [0, 1, 4.6], fov: 0.6 },                              // from the door, down the aisle
       { t: 4, pos: [0, 1.6, -4.6], look: [0, 0.9, 4.6], fov: 0.58, ease: "linear" },
-      { t: 4, cut: true, pos: [2.3, 1.1, 3.6], look: [0, 0.8, 4.9], fov: 0.5 },                 // beside him, kneeling
-      { t: 7.2, pos: [2.2, 1.1, 3.8], look: [0, 0.8, 5], fov: 0.48, ease: "linear" },
-      { t: 7.2, cut: true, pos: [0.7, 0.7, 4.3], look: [0, 0.8, 6.6], fov: 0.5 },                // the name, and the flower
-      { t: 10.4, pos: [0.6, 0.75, 4.5], look: [0, 0.85, 6.6], fov: 0.46, ease: "linear" },
+      { t: 4, cut: true, pos: [3.6, 1.9, 1.4], look: [0, 0.9, 5.4], fov: 0.62 },                 // from the side: kneeling at the grave
+      { t: 7.2, pos: [3.4, 1.8, 1.8], look: [0, 0.9, 5.4], fov: 0.58, ease: "linear" },
+      { t: 7.2, cut: true, pos: [1.6, 1.3, 3.2], look: [0, 0.75, 6.2], fov: 0.55 },               // past his shoulder: the name, and the flower
+      { t: 10.4, pos: [1.5, 1.25, 3.5], look: [0, 0.7, 6.2], fov: 0.52, ease: "linear" },
       { t: 10.4, cut: true, pos: [2.6, 1.6, -2.4], look: [-1.2, 1.2, -5.6], fov: 0.58 },         // he goes
       { t: 13.5, pos: [2.6, 1.6, -2.2], look: [-1.2, 1.2, -5.6], fov: 0.58 },
     ],
     events: [
-      { t: 0, pose: { id: "knight", name: "bow" } },
+      { t: 0, pose: { id: "knight", name: "bow" } }, { t: 0, cue: "noFlower" },
       { t: 5.4, pose: { id: "knight", name: "hand" } }, { t: 6.2, cue: "flower" }, { t: 6.4, pose: { id: "knight", name: "bow" } },
       { t: 7.2, pose: { id: "knight", name: "none" } },
-      { t: 10, move: { id: "knight", to: [-1.2, -5], dur: 2.2 } },
+      { t: 10, move: { id: "knight", to: [-1.2, -5], dur: 2.4 } },
       { t: 11.6, cue: "seam" }, { t: 11.6, sfx: "tear" },
       { t: 12.4, hide: "knight" },
     ],

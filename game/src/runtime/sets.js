@@ -1709,8 +1709,8 @@ function buildCrypt(scene, mobile) {
   c.font = "16px serif"; c.fillText("Lost in the Hollowmarch", 128, 262);
   c.beginPath(); for (let i = 0; i < 10; i++) { const a = (i / 10) * Math.PI * 2 - Math.PI / 2, r = i % 2 ? 22 : 52; c.lineTo(128 + Math.cos(a) * r, 110 + Math.sin(a) * r); } c.closePath(); c.fill();
   tex.update();
-  const nameM = new BB.StandardMaterial("cr-nameM", scene); nameM.emissiveTexture = tex; nameM.disableLighting = true; nameM.emissiveColor = new BB.Color3(0.55, 0.55, 0.6);
-  const face = MB.CreatePlane("cr-name", { width: 1.3, height: 1.8 }, scene); face.parent = K.root; face.position.set(G.x, 1.15, G.z + 0.79); face.material = nameM; face.isPickable = false; K.noGlow(face);
+  const nameM = new BB.StandardMaterial("cr-nameM", scene); nameM.emissiveTexture = tex; tex.level = 0.62; nameM.disableLighting = true; nameM.emissiveColor = BB.Color3.Black(); // carved stone, in candlelight
+  const face = MB.CreatePlane("cr-name", { width: 1.3, height: 1.8 }, scene); face.parent = K.root; face.position.set(G.x, 1.15, G.z + 0.72); face.material = nameM; face.isPickable = false; K.noGlow(face);
   const slab = add(MB.CreateBox("cr-graveSlab", { width: 1.4, height: 0.12, depth: 2.2 }, scene), 0.02); slab.position.set(G.x, 0.06, G.z - 0.4); slab.material = slabM;
   // Candles, low and many.
   const candles = [], flameM = glow(scene, "cr-flame", "#ffcf6a"), wax = P("#e8e0cc");
@@ -1722,6 +1722,7 @@ function buildCrypt(scene, mobile) {
   const seams = [];
   const cue = (name) => { // the cutscene: the flower laid down; his way out
     if (name === "flower") flower.setEnabled(true);
+    if (name === "noFlower") flower.setEnabled(false); // the scene starts before it's laid down
     if (name === "seam") { const t = makeTear(scene, "cr-seam", { r: 1.1, kind: "black", seed: 31, ground: false }); t.parent = K.root; t.position.set(-1.2, 1.2, -5.6); t.scaling.setAll(0.01); seams.push({ t, age: 0 }); }
   };
   { const stem = MB.CreateCylinder("cr-stem", { height: 0.5, diameter: 0.02, tessellation: 4 }, scene); stem.parent = flower; stem.position.set(G.x + 0.1, 0.16, G.z - 0.2); stem.rotation.z = Math.PI / 2.2; stem.material = P("#3a6a3a"); stem.isPickable = false;
