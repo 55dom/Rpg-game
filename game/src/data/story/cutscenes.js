@@ -126,8 +126,8 @@ export const CUTSCENES = {
       { t: 11, pos: [0.65, 2.0, 13.0], look: [OUT.x, 1.7, OUT.z], fov: 0.48, ease: "linear" },
       { t: 11, cut: true, pos: [-2.2, 1.9, 15.6], look: [OUT.x, 1.75, OUT.z], fov: 0.58 },             // the mask: head and shoulders
       { t: 13.6, pos: [-2.1, 1.9, 15.7], look: [OUT.x, 1.75, OUT.z], fov: 0.56, ease: "linear" },
-      { t: 13.6, cut: true, pos: [4.2, 4.6, 14.35], look: [OUT.x - 0.2, 1.4, OUT.z + 0.6], fov: 0.58 }, // from above: the way out
-      { t: 16.2, pos: [4.1, 4.5, 14.6], look: [OUT.x - 0.2, 1.4, OUT.z + 0.7], fov: 0.58, ease: "linear" },
+      { t: 13.6, cut: true, pos: [-1.8, 2.2, 13.9], look: [OUT.x - 0.7, 1.4, OUT.z + 0.6], fov: 0.58 }, // side by side: him, his way out, and Bas
+      { t: 16.2, pos: [-1.7, 2.2, 14.1], look: [OUT.x - 0.6, 1.4, OUT.z + 0.7], fov: 0.58, ease: "linear" },
       { t: 16.2, cut: true, pos: [0.4, 1.6, 10.4], look: [0.6, 1.3, 17.5], fov: 0.63 },              // the squad, and Bas in the doorway
       { t: 18.5, pos: [0.4, 1.6, 10.8], look: [0.4, 1.3, 18], fov: 0.63, ease: "linear" },
     ],
@@ -164,8 +164,8 @@ export const CUTSCENES = {
       { id: "under", look: "player", x: 0, z: -26, y: -4.2, yaw: PI },
     ],
     camera: [
-      { t: 0, pos: [2.9, 1.9, -9.4], look: [0, 1.1, -17.2], fov: 0.55, ots: "severin" },    // past Severin: Rook at the edge
-      { t: 2, pos: [2.7, 1.8, -9.9], look: [0, 0.9, -17.4], fov: 0.52, ease: "linear" },
+      { t: 0, pos: [3.1, 1.9, -8.85], look: [0, 1.1, -17.2], fov: 0.55 },                    // past Severin: Rook at the edge
+      { t: 2, pos: [2.9, 1.8, -9.35], look: [0, 0.9, -17.4], fov: 0.52, ease: "linear" },
       { t: 2, cut: true, pos: [3.4, 0.5, -20.4], look: [0, 1.1, -17.6], fov: 0.72 },              // low on the water: the fall
       { t: 3, pos: [3.4, 0.45, -20.4], look: [0, 0.8, -18.0], fov: 0.72, ease: "linear" },
       { t: 3, cut: true, pos: [3.2, -4.6, -22.6], look: [0, -3.3, -26], fov: 0.7 },             // under: sinking
