@@ -199,7 +199,7 @@ class Stage {
       if (!a) return null;
       const scale = a === this.getWorld().player ? 1 : this.actors.get(ids[0])?.rig.look.scale ?? 1;
       const down = !!a.down;
-      const look = { x: a.pos.x, y: (a.pos.y ?? 0) + (down ? 0.4 : 1.75 * scale), z: a.pos.z };
+      const look = { x: a.pos.x, y: (a.pos.y ?? 0) + (down ? 0.4 : 1.82 * scale), z: a.pos.z }; // the middle of the face (heads run 1.6–2.22 m)
       // Try a few angles around the subject and keep the one with the clearest line of sight.
       const others = pts.filter((p) => p !== a);
       let best = null, bestScore = -1;
@@ -227,7 +227,7 @@ class Stage {
       const side = 1.3 + (wide - 1) * 0.9; // far enough to the side that the near shoulder frames the shot instead of filling it
       const pos = { x: b.pos.x - ux * back + rx * side, y: 2.05 * sb + (b.pos.y ?? 0), z: b.pos.z - uz * back + rz * side };
       const sa = a === this.getWorld().player ? 1 : this.actors.get(ids[0])?.rig.look.scale ?? 1;
-      const look = { x: a.pos.x - ux * 0.3, y: 1.72 * sa + (a.pos.y ?? 0), z: a.pos.z - uz * 0.3 }; // their face, whatever their height
+      const look = { x: a.pos.x - ux * 0.3, y: 1.82 * sa + (a.pos.y ?? 0), z: a.pos.z - uz * 0.3 }; // their face, whatever their height
       return { pos, look, fov: 0.62 };
     }
     return null;
@@ -729,7 +729,9 @@ export class StoryPlayer {
     if (!sh) return;
     const subj = kind === "on" ? this.stage.get(ids[0]) : null;
     this.currentShot = { kind, ids, yaw: subj ? subj.targetYaw ?? subj.yaw : null };
-    this.ctx.camera.frame(sh.pos, sh.look, { fov: sh.fov, cut });
+    // A phone held sideways has a short strip between the letterbox and the dialogue box: close shots open up to fit a whole head in it.
+    const short = kind !== "wide" && typeof innerHeight !== "undefined" && innerHeight < 560;
+    this.ctx.camera.frame(sh.pos, sh.look, { fov: sh.fov * (short ? 1.3 : 1), cut });
   }
 
   async command(name, args) {
