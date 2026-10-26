@@ -80,7 +80,7 @@ Severin: The kitchen door. Twenty years, and it still sticks.
 
 title: Ep32_Garden
 ---
-<<shot wide>>
+<<shot wide side>>
 The kitchen door sticks, and while Severin is still leaning on it, a lamp comes up behind you in the garden.
 <<shot on Aldric>>
 Aldric: Severin. You used to come in this way when you were eleven. The cook told me. I let her think I didn't know.
@@ -107,7 +107,7 @@ Aldric: Whatever we're strong enough to command.
 <<show Halvard>>
 <<show lance1>>
 <<show lance2>>
-<<shot wide>>
+<<shot wide side>>
 Lanterns come up all round the garden. Halvard, and his Lances, spears grounded.
 <<shot on Halvard>>
 Halvard: My lord.
