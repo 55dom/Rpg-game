@@ -1282,7 +1282,10 @@ export class StoryPlayer {
     this.bars = null;
     if (won) {
       e.done = true;
-      if (e.flag) { this.flags.set(e.flag, 1); this.flags.set(`${e.flag}_VISIT`, Number(this.flags.get(`VISITS_${this.zone.id.toUpperCase()}`)) || 1); }
+      if (e.flag) { // (an episode's walk-around has no zone, and no visits to count)
+        this.flags.set(e.flag, 1);
+        if (this.zone) this.flags.set(`${e.flag}_VISIT`, Number(this.flags.get(`VISITS_${this.zone.id.toUpperCase()}`)) || 1);
+      }
       if (e.mark) this.flags.set(e.mark, 1); // beaten at least once (the fight itself comes back)
       const pp = world.player.pos; // a fight over the same ground waits until you've walked out and back in
       for (const o of x.encounters) if (inRect(pp, o.rect)) o.armed = false;
@@ -1309,12 +1312,13 @@ export class StoryPlayer {
     const e = x.combat;
     this._endCombat(false);
     e.armed = false; // walk out of its area before it can start again
-    const world = this.ctx.getWorld(), p = world.player, at = arrivalPoint(this.zone, this.arrival);
+    const world = this.ctx.getWorld(), p = world.player; // free roam: the zone's way in; an episode's walk-around: where it started
+    const at = this.zone ? arrivalPoint(this.zone, this.arrival) : (x.beat.rook ?? { x: 0, z: -4, yaw: 0 });
     world.revivePlayer(1);
     p.pos.x = p.prev.x = at.x; p.pos.z = p.prev.z = at.z; p.pos.y = p.prev.y = 0; p.yaw = p.prevYaw = at.yaw ?? 0;
     this.ctx.onEvents(world.drainEvents());
     this._fade(false, 0.6);
-    this.ctx.hud.banner(`${this.player.name.toUpperCase()} WAKES UP AT THE ${this.zone.dungeon ? "STAIRS" : "ROADSIDE"}`);
+    this.ctx.hud.banner(`${this.player.name.toUpperCase()} WAKES UP ${this.zone ? `AT THE ${this.zone.dungeon ? "STAIRS" : "ROADSIDE"}` : "WHERE THEY STARTED"}`);
   }
 
   // ---- Free roam: walk between zones (GDD §13) ----

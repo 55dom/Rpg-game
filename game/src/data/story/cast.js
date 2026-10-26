@@ -69,9 +69,9 @@ export const CAST = Object.freeze({
   // Luke, who joined the Watch, and Elsie, the sister you pulled out of the Fens.
   Luke: { name: "Luke", color: "#ffd98a", actor: "luke" },
   Elsie: { name: "Elsie", color: "#c9e8a0", actor: "elsie" },
-  // Ep 31, the poor quarter: Mag, and Pip, her boy.
+  // Ep 31, the poor quarter: Mag, and Kit, her boy.
   Mag: { name: "Mag", color: "#f0b8a0", actor: "mag" },
-  Pip: { name: "Pip", color: "#e6d29a", actor: "pip" },
+  Kit: { name: "Kit", color: "#e6d29a", actor: "kit" },
 });
 
 export const speakerName = (id, playerName, flags = null) => (id === "Rook" ? playerName : CAST[id]?.label ? CAST[id].label(flags) : CAST[id]?.name ?? id);

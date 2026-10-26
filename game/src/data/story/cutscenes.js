@@ -173,7 +173,7 @@ export const CUTSCENES = {
     actors: [
       { id: "wraithe", look: "wraithe", x: Q.out.x, z: Q.out.z, yaw: 2.5, hidden: true },
       { id: "knight", look: "masked", x: Q.knight.x, z: Q.knight.z, yaw: -0.65, hidden: true },
-      { id: "pip", look: "pip", x: Q.seam.x + 0.4, z: Q.seam.z - 0.8, yaw: -1.4, hidden: true },
+      { id: "kit", look: "kit", x: Q.seam.x + 0.4, z: Q.seam.z - 0.8, yaw: -1.4, hidden: true },
     ],
     camera: [
       { t: 0, pos: [24.6, 3.0, -15.2], look: [Q.out.x, 1.3, Q.out.z], fov: 0.62 },                  // down the lane from the street: a pale tear opens
@@ -211,8 +211,8 @@ export const CUTSCENES = {
       { t: 9.6, move: { id: "knight", to: [Q.reach.x, Q.reach.z], dur: 1.4 } },
       { t: 9.8, caption: "" },
       { t: 11.2, pose: { id: "knight", name: "hand" } }, { t: 11.2, caption: "He reaches into the Choir's seam, up to the shoulder." },
-      { t: 12.4, show: "pip" }, { t: 12.4, sfx: "rift" },
-      { t: 12.5, move: { id: "pip", to: [Q.boy.x, Q.boy.z], dur: 1.1 } },
+      { t: 12.4, show: "kit" }, { t: 12.4, sfx: "rift" },
+      { t: 12.5, move: { id: "kit", to: [Q.boy.x, Q.boy.z], dur: 1.1 } },
       { t: 13.2, pose: { id: "knight", name: "none" } },
       { t: 13.6, caption: "A boy in a man's coat. He sets him down on the cobbles as if he weighed nothing." },
       { t: 16.2, caption: "" },

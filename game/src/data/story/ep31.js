@@ -14,17 +14,17 @@ title: Ep31_Cold
 ---
 <<shot wide>>
 Aurelin, after midnight. The poor quarter by the grate, where the lamps don't reach.
-<<show pip>>
-<<shot on Pip>>
+<<show kit>>
+<<shot on Kit>>
 A boy in a man's coat is chasing the Lowmarket cat between the washing lines.
-Pip: Here, puss. Here. I've got a bit of fish. It's mostly fish.
-<<fx rift Pip>>
+Kit: Here, puss. Here. I've got a bit of fish. It's mostly fish.
+<<fx rift Kit>>
 The air beside him opens like a slit in paper. Pale at the edges, and nothing inside it at all.
-<<hide pip>>
+<<hide kit>>
 <<shot wide>>
 And he's gone. The washing on the line is still swinging.
 <<shot on Mag>>
-Mag: Pip? Pip, it's late, come in. ...Pip?
+Mag: Kit? Kit, it's late, come in. ...Kit?
 ===
 
 title: Ep31_Word
@@ -32,7 +32,7 @@ title: Ep31_Word
 <<shot wide>>
 Juno comes in from Aurelin with her stall money in one hand and a letter in the other, and doesn't sit down.
 <<shot on Juno>>
-Juno: Three children gone from the poor quarter in nine nights. The last one was Mag's boy, Pip. He's eight. Mag sells my knots on her corner when I'm away.
+Juno: Three children gone from the poor quarter in nine nights. The last one was Mag's boy, Kit. He's eight. Mag sells my knots on her corner when I'm away.
 Juno: The Watch says they ran off to the Fens. Children from the poor quarter don't run to the Fens. There's nothing to eat in the Fens.
 <<shot on Dagrun>>
 Dagrun: We're Lanterns, Juno. We're not the Watch.
@@ -120,7 +120,7 @@ Lio: The silent school always uses the same doors. It's a vanity thing. ...I'm a
 title: Ep31_Juno
 ---
 Juno: I've sold knots on this corner since I was twelve. I know every kid in this quarter by name.
-Juno: Pip. Nell. Tobin. Say them with me if you like. It helps.
+Juno: Kit. Nell. Tobin. Say them with me if you like. It helps.
 ===
 
 title: Ep31_Tamsin
@@ -152,8 +152,8 @@ title: Ep31_Step
 ---
 <<shot wide>>
 You come round the corner at a run, the others behind you. Wraithe is gone. In the lane by the grate, the masked knight stands over a small boy in a man's coat.
-<<shot on Pip>>
-Pip: ...Are you the Ferryman?
+<<shot on Kit>>
+Kit: ...Are you the Ferryman?
 <<shot on Masked>>
 He doesn't answer. He's looking at the pale seam by the shack door. It's still open, and it's starting to close.
 <<pose Masked hand>>
@@ -167,14 +167,14 @@ A girl in a nightdress, shaking with cold.
 <<shot on tobin>>
 A boy with one shoe.
 <<pose Masked none>>
-<<shot two Masked Pip>>
+<<shot two Masked Kit>>
 He puts a hand on the first boy's shoulder and turns him toward you, toward the street and home. The doorstep in front of the shack is cracked and high.
 Masked: Mind the step.
 <<set $CLUE_B4 to 1>>
 <<shot on Tamsin>>
 Tamsin: ...That's a weird thing to say.
 <<shot on Juno>>
-Juno: Pip. Nell. Tobin. Come here. Come here, all of you. You're all right.
+Juno: Kit. Nell. Tobin. Come here. Come here, all of you. You're all right.
 <<shot two Rook Masked>>
 -> "You killed him in front of them." #bold
     <<shot on Masked>>
@@ -198,10 +198,10 @@ title: Ep31_Dawn
 ---
 <<shot wide>>
 Dawn comes up grey over the poor quarter. Every door in the lane is open, and every lamp is lit.
-<<shot two Mag Pip>>
-Mag has Pip by both ears and is crying into his hair and telling him off, all at the same time.
+<<shot two Mag Kit>>
+Mag has Kit by both ears and is crying into his hair and telling him off, all at the same time.
 Mag: Your father's coat. You went out in your father's coat, after the cat, at midnight.
-Pip: The cat's fine.
+Kit: The cat's fine.
 <<shot on Mag>>
 Mag: He says the Ferryman brought him back. My gran used to say the Ferryman takes bad men across the river and sends the children home. I never believed a word of it.
 Mag: I'll light a candle for him now. Whoever he is.
@@ -241,7 +241,7 @@ export const EPISODE_31 = {
     { id: "cold", type: "scene", node: "Ep31_Cold", ...AU, ...NIGHT, rook: null,
       cast: [
         { id: "mag", look: "mag", x: 30.6, z: -20.0, yaw: 2.5 },
-        { id: "pip", look: "pip", x: 33.2, z: -23.0, yaw: 0.6, hidden: true },
+        { id: "kit", look: "kit", x: 33.2, z: -23.0, yaw: 0.6, hidden: true },
       ] },
     { id: "title", type: "title" },
     { id: "word", type: "scene", node: "Ep31_Word", ...LH,
@@ -285,13 +285,13 @@ export const EPISODE_31 = {
       ],
       eventHints: { taken: "A black tear, not a pale one. That isn't his. Somebody else is here tonight." },
       lines: [["Juno", "Where are they? Where are the children?"], ["Bas", "One arm's plenty for this one."]],
-      retry: "Up. Pip's waiting." },
+      retry: "Up. Kit's waiting." },
     { id: "cut", type: "cutscene", cutscene: "ep31_step" },
     { id: "step", type: "scene", node: "Ep31_Step", ...AU, ...NIGHT,
       rook: { x: 28.0, z: -22.6, yaw: 2.1 },
       cast: [
         { id: "masked", look: "masked", x: Q.reach.x, z: Q.reach.z, yaw: -1.0 },
-        { id: "pip", look: "pip", x: Q.boy.x, z: Q.boy.z, yaw: -1.2 },
+        { id: "kit", look: "kit", x: Q.boy.x, z: Q.boy.z, yaw: -1.2 },
         { id: "nell", look: "nell", x: 34.4, z: -27.8, yaw: -1.4, hidden: true },
         { id: "tobin", look: "tobin", x: 34.5, z: -25.4, yaw: -1.8, hidden: true },
         { id: "tamsin", look: "tamsin", x: 26.8, z: -23.8, yaw: 1.9 },
@@ -303,7 +303,7 @@ export const EPISODE_31 = {
       rook: { x: 27.8, z: -20.8, yaw: 1.6 },
       cast: [
         { id: "mag", look: "mag", x: 30.4, z: -20.2, yaw: -2.4 },
-        { id: "pip", look: "pip", x: 31.2, z: -21.0, yaw: -0.8 },
+        { id: "kit", look: "kit", x: 31.2, z: -21.0, yaw: -0.8 },
         { id: "juno", look: "juno", x: 28.8, z: -22.4, yaw: 1.0 },
         { id: "lio", look: "lio", x: 29.6, z: -23.8, yaw: 0.2 },
         { id: "luke", look: "luke", x: 26.4, z: -18.6, yaw: 2.0, when: "$LUKE_GUARD" },

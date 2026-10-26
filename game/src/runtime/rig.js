@@ -236,10 +236,10 @@ LOOKS.warden = { poses: WARDEN_POSES, scale: 1.95, skirt: 0.9, coat: "#8a8a94", 
   head: "helm", helm: "#9a9aa4", menace: true, weapon: "claw", talon: "#5a5a64", shoulders: 1.5, stoop: 0.08, eyes: "#9ad8ff", trail: "#9ad8ff" };
 // One of the admirers at the south gate since Luke joined: her best dress, for no reason at all.
 LOOKS.admirer = { ...LOOKS.townswoman, coat: "#c0507a", trim: "#f2d4dc", hairColor: "#3a2a20" };
-// Ep 31, the poor quarter: Mag, whose boy went missing, and the three children the Choir took (Pip in his father's
+// Ep 31, the poor quarter: Mag, whose boy went missing, and the three children the Choir took (Kit in his father's
 // coat, Nell in her nightdress, Tobin with one shoe).
 LOOKS.mag = { ...LOOKS.townswoman, coat: "#6a5646", trim: "#c9b48a", hairColor: "#5a3a2a" };
-LOOKS.pip = { ...LOOKS.kid, coat: "#7a6a4a", trim: "#c9a26a", hairColor: "#6a4a2a" };
+LOOKS.kit = { ...LOOKS.kid, coat: "#7a6a4a", trim: "#c9a26a", hairColor: "#6a4a2a" };
 LOOKS.nell = { ...LOOKS.kid, coat: "#e8e0d0", trim: "#c9b48a", hair: "long", hairColor: "#c98a4a", skirt: 1.3 };
 LOOKS.tobin = { ...LOOKS.kid, coat: "#4a7a5a", trim: "#d8c890", hairColor: "#2a2018" };
 // The Crown Archivist (Eps 25–26): grey robes, ink on her fingers, a ledger under her arm.
