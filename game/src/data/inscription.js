@@ -10,6 +10,13 @@ import { defineAbility, EventType as E } from "../core/abilities.js";
 
 export const INSCRIPTION = Object.freeze({ frames: 420, bonus: 1.15 });
 
+/**
+ * Revision, the second Under-Text stage (GDD §8.6, Arc 5, Ep 40): the page rewinds. When Rook would fall with at least
+ * half a Surge gauge, the last three seconds come undone for Rook (health, footing) and stay done for everyone else
+ * (the damage Rook dealt stands). It spends the half gauge. Ink comes back faster in a fight, too.
+ */
+export const REVISION = Object.freeze({ frames: 180, every: 5, cost: 0.5, iframes: 60, manaRegen: 2 });
+
 export const INSCRIPTION_HITBOXES = Object.freeze({
   Quill: { center: [0, 1.1, 2.4], size: [1.6, 1.8, 4.6] },
 });

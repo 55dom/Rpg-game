@@ -20,6 +20,9 @@ import { VarkaController, SparBoss } from "./varka.js";
 import { WRAITHE_STATS, WRAITHE_HITBOXES, wraitheOptions } from "../data/wraithe.js";
 import { REFORM } from "../data/hollow.js";
 import { HALVARD_STATS, HALVARD_HITBOXES, halvardOptions } from "../data/halvard.js";
+import { REVISION } from "../data/inscription.js";
+import { PARAGON_STATS, PARAGON_HITBOXES, paragonOptions } from "../data/paragon.js";
+import { ParagonController } from "./paragon.js";
 import { HalvardController } from "./halvard.js";
 import { ERASER_STATS, ERASER_HITBOXES, eraserOptions } from "../data/eraser.js";
 import { EraserController } from "./eraser.js";
@@ -78,6 +81,7 @@ const BOSSES = {
   // Arc 4: B11, the sky temple's guardian (Ep 30).
   warden: { stats: WARDEN_STATS, hitboxes: WARDEN_HITBOXES, options: wardenOptions, traits: { heavy: true, armoredAttacks: true }, Controller: StormWardenController, z: 7 },
   halvard: { stats: HALVARD_STATS, hitboxes: HALVARD_HITBOXES, options: halvardOptions, traits: { heavy: true, frontalGuard: true }, Controller: HalvardController, z: 6 },
+  paragon: { stats: PARAGON_STATS, hitboxes: PARAGON_HITBOXES, options: paragonOptions, traits: { heavy: true }, Controller: ParagonController, z: 6 },
   eraser: { stats: ERASER_STATS, hitboxes: ERASER_HITBOXES, options: eraserOptions, traits: { heavy: true, armoredAttacks: true }, Controller: EraserController, z: 7 },
 };
 export const BOSS_KINDS = Object.freeze(Object.keys(BOSSES));
@@ -288,6 +292,9 @@ export class World {
     this.hunted = !!o.hunted; // Ep 31: somebody else is after Wraithe tonight (sim/wraithe.js)
     // Equipment (core/inventory.js mods): folded into Rook's stats here and into damage in _resolve.
     this.mods = { attack: 0, defense: 0, health: 0, mana: 0, manaRegen: 0, posture: 0, surge: 0, speed: 0, ...(o.mods ?? {}) };
+    this.revision = !!o.revision; // the Palimpsest's Revision stage (after Ep 40): the page rewinds when Rook would fall
+    if (this.revision) this.mods = { ...this.mods, manaRegen: this.mods.manaRegen + REVISION.manaRegen }; // ink comes back faster
+    this.rewind = [];                 // where Rook was, and how, every few frames for the last three seconds
     const m = this.mods;
     this.playerStats = Object.freeze({ ...ROOK_STATS, maxHealth: ROOK_STATS.maxHealth + m.health, maxMana: ROOK_STATS.maxMana + m.mana,
       manaRegenPerSecond: ROOK_STATS.manaRegenPerSecond + m.manaRegen, runSpeed: ROOK_STATS.runSpeed * (1 + m.speed) });
@@ -797,6 +804,22 @@ export class World {
     }
   }
 
+  /** Revision: if Rook has half a Surge gauge, back to three seconds ago (for Rook only). True if it happened. */
+  _revise() {
+    const p = this.player, s = p.surge;
+    if (!this.revision || !s || s.current < s.max * REVISION.cost || !this.rewind.length) return false;
+    const then = this.rewind[0];
+    s.set(s.current - s.max * REVISION.cost);
+    p.combatant.health.set(Math.max(then.health, p.combatant.health.max * 0.15));
+    p.combatant.posture?.set?.(then.posture);
+    p.pos.x = p.prev.x = then.x; p.pos.z = p.prev.z = then.z; p.pos.y = p.prev.y = 0;
+    p.vel.x = p.vel.y = p.vel.z = 0; p.knock.x = p.knock.z = 0; p.runner.interrupt(); p.hitstop = 0;
+    p.combatant.startInvulnerability(REVISION.iframes);
+    this.rewind = [];
+    this.emit({ type: "revision", fighter: p, from: { x: then.x, z: then.z } });
+    return true;
+  }
+
   /** The posture-broken enemy a finisher would hit, if any. */
   brokenTarget(f) {
     if (f !== this.player) return null;
@@ -853,6 +876,11 @@ export class World {
 
   /** One 60 Hz logic frame, in fixed phases. */
   step() {
+    if (this.revision && this.player.alive && this.frame % REVISION.every === 0) { // the page keeps the last three seconds
+      const p = this.player;
+      this.rewind.push({ x: p.pos.x, z: p.pos.z, health: p.combatant.health.current, posture: p.combatant.posture?.current ?? 0 });
+      if (this.rewind.length > REVISION.frames / REVISION.every) this.rewind.shift();
+    }
     this.frame++;
     const frame = this.frame;
     if (this.slowFrames > 0) this.slowFrames--;
@@ -1137,7 +1165,7 @@ export class World {
           if (att === this.player && hb.ability.manaCost > 0) this._pageXp(hb.ability);
         }
         if (spec !== hb.spec) this.emit({ type: "shieldBlock", defender: def, at });
-        if (def === this.player) this._surge(def.stats.surgeGain.taken * r.healthDamage);
+        if (def === this.player && !r.killed) this._surge(def.stats.surgeGain.taken * r.healthDamage); // (the blow that drops you doesn't pay for its own Revision)
         if (def.alive) this._react(att, def, hb, at);
         if (def.alive && att === this.player && this.annotation && (hb.ability?.manaCost ?? 0) > 0 && !def.tags.has("INSCRIBED")) { // a spell writes on what it hits
           def.tags.add("INSCRIBED", INSCRIPTION.frames);
@@ -1148,11 +1176,12 @@ export class World {
         if (def === this.player) { this.comboCount = 0; def.buffer.clear(); }
         this.emit({ type: "hit", ...base });
         if (r.defenderPostureBroken) this.emit({ type: "postureBreak", ...base });
-        if (r.killed) {
+        const revised = r.killed && def === this.player && this._revise(); // the page rewinds: it didn't happen (to Rook)
+        if (r.killed && !revised) {
           this.emit({ type: "kill", ...base });
           if (this.lockTarget === def) this.lockTarget = this.nearestEnemy(20, def); // the lock moves on
         }
-        if (r.killed && def === this.player) { if (this.bench) this._fallSwap = true; else this.emit({ type: "playerDown" }); } // a partner tags in instead
+        if (r.killed && !revised && def === this.player) { if (this.bench) this._fallSwap = true; else this.emit({ type: "playerDown" }); } // a partner tags in instead
         if (r.killed && def.companion) this.emit({ type: "allyDown", fighter: def });
         break;
       }

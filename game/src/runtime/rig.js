@@ -225,6 +225,9 @@ LOOKS.lance = { poses: LANCE_POSES, scale: 1.08, skirt: 1.0, coat: "#22305a", tr
 LOOKS.halvard = { ...LOOKS.lance, scale: 1.14, coat: "#1a2448", helm: "#e6c060", shoulders: 1.35, menace: true, trail: "#e6c060" };
 // The Hollow Shell (Ep 33): old armor walking with nobody in it. Pitted iron, a closed helm, a faint violet light where
 // the eyes should be, and a long sword.
+// The Paragon, Elias Thorne (Arc 5): white and gold, a short white beard, the Sunlance.
+LOOKS.paragon = { poses: LANCE_POSES, scale: 1.16, skirt: 1.1, coat: "#f2ead8", trim: "#e6b54e", hairColor: "#ece8e0", beard: "#ece8e0", skin: "#e8c8a8",
+  head: "face", hair: "crop", weapon: "spear", shoulders: 1.4, eyeColor: "#4a6a90", trail: "#ffd36a" };
 // B13 · The Eraser (Ep 37): the Hollow's keeper. Tall and faceless, paper-white with nothing written on it, long arms.
 LOOKS.eraser = { poses: ERASER_POSES, scale: 1.6, skirt: 1.35, coat: "#ecebf2", trim: "#d6d4e0", hairColor: "#f4f2fa", skin: "#f2f0f8",
   head: "blank", weapon: "claw", talon: "#e2e0ea", shoulders: 1.05, stoop: 0.12, menace: true, trail: "#ffffff" };

@@ -57,7 +57,7 @@ test("Arc 4 opens after Arc 3 and chains episode to episode, each startable from
     for (const b of ep.beats) if (b.cutscene) validateCutscene(CUTSCENES[b.cutscene]);
   }
   const next = (ep) => ep.beats.find((b) => b.type === "preview").nextEpisode;
-  assert.deepEqual([EPISODE_28, ...eps].map(next), ["ep29", "ep30", "ep31", "ep32", "ep33", "ep34", "ep35", "ep36", "ep37", "ep38", undefined], "Arc 5 isn't written yet");
+  assert.deepEqual([EPISODE_28, ...eps].map(next), ["ep29", "ep30", "ep31", "ep32", "ep33", "ep34", "ep35", "ep36", "ep37", "ep38", "ep39"], "and on into Arc 5");
   assert.equal(EPISODE_38.beats.find((b) => b.type === "preview").next, "Arc 5 · Writ of Return");
   assert.deepEqual(eps.map((e) => e.setup), [AFTER_EP28, AFTER_EP29, AFTER_EP30, AFTER_EP31, AFTER_EP32, AFTER_EP33, AFTER_EP34, AFTER_EP35, AFTER_EP36, AFTER_EP37].map((s) => ({ ...s })));
   for (const who of ["Halvard", "Mag", "Kit", "Luke"]) assert.ok(CAST[who] && LOOKS[CAST[who].actor], who);

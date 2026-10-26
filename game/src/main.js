@@ -49,6 +49,8 @@ import { EPISODE_35, EP35_SCRIPT } from "./data/story/ep35.js";
 import { EPISODE_36, EP36_SCRIPT } from "./data/story/ep36.js";
 import { EPISODE_37, EP37_SCRIPT } from "./data/story/ep37.js";
 import { EPISODE_38, EP38_SCRIPT } from "./data/story/ep38.js";
+import { EPISODE_39, EP39_SCRIPT } from "./data/story/ep39.js";
+import { EPISODE_40, EP40_SCRIPT } from "./data/story/ep40.js";
 import { theatreList } from "./data/theatre.js";
 import { PlaytestLog, SURVEYS } from "./core/playtest.js";
 import { keyItemsHeld } from "./data/keyItems.js";
@@ -402,6 +404,13 @@ export function boot(doc = document) {
         case "riftCall": hud.pushLog(`Wraithe calls ${ev.called.length} acolytes through the air`); break;
         case "blankRing": vfx.ring({ x: ev.at.x, y: 0.06, z: ev.at.z }, ev.r, "#f4f2ff", ev.delay / 60); break;
         case "blanked": if (ev.fighter === world.player) { hud.toast("BLANKED", "danger"); hud.pushLog("Your mana and your Surge are rubbed out"); } vfx.flash(ev.at, 1.6, "#ffffff", 0.14); sfx.play("vacuum"); break;
+        case "revision": // the page rewinds three seconds, for Rook only
+          hud.toast("REVISION", "clear"); hud.pushLog("The page rewinds. Three seconds, undone (for you).");
+          vfx.ring({ x: ev.fighter.pos.x, y: 0.08, z: ev.fighter.pos.z }, 3.2, "#8ab4ff", 0.6); vfx.flash({ x: ev.fighter.pos.x, y: 1.2, z: ev.fighter.pos.z }, 2.4, "#c8d8ff", 0.2);
+          sfx.play("bookDescend"); camera.shake(0.3);
+          break;
+        case "dawnbreak": hud.toast("DAWNBREAK", "danger"); hud.banner("THE WHOLE YARD GOES WHITE"); sfx.play("ultActivate"); camera.shake(0.5); break;
+        case "zenith": break;
         case "lineCharge": groundFx.lane(ev.from, ev.to, ev.half * 1.6); hud.toast("LINE CHARGE", "danger"); sfx.play("guardWhistle", 0.6); break;
         case "formLine": hud.pushLog(`Halvard calls ${ev.called.length} Lances into line`); sfx.play("guardWhistle"); break;
         case "shieldBreak": vfx.flash(ev.at, 2, "#e6c060", 0.2); camera.kick(0.6); sfx.play("postureBreak"); break;
@@ -726,10 +735,11 @@ export function boot(doc = document) {
   let resetBossFx = null; // set once the boss visuals exist (below)
   let injuredNow = () => []; // squadmates fighting hurt, from the story's flags (set once the story exists)
   let annotationNow = () => false; // the Palimpsest's Annotation stage (after Ep 28)
+  let revisionNow = () => false;   // and its Revision stage (after Ep 40)
   const newWorld = (opts = {}) => {
     for (const f of [...views.keys()]) removeView(f);
     walls.clear(); setBog(false, true); constellation.clear(true);
-    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, companions: true, injured: injuredNow(), annotation: annotationNow(), ...opts });
+    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, companions: true, injured: injuredNow(), annotation: annotationNow(), revision: revisionNow(), ...opts });
     const ink = world.loadout.Spell1?.id === "Inscribe"; // the margin: Inscribe takes Gale's button
     const galeBtn = root.querySelector('[data-intent="Spell1"]'); if (galeBtn) galeBtn.textContent = ink ? "INK" : "GALE";
     if (opts.tokens == null) world.tokens.capacity = mobile ? 1 : 2;
@@ -823,8 +833,10 @@ export function boot(doc = document) {
     { episode: EPISODE_29, script: EP29_SCRIPT }, { episode: EPISODE_30, script: EP30_SCRIPT }, { episode: EPISODE_31, script: EP31_SCRIPT },
     { episode: EPISODE_32, script: EP32_SCRIPT }, { episode: EPISODE_33, script: EP33_SCRIPT },
     { episode: EPISODE_34, script: EP34_SCRIPT }, { episode: EPISODE_35, script: EP35_SCRIPT }, { episode: EPISODE_36, script: EP36_SCRIPT },
-    { episode: EPISODE_37, script: EP37_SCRIPT }, { episode: EPISODE_38, script: EP38_SCRIPT }], [WORLD_SCRIPT]);
+    { episode: EPISODE_37, script: EP37_SCRIPT }, { episode: EPISODE_38, script: EP38_SCRIPT },
+    { episode: EPISODE_39, script: EP39_SCRIPT }, { episode: EPISODE_40, script: EP40_SCRIPT }], [WORLD_SCRIPT]);
   annotationNow = () => !!story.flags.get("ANNOTATION"); // after Mirrorlake, Rook's spells write ink
+  revisionNow = () => !!story.flags.get("REVISION");     // after the Paragon's spar, the page rewinds
   const playtest = new PlaytestLog(story.flags, { where: () => ({ episode: story.ep?.id ?? null, beat: story.director?.beat?.id ?? null }) });
   injuredNow = () => (story.flags.get("BAS_ARM_BROKEN") ? ["bas"] : []); // Bas fights one-armed after the vault
   const playerName = root.querySelector(".player-card .name");
@@ -995,6 +1007,7 @@ export function boot(doc = document) {
     const found = FRAGMENTS.filter((f) => story.flags.get(`FRAG_${f.n}`));
     journal.querySelector("[data-lore]").innerHTML = `<p class="mats"><b>Page fragments: ${found.length}/${FRAGMENTS.length}</b> · ${story.flags.get("CLAUSE_1") ? `<b>${CLAUSE.name}</b> restored: ${CLAUSE.desc}` : `Find ${CLAUSE.need} to restore a clause of the under-text.`}</p>` +
       found.map((f) => `<p class="mats"><i>"${f.text}"</i> · ${f.where}</p>`).join("") +
+      (story.flags.get("REVISION") ? `<p class="mats"><b>Revision</b> (the second stage): the page turns back. With half a Surge gauge, a fall comes undone: the last three seconds rewind for you alone, and what you did to them stands. Ink comes back faster in a fight.</p>` : "") +
       (story.flags.get("ANNOTATION") ? `<p class="mats"><b>Annotation</b> (the first stage): the margin is open. Your spells leave ink on what they hit, and your hits land harder on anything inked.${story.flags.get("CLAUSE_I") ? ` <i>Written in the margin: "Severin comes home${story.flags.get("CLAUSE_I") === "home-anyway" ? ". Whether he likes it or not" : ""}."</i>` : ""}</p>` : "");
     const pt = journal.querySelector("[data-playtest]");
     pt.innerHTML = playtest.optIn
@@ -1032,6 +1045,7 @@ export function boot(doc = document) {
     masked: { 2: ["THE FLOOR OPENS", "PHASE 2 · A BLACK TEAR UNDER YOU · STEP OFF, OR JUMP OR DASH BEFORE YOU LAND"],
       3: ["NO WAY OUT", "PHASE 3 · EVERY WAY OUT LEADS BACK IN"], 4: ["…", "PHASE 4"] },
     warden: { 2: ["THE RODS RISE", "PHASE 2 · IT'S CHARGED WHILE ANY ROD STANDS · BREAK THEM"], 3: ["THE STAR CHART", "PHASE 3 · THUNDER ALONG THE CONSTELLATION'S LINES"] },
+    paragon: { 2: ["ZENITH", "PHASE 2 · LINES OF LIGHT RUN OUT FROM HIM IN A CROSS · STAND BETWEEN THEM"] },
     eraser: { 2: ["UNWRITE", "PHASE 2 · THE FLOOR GOES BLANK UNDER YOU · STEP OFF THE PALE PATCHES"], 3: ["ERASURE", "PHASE 3 · A WALL OF BLANK ROLLS OUT OF IT · JUMP IT"] },
     halvard: { 2: ["FORM THE LINE", "PHASE 2 · TWO LANCES · THE LINE CHARGES DOWN A RED LANE · STEP OUT OF IT"], 3: ["THE SHIELD SPLITS", "PHASE 3 · NO GUARD · HIS THRUST COMES TWICE"] },
     varka: { 2: ["THE IRONSONG ROLLS", "PHASE 2 · THE ENGINE CHARGES DOWN A LANE · GET OUT OF IT"], 3: ["THE ENGINE BREAKS", "PHASE 3 · FALLING WRECKAGE · WATCH THE RINGS"],
@@ -1041,6 +1055,7 @@ export function boot(doc = document) {
   const groundFx = (() => {
     const strikes = new Map(), lanes = [];
     const thunderMat = glow(scene, "strikeThunder", "#9ad8ff", 0.28, true), debrisMat = glow(scene, "strikeDebris", "#ff7a3a", 0.3, true), laneMat = glow(scene, "laneMat", "#ff3a2a", 0.22, true);
+    const sunMat = glow(scene, "strikeSun", "#ffd36a", 0.3, true); // the Paragon's light
     return {
       warn(s) {
         if (s.kind === "rift" || s.kind === "sever") { // the floor opening: a tear in the ground (pale: Wraithe; black: the masked knight), not a ring
@@ -1049,7 +1064,7 @@ export function boot(doc = document) {
           t.position.set(s.x, 0.05, s.z); t.scaling.setAll(0.2); strikes.set(s, t); sfx.play(black ? "tear" : "rift", 0.5); return;
         }
         const d = BB.MeshBuilder.CreateDisc("strikeWarn", { radius: s.r, tessellation: 28 }, scene); d.rotation.x = Math.PI / 2; d.position.set(s.x, 0.05, s.z);
-        d.material = s.kind === "debris" ? debrisMat : thunderMat; d.isPickable = false; d.scaling.setAll(0.2); strikes.set(s, d);
+        d.material = s.kind === "debris" ? debrisMat : s.kind === "sun" ? sunMat : thunderMat; d.isPickable = false; d.scaling.setAll(0.2); strikes.set(s, d);
       },
       hit(s) {
         strikes.get(s)?.dispose(); strikes.delete(s);

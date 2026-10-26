@@ -72,6 +72,8 @@ export const CAST = Object.freeze({
   // Ep 31, the poor quarter: Mag, and Kit, her boy.
   Mag: { name: "Mag", color: "#f0b8a0", actor: "mag" },
   Kit: { name: "Kit", color: "#e6d29a", actor: "kit" },
+  // Arc 5: the Paragon of Liraen.
+  Paragon: { name: "The Paragon", color: "#ffd98a", actor: "paragon" },
 });
 
 export const speakerName = (id, playerName, flags = null) => (id === "Rook" ? playerName : CAST[id]?.label ? CAST[id].label(flags) : CAST[id]?.name ?? id);

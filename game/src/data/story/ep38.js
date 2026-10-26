@@ -182,7 +182,7 @@ export const EPISODE_38 = {
       cast: [{ id: "severin", look: "severin", x: 1.0, z: 9.8, yaw: Math.PI * 0.8 }] },
     { id: "survey", type: "scene", node: "Ep38_Survey", ...LH, rook: null, cast: [],
       set: { EP38_DONE: 1, ARC4_DONE: 1 } },
-    { id: "preview", type: "preview", next: "Arc 5 · Writ of Return",
+    { id: "preview", type: "preview", next: "Arc 5 · Writ of Return", nextEpisode: "ep39",
       lines: [
         "Next on UNWRITTEN:",
         "The Paragon left a key for every door he ever closed. Hesper Voss wants the last one.",

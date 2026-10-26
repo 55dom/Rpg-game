@@ -1465,6 +1465,13 @@ export class StoryPlayer {
     if (!f || f.done) return;
     const hint = f.beat.eventHints?.[ev.type];
     if (hint && !f.shown?.has(ev.type)) { (f.shown ??= new Set()).add(ev.type); this._showHint(hint); }
+    const wake = f.beat.awaken; // a stage of the Palimpsest waking mid-fight (Ep 40: Revision, as the Dawnbreak comes)
+    if (wake && ev.type === wake.on && !this.flags.get(wake.flag)) {
+      this.flags.set(wake.flag, 1);
+      const w = this.ctx.getWorld();
+      if (wake.flag === "REVISION") { w.revision = true; w.player.surge?.fill(); }
+      if (wake.say) this.say(wake.say[0], wake.say[1]);
+    }
     if (ev.type === "waveClear") { f.done = true; this.sleep(0.4).then(() => f.resolve(true)); }
     if (ev.type === "playerDown") {
       f.falls++;
