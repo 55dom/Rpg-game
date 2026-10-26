@@ -115,12 +115,14 @@ export class EclipseController extends PhasedBoss {
       for (const t of w.fighters) {
         if (t.team === f.team || !t.alive || t.traits.object || t.traits.dummy || t.pos.y > 1.5) continue;
         const d = flat(t.pos, wl);
-        if (d > T.pullRadius || d < 0.05) continue;
-        const k = (T.pull / 60) * (1 - d / T.pullRadius) * 1.6; // stronger the closer you are
-        t.pos.x += ((wl.x - t.pos.x) / d) * Math.min(k, d); t.pos.z += ((wl.z - t.pos.z) / d) * Math.min(k, d);
+        if (d > T.pullRadius) continue;
+        if (d > 0.05) { // stronger the closer you are
+          const k = (T.pull / 60) * (1 - d / T.pullRadius) * 1.6;
+          t.pos.x += ((wl.x - t.pos.x) / d) * Math.min(k, d); t.pos.z += ((wl.z - t.pos.z) / d) * Math.min(k, d);
+        }
         if (d < T.core && wl.tick <= 0) w._resolve(f, t, { spec: ECLIPSED_TUNING.well, ability: WELL, hitSet: new Set(), origin: { x: wl.x, y: 0.5, z: wl.z }, projectile: true });
       }
-      if (--wl.tick <= 0) wl.tick = T.tick;
+      if (wl.tick <= 0) wl.tick = T.tick; else wl.tick--; // the core burns every T.tick frames
       if (wl.t <= 0) w.emit({ type: "darkStarEnd", well: wl });
     }
     this.wells = this.wells.filter((wl) => wl.t > 0);

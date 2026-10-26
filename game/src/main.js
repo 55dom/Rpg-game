@@ -1498,11 +1498,12 @@ export function boot(doc = document) {
     }
     for (const [f, m] of inkMarks) if (!world.fighters.includes(f)) { m.dispose(); inkMarks.delete(f); }
     root.classList.toggle("surge-locked", world.surgeLock > 0);
-    sets.update(dt * story.timeScale, state.time);
+    const sdt = story.sceneDt(dt); // the Theatre can slow, pause or frame-step the scene
+    sets.update(sdt, state.time);
     constellation.update(dt, state.time);
     walls.update(state.time);
     hud.update(dt, world, controls.device);
-    story.update(dt * story.timeScale, state.paused || state.help || state.frozen);
+    story.update(sdt, state.paused || state.help || state.frozen);
 
     if (impactLeft > 0) { impactLeft -= dt; if (impactLeft <= 0) canvas.style.filter = ""; }
     quality.update(dt);
