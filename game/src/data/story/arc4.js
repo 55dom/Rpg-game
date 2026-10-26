@@ -30,3 +30,9 @@ export const AFTER_EP35 = Object.freeze({ ...AFTER_EP34, EP35_DONE: 1, WATCH_STA
 
 /** By the end of Episode 36: Halvard yielded and wouldn't burn the Lowmarket; the coup stalled; a door took Elodie. */
 export const AFTER_EP36 = Object.freeze({ ...AFTER_EP35, EP36_DONE: 1, HALVARD_YIELDED: 1, ELODIE_TAKEN: 1 });
+
+/** By the end of Episode 37: into the Hollow; the Eraser came apart, and the white took Elodie further in. */
+export const AFTER_EP37 = Object.freeze({ ...AFTER_EP36, EP37_DONE: 1, ERASER_DEFEATED: 1 });
+
+/** By the end of Episode 38 (and Arc 4): the masked knight carried Elodie out of the Hollow and gave her to Rook. */
+export const AFTER_EP38 = Object.freeze({ ...AFTER_EP37, EP38_DONE: 1, ARC4_DONE: 1, SABLE_ENCOUNTER: 5, CLUE_B6: 1, ELODIE_HOME: 1 });

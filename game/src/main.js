@@ -47,6 +47,8 @@ import { EPISODE_33, EP33_SCRIPT } from "./data/story/ep33.js";
 import { EPISODE_34, EP34_SCRIPT } from "./data/story/ep34.js";
 import { EPISODE_35, EP35_SCRIPT } from "./data/story/ep35.js";
 import { EPISODE_36, EP36_SCRIPT } from "./data/story/ep36.js";
+import { EPISODE_37, EP37_SCRIPT } from "./data/story/ep37.js";
+import { EPISODE_38, EP38_SCRIPT } from "./data/story/ep38.js";
 import { theatreList } from "./data/theatre.js";
 import { PlaytestLog, SURVEYS } from "./core/playtest.js";
 import { keyItemsHeld } from "./data/keyItems.js";
@@ -318,7 +320,7 @@ export function boot(doc = document) {
         case "silenceZone": silenceFx.add(ev.zone); sfx.play("heal", 0.7); break;
         case "silenceEnd": silenceFx.remove(ev.zone); break;
         case "silenced": hud.toast(ev.what === "dodge" ? "DODGE SILENCED · PARRY!" : "SILENCED", "danger"); sfx.play("block", 0.5); break;
-        case "groundWave": vfx.ring({ x: ev.wave.x, y: 0.08, z: ev.wave.z }, ev.wave.maxR, { toll: "#c9b4ff", rot: "#c86a2a", splash: "#6ac8d8", shock: "#9ad8ff", gale: "#e8f4ff" }[ev.wave.kind] ?? "#ffffff", ev.wave.maxR / ev.wave.speed); sfx.play(ev.wave.kind === "rot" ? "mud" : "slam", 0.7); camera.shake(0.2); break;
+        case "groundWave": vfx.ring({ x: ev.wave.x, y: 0.08, z: ev.wave.z }, ev.wave.maxR, { toll: "#c9b4ff", rot: "#c86a2a", splash: "#6ac8d8", shock: "#9ad8ff", gale: "#e8f4ff", erasure: "#f4f2ff" }[ev.wave.kind] ?? "#ffffff", ev.wave.maxR / ev.wave.speed); sfx.play(ev.wave.kind === "rot" ? "mud" : "slam", 0.7); camera.shake(0.2); break;
         case "rodsRise": hud.toast("THE RODS RISE", "danger"); sfx.play("glint"); break;
         case "rodsBroken": hud.toast("THE CHARGE GOES OUT OF IT", "break"); impact(3, true); sfx.play("postureBreak"); break;
         case "constellation": hud.toast("THE STARS LIGHT UP", "danger"); break;
@@ -398,6 +400,8 @@ export function boot(doc = document) {
           sfx.play("tear"); camera.shake(0.4);
           break;
         case "riftCall": hud.pushLog(`Wraithe calls ${ev.called.length} acolytes through the air`); break;
+        case "blankRing": vfx.ring({ x: ev.at.x, y: 0.06, z: ev.at.z }, ev.r, "#f4f2ff", ev.delay / 60); break;
+        case "blanked": if (ev.fighter === world.player) { hud.toast("BLANKED", "danger"); hud.pushLog("Your mana and your Surge are rubbed out"); } vfx.flash(ev.at, 1.6, "#ffffff", 0.14); sfx.play("vacuum"); break;
         case "lineCharge": groundFx.lane(ev.from, ev.to, ev.half * 1.6); hud.toast("LINE CHARGE", "danger"); sfx.play("guardWhistle", 0.6); break;
         case "formLine": hud.pushLog(`Halvard calls ${ev.called.length} Lances into line`); sfx.play("guardWhistle"); break;
         case "shieldBreak": vfx.flash(ev.at, 2, "#e6c060", 0.2); camera.kick(0.6); sfx.play("postureBreak"); break;
@@ -818,7 +822,8 @@ export function boot(doc = document) {
     { episode: EPISODE_27, script: EP27_SCRIPT }, { episode: EPISODE_28, script: EP28_SCRIPT },
     { episode: EPISODE_29, script: EP29_SCRIPT }, { episode: EPISODE_30, script: EP30_SCRIPT }, { episode: EPISODE_31, script: EP31_SCRIPT },
     { episode: EPISODE_32, script: EP32_SCRIPT }, { episode: EPISODE_33, script: EP33_SCRIPT },
-    { episode: EPISODE_34, script: EP34_SCRIPT }, { episode: EPISODE_35, script: EP35_SCRIPT }, { episode: EPISODE_36, script: EP36_SCRIPT }], [WORLD_SCRIPT]);
+    { episode: EPISODE_34, script: EP34_SCRIPT }, { episode: EPISODE_35, script: EP35_SCRIPT }, { episode: EPISODE_36, script: EP36_SCRIPT },
+    { episode: EPISODE_37, script: EP37_SCRIPT }, { episode: EPISODE_38, script: EP38_SCRIPT }], [WORLD_SCRIPT]);
   annotationNow = () => !!story.flags.get("ANNOTATION"); // after Mirrorlake, Rook's spells write ink
   const playtest = new PlaytestLog(story.flags, { where: () => ({ episode: story.ep?.id ?? null, beat: story.director?.beat?.id ?? null }) });
   injuredNow = () => (story.flags.get("BAS_ARM_BROKEN") ? ["bas"] : []); // Bas fights one-armed after the vault
@@ -1027,6 +1032,7 @@ export function boot(doc = document) {
     masked: { 2: ["THE FLOOR OPENS", "PHASE 2 · A BLACK TEAR UNDER YOU · STEP OFF, OR JUMP OR DASH BEFORE YOU LAND"],
       3: ["NO WAY OUT", "PHASE 3 · EVERY WAY OUT LEADS BACK IN"], 4: ["…", "PHASE 4"] },
     warden: { 2: ["THE RODS RISE", "PHASE 2 · IT'S CHARGED WHILE ANY ROD STANDS · BREAK THEM"], 3: ["THE STAR CHART", "PHASE 3 · THUNDER ALONG THE CONSTELLATION'S LINES"] },
+    eraser: { 2: ["UNWRITE", "PHASE 2 · THE FLOOR GOES BLANK UNDER YOU · STEP OFF THE PALE PATCHES"], 3: ["ERASURE", "PHASE 3 · A WALL OF BLANK ROLLS OUT OF IT · JUMP IT"] },
     halvard: { 2: ["FORM THE LINE", "PHASE 2 · TWO LANCES · THE LINE CHARGES DOWN A RED LANE · STEP OUT OF IT"], 3: ["THE SHIELD SPLITS", "PHASE 3 · NO GUARD · HIS THRUST COMES TWICE"] },
     varka: { 2: ["THE IRONSONG ROLLS", "PHASE 2 · THE ENGINE CHARGES DOWN A LANE · GET OUT OF IT"], 3: ["THE ENGINE BREAKS", "PHASE 3 · FALLING WRECKAGE · WATCH THE RINGS"],
       4: ["RAILGUN", "PHASE 4 · SHE FIRES HERSELF DOWN THE FIELD · DODGE"] },

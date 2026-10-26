@@ -171,7 +171,7 @@ class Stage {
       actor.yaw += wrap(actor.targetYaw - actor.yaw) * Math.min(1, dt * 5);
       actor.prevYaw = actor.yaw;
       rig.update(actor, 1, dt);
-      if (actor.down) { rig.root.rotation.x = -1.45; rig.root.position.y = 0.32; } // lying on their back
+      if (actor.down) { rig.root.rotation.x = -1.45; rig.root.position.y = (actor.pos.y ?? 0) + 0.32; } // lying on their back (or carried, held up off the ground)
       if (actor.talking) { rig.body.rotation.y += Math.sin(time * 5.5) * 0.06; if (rig.head !== rig.shoulder) rig.head.rotation.x = Math.sin(time * 8.5) * 0.06; }
       else if (rig.head !== rig.shoulder) rig.head.rotation.x = 0;
     }

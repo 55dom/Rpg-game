@@ -11,6 +11,12 @@ import { EPISODE_33, EP33_SCRIPT, OLDCITY_SCRIPT } from "../src/data/story/ep33.
 import { EPISODE_34, EP34_SCRIPT } from "../src/data/story/ep34.js";
 import { EPISODE_35, EP35_SCRIPT } from "../src/data/story/ep35.js";
 import { EPISODE_36, EP36_SCRIPT } from "../src/data/story/ep36.js";
+import { EPISODE_37, EP37_SCRIPT } from "../src/data/story/ep37.js";
+import { EPISODE_38, EP38_SCRIPT } from "../src/data/story/ep38.js";
+import { AFTER_EP36, AFTER_EP37, AFTER_EP38 } from "../src/data/story/arc4.js";
+import { ERASER_TUNING } from "../src/data/eraser.js";
+import { SURVEYS } from "../src/core/playtest.js";
+import { actorsAt } from "../src/core/framing.js";
 import { AFTER_EP28, AFTER_EP29, AFTER_EP30, AFTER_EP31, AFTER_EP32, AFTER_EP33, AFTER_EP34, AFTER_EP35 } from "../src/data/story/arc4.js";
 import { HALVARD_TUNING, HALVARD_STATS } from "../src/data/halvard.js";
 import { REFORM } from "../src/data/hollow.js";
@@ -32,7 +38,7 @@ import { LOOKS } from "../src/runtime/rig.js";
 
 const nodes = { ...parseScript(EP29_SCRIPT, "e29"), ...parseScript(EP30_SCRIPT, "e30"), ...parseScript(EP31_SCRIPT, "e31"), ...parseScript(EP32_SCRIPT, "e32"),
   ...parseScript(EP33_SCRIPT, "e33"), ...parseScript(EP34_SCRIPT, "e34"), ...parseScript(OLDCITY_SCRIPT, "oc"),
-  ...parseScript(EP35_SCRIPT, "e35"), ...parseScript(EP36_SCRIPT, "e36") };
+  ...parseScript(EP35_SCRIPT, "e35"), ...parseScript(EP36_SCRIPT, "e36"), ...parseScript(EP37_SCRIPT, "e37"), ...parseScript(EP38_SCRIPT, "e38") };
 const play = (node, f = new FlagStore(), pick = 0) => {
   const r = new DialogueRunner(nodes, f, { name: "Rook" }).start(node), lines = [], cmds = [];
   for (let s = r.next(); s.type !== "end"; s = r.next()) { if (s.type === "line") lines.push(s); if (s.type === "options") r.choose(pick); if (s.type === "command") cmds.push(s); }
@@ -44,15 +50,16 @@ const boss = (kind, seed = 3, opts = {}) => { const w = new World({ seed, ...opt
 const to = (b, frac) => b.combatant.health.set(b.stats.maxHealth * frac);
 
 test("Arc 4 opens after Arc 3 and chains episode to episode, each startable from the menu with what came before", () => {
-  const eps = [EPISODE_29, EPISODE_30, EPISODE_31, EPISODE_32, EPISODE_33, EPISODE_34, EPISODE_35, EPISODE_36];
+  const eps = [EPISODE_29, EPISODE_30, EPISODE_31, EPISODE_32, EPISODE_33, EPISODE_34, EPISODE_35, EPISODE_36, EPISODE_37, EPISODE_38];
   for (const ep of eps) {
     validateEpisode(ep);
     for (const b of ep.beats) { if (b.node) assert.ok(nodes[b.node], b.node); for (const c of b.cast ?? []) if (c.node) assert.ok(nodes[c.node], c.node); for (const p of b.pickups ?? []) if (p.node) assert.ok(nodes[p.node], p.node); }
     for (const b of ep.beats) if (b.cutscene) validateCutscene(CUTSCENES[b.cutscene]);
   }
   const next = (ep) => ep.beats.find((b) => b.type === "preview").nextEpisode;
-  assert.deepEqual([EPISODE_28, ...eps].map(next), ["ep29", "ep30", "ep31", "ep32", "ep33", "ep34", "ep35", "ep36", "ep37"]);
-  assert.deepEqual(eps.map((e) => e.setup), [AFTER_EP28, AFTER_EP29, AFTER_EP30, AFTER_EP31, AFTER_EP32, AFTER_EP33, AFTER_EP34, AFTER_EP35].map((s) => ({ ...s })));
+  assert.deepEqual([EPISODE_28, ...eps].map(next), ["ep29", "ep30", "ep31", "ep32", "ep33", "ep34", "ep35", "ep36", "ep37", "ep38", undefined], "Arc 5 isn't written yet");
+  assert.equal(EPISODE_38.beats.find((b) => b.type === "preview").next, "Arc 5 · Writ of Return");
+  assert.deepEqual(eps.map((e) => e.setup), [AFTER_EP28, AFTER_EP29, AFTER_EP30, AFTER_EP31, AFTER_EP32, AFTER_EP33, AFTER_EP34, AFTER_EP35, AFTER_EP36, AFTER_EP37].map((s) => ({ ...s })));
   for (const who of ["Halvard", "Mag", "Kit", "Luke"]) assert.ok(CAST[who] && LOOKS[CAST[who].actor], who);
   for (const look of ["nell", "tobin", "lance", "warden"]) assert.ok(LOOKS[look], look);
 });
@@ -301,9 +308,51 @@ test("a walk-around fight in an episode (no zone) can end, or knock Rook down, w
   }
 });
 
+test("Boss 13, the Eraser: the Blank rubs out mana and Surge in its ring; at 60% the floor goes blank under you; at 30% a wall of blank", () => {
+  const { w, b } = boss("eraser", 11);
+  b.brain.aggroRange = 0;
+  const p = w.player;
+  p.pos.x = b.pos.x + b.forward.x * ERASER_TUNING.blankAhead; p.pos.z = b.pos.z + b.forward.z * ERASER_TUNING.blankAhead;
+  p.mana.fill(); p.surge?.set(50);
+  b.boss.onCustom("blank");
+  const ring = run(w, ERASER_TUNING.blankDelay + 4);
+  assert.ok(ring.some((e) => e.type === "blankRing") && ring.some((e) => e.type === "blanked" && e.fighter === p));
+  assert.ok(p.mana.current < 1 && (p.surge?.current ?? 0) < 1, "rubbed out (a few frames of regeneration since)");
+  p.pos.x = b.pos.x - b.forward.x * 6; p.pos.z = b.pos.z - b.forward.z * 6; p.mana.fill();
+  b.boss.onCustom("blank");
+  assert.ok(!run(w, ERASER_TUNING.blankDelay + 4).some((e) => e.type === "blanked"), "behind it, nothing");
+  to(b, 0.55);
+  const holes = run(w, ERASER_TUNING.holeEvery + 30).filter((e) => e.type === "strikeWarn" && e.strike.kind === "rift");
+  assert.ok(holes.length >= 1 && holes.every((e) => e.strike.lift > 0), "pale patches that drop you through");
+  to(b, 0.25);
+  assert.ok(run(w, ERASER_TUNING.erasureEvery + 30).some((e) => e.type === "groundWave" && e.wave.kind === "erasure"));
+});
+
+test("Encounter V: the knight carries Elodie out of the white and gives her to Rook; the cord shows for about a second; Juno isn't there", () => {
+  const cs = CUTSCENES.ep38_carried;
+  validateCutscene(cs);
+  assert.ok(!cs.actors.some((a) => a.id === "juno"), "Juno isn't in that scene");
+  assert.equal(LOOKS[cs.actors.find((a) => a.id === "knightClose").look].wristCord != null, true);
+  assert.equal(LOOKS.masked.wristCord, undefined, "never on the everyday look");
+  let shown = 0;
+  for (let t = 0; t <= cs.duration; t += 0.05) if (actorsAt(cs, t).find((a) => a.id === "knightClose").shown) shown += 0.05;
+  assert.ok(shown >= 0.8 && shown <= 1.5, `seen for about a second (${shown.toFixed(2)} s)`);
+  assert.ok(!cs.events.some((e) => e.caption), "no captions: he says nothing, and nothing points at it");
+  assert.deepEqual(EPISODE_38.beats.find((b) => b.cutscene === "ep38_carried").set, { CLUE_B6: 1 });
+  const arms = play("Ep38_Arms");
+  assert.ok(!arms.lines.some((l) => l.speaker === "Masked"));
+  assert.ok(!/cord|wrist|knot/i.test(EP38_SCRIPT), "and nobody mentions it");
+  assert.deepEqual([arms.f.get("SABLE_ENCOUNTER"), arms.f.get("ELODIE_HOME")], [5, 1]);
+  const board = rumorBoard(new FlagStore(AFTER_EP38));
+  assert.equal(board.seen.length, 6);
+  assert.ok(!/cord|wrist/i.test(board.seen.join(" ")));
+  assert.ok(SURVEYS.arc4 && EP38_SCRIPT.includes("<<survey arc4>>"));
+  assert.ok(play("Ep37_Pages").f.get("ERASER_DEFEATED") && play("Ep37_Pages").cmds.some((c) => c.name === "cue" && c.args[0] === "pillarOff"));
+});
+
 test("leak test: the poor quarter's files never name him, or anyone he might be", () => {
   const src = (p) => readFileSync(new URL(`../src/${p}`, import.meta.url), "utf8");
-  for (const p of ["data/story/ep31.js", "data/story/ep32.js", "data/story/ep33.js", "data/story/ep34.js", "data/story/ep35.js", "data/story/ep36.js", "data/story/arc4.js", "data/halvard.js", "sim/halvard.js", "sim/wraithe.js", "data/wraithe.js", "sim/sentry.js", "data/hollow.js"]) {
+  for (const p of ["data/story/ep31.js", "data/story/ep32.js", "data/story/ep33.js", "data/story/ep34.js", "data/story/ep35.js", "data/story/ep36.js", "data/story/ep37.js", "data/story/ep38.js", "data/story/arc4.js", "data/halvard.js", "sim/halvard.js", "data/eraser.js", "sim/eraser.js", "sim/wraithe.js", "data/wraithe.js", "sim/sentry.js", "data/hollow.js"]) {
     assert.ok(!/\bsable\b/i.test(src(p)), `${p} calls him "masked"`);
     assert.ok(!/\bcal\b|calder|CAL_[A-Z]|\bdemons?\b/i.test(src(p)), p);
   }

@@ -265,6 +265,48 @@ export const CUTSCENES = {
     ],
   },
 
+  // Episode 38 (Encounter V): in the white of the Hollow a black tear opens, and the masked knight walks out of it
+  // carrying Elodie, asleep. He puts her into Rook's arms without a word, and goes back the way he came. One close shot
+  // of his hands as he lets her go (about a second): what's round his wrist, under the gauntlet's edge.
+  ep38_carried: {
+    id: "ep38_carried",
+    stage: "hollow",
+    duration: 14.5,
+    actors: [
+      { id: "rook", look: "player", x: 0, z: -2, yaw: 0 },
+      { id: "severin", look: "severin", x: -2.6, z: -0.8, yaw: 0.5 },
+      { id: "knight", look: "masked", x: 0.4, z: 6.0, yaw: PI, hidden: true },
+      { id: "knightClose", look: "maskedClose", x: 0.2, z: -0.2, yaw: PI, hidden: true },
+      { id: "elodie", look: "elodie", x: 0.4, z: 5.65, y: 0.75, yaw: PI / 2, down: true, hidden: true },
+    ],
+    camera: [
+      { t: 0, pos: [-2.6, 2.2, -6.4], look: [0.3, 1.4, 4.0], fov: 0.62 },                     // into the white, past Rook and Severin
+      { t: 3.0, pos: [-2.5, 2.2, -6.2], look: [0.3, 1.35, 3.4], fov: 0.6, ease: "linear" },
+      { t: 3.0, cut: true, pos: [-6.84, 2.4, 7.08], look: [0.3, 1.3, 1.6], fov: 0.62 },         // from behind him: he walks out of the white with her
+      { t: 7.5, pos: [-6.6, 2.4, 6.8], look: [0.2, 1.25, 0.6], fov: 0.6, ease: "linear" },
+      { t: 7.5, cut: true, pos: [1.25, 1.3, -1.45], look: [0.1, 1.0, -0.95], fov: 0.42 },       // his hands, as he lets her go
+      { t: 8.8, pos: [1.2, 1.28, -1.5], look: [0.08, 0.98, -1.05], fov: 0.42, ease: "linear" },
+      { t: 8.8, cut: true, pos: [-1.4, 2.0, -3.9], look: [0.2, 1.8, -0.2], fov: 0.5, ots: "rook" }, // over Rook's shoulder: the mask
+      { t: 10.8, pos: [-1.35, 2.0, -3.8], look: [0.2, 1.8, -0.1], fov: 0.48, ease: "linear" },
+      { t: 10.8, cut: true, pos: [3.4, 2.6, -6.0], look: [0.2, 1.3, -0.2], fov: 0.62 },          // he goes
+      { t: 13.0, pos: [3.35, 2.6, -5.9], look: [0.4, 1.3, 4.8], fov: 0.62, ease: "inOut" },
+      { t: 14.5, pos: [3.3, 2.6, -5.8], look: [0.4, 1.3, 5.0], fov: 0.62, ease: "linear" },
+    ],
+    events: [
+      { t: 0.6, tear: { at: [0.4, 1.3, 6.4], kind: "black", r: 1.1, yaw: PI, life: 3.0 } },
+      { t: 1.0, show: "knight" }, { t: 1.0, show: "elodie" }, { t: 1.0, pose: { id: "knight", name: "hand" } },
+      { t: 1.4, move: { id: "knight", to: [0.2, -0.2], dur: 5.2 } }, { t: 1.4, move: { id: "elodie", to: [0.2, -0.55], dur: 5.2 } },
+      { t: 6.6, pose: { id: "rook", name: "hand" } }, { t: 6.8, pose: { id: "severin", name: "point" } },
+      { t: 7.4, hide: "knight" }, { t: 7.4, show: "knightClose" }, { t: 7.4, pose: { id: "knightClose", name: "hand" } },
+      { t: 7.6, move: { id: "elodie", to: [0.05, -1.6], dur: 1.0 } },
+      { t: 8.6, hide: "knightClose" }, { t: 8.6, show: "knight" }, { t: 8.6, pose: { id: "knight", name: "none" } },
+      { t: 8.8, pose: { id: "severin", name: "none" } },
+      { t: 10.6, move: { id: "knight", to: [0.4, 4.8], dur: 2.4 } },
+      { t: 12.4, tear: { at: [0.4, 1.3, 5.6], kind: "black", r: 1.0, yaw: PI, life: 1.6 } },
+      { t: 13.0, hide: "knight" },
+    ],
+  },
+
   // Episode 28: the lake takes Rook. Under the water the under-text wakes, rising out of the dark in pale lines;
   // the margin opens (Annotation); Rook comes back up at the island's edge.
   ep28_lake: {

@@ -60,6 +60,7 @@ test("every cutscene: nobody stands or walks through anybody else", () => {
       for (let i = 0; i < on.length; i++) for (let j = i + 1; j < on.length; j++) {
         const a = on[i], b = on[j];
         if (Math.abs(a.y - b.y) > 1.5) continue; // one up on the ridge, or down under the lake
+        if (a.down || b.down) continue; // lying down, or being carried: not standing anywhere
         const d = Math.hypot(a.x - b.x, a.z - b.z);
         assert.ok(d >= 0.42 * (a.scale + b.scale), `${id} @${t.toFixed(2)}s: ${a.id} and ${b.id} are ${d.toFixed(2)} m apart`);
       }

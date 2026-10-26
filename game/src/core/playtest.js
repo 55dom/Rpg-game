@@ -20,6 +20,14 @@ export const SURVEYS = Object.freeze({
       "The Paragon's secret executioner", "One of the Crown's own", "Someone we've already met", "Someone we haven't met yet", "No idea"],
     sure: ["A wild guess", "A hunch", "Pretty sure", "Certain"],
   }),
+  arc4: Object.freeze({
+    title: "WHO IS THE SABLE KNIGHT?",
+    ask: "Now, after the Hollow: who do you think the Sable Knight is?", howSure: "How sure are you?",
+    intro: "Optional, and only for playtesting the mystery. Your answers stay in this browser unless you copy them out from the Journal.",
+    guesses: ["Aurek Valcourt, Severin's brother", "A Choir defector", "An Ashfall war hero", "A Hollow thing wearing a man's armor",
+      "The Paragon's secret executioner", "One of the Crown's own", "The Ferryman, out of a Lowmarket story", "Someone we've already met", "Someone we haven't met yet", "No idea"],
+    sure: ["A wild guess", "A hunch", "Pretty sure", "Certain"],
+  }),
 });
 
 export class PlaytestLog {

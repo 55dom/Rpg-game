@@ -123,6 +123,15 @@ export const OLDCITY_LAYOUT = {
   braziers: [[-3.4, -11], [3.4, -11], [-6, 7.5], [6, 7.5]],
   stairs: { x: 0, z: -43.2 },
 };
+// The Hollow (Eps 37–38), through the door under the Lowmarket: a white nowhere with paper underfoot, holes where the
+// floor simply isn't, doors standing up on their own, and stairs to nothing. The Eraser keeps the middle of it.
+export const HOLLOW_LAYOUT = {
+  radius: 26,
+  voids: [[-10, -14, 3], [9.5, -12, 2.6], [-14, 2, 2.8], [13, 4, 3], [-7, 17, 2.4], [8, 18, 2.6]], // [x, z, r]: no floor
+  doors: [[-5.5, -18, 0.3], [6.5, -20, -0.4], [-16, -6, 1.2], [16, -4, -1.3], [-13, 11, 0.9], [14, 12, -0.8]], // [x, z, yaw]: standing on their own
+  stairs: [[-19, -15, 0.7], [18, 18, -2.4]],
+  pillar: { x: 0, z: 16 }, // where Elodie is held, in a column of pale light
+};
 // The Watch House by Aurelin's south gate (data/law.js): the sergeant's desk by the door, the wanted board,
 // and two cells along the back wall (bars along z = cellZ; cell one's door stands open, cell two has a guest).
 export const WATCH_LAYOUT = {
@@ -162,6 +171,7 @@ const rect = (r) => box(r.x0, r.z0, r.x1, r.z1);
 // The City Watch's patrols (data/law.js): one more walks the streets for every step $WATCH_STRENGTH takes.
 const patrol = (n, a, b) => ({ id: `patrol${n}`, name: "City Watch", look: "guard", x: a[0], z: a[1], yaw: 0, node: "W_Patrol", when: `$WATCH_STRENGTH >= ${n}`,
   routine: { role: "guard", steps: [{ do: "walk", to: a }, { do: "idle", at: a, face: Math.atan2(b[0] - a[0], b[1] - a[1]), dur: [4, 7] }, { do: "walk", to: b }, { do: "idle", at: b, face: Math.atan2(a[0] - b[0], a[1] - b[1]), dur: [4, 7] }] } });
+const HW = HOLLOW_LAYOUT;
 const OC = OLDCITY_LAYOUT;
 const aurelinSolids = [
   ...A.houses.map((h) => box(h.x - h.w / 2, h.z - h.d / 2, h.x + h.w / 2, h.z + h.d / 2)),
@@ -557,6 +567,13 @@ export const ZONES = {
     ],
     exits: [{ id: "stairs", rect: [-2.2, OC.south, 2.2, OC.south + 0.8], to: "undercroft", spawn: "oldcity", label: "The steps up to the Undercroft" }],
     arrivals: { undercroft: { x: 0, z: OC.stairs.z + 2, yaw: 0 } },
+  },
+  // The Hollow (Eps 37–38): story only, there's no road to it.
+  hollow: {
+    id: "hollow", name: "The Hollow", region: "Through the door", stage: "hollow", dungeon: true,
+    bounds: { radius: HW.radius, solids: [...HW.voids.map(([x, z, r]) => circle(x, z, r)), ...HW.doors.map(([x, z]) => circle(x, z, 0.8)), circle(HW.pillar.x, HW.pillar.z, 1.4)] },
+    spawn: { x: 0, z: -22, yaw: 0 },
+    cast: [], pickups: [], encounters: [], exits: [], arrivals: {},
   },
   // The Watch House (data/law.js): where you pay a bounty, or wake up in a cell having not paid it.
   watchhouse: {

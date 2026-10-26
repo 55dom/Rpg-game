@@ -12,7 +12,7 @@ const BODY = 2.22, HEAD = 0.62, LETTERBOX = 0.86;
 /** Every actor's position and visibility at time t. */
 export function actorsAt(cs, t, scaleOf = () => 1) {
   const out = new Map();
-  for (const a of cs.actors ?? []) out.set(a.id, { id: a.id, x: a.x, z: a.z, y: a.y ?? 0, shown: !a.hidden, scale: scaleOf(a.look) });
+  for (const a of cs.actors ?? []) out.set(a.id, { id: a.id, x: a.x, z: a.z, y: a.y ?? 0, shown: !a.hidden, scale: scaleOf(a.look), down: !!a.down });
   const evs = [...(cs.events ?? [])].sort((p, q) => p.t - q.t);
   for (const e of evs) {
     if (e.t > t) break;

@@ -16,6 +16,7 @@ export const THEATRE = Object.freeze([
   { id: "ep28_crypt", title: "The Valcourt Crypt", episode: 28 },
   { id: "ep31_step", title: "The Poor Quarter", episode: 31 },
   { id: "ep34_brother", title: "The Convoy", episode: 34 },
+  { id: "ep38_carried", title: "Out of the White", episode: 38 },
 ]);
 
 /** When the Annotated Edition opens (and the notes it carries). */

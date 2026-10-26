@@ -1,7 +1,7 @@
 // Story sets (Phase 3): each one is built on first use from primitives, carries its own sky, fog,
 // and lighting, and can be swapped in and out. "yard" is the original training yard (arena.js).
 
-import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT, ISLES_LAYOUT, OLDCITY_LAYOUT } from "../data/zones.js";
+import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT, ISLES_LAYOUT, OLDCITY_LAYOUT, HOLLOW_LAYOUT } from "../data/zones.js";
 import { WARDEN_STARS } from "../data/isles.js";
 import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } from "./look.js";
 import { buildCrowd } from "./crowd.js";
@@ -54,7 +54,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, watchhouse: buildWatchhouse, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, watchhouse: buildWatchhouse, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, hollow: buildHollow, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -1355,6 +1355,68 @@ function buildOldCity(scene, mobile) {
       hollow.intensity = 0.35 + open * 1.4 + Math.sin(t * 2.2) * 0.05;
       for (let i = 0; i < fires.length; i++) fires[i].scaling.y = 0.88 + Math.sin(t * 8 + i * 1.7) * 0.12;
       warm.intensity = 0.48 + Math.sin(t * 5) * 0.04;
+    } };
+}
+
+/**
+ * The Hollow (Eps 37–38): a white nowhere. Paper underfoot with faint script nobody can read, holes where the floor
+ * isn't, doors standing up on their own (and a few drifting overhead), stairs to nothing, and a column of pale light
+ * where Elodie is held. Cues: pillarOn, pillarOff.
+ */
+function buildHollow(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, L = HOLLOW_LAYOUT, P = palette(scene, "ho"), rng = mulberry(38);
+  const paper = toon(scene, "ho-paper", "#dcd7e6"), stone = toon(scene, "ho-stone", "#c4bed2"), holeM = P("#9d93c0"), doorM = P("#4a4458");
+  const floor = add(MB.CreateDisc("ho-floor", { radius: L.radius + 6, tessellation: 64 }, scene)); floor.rotation.x = Math.PI / 2; floor.position.y = 0.004; floor.material = paper;
+  // Lines of under-text lying on the floor, pale, nearly gone.
+  const scriptM = new BB.StandardMaterial("ho-script", scene); scriptM.diffuseTexture = underTextTexture(scene, "ho-scriptTex", 3); scriptM.diffuseTexture.hasAlpha = true;
+  scriptM.useAlphaFromDiffuseTexture = true; scriptM.emissiveColor = color3("#8a84a8").clone(); scriptM.disableLighting = true; scriptM.alpha = 0.35; scriptM.backFaceCulling = false;
+  for (let i = 0; i < (mobile ? 10 : 18); i++) {
+    const a = rng() * Math.PI * 2, r = 3 + rng() * (L.radius - 4);
+    const sh = MB.CreatePlane("ho-line", { width: 4 + rng() * 3, height: 2 }, scene); sh.parent = K.root; sh.rotation.set(Math.PI / 2, rng() * Math.PI, 0); sh.position.set(Math.sin(a) * r, 0.012, Math.cos(a) * r); sh.material = scriptM; sh.isPickable = false;
+  }
+  // Holes: no floor at all, a ragged edge, a long way down.
+  for (const [x, z, r] of L.voids) {
+    const h = add(MB.CreateDisc("ho-hole", { radius: r, tessellation: 9 }, scene)); h.rotation.x = Math.PI / 2; h.rotation.z = rng() * 3; h.position.set(x, 0.01, z); h.material = holeM;
+    const deep = add(MB.CreateDisc("ho-deep", { radius: r * 0.7, tessellation: 9 }, scene)); deep.rotation.x = Math.PI / 2; deep.position.set(x, 0.013, z); deep.material = P("#7a6fa6");
+  }
+  // Doors, standing up on their own: a frame, and a door in it, some ajar.
+  const door = (x, y, z, yaw, tilt = 0, ajar = 0) => {
+    const n = new BB.TransformNode("ho-door", scene); n.parent = K.root; n.position.set(x, y, z); n.rotation.set(tilt, yaw, tilt * 0.5);
+    for (const sx of [-0.75, 0.75]) { const post = add(MB.CreateBox("ho-post", { width: 0.22, height: 2.6, depth: 0.3 }, scene), 0.02); post.parent = n; post.position.set(sx, 1.3, 0); post.material = stone; }
+    const lintel = add(MB.CreateBox("ho-lintel", { width: 1.9, height: 0.25, depth: 0.32 }, scene), 0.02); lintel.parent = n; lintel.position.set(0, 2.65, 0); lintel.material = stone;
+    const leaf = add(MB.CreateBox("ho-leaf", { width: 1.28, height: 2.4, depth: 0.08 }, scene), 0.02); leaf.parent = n; leaf.setPivotPoint(new BB.Vector3(-0.64, 0, 0)); leaf.position.set(0, 1.2, 0); leaf.rotation.y = ajar; leaf.material = doorM;
+    return n;
+  };
+  for (const [x, z, yaw] of L.doors) door(x, 0, z, yaw, 0, rng() < 0.4 ? 0.6 : 0);
+  const drifting = [];
+  for (let i = 0; i < (mobile ? 5 : 9); i++) { const a = rng() * Math.PI * 2, r = 8 + rng() * 20; drifting.push({ n: door(Math.sin(a) * r, 4 + rng() * 9, Math.cos(a) * r, rng() * 6, (rng() - 0.5) * 2.4, rng() * 0.8), b: rng() * 6 }); }
+  // Stairs up into nothing.
+  for (const [x, z, yaw] of L.stairs) {
+    const n = new BB.TransformNode("ho-stairs", scene); n.parent = K.root; n.position.set(x, 0, z); n.rotation.y = yaw;
+    for (let i = 0; i < 7; i++) { const st = add(MB.CreateBox("ho-step", { width: 1.8, height: 0.35, depth: 0.7 }, scene), 0.02); st.parent = n; st.position.set(0, 0.17 + i * 0.5, i * 0.7); st.material = stone; }
+  }
+  // Where Elodie is held: a column of pale light from the floor up out of sight.
+  const pillarM = glow(scene, "ho-pillar", "#f4efff", 0.38, true);
+  const pillar = MB.CreateCylinder("ho-pillar", { height: 40, diameter: 2.4, tessellation: 20 }, scene); pillar.parent = K.root; pillar.position.set(L.pillar.x, 20, L.pillar.z); pillar.material = pillarM; pillar.isPickable = false;
+  const ring = MB.CreateTorus("ho-pillarRing", { diameter: 3.2, thickness: 0.06, tessellation: 32 }, scene); ring.parent = K.root; ring.position.set(L.pillar.x, 0.03, L.pillar.z); ring.material = glow(scene, "ho-pillarRingM", "#c9b8ff", 0.8); ring.isPickable = false;
+  const motes = new BB.ParticleSystem("ho-motes", mobile ? 30 : 60, scene);
+  motes.particleTexture = softTexture(scene); motes.emitter = new BB.Vector3(0, 2, 0);
+  motes.minEmitBox = new BB.Vector3(-22, -1, -22); motes.maxEmitBox = new BB.Vector3(22, 6, 22);
+  motes.color1 = new BB.Color4(1, 1, 1, 0.6); motes.color2 = new BB.Color4(0.85, 0.8, 1, 0.4); motes.colorDead = new BB.Color4(1, 1, 1, 0);
+  motes.minSize = 0.06; motes.maxSize = 0.18; motes.minLifeTime = 4; motes.maxLifeTime = 8; motes.emitRate = mobile ? 6 : 12; motes.gravity = new BB.Vector3(0, 0.05, 0);
+  motes.minEmitPower = 0.02; motes.maxEmitPower = 0.1; motes.blendMode = BB.ParticleSystem.BLENDMODE_ADD;
+  K.systems.push(motes);
+  K.bake([]);
+  let lit = 1, want = 1;
+  const cue = (name) => { if (name === "pillarOn") want = 1; if (name === "pillarOff") want = 0; };
+  const env = { clear: "#e9e6f1", fog: "#e9e6f1", fogDensity: 0.03, hemi: [0.95, "#ffffff", "#c8c0dc"], sun: [0.45, "#ffffff", [0.1, -1, 0.2]], warm: 0 };
+  const toonEnv = { lightDir: [-0.1, 1, -0.2], fogColor: "#e9e6f1", fogDensity: 0.022, sky: [1.1, 1.08, 1.14], ground: [0.9, 0.88, 0.96], rim: [1.0, 0.98, 1.08] };
+  return { env, toon: toonEnv, show: K.show, conditions: K.conditions, outdoor: true, cue,
+    update(dt, t) {
+      lit += (want - lit) * Math.min(1, dt * 2.5);
+      pillar.scaling.x = pillar.scaling.z = Math.max(0.01, lit); pillarM.alpha = 0.38 * lit; ring.setEnabled(lit > 0.05);
+      ring.rotation.y += dt * 0.6;
+      for (const d of drifting) { d.n.position.y += Math.sin(t * 0.5 + d.b) * dt * 0.25; d.n.rotation.y += dt * 0.05; }
     } };
 }
 

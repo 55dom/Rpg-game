@@ -21,6 +21,8 @@ import { WRAITHE_STATS, WRAITHE_HITBOXES, wraitheOptions } from "../data/wraithe
 import { REFORM } from "../data/hollow.js";
 import { HALVARD_STATS, HALVARD_HITBOXES, halvardOptions } from "../data/halvard.js";
 import { HalvardController } from "./halvard.js";
+import { ERASER_STATS, ERASER_HITBOXES, eraserOptions } from "../data/eraser.js";
+import { EraserController } from "./eraser.js";
 import { WraitheController } from "./wraithe.js";
 import { MASKED_STATS, MASKED_HITBOXES, maskedOptions } from "../data/masked.js";
 import { MaskedController } from "./masked.js";
@@ -76,6 +78,7 @@ const BOSSES = {
   // Arc 4: B11, the sky temple's guardian (Ep 30).
   warden: { stats: WARDEN_STATS, hitboxes: WARDEN_HITBOXES, options: wardenOptions, traits: { heavy: true, armoredAttacks: true }, Controller: StormWardenController, z: 7 },
   halvard: { stats: HALVARD_STATS, hitboxes: HALVARD_HITBOXES, options: halvardOptions, traits: { heavy: true, frontalGuard: true }, Controller: HalvardController, z: 6 },
+  eraser: { stats: ERASER_STATS, hitboxes: ERASER_HITBOXES, options: eraserOptions, traits: { heavy: true, armoredAttacks: true }, Controller: EraserController, z: 7 },
 };
 export const BOSS_KINDS = Object.freeze(Object.keys(BOSSES));
 

@@ -20,6 +20,7 @@ export const RUMOR_BOARD = Object.freeze({
     { when: "$SABLE_NAMED", text: "Aurelin: the Crown's bounty is on every notice board. Five thousand Marks for the Sable Knight." },
     { when: "$SABLE_ENCOUNTER >= 3", text: "Aurelin, the poor quarter: Wraithe slipped away through a tear, and he was waiting on the other side. One cut. Then he reached into the Choir's seam and lifted out the three missing children, and left the way he came." },
     { when: "$SABLE_ENCOUNTER >= 4", text: "Aurelin, the Lowmarket: he came out of the dark at the Chancellor's convoy, put Halvard down, and took the Writ out of Aldric's hands. When Severin stood in front of his father and said his brother's name, he stopped, and left." },
+    { when: "$SABLE_ENCOUNTER >= 5", text: "The Hollow: he walked out of a black tear in the white carrying Elodie, asleep, and put her into Rook's arms without a word, and went back the way he came." },
   ]),
   /** Theories, in the order they can be heard (the flag is set by whoever says it). */
   rumors: Object.freeze([
