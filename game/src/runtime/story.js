@@ -611,7 +611,7 @@ export class StoryPlayer {
 
   async scene(beat) {
     this._enterScene(true);
-    this.ctx.sets?.use(beat.stage ?? "yard"); this._refreshSet(); // set pieces follow the story (a cairn, a wreck…)
+    this.ctx.sets?.use(beat.stage ?? "yard"); this._refreshSet(); this._sky(beat); // set pieces follow the story (a cairn, a wreck…)
     this.stage.setup(beat);
     const wide = this.stage.shot("wide");
     if (wide) this.ctx.camera.frame(wide.pos, wide.look, { fov: wide.fov, cut: true });
@@ -867,6 +867,7 @@ export class StoryPlayer {
     this._enterScene(false);
     this.ctx.sets?.use(beat.stage ?? "yard");
     this.ctx.sets?.applyFlags?.((cond) => truthy(compileExpr(cond)(this.flags))); // aftermath and repairs follow the story
+    this._sky(beat);
     this.stage.setup(beat);
     const world = this.ctx.getWorld(), p = world.player;
     p.relaxed = true;
@@ -999,6 +1000,18 @@ export class StoryPlayer {
       }
     }
     if (near && !near.pickup) { const a = this.stage.get(near.id); if (!a.down) a.targetYaw = Math.atan2(p.pos.x - a.pos.x, p.pos.z - a.pos.z); }
+  }
+
+  /**
+   * An episode beat's sky (`sky: { daylight }`, 0 = night) on an outdoor set; a beat without one puts back the
+   * set's own light if the last beat changed it. Free roam keeps the world clock's sky.
+   */
+  _sky(beat) {
+    if (this.roaming) return;
+    const d = beat?.sky?.daylight ?? 1;
+    if (d >= 1 && !this._skyChanged) return;
+    this._skyChanged = d < 1;
+    this.ctx.sets?.atmosphere?.({ daylight: d, cloud: beat?.sky?.cloud ?? 0, wet: 0 });
   }
 
   /** Story flags changed: conditional set dressing follows (a cake goes back in its case…). */
@@ -1250,7 +1263,7 @@ export class StoryPlayer {
     const cs = CUTSCENES[id];
     if (!cs) return Promise.resolve();
     if (!this.theatre) theatreMark(id, "seen"); // the Lore Archive keeps every scene you've watched
-    this.ctx.sets?.use(cs.stage ?? "yard"); this._refreshSet(); // set pieces follow the story (a cairn, a wreck…)
+    this.ctx.sets?.use(cs.stage ?? "yard"); this._refreshSet(); this._sky(cs); // set pieces follow the story (a cairn, a wreck…)
     this.stage.setup({ actors: cs.actors, rook: null });
     this.view.hide();
     this.ctx.root.classList.add("in-cut");
@@ -1305,7 +1318,7 @@ export class StoryPlayer {
   async runFight(beat) {
     this._enterScene(false);
     this.stage.clear();
-    this.ctx.sets?.use(beat.stage ?? "yard"); this._refreshSet(); // set pieces follow the story (a cairn, a wreck…)
+    this.ctx.sets?.use(beat.stage ?? "yard"); this._refreshSet(); this._sky(beat); // set pieces follow the story (a cairn, a wreck…)
     const world = this.ctx.makeWorld({ ...this.ep.world, ...(beat.world ?? {}), tokens: beat.tokens ?? this.ep.world?.tokens }); // a fight can change the rules (Mirrorlake: the margin)
     for (;;) {
       world.resetPlayer();

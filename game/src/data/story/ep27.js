@@ -134,7 +134,7 @@ export const EPISODE_27 = {
   arc: "Arc 3 · Ashes and Echoes",
   world: { companions: ["bas", "juno"] },
   beats: [
-    { id: "cold", type: "scene", node: "Ep27_Cold", ...AU, rook: null,
+    { id: "cold", type: "scene", node: "Ep27_Cold", ...AU, rook: null, sky: { daylight: 0.05 },
       cast: [
         { id: "aldric", look: "aldric", x: HOUSE.x + 1.4, z: HOUSE.z - 1.2, yaw: -1.7 },
         { id: "severin", look: "severin", x: HOUSE.x - 0.6, z: HOUSE.z - 1.6, yaw: 1.4 },
@@ -159,18 +159,18 @@ export const EPISODE_27 = {
         { id: "juno", look: "juno", x: -3.4, z: -6.2, yaw: 0.6, node: "Ep27_Juno" },
         { id: "tamsin", look: "tamsin", x: 6.4, z: -9, yaw: -0.8, node: "Ep27_Tamsin" },
       ] },
-    { id: "steps", type: "scene", node: "Ep27_Steps", ...TS,
+    { id: "steps", type: "scene", node: "Ep27_Steps", ...TS, sky: { daylight: 0.08 },
       rook: { x: 0, z: 0.6, yaw: 0 },
       cast: [
         { id: "severin", look: "severin", x: 0, z: 5.6, yaw: Math.PI },
         { id: "juno", look: "juno", x: -2.2, z: -1.4, yaw: 0.3 },
         { id: "lio", look: "lio", x: 2.1, z: -1.6, yaw: -0.3 },
       ] },
-    { id: "duel", type: "fight", ...TS, wave: ["severinDuel"], tokens: 1,
+    { id: "duel", type: "fight", ...TS, wave: ["severinDuel"], tokens: 1, sky: { daylight: 0.08 },
       tutorial: [{ at: 0.5, text: "Severin, the way he fought at the exam, only harder. Knock him off his Polaris point and his stars go dark." }],
       lines: [["Severin", "Up, one-page. You always get up."]],
       retry: "Up. He said he'd listen if I won." },
-    { id: "after", type: "scene", node: "Ep27_After", ...TS,
+    { id: "after", type: "scene", node: "Ep27_After", ...TS, sky: { daylight: 0.06 },
       rook: { x: 0, z: 2.6, yaw: 0 },
       cast: [
         { id: "severin", look: "severin", x: 0, z: 4.8, yaw: Math.PI },

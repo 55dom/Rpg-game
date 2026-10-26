@@ -206,7 +206,8 @@ function buildTowerSteps(scene, mobile) {
   // Banners on poles flanking the stairs (Crown blue and gold).
   for (const [bi, x] of [-8.5, -5, 5, 8.5].entries()) {
     const pole = add(MB.CreateCylinder("ts-pole", { height: 9, diameter: 0.18, tessellation: 6 }, scene)); pole.position.set(x, 4.5, 7); pole.material = stoneDark;
-    const ban = add(MB.CreateBox("ts-banner", { width: 1.4, height: 4, depth: 0.16 }, scene), 0.016); // thick enough that its ink line can't show through ban.position.set(x, 6.4, 7.1); ban.material = toon(scene, `ts-ban${bi}`, bi % 2 ? "#d9ae4f" : "#2b4f8f");
+    const ban = add(MB.CreateBox("ts-banner", { width: 1.4, height: 4, depth: 0.16 }, scene), 0.016); // thick enough that its ink line can't show through
+    ban.position.set(x, 6.4, 7.1); ban.material = toon(scene, `ts-ban${bi}`, bi % 2 ? "#d9ae4f" : "#2b4f8f");
   }
   // Clouds and hills.
   const cloud = toon(scene, "ts-cloud", "#f7f6ff");
@@ -234,7 +235,7 @@ function buildTowerSteps(scene, mobile) {
   }
   const env = { clear: "#9ec4ee", fog: "#b8d2f0", fogDensity: 0.009, hemi: [0.7, "#fff6e6", "#7a86a8"], sun: [0.95, "#fff1d0", [-0.5, -1, 0.6]], warm: 0 };
   const toonEnv = { lightDir: [0.5, 1, -0.6], fogColor: "#b8d2f0", fogDensity: 0.006, sky: [1.1, 1.08, 1.04], ground: [0.9, 0.88, 0.92] };
-  return { env, toon: toonEnv, show: K.show, update() {} };
+  return { env, toon: toonEnv, show: K.show, outdoor: true, update() {} };
 }
 
 // ---- The Tower of Choosing: the hall of grimoires ---------------------------------------------
