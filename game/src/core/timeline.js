@@ -5,10 +5,11 @@
 // cutscene = {
 //   id, stage, duration,
 //   actors: [{ id, look, x, z, yaw, hidden?, carry? }],
-//   camera: [{ t, pos: [x,y,z], look: [x,y,z], fov?, ease?: "linear"|"in"|"out"|"inOut", cut? }],
+//   camera: [{ t, pos: [x,y,z], look: [x,y,z], fov?, ease?: "linear"|"in"|"out"|"inOut", cut?, ots? }],
 //   events: [{ t, caption? | sfx? | fx? | move?: { id, to: [x,z], dur } | show? | hide? | fade?: "in"|"out" }],
 // }
 // Camera keys interpolate toward the next key unless that key is a `cut` (a hard cut to a new shot).
+// `ots: id` on a shot's first key marks it as over that actor's shoulder (core/framing.js lets them fill the foreground).
 
 export const EASE = Object.freeze({
   linear: (k) => k,
@@ -25,13 +26,14 @@ export function validateCutscene(cs) {
   if (!(cs.duration > 0)) throw new Error(`${where}: duration must be > 0`);
   if (!Array.isArray(cs.camera) || !cs.camera.length) throw new Error(`${where}: needs camera keys`);
   let last = -Infinity;
+  const ids = new Set((cs.actors ?? []).map((a) => a.id));
   for (const k of cs.camera) {
     if (!(k.t >= last)) throw new Error(`${where}: camera keys must be in time order`);
     last = k.t;
     if (k.pos?.length !== 3 || k.look?.length !== 3) throw new Error(`${where}: camera key at ${k.t} needs pos and look`);
     if (k.ease && !EASE[k.ease]) throw new Error(`${where}: unknown ease "${k.ease}"`);
+    if (k.ots && !ids.has(k.ots)) throw new Error(`${where}: camera key at ${k.t} is over the shoulder of unknown actor ${k.ots}`);
   }
-  const ids = new Set((cs.actors ?? []).map((a) => a.id));
   for (const e of cs.events ?? []) {
     if (!(e.t >= 0 && e.t <= cs.duration)) throw new Error(`${where}: event at ${e.t} is outside 0–${cs.duration}`);
     if (!EVENT_KEYS.some((key) => key in e)) throw new Error(`${where}: event at ${e.t} does nothing`);

@@ -22,6 +22,20 @@ test("the framing checker sees someone in the lens, someone in the way, a croppe
   assert.deepEqual(fine, []);
 });
 
+test("a column of people seen end-on hides the ones at the back; a huge head sliced by the frame's edge is flagged unless it's an over-the-shoulder", () => {
+  const cs = (camera, actors) => ({ duration: 1, camera, actors, events: [] });
+  const column = [{ id: "a", x: 0.18, z: 6 }, { id: "b", x: -0.18, z: 8 }, { id: "c", x: 0, z: 10 }];
+  const end = shotProblems(cs(still([0, 4, -4], [6, 1.4, 14]), column), 0);
+  assert.ok(end.some((p) => p.kind === "hidden" && p.id === "c"), JSON.stringify(end));
+  const across = shotProblems(cs(still([-12, 4, 8], [0, 1.4, 8]), column), 0);
+  assert.deepEqual(across, [], "from the side they're a row, all in view");
+  const shoulder = [{ id: "near", x: 0.9, z: 1.4 }, { id: "far", x: 0, z: 8 }];
+  const big = shotProblems(cs(still([0, 1.7, 0], [0, 1.5, 8]), shoulder), 0);
+  assert.ok(big.some((p) => p.kind === "looms" && p.id === "near"));
+  const ots = shotProblems(cs([{ t: 0, cut: true, pos: [0, 1.7, 0], look: [0, 1.5, 8], fov: 0.6, ots: "near" }], shoulder), 0);
+  assert.ok(!ots.some((p) => p.kind === "looms"));
+});
+
 test("the checker follows people as they're shown, hidden and walked about", () => {
   const cs = { duration: 6, camera: still([0, 2, -6], [0, 1, 0]), actors: [{ id: "a", x: 0, z: 0, hidden: true }],
     events: [{ t: 1, show: "a" }, { t: 2, move: { id: "a", to: [4, 0], dur: 2 } }, { t: 5, hide: "a" }] };
