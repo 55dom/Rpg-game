@@ -53,6 +53,20 @@ test("every cutscene: nobody fills the lens, stands in front of the shot's subje
   }
 });
 
+test("every cutscene: nobody stands or walks through anybody else", () => {
+  for (const [id, cs] of Object.entries(CUTSCENES)) {
+    for (let t = 0; t <= cs.duration + 1e-6; t += 0.125) {
+      const on = actorsAt(cs, t, scaleOf).filter((a) => a.shown);
+      for (let i = 0; i < on.length; i++) for (let j = i + 1; j < on.length; j++) {
+        const a = on[i], b = on[j];
+        if (Math.abs(a.y - b.y) > 1.5) continue; // one up on the ridge, or down under the lake
+        const d = Math.hypot(a.x - b.x, a.z - b.z);
+        assert.ok(d >= 0.42 * (a.scale + b.scale), `${id} @${t.toFixed(2)}s: ${a.id} and ${b.id} are ${d.toFixed(2)} m apart`);
+      }
+    }
+  }
+});
+
 test("every scene and walk-around: nobody stands inside anybody else, Rook included", async () => {
   const R = (look) => 0.42 * scaleOf(look);
   const files = readdirSync(new URL("../src/data/story/", import.meta.url)).filter((f) => /^ep\d+\.js$/.test(f));

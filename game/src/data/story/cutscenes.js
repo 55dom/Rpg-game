@@ -11,6 +11,7 @@ export const SQUAD = Object.freeze({
   tamsin: { x: -4.3, z: -0.8 }, lio: { x: 3.7, z: 0.1 },
 });
 const VT = VAULT_LAYOUT;
+const OUT = { x: VT.exit.x + 0.2, z: VT.exit.z - 0.6 }; // where he waits for his way out (Ep 26): clear of Bas, knocked down by the door
 
 export const CUTSCENES = {
   // Episode 1 cold open.
@@ -61,22 +62,22 @@ export const CUTSCENES = {
       { id: "knight", look: "masked", x: KNIGHT.x, z: KNIGHT.z, y: RG.h, yaw: -PI / 2 },
     ],
     camera: [
-      { t: 0, pos: [1.6, 3.6, -6.2], look: [0, 2.6, 24], fov: 0.62 },                         // high behind the squad: it's coming
-      { t: 3.2, pos: [1.5, 3.5, -5.4], look: [0, 2.8, 22], fov: 0.6, ease: "linear" },
+      { t: 0, pos: [1.3, 3.6, -6.2], look: [0, 2.6, 24], fov: 0.62 },                         // high behind the squad: it's coming
+      { t: 3.2, pos: [1.2, 3.5, -5.4], look: [0, 2.8, 22], fov: 0.6, ease: "linear" },
       { t: 3.2, cut: true, pos: [0.9, 0.35, 5.4], look: [0, 4.5, 16], fov: 0.7 },              // low in front of Bas, looking up at the jaw
       { t: 6, pos: [0.8, 0.4, 5.8], look: [0, 4.8, 15], fov: 0.72, ease: "linear" },
-      { t: 6, cut: true, pos: [-1.4, 2.0, 7.2], look: [0.3, 1.8, 3.2], fov: 0.6 },              // Bas, planting his feet
-      { t: 7.4, pos: [-1.3, 2.0, 6.9], look: [0.3, 1.8, 3.2], fov: 0.58, ease: "linear" },
+      { t: 6, cut: true, pos: [-2.2, 2.0, 6.85], look: [0.3, 1.8, 3.2], fov: 0.6 },              // Bas, planting his feet
+      { t: 7.4, pos: [-2.1, 2.0, 6.55], look: [0.3, 1.8, 3.2], fov: 0.58, ease: "linear" },
       { t: 7.4, cut: true, pos: [-20.5, 6.6, 10.8], look: [1, 1.4, 5], fov: 0.62 },            // high, from out on the field (the ridge far behind)
       { t: 9, pos: [-20.1, 6.6, 10.5], look: [1, 1.4, 5.2], fov: 0.62, ease: "linear" },
       { t: 9, cut: true, pos: [-4, 9, -1], look: [0, 0, 8], fov: 0.66 },                        // high, down onto the tear sealing
       { t: 10.4, pos: [-3.8, 9.4, -0.6], look: [0, 0, 8], fov: 0.64, ease: "linear" },
       { t: 10.4, cut: true, pos: [-1.6, 3.4, 10.4], look: [-0.6, 1.3, 1.2], fov: 0.66 },        // the squad: where did it go?
       { t: 11.6, pos: [-1.6, 3.4, 10.1], look: [-0.6, 1.3, 1.2], fov: 0.64, ease: "linear" },
-      { t: 11.6, cut: true, pos: [-2, 4, -2], look: [EN.crash.x, 14, EN.crash.z], fov: 0.5 },   // the sky over the Ashfall camp
-      { t: 14.6, pos: [-2, 3.6, -2], look: [EN.crash.x, 4, EN.crash.z], fov: 0.5, ease: "inOut" },
-      { t: 14.6, cut: true, pos: [2.85, 1.8, 3.8], look: [SQUAD.juno.x, 1.45, SQUAD.juno.z], fov: 0.52 }, // Juno points
-      { t: 15.8, pos: [2.85, 1.8, 3.8], look: [SQUAD.juno.x, 1.45, SQUAD.juno.z], fov: 0.52 },
+      { t: 11.6, cut: true, pos: [-2, 4.3, -2], look: [EN.crash.x, 14, EN.crash.z], fov: 0.5 },   // the sky over the Ashfall camp
+      { t: 14.6, pos: [-2, 3.9, -2], look: [EN.crash.x, 4, EN.crash.z], fov: 0.5, ease: "inOut" },
+      { t: 14.6, cut: true, pos: [2.85, 1.8, 3.8], look: [SQUAD.juno.x, 1.65, SQUAD.juno.z], fov: 0.52 }, // Juno points
+      { t: 15.8, pos: [2.85, 1.8, 3.8], look: [SQUAD.juno.x, 1.65, SQUAD.juno.z], fov: 0.52 },
       { t: 15.8, cut: true, pos: [27, 4.6, 2], look: [KNIGHT.x, RG.h + 1.3, KNIGHT.z], fov: 0.42 }, // the ridge: a masked figure
       { t: 18.4, pos: [29, 4.8, 2.6], look: [KNIGHT.x, RG.h + 1.4, KNIGHT.z], fov: 0.36, ease: "linear" },
       { t: 18.4, cut: true, pos: [30, 6, -6], look: [KNIGHT.x, RG.h + 1, KNIGHT.z + 4], fov: 0.5 }, // he turns, and walks
@@ -113,22 +114,22 @@ export const CUTSCENES = {
       { id: "dagrun", look: "dagrun", x: 3.6, z: 13.4, yaw: -0.5 },
     ],
     camera: [
-      { t: 0, pos: [0.9, 4.2, 16.4], look: [0, 1.4, 22.8], fov: 0.58 },                            // over Bas's head, through the gap in the door
-      { t: 2.6, pos: [0.85, 4.1, 16.7], look: [0, 1.4, 22.8], fov: 0.56, ease: "linear" },
-      { t: 2.6, cut: true, pos: [4.4, 1.5, 20.4], look: [0, 1.4, 20.8], fov: 0.6 },                // the doorway, side on
-      { t: 5.2, pos: [4.2, 1.5, 20.4], look: [0, 1.3, 20.6], fov: 0.58, ease: "linear" },
-      { t: 5.2, cut: true, pos: [-2.9, 2.1, 15.9], look: [0.3, 1.4, 19.5], fov: 0.6 },              // Bas, folded over his arm
-      { t: 7, pos: [-2.7, 2.1, 16.2], look: [0.3, 1.4, 19.5], fov: 0.58, ease: "linear" },
-      { t: 7, cut: true, pos: [-6.7, 2.8, 16.6], look: [0.6, 1.4, 19.0], fov: 0.6 },                // from across the room: he walks out
-      { t: 9.4, pos: [-6.4, 2.8, 16.8], look: [1.0, 1.4, 18.4], fov: 0.58, ease: "linear" },
-      { t: 9.4, cut: true, pos: [0.6, 2.0, 12.8], look: [1.2, 1.6, 18.2], fov: 0.5, ots: "rook" }, // over Rook's shoulder
-      { t: 11, pos: [0.65, 2.0, 13.0], look: [1.2, 1.7, 18.2], fov: 0.48, ease: "linear" },
-      { t: 11, cut: true, pos: [-0.6, 1.9, 16.8], look: [1.2, 1.75, 18.2], fov: 0.5 },             // the mask: head and shoulders
-      { t: 13.6, pos: [-0.5, 1.9, 16.9], look: [1.2, 1.75, 18.2], fov: 0.48, ease: "linear" },
-      { t: 13.6, cut: true, pos: [5.8, 2.2, 15.2], look: [1.2, 1.4, 18.8], fov: 0.58 },            // side on: the way out
-      { t: 16.2, pos: [5.6, 2.2, 15.4], look: [1.2, 1.4, 19], fov: 0.58, ease: "linear" },
-      { t: 16.2, cut: true, pos: [0.4, 1.6, 11], look: [0.6, 1.3, 17.5], fov: 0.55 },              // the squad, and Bas in the doorway
-      { t: 18.5, pos: [0.4, 1.6, 11.4], look: [0.4, 1.3, 18], fov: 0.55, ease: "linear" },
+      { t: 0, pos: [0.9, 4.5, 16.4], look: [0, 1.4, 22.8], fov: 0.58 },                            // over Bas's head, through the gap in the door
+      { t: 2.6, pos: [0.85, 4.4, 16.7], look: [0, 1.4, 22.8], fov: 0.56, ease: "linear" },
+      { t: 2.6, cut: true, pos: [4.7, 1.5, 20.4], look: [0, 1.7, 20.8], fov: 0.6 },                // the doorway, side on
+      { t: 5.2, pos: [4.5, 1.5, 20.4], look: [0, 1.6, 20.6], fov: 0.58, ease: "linear" },
+      { t: 5.2, cut: true, pos: [-2.9, 2.1, 15.9], look: [0.3, 1.6, 19.5], fov: 0.6 },              // Bas, folded over his arm
+      { t: 7, pos: [-2.7, 2.1, 16.2], look: [0.3, 1.6, 19.5], fov: 0.58, ease: "linear" },
+      { t: 7, cut: true, pos: [5.3, 4.6, 16.85], look: [0.9, 1.4, 19.4], fov: 0.68 },                // high by the wall: he steps round Bas and walks out
+      { t: 9.4, pos: [5.2, 4.5, 17.1], look: [OUT.x - 0.3, 1.4, OUT.z + 0.2], fov: 0.66, ease: "linear" },
+      { t: 9.4, cut: true, pos: [0.6, 2.0, 12.8], look: [OUT.x, 1.6, OUT.z], fov: 0.5, ots: "rook" }, // over Rook's shoulder
+      { t: 11, pos: [0.65, 2.0, 13.0], look: [OUT.x, 1.7, OUT.z], fov: 0.48, ease: "linear" },
+      { t: 11, cut: true, pos: [-2.2, 1.9, 15.6], look: [OUT.x, 1.75, OUT.z], fov: 0.58 },             // the mask: head and shoulders
+      { t: 13.6, pos: [-2.1, 1.9, 15.7], look: [OUT.x, 1.75, OUT.z], fov: 0.56, ease: "linear" },
+      { t: 13.6, cut: true, pos: [6.0, 2.2, 15.45], look: [OUT.x, 1.4, OUT.z + 0.5], fov: 0.58 },            // side on: the way out
+      { t: 16.2, pos: [5.8, 2.2, 15.65], look: [OUT.x, 1.4, OUT.z + 0.7], fov: 0.58, ease: "linear" },
+      { t: 16.2, cut: true, pos: [0.4, 1.6, 10.4], look: [0.6, 1.3, 17.5], fov: 0.63 },              // the squad, and Bas in the doorway
+      { t: 18.5, pos: [0.4, 1.6, 10.8], look: [0.4, 1.3, 18], fov: 0.63, ease: "linear" },
     ],
     events: [
       { t: 0, pose: { id: "rook", name: "bow" } },                        // Rook, down on one knee
@@ -138,13 +139,14 @@ export const CUTSCENES = {
       { t: 4.2, pose: { id: "knight", name: "raise" } }, { t: 4.2, sfx: "swingHeavy" },
       { t: 4.6, pose: { id: "knight", name: "none" } }, { t: 4.6, sfx: "slam" }, { t: 4.65, sfx: "postureBreak" },
       { t: 4.7, pose: { id: "bas", name: "bow" } }, { t: 4.7, move: { id: "bas", to: [0.35, 19.5], dur: 0.5 } },
-      { t: 7.2, move: { id: "knight", to: [VT.exit.x - 0.2, VT.exit.z - 0.7], dur: 2.2 } },
+      { t: 7.2, move: { id: "knight", to: [1.5, 20.4], dur: 0.8 } },          // a step aside, round Bas…
+      { t: 8, move: { id: "knight", to: [OUT.x, OUT.z], dur: 1.5 } },         // …and on to where his way out will open
       { t: 9.6, pose: { id: "rook", name: "none" } },
       { t: 10.2, pose: { id: "rook", name: "point" } },
       { t: 11.6, pose: { id: "knight", name: "tilt" } },
       { t: 13.4, pose: { id: "knight", name: "none" } },
       { t: 13.8, cue: "seamOpen" }, { t: 13.8, sfx: "tear" },
-      { t: 14.6, move: { id: "knight", to: [VT.exit.x, VT.exit.z + 0.3], dur: 1 } },
+      { t: 14.6, move: { id: "knight", to: [VT.exit.x + 0.1, VT.exit.z + 0.1], dur: 1 } },
       { t: 15.6, hide: "knight" }, { t: 15.6, cue: "seamShut" }, { t: 15.6, sfx: "tear" },
       { t: 16.4, move: { id: "juno", to: [-0.6, 18.8], dur: 1.8 } },
     ],
@@ -164,14 +166,14 @@ export const CUTSCENES = {
     camera: [
       { t: 0, pos: [2.9, 1.9, -9.4], look: [0, 1.1, -17.2], fov: 0.55, ots: "severin" },    // past Severin: Rook at the edge
       { t: 2, pos: [2.7, 1.8, -9.9], look: [0, 0.9, -17.4], fov: 0.52, ease: "linear" },
-      { t: 2, cut: true, pos: [3.4, 0.5, -20.4], look: [0, 1, -17.6], fov: 0.72 },              // low on the water: the fall
-      { t: 3, pos: [3.4, 0.45, -20.4], look: [0, 0.7, -18.0], fov: 0.72, ease: "linear" },
+      { t: 2, cut: true, pos: [3.4, 0.5, -20.4], look: [0, 1.1, -17.6], fov: 0.72 },              // low on the water: the fall
+      { t: 3, pos: [3.4, 0.45, -20.4], look: [0, 0.8, -18.0], fov: 0.72, ease: "linear" },
       { t: 3, cut: true, pos: [3.2, -4.6, -22.6], look: [0, -3.3, -26], fov: 0.7 },             // under: sinking
       { t: 7.4, pos: [2.8, -5.0, -23.0], look: [0, -3.4, -26], fov: 0.66, ease: "linear" },
       { t: 7.4, cut: true, pos: [0.4, -7, -24.6], look: [0, -2, -26.6], fov: 0.7 },             // looking up past Rook: the script rising
       { t: 11.2, pos: [0.2, -7.4, -24.4], look: [0, -1, -26.4], fov: 0.74, ease: "linear" },
-      { t: 11.2, cut: true, pos: [-3.2, 1.9, -13.2], look: [0, 1.1, -17], fov: 0.62 },          // back up: the edge of the island
-      { t: 15, pos: [-3, 1.9, -13.5], look: [0, 1.2, -16.6], fov: 0.58, ease: "linear" },
+      { t: 11.2, cut: true, pos: [-3.2, 1.9, -13.2], look: [0, 1.2, -17], fov: 0.62 },          // back up: the edge of the island
+      { t: 15, pos: [-3, 1.9, -13.5], look: [0, 1.3, -16.6], fov: 0.58, ease: "linear" },
     ],
     events: [
       { t: 0.2, pose: { id: "rook", name: "bow" } },                     // staggered back to the edge…
@@ -196,12 +198,12 @@ export const CUTSCENES = {
     camera: [
       { t: 0, pos: [0, 1.7, -7.2], look: [0, 1, 4.6], fov: 0.6 },                              // from the door, down the aisle
       { t: 4, pos: [0, 1.6, -4.6], look: [0, 0.9, 4.6], fov: 0.58, ease: "linear" },
-      { t: 4, cut: true, pos: [3.6, 1.9, 1.4], look: [0, 0.9, 5.4], fov: 0.62 },                 // from the side: kneeling at the grave
-      { t: 7.2, pos: [3.4, 1.8, 1.8], look: [0, 0.9, 5.4], fov: 0.58, ease: "linear" },
+      { t: 4, cut: true, pos: [3.6, 1.9, 1.4], look: [0, 1.35, 5.4], fov: 0.62 },                 // from the side: kneeling at the grave
+      { t: 7.2, pos: [3.4, 1.8, 1.8], look: [0, 1.35, 5.4], fov: 0.58, ease: "linear" },
       { t: 7.2, cut: true, pos: [1.6, 1.3, 3.2], look: [0, 0.75, 6.2], fov: 0.55 },               // past his shoulder: the name, and the flower
       { t: 10.4, pos: [1.5, 1.25, 3.5], look: [0, 0.7, 6.2], fov: 0.52, ease: "linear" },
-      { t: 10.4, cut: true, pos: [2.6, 1.6, -2.4], look: [-1.2, 1.2, -5.6], fov: 0.58 },         // he goes
-      { t: 13.5, pos: [2.6, 1.6, -2.2], look: [-1.2, 1.2, -5.6], fov: 0.58 },
+      { t: 10.4, cut: true, pos: [2.85, 1.6, -2.2], look: [-1.2, 1.4, -5.6], fov: 0.7 },         // he goes
+      { t: 13.5, pos: [2.85, 1.6, -2.0], look: [-1.2, 1.4, -5.6], fov: 0.7 },
     ],
     events: [
       { t: 0, pose: { id: "knight", name: "bow" } }, { t: 0, cue: "noFlower" },

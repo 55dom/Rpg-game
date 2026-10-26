@@ -2,11 +2,12 @@
 // and whether a camera key at that moment has someone in the lens, someone standing between the camera and
 // what it's looking at, or the subject's head cut off by the top of the frame.
 //
-// Heights: a character is about 1.95 m tall at scale 1. The letterbox bars take ~7% off the top and bottom.
+// Heights (measured off the rigs): a character is about 2.22 m to the top of the head at scale 1, and the head
+// (big, anime-style) is the top 0.62 m of that. The letterbox bars take ~7% off the top and bottom.
 
 import { sampleMove, sampleCamera } from "./timeline.js";
 
-const BODY = 1.95, LETTERBOX = 0.86;
+const BODY = 2.22, HEAD = 0.62, LETTERBOX = 0.86;
 
 /** Every actor's position and visibility at time t. */
 export function actorsAt(cs, t, scaleOf = () => 1) {
@@ -60,9 +61,9 @@ export function shotProblems(cs, t, scaleOf = () => 1) {
   const seen = actorsAt(cs, t, scaleOf).filter((a) => a.shown).map((a) => {
     const ax = a.x - px, az = a.z - pz, along = ax * ux + az * uz, side = ax * -uz + az * ux;
     const lo = Math.atan2(a.y - py, Math.max(0.1, along)), hi = Math.atan2(a.y + BODY * a.scale - py, Math.max(0.1, along));
-    const headLo = Math.atan2(a.y + (BODY - 0.55) * a.scale - py, Math.max(0.1, along)); // where their head starts
+    const headLo = Math.atan2(a.y + (BODY - HEAD) * a.scale - py, Math.max(0.1, along)); // where their head starts
     return { ...a, along, ang: Math.atan2(side, along), w: Math.atan2(0.26 * a.scale, Math.max(0.1, along)), lo, hi, headLo };
-  }).filter((a) => a.along > 0.8 && Math.abs(a.ang) < halfW);
+  }).filter((a) => a.along > 0.8 && Math.abs(a.ang) - a.w < halfW); // any part of them on screen
   const overlap = (a0, a1, b0, b1) => Math.max(0, Math.min(a1, b1) - Math.max(a0, b0));
   for (const far of seen) {
     let covered = 0, face = 0, by = null, most = 0;
@@ -82,8 +83,8 @@ export function shotProblems(cs, t, scaleOf = () => 1) {
   // Looming: someone near the lens (not the subject) whose head takes up a big piece of the frame, usually cut off by its edge.
   for (const a of seen) {
     if (Math.hypot(a.x - qx, a.z - qz) < 0.7 || (key.ots && key.ots === a.id)) continue;
-    const hy = a.y + BODY * a.scale - 0.28 * a.scale - py; // the middle of their head, above or below the camera
-    const head = Math.atan2(0.55 * a.scale, Math.hypot(a.along, hy)), mid = Math.atan2(hy, a.along) - pitch;
+    const hy = a.y + (BODY - HEAD / 2) * a.scale - py; // the middle of their head, above or below the camera
+    const head = Math.atan2(HEAD * a.scale, Math.hypot(a.along, hy)), mid = Math.atan2(hy, a.along) - pitch;
     if (Math.abs(mid) > half + head / 2) continue; // their head is out of the shot altogether
     const size = head / (2 * half), cut = Math.abs(mid) + head / 2 > half || Math.abs(a.ang) + head * 0.4 > halfW; // sliced by the frame's edge
     if (size > 0.36 || (size > 0.22 && cut)) out.push({ kind: "looms", id: a.id, t, size: +size.toFixed(2) });
@@ -92,7 +93,7 @@ export function shotProblems(cs, t, scaleOf = () => 1) {
 }
 
 /** Every problem in a cutscene, sampled every `step` seconds (one entry per actor and kind per shot). */
-export function cutsceneProblems(cs, scaleOf = () => 1, step = 0.25) {
+export function cutsceneProblems(cs, scaleOf = () => 1, step = 0.125) {
   const seen = new Set(), out = [];
   const cuts = [0, ...cs.camera.filter((k) => k.cut).map((k) => k.t), cs.duration];
   for (let t = 0; t <= cs.duration + 1e-6; t += step) {
