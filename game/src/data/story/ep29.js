@@ -12,7 +12,7 @@ title: Ep29_Cold
 <<shot wide>>
 The Lighthouse, before dawn. Someone is up already, and it isn't Dagrun.
 <<shot on Severin>>
-Severin sits on the steps with a broken pendant in his hand, turning it over and over.
+Severin is out on the steps with a broken pendant in his hand, turning it over and over.
 Severin: A man in a mask knelt at my brother's grave and left him a flower.
 Severin: Who leaves a flower for a stranger? Nobody. Nobody does that.
 ===
@@ -150,7 +150,7 @@ export const EPISODE_29 = {
   world: { companions: ["bas", "juno"] },
   beats: [
     { id: "cold", type: "scene", node: "Ep29_Cold", ...LH, rook: null, sky: { daylight: 0.25 },
-      cast: [{ id: "severin", look: "severin", x: 0.4, z: -3.2, yaw: Math.PI }] },
+      cast: [{ id: "severin", look: "severin", x: -3.6, z: 9.3, yaw: Math.PI }] }, // on the house steps
     { id: "title", type: "title" },
     { id: "breakfast", type: "scene", node: "Ep29_Breakfast", ...LH,
       rook: { x: TABLE.x + 1.6, z: TABLE.z - 2.2, yaw: -0.6 },

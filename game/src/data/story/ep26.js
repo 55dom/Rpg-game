@@ -193,7 +193,7 @@ export const EPISODE_26 = {
         { id: "archivist", look: "archivist", x: 1.8, z: -9.2, yaw: -2.6 },
         { id: "dagrun", look: "dagrun", x: -1.8, z: -12.4, yaw: 0.6 },
         { id: "juno", look: "juno", x: 2.6, z: -12.2, yaw: -0.4 },
-        { id: "tamsin", look: "tamsin", x: -3.2, z: -11, yaw: 0.9 },
+        { id: "tamsin", look: "tamsin", x: -3.4, z: -9.8, yaw: 1.2 },
         { id: "lio", look: "lio", x: 3.6, z: -10.6, yaw: -0.9, when: "$LIO_STATUS == 2" },
         { id: "bas", look: "bas", x: 0.4, z: -7.6, yaw: 0 },
       ] },

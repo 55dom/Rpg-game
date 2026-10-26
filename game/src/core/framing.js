@@ -107,3 +107,47 @@ export function cutsceneProblems(cs, scaleOf = () => 1, step = 0.125) {
   }
   return out;
 }
+
+/**
+ * A dialogue scene's wide shot (runtime/story.js Stage.shot "wide"), from where everyone stands: the camera backs
+ * off from the middle of the group far enough to take them all in. mode: "front" looks back from the far side of
+ * the set, "side" from the right; anything else from the near side. If someone would be hidden behind someone else
+ * from there, the camera swings round the group a little (either way, up to ~45°) to the clearest angle.
+ * points: [{ x, z, y?, scale? }]. Returns { pos, look, fov }.
+ */
+export function wideShot(points, mode) {
+  let cx = 0, cz = 0;
+  for (const p of points) { cx += p.x; cz += p.z; }
+  cx /= points.length; cz /= points.length;
+  const span = Math.max(...points.map((p) => Math.hypot(p.x - cx, p.z - cz)));
+  const cy = points.reduce((m, p) => m + (p.y ?? 0), 0) / points.length;
+  const d = 5 + span * 1.3, front = mode === "front" ? -1 : 1;
+  const base = mode === "side"
+    ? { pos: { x: cx + d, y: cy + 2.4 + span * 0.2, z: cz - d * 0.3 }, look: { x: cx, y: cy + 1.3, z: cz + 0.6 }, fov: 0.8 }
+    : { pos: { x: cx + d * 0.35, y: cy + 2.6 + span * 0.25, z: cz - d * front }, look: { x: cx, y: cy + 1.3, z: cz + front }, fov: 0.8 };
+  if (points.length < 2) return base;
+  let best = base, bestN = Infinity;
+  for (const a of [0, 0.25, -0.25, 0.5, -0.5, 0.75, -0.75]) {
+    const c = Math.cos(a), s = Math.sin(a), ox = base.pos.x - cx, oz = base.pos.z - cz;
+    const sh = { ...base, pos: { x: cx + ox * c + oz * s, y: base.pos.y, z: cz - ox * s + oz * c } };
+    const n = wideFaults(sh, points).filter((p) => p.kind === "hidden" || p.kind === "looms").length;
+    if (n < bestN) { best = sh; bestN = n; }
+    if (!n) break;
+  }
+  return best;
+}
+
+const asCutscene = (sh, points) => ({ duration: 1, camera: [{ t: 0, cut: true, pos: [sh.pos.x, sh.pos.y, sh.pos.z], look: [sh.look.x, sh.look.y, sh.look.z], fov: sh.fov }],
+  actors: points.map((p, i) => ({ id: p.id ?? `p${i}`, look: p.scale ?? 1, x: p.x, z: p.z, y: p.y ?? 0 })), events: [] });
+
+// A crowd (a row of guards, a congregation) can stand behind one another; only the people the scene is about can't be lost.
+const wideFaults = (sh, points) => {
+  const crowd = new Set(points.filter((p) => p.crowd).map((p, i) => p.id ?? `p${i}`));
+  return shotProblems(asCutscene(sh, points), 0, (k) => k).filter((p) => !(p.kind === "hidden" && crowd.has(p.id)));
+};
+
+/** Problems with a scene's wide shot (the same checks as a cutscene's, for a camera that holds still). people: [{ id, look, x, z, y?, crowd? }]. */
+export function wideShotProblems(people, scaleOf = () => 1, mode) {
+  const pts = people.map((p) => ({ ...p, scale: scaleOf(p.look) }));
+  return wideFaults(wideShot(pts, mode), pts);
+}

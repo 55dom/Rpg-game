@@ -1208,7 +1208,7 @@ function buildHome(scene, mobile) {
 function buildIsles(scene, mobile) {
   const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, L = ISLES_LAYOUT;
   const rng = mulberry(30), P = palette(scene, "si");
-  const rockM = toon(scene, "si-rock", "#8a8070"), rockDark = toon(scene, "si-rockDark", "#6a6052"), grassM = toon(scene, "si-grass", "#7aa86a");
+  const rockM = toon(scene, "si-rock", "#8a8070"), rockDark = toon(scene, "si-rockDark", "#6a6052"), grassM = toon(scene, "si-grass", "#71925f");
   const stoneM = toon(scene, "si-stone", "#d8d2c4"), runeM = glow(scene, "si-rune", "#9ad8ff", 0.9);
   // An isle: a grassy top on a rough cone of rock tapering away underneath.
   const isle = (x, y, z, r, grassy = true) => {
@@ -1269,7 +1269,7 @@ function buildIsles(scene, mobile) {
     clouds.push({ c, a, d, s: 0.004 + rng() * 0.006 });
   }
   K.bake([]);
-  const env = { clear: "#9ec8f0", fog: "#cfe2f4", fogDensity: 0.004, hemi: [0.85, "#ffffff", "#8aa0b8"], sun: [0.8, "#fff4e0", [0.4, -1, 0.3]], warm: 0 };
+  const env = { clear: "#9ec8f0", fog: "#cfe2f4", fogDensity: 0.004, hemi: [0.72, "#fff6ea", "#8aa0b8"], sun: [0.8, "#fff4e0", [0.4, -1, 0.3]], warm: 0 };
   const toonEnv = { lightDir: [-0.4, 1, -0.3], fogColor: "#cfe2f4", fogDensity: 0.002, sky: [1.08, 1.08, 1.12], ground: [0.84, 0.86, 0.92], rim: [1.0, 1.0, 1.05] };
   return { env, toon: toonEnv, show: K.show, conditions: K.conditions, outdoor: true,
     update(dt, t) {

@@ -206,8 +206,8 @@ const STONE = { x: -6.1, z: 7.2 }; // the loose stone at the foot of the tower (
 const CAIRN = IRONHOLD_LAYOUT.cairn; // Brannoc's cairn on the gate field, outside the fighting ring
 // The Iron Wardens in two rows behind the squad, facing the cairn (the vigil, and still there after it).
 const WARDENS = [
-  ...[-4, -2, 0, 2, 4].map((dx, i) => ({ id: `warden${i}`, look: "guard", x: CAIRN.x + dx, z: CAIRN.z + 4.4, yaw: Math.PI })),
-  ...[-3, -1, 1, 3].map((dx, i) => ({ id: `wardenB${i}`, look: "guard", x: CAIRN.x + dx, z: CAIRN.z + 5.8, yaw: Math.PI })),
+  ...[-4, -2, 0, 2, 4].map((dx, i) => ({ id: `warden${i}`, look: "guard", x: CAIRN.x + dx, z: CAIRN.z + 4.4, yaw: Math.PI, crowd: true })),
+  ...[-3, -1, 1, 3].map((dx, i) => ({ id: `wardenB${i}`, look: "guard", x: CAIRN.x + dx, z: CAIRN.z + 5.8, yaw: Math.PI, crowd: true })),
 ];
 
 export const EPISODE_23 = {
@@ -251,7 +251,7 @@ export const EPISODE_23 = {
       rook: { x: CAIRN.x + 1.4, z: CAIRN.z + 2.6, yaw: Math.PI },
       cast: [
         { id: "bas", look: "bas", x: CAIRN.x + 0.8, z: CAIRN.z + 1.3, yaw: Math.PI },
-        { id: "dagrun", look: "dagrun", x: CAIRN.x - 1.4, z: CAIRN.z + 1.5, yaw: Math.PI * 0.9 },
+        { id: "dagrun", look: "dagrun", x: CAIRN.x - 1.6, z: CAIRN.z + 0.4, yaw: 1.8 },
         { id: "juno", look: "juno", x: CAIRN.x + 2.4, z: CAIRN.z + 2.1, yaw: -2.6 },
         { id: "tamsin", look: "tamsin", x: CAIRN.x - 2.8, z: CAIRN.z + 2.6, yaw: 2.8 },
         { id: "lio", look: "lio", x: CAIRN.x + 3.4, z: CAIRN.z + 0.9, yaw: -2.2 },
@@ -273,7 +273,7 @@ export const EPISODE_23 = {
       rook: { x: CAIRN.x + 1.4, z: CAIRN.z + 2.6, yaw: Math.PI },
       cast: [
         { id: "bas", look: "bas", x: CAIRN.x + 0.8, z: CAIRN.z + 1.3, yaw: Math.PI },
-        { id: "dagrun", look: "dagrun", x: CAIRN.x - 1.4, z: CAIRN.z + 1.5, yaw: 0.4 },
+        { id: "dagrun", look: "dagrun", x: CAIRN.x - 1.6, z: CAIRN.z + 0.4, yaw: 0.4 },
         { id: "juno", look: "juno", x: CAIRN.x + 2.4, z: CAIRN.z + 2.1, yaw: -2.6 },
         { id: "tamsin", look: "tamsin", x: CAIRN.x - 2.8, z: CAIRN.z + 2.6, yaw: 2.8 },
         { id: "lio", look: "lio", x: CAIRN.x + 3.4, z: CAIRN.z + 0.9, yaw: -2.2 },

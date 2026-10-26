@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
-import { actorsAt, shotProblems, cutsceneProblems } from "../src/core/framing.js";
+import { actorsAt, shotProblems, cutsceneProblems, wideShot, wideShotProblems } from "../src/core/framing.js";
 import { CUTSCENES } from "../src/data/story/cutscenes.js";
 import { LOOKS } from "../src/runtime/rig.js";
 
@@ -86,6 +86,42 @@ test("every scene and walk-around: nobody stands inside anybody else, Rook inclu
     }
   }
   assert.ok(checked >= 60, `checked ${checked}`);
+});
+
+test("a scene's wide shot swings round the group until nobody's hidden behind anybody, and a crowd may stand in rows", () => {
+  const row = [{ id: "a", x: 0, z: 0 }, { id: "b", x: 0.7, z: 2 }, { id: "c", x: -2, z: 1 }];
+  const base = wideShot([{ x: 0, z: 0 }, { x: 0, z: 0.01 }]);
+  assert.ok(base.pos.z < 0 && base.look.y > 1, "from the near side, looking at chest height");
+  assert.deepEqual(wideShotProblems(row).filter((p) => p.kind === "hidden"), []);
+  const guards = [-2, 0, 2].flatMap((x) => [{ id: `f${x}`, x, z: 4, crowd: true }, { id: `r${x}`, x: x + 0.1, z: 5.4, crowd: true }]);
+  assert.deepEqual(wideShotProblems([...row, ...guards]).filter((p) => p.kind === "hidden"), []);
+});
+
+test("every scene's wide shot, from where everyone starts: nobody hidden behind anybody, nobody looming over the lens", async () => {
+  const files = readdirSync(new URL("../src/data/story/", import.meta.url)).filter((f) => /^ep\d+\.js$/.test(f));
+  let checked = 0;
+  for (const f of files) {
+    const mod = await import(`../src/data/story/${f}`);
+    const scripts = Object.values(mod).filter((v) => typeof v === "string").join("\n");
+    for (const ep of Object.values(mod).filter((v) => v?.beats)) {
+      for (const b of ep.beats.filter((x) => x.type === "scene")) {
+        const body = scripts.match(new RegExp(`title: ${b.node}\\n---\\n([\\s\\S]*?)\\n===`))?.[1] ?? "";
+        const ppl = [...(b.cast ?? []).filter((c) => !c.down && !c.hidden), ...(b.rook ? [{ id: "rook", look: "player", ...b.rook }] : [])];
+        for (const mode of new Set([...body.matchAll(/<<shot wide ?(\w*)>>/g)].map((m) => m[1] || undefined))) {
+          const bad = wideShotProblems(ppl, scaleOf, mode).filter((p) => p.kind === "hidden" || p.kind === "looms" || p.kind === "lens");
+          assert.deepEqual(bad, [], `${ep.id}/${b.id} wide${mode ? " " + mode : ""}`);
+          checked++;
+        }
+      }
+    }
+  }
+  assert.ok(checked >= 50, `checked ${checked}`);
+});
+
+test("a wide shot only fades out someone right against the lens, never whoever stands in the middle of the group", () => {
+  const src = readFileSync(new URL("../src/runtime/story.js", import.meta.url), "utf8");
+  const occ = src.slice(src.indexOf("_occlusion() {"), src.indexOf("_frameBias() {"));
+  assert.match(occ, /for \(let i = 0; i <= 10 && !block && this\.currentShot\.kind !== "wide"; i\+\+\)/);
 });
 
 test("SKIP owns the top-right corner in a cutscene: the menu steps aside", () => {

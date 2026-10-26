@@ -10,6 +10,7 @@ import { CAST, speakerName } from "../data/story/cast.js";
 import { maskIntegrity } from "../data/masked.js";
 import { CUTSCENES } from "../data/story/cutscenes.js";
 import { validateCutscene, sampleCamera, eventsBetween, sampleMove } from "../core/timeline.js";
+import { wideShot } from "../core/framing.js";
 import { B, toon2, glow } from "./look.js";
 import { makeTear } from "./tears.js";
 import { GuideTrail } from "./trail.js";
@@ -88,7 +89,7 @@ class Stage {
       actor.pos.y = actor.prev.y = c.y ?? 0;
       const rig = new Rig(this.scene, c.look, `story-${c.id}`);
       if (c.hidden) { rig.setVisible(false); actor.hiddenActor = true; }
-      this.actors.set(c.id, { actor, rig, look: c.look });
+      this.actors.set(c.id, { actor, rig, look: c.look, crowd: !!c.crowd });
     }
   }
 
@@ -184,16 +185,11 @@ class Stage {
   /** Camera framings. Returns { pos, look, fov } or null. */
   shot(kind, ids = []) {
     const pts = [this.getWorld().player, ...[...this.actors.values()].map((a) => a.actor)];
-    if (kind === "wide") { // ids[0]: "front" looks back from the far side of the set, "side" from the right
-      const vis = pts.filter((p) => !p.hiddenActor);
-      let cx = 0, cz = 0;
-      for (const p of vis) { cx += p.pos.x; cz += p.pos.z; }
-      cx /= vis.length; cz /= vis.length;
-      const span = Math.max(...vis.map((p) => Math.hypot(p.pos.x - cx, p.pos.z - cz)));
-      const cy = vis.reduce((m, p) => m + (p.pos.y ?? 0), 0) / vis.length;
-      const d = 5 + span * 1.3, front = ids[0] === "front" ? -1 : 1;
-      if (ids[0] === "side") return { pos: { x: cx + d, y: cy + 2.4 + span * 0.2, z: cz - d * 0.3 }, look: { x: cx, y: cy + 1.3, z: cz + 0.6 }, fov: 0.8 };
-      return { pos: { x: cx + d * 0.35, y: cy + 2.6 + span * 0.25, z: cz - d * front }, look: { x: cx, y: cy + 1.3, z: cz + front }, fov: 0.8 };
+    if (kind === "wide") { // ids[0]: "front" looks back from the far side of the set, "side" from the right (core/framing.js)
+      const vis = pts.filter((p) => !p.hiddenActor && !(p === this.getWorld().player && this.playerHidden));
+      if (!vis.length) return null;
+      const entry = (p) => [...this.actors.values()].find((a) => a.actor === p);
+      return wideShot(vis.map((p) => ({ x: p.pos.x, z: p.pos.z, y: p.pos.y ?? 0, scale: entry(p)?.rig.look.scale ?? 1, crowd: !!entry(p)?.crowd })), ids[0]);
     }
     if (kind === "on") {
       const a = this.get(ids[0]);
@@ -701,7 +697,7 @@ export class StoryPlayer {
         if (keep.has(id) || a.hiddenActor || !a.pos) continue;
         const near = (this.currentShot.kind === "on" ? 2.4 : 1.7) * sc; // close-ups: nobody else gets that close to the lens
         let block = Math.hypot(a.pos.x - P.x, a.pos.z - P.z) < near; // right against the lens: a head filling the frame
-        for (let i = 0; i <= 10 && !block; i++) {
+        for (let i = 0; i <= 10 && !block && this.currentShot.kind !== "wide"; i++) { // a wide shot looks at the middle of the group, not at anyone in it
           const t = i / 11, y = P.y + (Q.y - P.y) * t;
           if (y < (a.pos.y ?? 0) || y > (a.pos.y ?? 0) + 2.05 * sc) continue;
           const x = P.x + (Q.x - P.x) * t, z = P.z + (Q.z - P.z) * t;
