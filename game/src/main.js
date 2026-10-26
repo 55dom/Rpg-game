@@ -45,6 +45,8 @@ import { EPISODE_31, EP31_SCRIPT } from "./data/story/ep31.js";
 import { EPISODE_32, EP32_SCRIPT } from "./data/story/ep32.js";
 import { EPISODE_33, EP33_SCRIPT } from "./data/story/ep33.js";
 import { EPISODE_34, EP34_SCRIPT } from "./data/story/ep34.js";
+import { EPISODE_35, EP35_SCRIPT } from "./data/story/ep35.js";
+import { EPISODE_36, EP36_SCRIPT } from "./data/story/ep36.js";
 import { theatreList } from "./data/theatre.js";
 import { PlaytestLog, SURVEYS } from "./core/playtest.js";
 import { keyItemsHeld } from "./data/keyItems.js";
@@ -396,6 +398,9 @@ export function boot(doc = document) {
           sfx.play("tear"); camera.shake(0.4);
           break;
         case "riftCall": hud.pushLog(`Wraithe calls ${ev.called.length} acolytes through the air`); break;
+        case "lineCharge": groundFx.lane(ev.from, ev.to, ev.half * 1.6); hud.toast("LINE CHARGE", "danger"); sfx.play("guardWhistle", 0.6); break;
+        case "formLine": hud.pushLog(`Halvard calls ${ev.called.length} Lances into line`); sfx.play("guardWhistle"); break;
+        case "shieldBreak": vfx.flash(ev.at, 2, "#e6c060", 0.2); camera.kick(0.6); sfx.play("postureBreak"); break;
         case "reform": // Hollow armor (Ep 33) pulls itself back together, once
           vfx.flash({ x: ev.at.x, y: 1, z: ev.at.z }, 1.8, "#c9a4ff", 0.14); sfx.play("reform");
           hud.pushLog("The empty armor drags itself back together.");
@@ -813,7 +818,7 @@ export function boot(doc = document) {
     { episode: EPISODE_27, script: EP27_SCRIPT }, { episode: EPISODE_28, script: EP28_SCRIPT },
     { episode: EPISODE_29, script: EP29_SCRIPT }, { episode: EPISODE_30, script: EP30_SCRIPT }, { episode: EPISODE_31, script: EP31_SCRIPT },
     { episode: EPISODE_32, script: EP32_SCRIPT }, { episode: EPISODE_33, script: EP33_SCRIPT },
-    { episode: EPISODE_34, script: EP34_SCRIPT }], [WORLD_SCRIPT]);
+    { episode: EPISODE_34, script: EP34_SCRIPT }, { episode: EPISODE_35, script: EP35_SCRIPT }, { episode: EPISODE_36, script: EP36_SCRIPT }], [WORLD_SCRIPT]);
   annotationNow = () => !!story.flags.get("ANNOTATION"); // after Mirrorlake, Rook's spells write ink
   const playtest = new PlaytestLog(story.flags, { where: () => ({ episode: story.ep?.id ?? null, beat: story.director?.beat?.id ?? null }) });
   injuredNow = () => (story.flags.get("BAS_ARM_BROKEN") ? ["bas"] : []); // Bas fights one-armed after the vault
@@ -1022,6 +1027,7 @@ export function boot(doc = document) {
     masked: { 2: ["THE FLOOR OPENS", "PHASE 2 · A BLACK TEAR UNDER YOU · STEP OFF, OR JUMP OR DASH BEFORE YOU LAND"],
       3: ["NO WAY OUT", "PHASE 3 · EVERY WAY OUT LEADS BACK IN"], 4: ["…", "PHASE 4"] },
     warden: { 2: ["THE RODS RISE", "PHASE 2 · IT'S CHARGED WHILE ANY ROD STANDS · BREAK THEM"], 3: ["THE STAR CHART", "PHASE 3 · THUNDER ALONG THE CONSTELLATION'S LINES"] },
+    halvard: { 2: ["FORM THE LINE", "PHASE 2 · TWO LANCES · THE LINE CHARGES DOWN A RED LANE · STEP OUT OF IT"], 3: ["THE SHIELD SPLITS", "PHASE 3 · NO GUARD · HIS THRUST COMES TWICE"] },
     varka: { 2: ["THE IRONSONG ROLLS", "PHASE 2 · THE ENGINE CHARGES DOWN A LANE · GET OUT OF IT"], 3: ["THE ENGINE BREAKS", "PHASE 3 · FALLING WRECKAGE · WATCH THE RINGS"],
       4: ["RAILGUN", "PHASE 4 · SHE FIRES HERSELF DOWN THE FIELD · DODGE"] },
   };

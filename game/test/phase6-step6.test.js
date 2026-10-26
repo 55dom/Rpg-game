@@ -9,7 +9,10 @@ import { EPISODE_31, EP31_SCRIPT } from "../src/data/story/ep31.js";
 import { EPISODE_32, EP32_SCRIPT } from "../src/data/story/ep32.js";
 import { EPISODE_33, EP33_SCRIPT, OLDCITY_SCRIPT } from "../src/data/story/ep33.js";
 import { EPISODE_34, EP34_SCRIPT } from "../src/data/story/ep34.js";
-import { AFTER_EP28, AFTER_EP29, AFTER_EP30, AFTER_EP31, AFTER_EP32, AFTER_EP33, AFTER_EP34 } from "../src/data/story/arc4.js";
+import { EPISODE_35, EP35_SCRIPT } from "../src/data/story/ep35.js";
+import { EPISODE_36, EP36_SCRIPT } from "../src/data/story/ep36.js";
+import { AFTER_EP28, AFTER_EP29, AFTER_EP30, AFTER_EP31, AFTER_EP32, AFTER_EP33, AFTER_EP34, AFTER_EP35 } from "../src/data/story/arc4.js";
+import { HALVARD_TUNING, HALVARD_STATS } from "../src/data/halvard.js";
 import { REFORM } from "../src/data/hollow.js";
 import { makeSentries, stepSentries, blocked, sees, SENTRY } from "../src/sim/sentry.js";
 import { ZONES } from "../src/data/zones.js";
@@ -28,7 +31,8 @@ import { THEATRE } from "../src/data/theatre.js";
 import { LOOKS } from "../src/runtime/rig.js";
 
 const nodes = { ...parseScript(EP29_SCRIPT, "e29"), ...parseScript(EP30_SCRIPT, "e30"), ...parseScript(EP31_SCRIPT, "e31"), ...parseScript(EP32_SCRIPT, "e32"),
-  ...parseScript(EP33_SCRIPT, "e33"), ...parseScript(EP34_SCRIPT, "e34"), ...parseScript(OLDCITY_SCRIPT, "oc") };
+  ...parseScript(EP33_SCRIPT, "e33"), ...parseScript(EP34_SCRIPT, "e34"), ...parseScript(OLDCITY_SCRIPT, "oc"),
+  ...parseScript(EP35_SCRIPT, "e35"), ...parseScript(EP36_SCRIPT, "e36") };
 const play = (node, f = new FlagStore(), pick = 0) => {
   const r = new DialogueRunner(nodes, f, { name: "Rook" }).start(node), lines = [], cmds = [];
   for (let s = r.next(); s.type !== "end"; s = r.next()) { if (s.type === "line") lines.push(s); if (s.type === "options") r.choose(pick); if (s.type === "command") cmds.push(s); }
@@ -40,16 +44,16 @@ const boss = (kind, seed = 3, opts = {}) => { const w = new World({ seed, ...opt
 const to = (b, frac) => b.combatant.health.set(b.stats.maxHealth * frac);
 
 test("Arc 4 opens after Arc 3 and chains episode to episode, each startable from the menu with what came before", () => {
-  const eps = [EPISODE_29, EPISODE_30, EPISODE_31, EPISODE_32, EPISODE_33, EPISODE_34];
+  const eps = [EPISODE_29, EPISODE_30, EPISODE_31, EPISODE_32, EPISODE_33, EPISODE_34, EPISODE_35, EPISODE_36];
   for (const ep of eps) {
     validateEpisode(ep);
     for (const b of ep.beats) { if (b.node) assert.ok(nodes[b.node], b.node); for (const c of b.cast ?? []) if (c.node) assert.ok(nodes[c.node], c.node); for (const p of b.pickups ?? []) if (p.node) assert.ok(nodes[p.node], p.node); }
     for (const b of ep.beats) if (b.cutscene) validateCutscene(CUTSCENES[b.cutscene]);
   }
   const next = (ep) => ep.beats.find((b) => b.type === "preview").nextEpisode;
-  assert.deepEqual([EPISODE_28, ...eps].map(next), ["ep29", "ep30", "ep31", "ep32", "ep33", "ep34", "ep35"]);
-  assert.deepEqual(eps.map((e) => e.setup), [AFTER_EP28, AFTER_EP29, AFTER_EP30, AFTER_EP31, AFTER_EP32, AFTER_EP33].map((s) => ({ ...s })));
-  for (const who of ["Halvard", "Mag", "Pip", "Luke"]) assert.ok(CAST[who] && LOOKS[CAST[who].actor], who);
+  assert.deepEqual([EPISODE_28, ...eps].map(next), ["ep29", "ep30", "ep31", "ep32", "ep33", "ep34", "ep35", "ep36", "ep37"]);
+  assert.deepEqual(eps.map((e) => e.setup), [AFTER_EP28, AFTER_EP29, AFTER_EP30, AFTER_EP31, AFTER_EP32, AFTER_EP33, AFTER_EP34, AFTER_EP35].map((s) => ({ ...s })));
+  for (const who of ["Halvard", "Mag", "Kit", "Luke"]) assert.ok(CAST[who] && LOOKS[CAST[who].actor], who);
   for (const look of ["nell", "tobin", "lance", "warden"]) assert.ok(LOOKS[look], look);
 });
 
@@ -163,9 +167,9 @@ test("The Crown Ward: Lances on every way in, each beat clear of the walls, and 
   const B = ZONES.aurelin.bounds;
   assert.deepEqual(ward.required, ["severin"]);
   assert.ok(ward.sentries.length >= 4 && ward.spotted.wave.every((k) => k === "lance"));
-  for (const d of ward.sentries) for (const [x, z] of d.route) {
+  for (const ep of [EPISODE_32, EPISODE_35]) for (const b of ep.beats.filter((x) => x.sentries)) for (const d of b.sentries) for (const [x, z] of d.route) {
     const p = constrain({ x, z }, 0.45, B);
-    assert.ok(Math.hypot(p.x - x, p.z - z) < 1e-6, `${d.id} walks through a wall at ${x}, ${z}`);
+    assert.ok(Math.hypot(p.x - x, p.z - z) < 1e-6, `${ep.id}/${d.id} walks through a wall at ${x}, ${z}`);
   }
   const list = makeSentries(ward.sentries), door = ward.cast.find((c) => c.id === "severin"), start = ward.rook;
   let clear = 0, startSeen = false;
@@ -245,9 +249,61 @@ test("Encounter IV: he takes the Writ from the Chancellor; Severin stands in fro
   assert.match(board.seen[4], /said his brother's name, he stopped/);
 });
 
+test("Boss 12, Halvard: two Lances fall in at 60% and the line charges down a red lane; at 30% his shield splits; he yields, never dies", () => {
+  const { w, b } = boss("halvard", 7);
+  b.brain.aggroRange = 0;
+  assert.ok(b.traits.frontalGuard && HALVARD_STATS.yields);
+  to(b, 0.55);
+  const form = run(w, 3);
+  assert.ok(form.some((e) => e.type === "formLine") && w.liveEnemies.filter((e) => e.kind === "lance").length === HALVARD_TUNING.lances);
+  for (const e of w.liveEnemies.filter((e) => e.kind === "lance")) e.brain.aggroRange = 0;
+  let lane = null, waited = 0; // (his controller sits out hitstop, so give it some slack)
+  while (!lane && waited++ < HALVARD_TUNING.lineEvery * 2) lane = run(w, 1).find((e) => e.type === "lineCharge");
+  assert.ok(lane, "a lane is called");
+  const near = (s) => { const dx = lane.to.x - lane.from.x, dz = lane.to.z - lane.from.z, L = Math.hypot(dx, dz), k = ((s.x - lane.from.x) * dx + (s.z - lane.from.z) * dz) / (L * L); return Math.hypot(lane.from.x + dx * k - s.x, lane.from.z + dz * k - s.z); };
+  const strikes = run(w, HALVARD_TUNING.lineWarn * 2).filter((e) => e.type === "strikeWarn").map((e) => e.strike);
+  assert.ok(strikes.length >= 4 && strikes.every((s) => near(s) < 0.05), "the line runs down the lane, nowhere else");
+  to(b, 0.25);
+  const split = run(w, 3);
+  assert.ok(split.some((e) => e.type === "shieldBreak") && !b.traits.frontalGuard);
+  assert.ok(w.boss === b && ENEMY_TRAITS_INTACT(), "the shield breaking is his, not every Lance's");
+});
+const ENEMY_TRAITS_INTACT = () => { const w = new World({ seed: 1 }); w.spawnWave(["halvard"]); return w.boss.traits.frontalGuard === true; };
+
+test("The Watch Holds: across the city past the patrols, and the gate taken back beside the Watch (Luke too, if he joined)", () => {
+  const gates = EPISODE_35.beats.filter((b) => b.type === "fight");
+  assert.deepEqual(gates.map((b) => b.if), ["$LUKE_GUARD", "not $LUKE_GUARD"], "exactly one of them plays");
+  assert.deepEqual(gates.map((b) => b.world.companions), [["juno", "luke"], ["juno"]]);
+  assert.ok(gates.every((b) => b.world.origin && b.world.bounds.rect));
+  const streets = EPISODE_35.beats.find((b) => b.id === "streets");
+  assert.ok(streets.sentries.length >= 4 && streets.required.includes("door"));
+  const luke = play("Ep35_Watch", new FlagStore({ LUKE_GUARD: 1 })), holt = play("Ep35_Watch", new FlagStore());
+  assert.ok(luke.speakers.has("Luke") && !holt.speakers.has("Luke"));
+  assert.ok(play("Ep35_Held").f.get("GATE_HELD"));
+});
+
+test("Lance-Commander: the duel in front of the Hall; he yields and won't give Aldric's next order; then a door takes Elodie", () => {
+  const duel = EPISODE_36.beats.find((b) => b.type === "fight");
+  assert.deepEqual(duel.wave, ["halvard"]);
+  assert.deepEqual(duel.world.origin, { x: 0, z: 13 });
+  const y = play("Ep36_Yield");
+  assert.ok(y.lines.some((l) => l.speaker === "Halvard" && l.text === "No, my lord."));
+  assert.ok(y.f.get("HALVARD_YIELDED"));
+  const d = play("Ep36_Door");
+  assert.ok(d.f.get("ELODIE_TAKEN") && d.cmds.some((c) => c.name === "hide" && c.args[0] === "Elodie"));
+});
+
+test("a walk-around fight in an episode (no zone) can end, or knock Rook down, without reaching for a zone", () => {
+  const src = readFileSync(new URL("../src/runtime/story.js", import.meta.url), "utf8");
+  for (const name of ["_endCombat(won) {", "async _fallInField() {"]) {
+    const i = src.indexOf(name), body = src.slice(i, src.indexOf("\n  }\n", i));
+    assert.ok(i > 0 && !/this\.zone\.[a-z]/i.test(body.replace(/if \(this\.zone\)[^\n]*/g, "").replace(/this\.zone \?[^\n]*/g, "")), name);
+  }
+});
+
 test("leak test: the poor quarter's files never name him, or anyone he might be", () => {
   const src = (p) => readFileSync(new URL(`../src/${p}`, import.meta.url), "utf8");
-  for (const p of ["data/story/ep31.js", "data/story/ep32.js", "data/story/ep33.js", "data/story/ep34.js", "data/story/arc4.js", "sim/wraithe.js", "data/wraithe.js", "sim/sentry.js", "data/hollow.js"]) {
+  for (const p of ["data/story/ep31.js", "data/story/ep32.js", "data/story/ep33.js", "data/story/ep34.js", "data/story/ep35.js", "data/story/ep36.js", "data/story/arc4.js", "data/halvard.js", "sim/halvard.js", "sim/wraithe.js", "data/wraithe.js", "sim/sentry.js", "data/hollow.js"]) {
     assert.ok(!/\bsable\b/i.test(src(p)), `${p} calls him "masked"`);
     assert.ok(!/\bcal\b|calder|CAL_[A-Z]|\bdemons?\b/i.test(src(p)), p);
   }

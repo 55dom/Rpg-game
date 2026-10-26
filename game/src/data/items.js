@@ -28,5 +28,5 @@ export const SHOPS = Object.freeze({
 });
 
 /** Marks for defeating each enemy kind (GDD §17). */
-export const BOUNTIES = Object.freeze({ acolyte: 6, hound: 4, cantor: 8, bulwark: 10, beast: 22, rat: 2, clockwork: 16, bandit: 7, hask: 80, severin: 0, cal: 0, ilse: 120, galen: 150, gullmaw: 180, ashLegion: 11, ashMage: 10, varka: 200, engine: 0, brannocSpar: 0, lion: 18, reflection: 0, severinDuel: 0, eclipsed: 0, eclipsedFinal: 0, guard: 0, brawler: 0, lance: 12, rider: 9, wisp: 6, warden: 220, shell: 14 }); // the Watch and the townsfolk aren't a payday
+export const BOUNTIES = Object.freeze({ acolyte: 6, hound: 4, cantor: 8, bulwark: 10, beast: 22, rat: 2, clockwork: 16, bandit: 7, hask: 80, severin: 0, cal: 0, ilse: 120, galen: 150, gullmaw: 180, ashLegion: 11, ashMage: 10, varka: 200, engine: 0, brannocSpar: 0, lion: 18, reflection: 0, severinDuel: 0, eclipsed: 0, eclipsedFinal: 0, guard: 0, brawler: 0, lance: 12, rider: 9, wisp: 6, warden: 220, shell: 14, halvard: 0 }); // the Watch and the townsfolk aren't a payday
 export const EPISODE_REWARD = 40;

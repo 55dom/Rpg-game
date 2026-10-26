@@ -24,3 +24,9 @@ export const AFTER_EP33 = Object.freeze({ ...AFTER_EP32, EP33_DONE: 1, ELODIE_DO
 
 /** By the end of Episode 34: the masked knight took the Writ from Aldric, and stopped when Severin said his brother's name. */
 export const AFTER_EP34 = Object.freeze({ ...AFTER_EP33, EP34_DONE: 1, SABLE_ENCOUNTER: 4, WRIT_STOLEN: 1, SEVERIN_SAVED_ALDRIC: 1 });
+
+/** By the end of Episode 35: the Watch took the south gate back from the Lances, and Halvard named the terms. */
+export const AFTER_EP35 = Object.freeze({ ...AFTER_EP34, EP35_DONE: 1, WATCH_STANDS: 1, GATE_HELD: 1 });
+
+/** By the end of Episode 36: Halvard yielded and wouldn't burn the Lowmarket; the coup stalled; a door took Elodie. */
+export const AFTER_EP36 = Object.freeze({ ...AFTER_EP35, EP36_DONE: 1, HALVARD_YIELDED: 1, ELODIE_TAKEN: 1 });

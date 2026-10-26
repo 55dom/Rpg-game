@@ -19,6 +19,8 @@ import { VARKA_STATS, VARKA_HITBOXES, varkaOptions, ASH_OBJECTS, ASH_OBJECT_HITB
 import { VarkaController, SparBoss } from "./varka.js";
 import { WRAITHE_STATS, WRAITHE_HITBOXES, wraitheOptions } from "../data/wraithe.js";
 import { REFORM } from "../data/hollow.js";
+import { HALVARD_STATS, HALVARD_HITBOXES, halvardOptions } from "../data/halvard.js";
+import { HalvardController } from "./halvard.js";
 import { WraitheController } from "./wraithe.js";
 import { MASKED_STATS, MASKED_HITBOXES, maskedOptions } from "../data/masked.js";
 import { MaskedController } from "./masked.js";
@@ -73,6 +75,7 @@ const BOSSES = {
   eclipsedFinal: { stats: ECLIPSED_FINAL_STATS, hitboxes: ECLIPSED_HITBOXES, options: eclipsedFinalOptions, traits: {}, Controller: EclipseFinalController, z: 5 },
   // Arc 4: B11, the sky temple's guardian (Ep 30).
   warden: { stats: WARDEN_STATS, hitboxes: WARDEN_HITBOXES, options: wardenOptions, traits: { heavy: true, armoredAttacks: true }, Controller: StormWardenController, z: 7 },
+  halvard: { stats: HALVARD_STATS, hitboxes: HALVARD_HITBOXES, options: halvardOptions, traits: { heavy: true, frontalGuard: true }, Controller: HalvardController, z: 6 },
 };
 export const BOSS_KINDS = Object.freeze(Object.keys(BOSSES));
 
