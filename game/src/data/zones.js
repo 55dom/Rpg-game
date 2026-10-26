@@ -31,6 +31,7 @@ export const AURELIN_LAYOUT = (() => {
     chapel: { x: 16, z: 12, w: 6, d: 9 },
     tavern: { x: -16, z: -8 },  // "The Lantern & Anchor", in the west-street house nearest the gate
     notice: { x: -6.2, z: -16, yaw: 0 }, // the Crown's notice board on the gate road, its face toward the gate (bounties go up here)
+    watch: { x: -12.2, z: -20 }, // the Watch House: the west-street house nearest the gate, its door on the street (data/law.js)
     // The poor quarter by the grate: shacks of patched planks.
     shacks: [{ x: 37, z: -27, w: 4, d: 4 }, { x: 37, z: -20.5, w: 4, d: 3.6 }, { x: 24.5, z: -29.6, w: 4, d: 3 }],
     // The Gilded Spoon, a café at the top of the Lowmarket. Its door faces the stalls (south).
@@ -98,6 +99,18 @@ export const VAULT_LAYOUT = {
   pillars: 18.8, braziers: 19.6,
 };
 export const HOME_LAYOUT = { half: [5, 4], door: { x: 0, z: -4 }, table: { x: 1.6, z: 0.4 }, bed: { x0: -4.9, z0: 1, x1: -2.4, z1: 3.9 }, hearth: { x0: 1.2, z0: 3.3, x1: 3.4, z1: 4 } };
+// The Watch House by Aurelin's south gate (data/law.js): the sergeant's desk by the door, the wanted board,
+// and two cells along the back wall (bars along z = cellZ; cell one's door stands open, cell two has a guest).
+export const WATCH_LAYOUT = {
+  half: [6, 5], door: { x: 0, z: -5 }, desk: { x0: -3.9, z0: -2.7, x1: -1.3, z1: -1.9 }, sergeant: { x: -2.6, z: -1.1 },
+  cellZ: 1.6, cells: [{ x0: -5.75, x1: -0.6, gap: [-2.6, -1.6] }, { x0: 0.6, x1: 5.75, gap: null }],
+  cot: { x0: -5.6, z0: 3.6, x1: -4.0, z1: 4.6 }, board: { x: 5.75, z: -2 }, bench: { x0: 3.4, z0: -4.6, x1: 5.0, z1: -3.9 }, rack: { x0: -5.75, z0: -1.6, x1: -5.3, z1: -0.4 },
+};
+// Luke and Elsie's house in the Fens village: two cots, a stove, a table, the eel chest under the window.
+export const FENHOME_LAYOUT = {
+  half: [4.5, 4], door: { x: 0, z: -4 }, lukeCot: { x0: -4.3, z0: 1.6, x1: -2.6, z1: 3.8 }, elsieCot: { x0: 2.9, z0: 2.4, x1: 4.3, z1: 3.8 },
+  stove: { x0: -4.3, z0: -1.2, x1: -3.3, z1: 0.2 }, table: { x0: 0.2, z0: -0.2, x1: 1.4, z1: 0.6 }, chest: { x0: 1.7, z0: 3.4, x1: 2.7, z1: 3.95 },
+};
 
 // ---- Thornwick, the home village ------------------------------------------------------------
 // The green and its old oak in the middle; the orphanage to the north; the mill to the south-east
@@ -120,7 +133,11 @@ export const THORNWICK_LAYOUT = {
 export const UNDERCROFT_BANDS = [[-34, -22, 6], [-22, -14, 2], [-14, 2, 10], [2, 10, 2], [10, 26, 12], [26, 32, 2], [32, 46, 14]];
 const UC_HALF = 14;
 
-const A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT, IH = IRONHOLD_LAYOUT;
+const A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT, IH = IRONHOLD_LAYOUT, WH = WATCH_LAYOUT, FH = FENHOME_LAYOUT;
+const rect = (r) => box(r.x0, r.z0, r.x1, r.z1);
+// The City Watch's patrols (data/law.js): one more walks the streets for every step $WATCH_STRENGTH takes.
+const patrol = (n, a, b) => ({ id: `patrol${n}`, look: "guard", x: a[0], z: a[1], yaw: 0, node: "W_Patrol", when: `$WATCH_STRENGTH >= ${n}`,
+  routine: { role: "guard", steps: [{ do: "walk", to: a }, { do: "idle", at: a, face: Math.atan2(b[0] - a[0], b[1] - a[1]), dur: [4, 7] }, { do: "walk", to: b }, { do: "idle", at: b, face: Math.atan2(a[0] - b[0], a[1] - b[1]), dur: [4, 7] }] } });
 const aurelinSolids = [
   ...A.houses.map((h) => box(h.x - h.w / 2, h.z - h.d / 2, h.x + h.w / 2, h.z + h.d / 2)),
   ...A.stalls.map((s) => box(s.x - 1.4, s.z - 1, s.x + 1.4, s.z + 1)),
@@ -232,6 +249,22 @@ export const ZONES = {
         routine: { home: [25.6, 27], steps: [{ do: "work", at: [5.6, -5.4], face: -0.6, anim: "stir", dur: [14, 20] }, { do: "work", at: [6.8, -6.6], face: 2.6, anim: "work", dur: [4, 6] }] } },
     ],
     extras: [
+      // Luke (data/story/law.js): selling eels by the Lowmarket until he's thought it over; then the south gate, in blue.
+      { id: "luke", look: "lukeHome", x: 14.8, z: -2.6, yaw: Math.PI / 2, node: "W_Luke", when: "$ELSIE_SAVED and not $LUKE_GUARD",
+        routine: { steps: [{ do: "idle", at: [14.8, -2.6], face: Math.PI / 2, dur: [10, 14] }, { do: "work", at: [14.8, -2.6], face: 2.2, anim: "hawk", dur: [4, 6] }] } },
+      { id: "luke", look: "luke", x: 2.6, z: -27.4, yaw: 0.2, node: "W_Luke", when: "$LUKE_GUARD",
+        routine: { role: "guard", home: [-12.3, -20], steps: [{ do: "idle", at: [2.6, -27.4], face: 0.2, dur: [10, 14] }, { do: "wander", around: [1.8, -26.4], r: 1.3, dur: [5, 7] }] } },
+      // Since Luke: people with somewhere they suddenly need to be, which happens to be past the south gate.
+      { id: "admirer1", look: "townswoman", x: 6.6, z: -24.4, yaw: -2.3, node: "W_Admirer", when: "$LUKE_GUARD",
+        routine: { steps: [{ do: "work", at: [6.6, -24.4], face: -2.3, anim: "chat", dur: [8, 12] }, { do: "idle", at: [6.2, -23.2], face: -2.5, dur: [4, 6] }] } },
+      { id: "admirer2", look: "admirer", x: 8.2, z: -25.2, yaw: -2.0, when: "$LUKE_GUARD",
+        routine: { steps: [{ do: "work", at: [8.2, -25.2], face: -2.0, anim: "chat", dur: [9, 13] }, { do: "idle", at: [8.6, -24], face: -2.4, dur: [4, 6] }] } },
+      { id: "recruit1", look: "guard", x: -2.8, z: -21, yaw: 0, node: "W_Recruit", when: "$WATCH_STRENGTH >= 4",
+        routine: { role: "guard", steps: [{ do: "work", at: [-2.8, -21], face: 0, anim: "practice", dur: [10, 14] }, { do: "idle", at: [-2.4, -21.6], face: 0.6, dur: [3, 5] }] } },
+      { id: "recruit2", look: "guard", x: -0.6, z: -21.4, yaw: 0, when: "$WATCH_STRENGTH >= 6",
+        routine: { role: "guard", steps: [{ do: "work", at: [-0.6, -21.4], face: 0, anim: "practice", dur: [10, 14] }, { do: "idle", at: [-0.2, -22], face: -0.6, dur: [3, 5] }] } },
+      patrol(1, [8, 3], [-8, 3]), patrol(2, [16, -3], [33, -3]), patrol(3, [-11, -26], [-11, 14]), patrol(4, [14, 20], [24, 22]),
+      patrol(5, [3, -22], [-3, -22]), patrol(6, [22, 9], [22, 30]), patrol(7, [31, -16], [31, -30]), patrol(8, [33, 1.4], [41, 1.4]),
       { id: "pilgrim", look: "elder", x: 12, z: 11.8, yaw: Math.PI / 2,
         routine: { role: "elder", home: [-12.3, 16], steps: [{ do: "work", at: [12, 11.8], face: Math.PI / 2, anim: "read", dur: [14, 20] }, { do: "wander", around: [9, 9], r: 2, dur: [6, 9] }] } },
     ],
@@ -245,9 +278,15 @@ export const ZONES = {
       { id: "cafe", rect: [A.cafe.door.x - 0.8, A.cafe.door.z - 0.9, A.cafe.door.x + 0.8, A.cafe.door.z + 0.1], to: "cafe", spawn: "aurelin", label: "The Gilded Spoon" },
       { id: "home", rect: [25.1, 17.2, 26.1, 18.8], to: "home", spawn: "aurelin", label: "The vendor's house" },
       { id: "hall", rect: [A.hall.door.x - 1.4, A.hall.door.z - 0.9, A.hall.door.x + 1.4, A.hall.door.z + 0.4], to: "hall", spawn: "aurelin", label: "The Hall of Lanterns" },
+      { id: "watchhouse", rect: [A.watch.x - 0.5, A.watch.z - 0.9, A.watch.x + 0.4, A.watch.z + 0.9], to: "watchhouse", spawn: "aurelin", label: "The Watch House" },
+    ],
+    // Luke's soft spot (data/story/law.js): thugs leaning on the Lowmarket kids, and Luke beside you.
+    encounters: [
+      { id: "shakedown", rect: [12, -10, 31, 3], at: { x: 24, z: -3, r: 4 }, wave: ["bandit", "bandit", "bandit"], squad: ["luke"], when: "$Q_LUKE == 4", flag: "LUKE_SOFT", label: "SHAKEDOWN IN THE LOWMARKET" },
     ],
     arrivals: { gate: { x: 0, z: -31, yaw: 0 }, undercroft: { x: A.grate.x, z: A.grate.z + 4, yaw: 0 },
-      cafe: { x: A.cafe.door.x, z: A.cafe.door.z - 1.9, yaw: Math.PI }, home: { x: 24, z: 18, yaw: -Math.PI / 2 }, tower: { x: 0, z: 21.5, yaw: Math.PI }, hall: { x: 0, z: 23.4, yaw: Math.PI } },
+      cafe: { x: A.cafe.door.x, z: A.cafe.door.z - 1.9, yaw: Math.PI }, home: { x: 24, z: 18, yaw: -Math.PI / 2 }, tower: { x: 0, z: 21.5, yaw: Math.PI }, hall: { x: 0, z: 23.4, yaw: Math.PI },
+      watchhouse: { x: A.watch.x + 1.6, z: A.watch.z, yaw: Math.PI / 2 } },
     crowd: 22,
   },
   thornwick: {
@@ -273,6 +312,11 @@ export const ZONES = {
         routine: { home: [-15.6, 9], steps: [{ do: "work", at: [-10.4, 12.6], face: 0.3, anim: "sew", dur: [10, 14] }, { do: "work", at: [-8.8, 13], face: 0.3, anim: "light", dur: [5, 8] }] } },
       { id: "woodcutter", look: "laborer", x: -12.6, z: -9.6, yaw: Math.PI,
         routine: { role: "worker", home: [-10, -15.6], steps: [{ do: "work", at: [-12.6, -9.6], face: Math.PI, anim: "hoe", dur: [12, 18] }, { do: "walk", to: [-6.2, -5.4] }, { do: "idle", at: [-6.2, -5.4], face: 1.2, dur: [4, 6] }] } },
+      // Thornwick's own watch: once the Watch has grown enough to spare them (data/law.js).
+      { id: "watchman1", look: "guard", x: -4, z: 6.6, yaw: 1.57, node: "W_Watchman", when: "$WATCH_STRENGTH >= 2",
+        routine: { role: "guard", steps: [{ do: "walk", to: [4, 6.6] }, { do: "idle", at: [4, 6.6], face: 0, dur: [5, 8] }, { do: "walk", to: [-4, 6.6] }, { do: "idle", at: [-4, 6.6], face: 0, dur: [5, 8] }] } },
+      { id: "watchman2", look: "guard", x: 12.5, z: -6.5, yaw: -2.4, node: "W_Watchman", when: "$WATCH_STRENGTH >= 5",
+        routine: { role: "guard", steps: [{ do: "idle", at: [12.5, -6.5], face: -2.4, dur: [8, 12] }, { do: "wander", around: [12, -5.5], r: 1.5, dur: [5, 7] }] } },
       { id: "waterman", look: "townsman", x: -3.6, z: -4.2, yaw: -1.6,
         routine: { home: [-15.2, -3], steps: [{ do: "work", at: [-3.7, -3.9], face: -1.9, anim: "work", dur: [6, 9] }, { do: "walk", to: [-13, 2] }, { do: "idle", at: [-13, 2], face: 0, dur: [5, 8] }] } },
     ],
@@ -291,18 +335,28 @@ export const ZONES = {
     bounds: { rect: [-30, -30, 30, 30], solids: fensSolids },
     spawn: { x: 0, z: -25, yaw: 0 },
     cast: [{ id: "ness", look: "ness", x: 12.6, z: -8.6, yaw: 2.36, node: "W_Ness",
-      routine: { role: "elder", steps: [{ do: "work", at: [12.6, -8.6], face: 2.36, anim: "fish", dur: [20, 30] }, { do: "idle", at: [10.5, -5.5], face: 2.6, dur: [5, 8] }] } }],
+      routine: { role: "elder", steps: [{ do: "work", at: [12.6, -8.6], face: 2.36, anim: "fish", dur: [20, 30] }, { do: "idle", at: [10.5, -5.5], face: 2.6, dur: [5, 8] }] } },
+      // Elsie (data/story/law.js): hiding by her house when the Choir comes back for her; then Ness's, by the water; then home.
+      { id: "elsie", look: "elsie", x: -4.4, z: 15.6, yaw: Math.PI, node: "W_Elsie", when: "not $LUKE_HOME_OPEN",
+        routines: [
+          { when: "not $ELSIE_SAVED", role: "child", steps: [{ do: "work", at: [-4.4, 15.6], face: Math.PI, anim: "cower", dur: [30, 40] }] },
+          { role: "child", steps: [{ do: "work", at: [10.2, -6.4], face: 2.4, anim: "play", dur: [10, 14] }, { do: "wander", around: [9.6, -5.6], r: 1.4, dur: [5, 8] }] },
+        ] }],
     pickups: [{ id: "hymn", x: -1.4, z: 15.2, show: "1", flag: "HYMN_READ", node: "W_Hymn", label: "Read the hymn nailed to the well" }, frag(4, -10.4, 9.5)],
     // Field fights: they come back each visit. Run far enough and they give up the chase.
     encounters: [
       { id: "hounds", rect: [-10, -20, 10, -11], at: { x: 0, z: -14, r: 5 }, wave: ["hound", "hound", "hound"], label: "FEN HOUNDS" },
-      { id: "choir", rect: [-9, 4, 10, 20], at: { x: 0, z: 9, r: 5 }, wave: ["acolyte", "acolyte", "cantor"], label: "THE CHOIR CAME BACK" },
-      { id: "beast", rect: [-28, -12, -12, -1], at: { x: -20, z: -7, r: 4 }, wave: ["beast", "hound"], label: "BOG BEAST" },
+      // Elsie's rescue comes first: the Choir came back for the one they missed.
+      { id: "elsie", rect: [-10, 6, 4, 13.5], at: { x: -2, z: 10, r: 4 }, wave: ["acolyte", "acolyte", "cantor"], when: "not $ELSIE_SAVED", flag: "ELSIE_SAVED", label: "THE CHOIR CAME BACK FOR HER" },
+      // Once Luke has Elsie home, the Watch keeps a man at the village and the Choir stops coming back.
+      { id: "choir", rect: [-9, 4, 10, 13.5], at: { x: 0, z: 9, r: 5 }, wave: ["acolyte", "acolyte", "cantor"], when: "not $LUKE_HOME_OPEN", label: "THE CHOIR CAME BACK" },
+      { id: "beast", rect: [-28, -12, -12, -1], at: { x: -20, z: -7, r: 4 }, wave: ["beast", "hound"], mark: "BOG_BEAST_DOWN", label: "BOG BEAST" },
       // B3: the Deacon whose hymn is nailed to the well. Bas and Juno come with you.
       { id: "ilse", rect: [8, -6, 22, 4], at: { x: 15, z: -1, r: 5 }, wave: ["ilse"], boss: true, squad: ["bas", "juno"], when: "$HYMN_READ", flag: "ILSE_DEFEATED", label: "THE SILENCE SERMON" },
     ],
-    exits: [{ id: "path", rect: [-6, -30, 6, -28.6], to: "thornwick", spawn: "fens", label: "The path south to Thornwick" }],
-    arrivals: { thornwick: { x: 0, z: -26, yaw: 0 } },
+    exits: [{ id: "path", rect: [-6, -30, 6, -28.6], to: "thornwick", spawn: "fens", label: "The path south to Thornwick" },
+      { id: "lukehome", rect: [-4.0, 15.8, -2.6, 16.8], to: "fenhome", spawn: "fens", when: "$LUKE_HOME_OPEN", label: "Luke and Elsie's house" }],
+    arrivals: { thornwick: { x: 0, z: -26, yaw: 0 }, fenhome: { x: -3.3, z: 14.8, yaw: Math.PI } },
   },
   undercroft: {
     id: "undercroft", name: "The Undercroft", region: "Beneath Aurelin", stage: "undercroft", dungeon: true,
@@ -439,6 +493,46 @@ export const ZONES = {
     ],
     exits: [{ id: "door", rect: [-0.9, -HL.half[1], 0.9, -HL.half[1] + 0.75], to: "aurelin", spawn: "hall", label: "Out to the plaza" }],
     arrivals: { aurelin: { x: 0, z: -8.6, yaw: 0 } },
+  },
+  // The Watch House (data/law.js): where you pay a bounty, or wake up in a cell having not paid it.
+  watchhouse: {
+    id: "watchhouse", name: "The Watch House", region: "South Gate, Aurelin", stage: "watchhouse", interior: true,
+    bounds: { rect: [-WH.half[0] + 0.25, -WH.half[1] + 0.25, WH.half[0] - 0.25, WH.half[1] - 0.25], solids: [
+      rect(WH.desk), rect(WH.cot), rect(WH.bench), rect(WH.rack), box(-0.6, WH.cellZ - 0.1, 0.6, WH.half[1]),
+      ...WH.cells.flatMap((c) => (c.gap ? [box(c.x0, WH.cellZ - 0.1, c.gap[0], WH.cellZ + 0.1), box(c.gap[1], WH.cellZ - 0.1, c.x1, WH.cellZ + 0.1)] : [box(c.x0, WH.cellZ - 0.1, c.x1, WH.cellZ + 0.1)])),
+    ] },
+    spawn: { x: 0, z: -3.4, yaw: 0 },
+    cast: [
+      { id: "sergeant", look: "sergeant", x: WH.sergeant.x, z: WH.sergeant.z, yaw: Math.PI, node: "L_Sergeant",
+        routine: { role: "guard", steps: [{ do: "work", at: [WH.sergeant.x, WH.sergeant.z], face: Math.PI, anim: "write", dur: [12, 16] }, { do: "idle", at: [-0.9, -0.8], face: Math.PI, dur: [4, 6] }] } },
+      // Cell two's guest, slumped against the bars: talk to him through them (he can't come out, and you can't go in).
+      { id: "drunk", look: "townsman", x: 3.0, z: 2.3, yaw: Math.PI, node: "L_Drunk", law: false, behindBars: true, routine: { seated: { face: Math.PI, anim: "nap" }, steps: [{ do: "idle", at: [3.0, 2.3], dur: [30, 40] }] } },
+    ],
+    pickups: [{ id: "wantedBoard", x: WH.board.x - 0.8, z: WH.board.z, show: "1", marker: false, node: "L_Board", label: "Read the wanted board" }],
+    exits: [{ id: "door", rect: [-0.9, -WH.half[1], 0.9, -WH.half[1] + 0.75], to: "aurelin", spawn: "watchhouse", label: "Out to the south gate" }],
+    arrivals: { aurelin: { x: 0, z: -3.4, yaw: 0 }, cell: { x: -2.9, z: 3.0, yaw: Math.PI } },
+    intro: { when: "$JAILED", node: "L_Jailed" },
+  },
+  // Luke and Elsie's house (data/story/law.js), once the Fens village is safe.
+  fenhome: {
+    id: "fenhome", name: "Luke and Elsie's House", region: "The Fens Village", stage: "fenhome", interior: true,
+    bounds: { rect: [-FH.half[0] + 0.25, -FH.half[1] + 0.25, FH.half[0] - 0.25, FH.half[1] - 0.25], solids: [
+      rect(FH.lukeCot), rect(FH.elsieCot), rect(FH.stove), rect(FH.table), rect(FH.chest),
+    ] },
+    spawn: { x: 0, z: -2.8, yaw: 0 },
+    cast: [
+      { id: "elsie", look: "elsie", x: 1.8, z: 1.6, yaw: Math.PI, node: "W_ElsieHome",
+        routine: { role: "child", steps: [{ do: "work", at: [1.8, 1.6], face: Math.PI, anim: "play", dur: [8, 12] }, { do: "work", at: [-1.6, 2.9], face: 0, anim: "sew", dur: [6, 9] }] } },
+      { id: "luke", look: "lukeHome", x: -0.4, z: 0.2, yaw: Math.PI / 2, node: "W_LukeHome", when: "$CLOCK_NIGHT",
+        routine: { seated: { face: Math.PI / 2, anim: "sit" }, steps: [{ do: "idle", at: [-0.4, 0.2], dur: [30, 40] }] } },
+    ],
+    pickups: [
+      { id: "lukeChest", x: 2.2, z: 2.9, show: "not $LUKE_CHEST", flag: "LUKE_CHEST", node: "W_LukeChest", label: "Open the chest under the window" },
+      { id: "elsieDrawings", x: FH.half[0] - 0.7, z: -1.2, show: "1", marker: false, node: "W_ElsieDrawing", label: "Look at Elsie's drawings" },
+      { id: "lukeHelmet", x: -FH.half[0] + 0.7, z: -2.4, show: "1", marker: false, node: "W_LukeHelmet", label: "Luke's spare helmet, on its peg" },
+    ],
+    exits: [{ id: "door", rect: [-0.9, -FH.half[1], 0.9, -FH.half[1] + 0.75], to: "fens", spawn: "fenhome", label: "Out to the village" }],
+    arrivals: { fens: { x: 0, z: -2.8, yaw: 0 } },
   },
 };
 

@@ -57,6 +57,28 @@ export const QUESTS = {
     summary: "The cake went to the wrong table. Old Fenwick ate two tiers out of politeness. The Countess got a 'brave, minimalist cake'.",
     reward: { marks: 40, xp: 120, flags: { RENOWN_AURELIN: 6, MERIT: 5 }, bond: { juno: 12 } },
   },
+  // Luke (data/story/law.js): the eel seller whose sister you pulled out of the Fens, and who joined the Watch.
+  luke: {
+    title: "Owing a Life", giver: "Elsie", region: "The Greywater Fens",
+    stages: [
+      { text: "Tell Elsie's brother she's safe. Luke sells eels in Aurelin's Lowmarket.", done: "$LUKE_MET" },
+      { text: "Luke said he'd sleep on it. Come back to Aurelin another day.", done: "$LUKE_GUARD" },
+      { text: "Luke has joined the City Watch. Find him at the south gate.", done: "$LUKE_TALKED_GUARD" },
+      { text: "Somebody's shaking down the kids in the Lowmarket. Luke is already on his way.", done: "$LUKE_SOFT" },
+      { text: "Talk to Luke at the south gate.", done: "$LUKE_SOFT_TALK" },
+    ],
+    summary: "Luke still says \"whatever\" to everything. He also walked the kid home, and paid for her eel.",
+    reward: { marks: 60, xp: 200, flags: { RENOWN_AURELIN: 6, REP_SQUAD: 3, MERIT: 10 } },
+  },
+  lukehome: {
+    title: "A House in the Fens", giver: "Luke", region: "The Greywater Fens",
+    stages: [
+      { text: "Make the Fens village safe: the Deacon east of the empty village, and the bog beast in the west reeds.", done: "$ILSE_DEFEATED and $BOG_BEAST_DOWN" },
+      { text: "Luke and Elsie are home. Visit their house in the Fens village.", done: "$LUKE_HOME_VISITED" },
+    ],
+    summary: "The door sticks. Luke says it's a feature. Elsie has drawn you a cape.",
+    reward: { marks: 40, xp: 150, flags: { RENOWN_FENS: 10, MERIT: 5 } },
+  },
   trail: {
     title: "The Pale Choir's Trail", giver: "The hymn on the well", region: "The Greywater Fens",
     stages: [

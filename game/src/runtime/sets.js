@@ -1,7 +1,7 @@
 // Story sets (Phase 3): each one is built on first use from primitives, carries its own sky, fog,
 // and lighting, and can be swapped in and out. "yard" is the original training yard (arena.js).
 
-import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT } from "../data/zones.js";
+import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT } from "../data/zones.js";
 import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } from "./look.js";
 import { buildCrowd } from "./crowd.js";
 import { buildCritters } from "./critters.js";
@@ -53,7 +53,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, watchhouse: buildWatchhouse, fenhome: buildFenhome, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -640,6 +640,10 @@ function buildFens(scene, mobile) {
     const h = add(MB.CreateBox("fn-house", { width: 4, height: 2.8, depth: 3.4 }, scene), 0.04); h.position.set(x, 1.4, z); h.rotation.y = rot; h.material = wall;
     const r = add(MB.CreateCylinder("fn-roof", { height: 4.4, diameter: 3.8, tessellation: 3 }, scene), 0.04); r.position.set(x, 3.4, z); r.rotation.set(0, rot, Math.PI / 2); r.scaling.set(1, 1, 0.8); r.material = roof;
     const w = add(MB.CreatePlane("fn-win", { width: 0.8, height: 0.7 }, scene)); w.position.set(x - Math.sin(rot) * 1.72, 1.5, z - Math.cos(rot) * 1.72); w.rotation.y = rot; w.material = dark;
+    if (x === -4 && z === 19) { // Luke and Elsie's house: a plank door beside the window (it opens once the village is safe)
+      const dx = x - Math.sin(rot) * 1.73 + Math.cos(rot) * 0.95, dz = z - Math.cos(rot) * 1.73 - Math.sin(rot) * 0.95;
+      const d = add(MB.CreatePlane("fn-door", { width: 0.95, height: 1.9, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); d.position.set(dx, 0.95, dz); d.rotation.y = rot; d.material = toon(scene, "fn-doorWood", "#4a3424");
+    }
   }
   const well = add(MB.CreateCylinder("fn-well", { height: 0.8, diameter: 1.6, tessellation: 14 }, scene), 0.04); well.position.set(3, 0.4, 12); well.material = toon(scene, "fn-wellStone", "#7a7466");
   const mist = new BB.ParticleSystem("fn-mist", mobile ? 30 : 60, scene);
@@ -740,6 +744,11 @@ function buildAurelin(scene, mobile) {
   const TV = L.tavern;
   PR.sign(TV.x + 3.8, TV.z + 2.1, { ry: Math.PI / 2, hex: "#2b4f8f" });
   PR.bench(TV.x + 5.6, TV.z - 2.6, { ry: 0 }); PR.table(TV.x + 5.4, TV.z + 2.8, { ry: 0.1 }); PR.barrel(TV.x + 4.2, TV.z - 4.4); PR.barrel(TV.x + 4.9, TV.z - 4.6); PR.crate(TV.x + 4.4, TV.z + 4.4, { ry: 0.3, s: 0.7 });
+  // The Watch House (data/law.js): the west-street house nearest the gate, the Watch's blue over its door.
+  const WA = L.watch, watchBlue = toon(scene, "au-watchBlue", "#2b4fa0");
+  for (const dz of [-1.6, 1.6]) { const b = add(MB.CreateBox("au-watchBanner", { width: 0.1, height: 1.8, depth: 0.9 }, scene), 0.02); b.position.set(WA.x - 0.18, 3.5, WA.z + dz); b.material = watchBlue; }
+  const wLamp = add(MB.CreateBox("au-watchLamp", { width: 0.22, height: 0.3, depth: 0.22 }, scene)); wLamp.position.set(WA.x + 0.05, 2.7, WA.z - 0.9); wLamp.material = glow(scene, "au-watchLampGlow", "#ffd36a");
+  PR.sign(WA.x + 0.7, WA.z + 1.4, { ry: Math.PI / 2, hex: "#2b4fa0" });
   // The cooper's yard by the east houses: barrels in every state of being made.
   PR.barrel(25.2, 14.6); PR.barrel(25.9, 15.3); PR.barrel(24.6, 15.8, { tipped: true, ry: 0.4 }); PR.woodpile(26.2, 12.4, { ry: Math.PI / 2 });
   // The poor quarter by the grate: shacks of patched planks, laundry, crates, a puddle.
@@ -1187,6 +1196,79 @@ function buildHome(scene, mobile) {
   const toonEnv = { lightDir: [-0.3, 1, -0.4], fogColor: "#141218", fogDensity: 0.002, sky: [1.06, 0.98, 0.92], ground: [0.84, 0.76, 0.7], rim: [1.0, 0.82, 0.7] };
   const self = { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true,
     update(dt, t) { room.cutaway(scene.activeCamera, self.mood?.player); flame.scaling.y = 0.85 + Math.sin(t * 9) * 0.15; warm.intensity = 0.5 + Math.sin(t * 7) * 0.05; } };
+  return self;
+}
+
+/** The Watch House (data/law.js): the sergeant's desk, the wanted board, a weapon rack, and two barred cells. */
+function buildWatchhouse(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, W = WATCH_LAYOUT;
+  const P = palette(scene, "wh"), PR = props(scene, K, P);
+  const room = buildRoom(scene, K, { prefix: "wh", half: W.half, wall: "#b8b2a6", wainscot: "#4a4f5a", floorA: "#8a857a", floorB: "#7a756b", door: W.door,
+    windows: [["w", -3, 2.4, 1.0, 0.8], ["n", -3.2, 3.1, 0.7, 0.45]] });
+  const iron = P("#2e3038"), wood = P("#6a4a2a");
+  // The cells: bars along the front of each (one door standing open), a stone wall between them.
+  for (const c of W.cells) {
+    for (let x = c.x0 + 0.15; x < c.x1; x += 0.3) {
+      if (c.gap && x > c.gap[0] && x < c.gap[1]) continue;
+      const bar = add(MB.CreateCylinder("wh-bar", { height: 3.0, diameter: 0.07, tessellation: 6 }, scene), 0.01); bar.position.set(x, 1.5, W.cellZ); bar.material = iron;
+    }
+    for (const y of [0.1, 2.95]) { const rail = add(MB.CreateBox("wh-rail", { width: c.x1 - c.x0, height: 0.1, depth: 0.12 }, scene), 0.01); rail.position.set((c.x0 + c.x1) / 2, y, W.cellZ); rail.material = iron; }
+    if (c.gap) { // the open cell door, swung back against the bars
+      const door = new BB.TransformNode("wh-cellDoor", scene); door.parent = K.root; door.position.set(c.gap[0], 0, W.cellZ); door.rotation.y = -1.9;
+      for (let k = 0; k < 4; k++) { const bar = add(MB.CreateCylinder("wh-doorBar", { height: 2.9, diameter: 0.07, tessellation: 6 }, scene), 0.01); bar.parent = door; bar.position.set(0.12 + k * 0.28, 1.45, 0); bar.material = iron; }
+    }
+  }
+  const wall = add(MB.CreateBox("wh-cellWall", { width: 1.2, height: 4, depth: W.half[1] - W.cellZ }, scene), 0.03); wall.position.set(0, 2, (W.cellZ + W.half[1]) / 2); wall.material = P("#a8a296");
+  const CT = W.cot, cot = add(MB.CreateBox("wh-cot", { width: CT.x1 - CT.x0, height: 0.45, depth: CT.z1 - CT.z0 }, scene), 0.02); cot.position.set((CT.x0 + CT.x1) / 2, 0.22, (CT.z0 + CT.z1) / 2); cot.material = wood;
+  const blanket = add(MB.CreateBox("wh-blanket", { width: CT.x1 - CT.x0 - 0.2, height: 0.08, depth: CT.z1 - CT.z0 - 0.2 }, scene), 0.01); blanket.position.set(cot.position.x, 0.5, cot.position.z); blanket.material = P("#3a4a6a");
+  const bench2 = add(MB.CreateBox("wh-cellBench", { width: 2.2, height: 0.45, depth: 0.6 }, scene), 0.02); bench2.position.set(3.6, 0.22, 4.3); bench2.material = wood;
+  // The front room: the desk with its ledger and lamp, a bench for the waiting, the rack, the board.
+  const D = W.desk, desk = add(MB.CreateBox("wh-desk", { width: D.x1 - D.x0, height: 0.9, depth: D.z1 - D.z0 }, scene), 0.03); desk.position.set((D.x0 + D.x1) / 2, 0.45, (D.z0 + D.z1) / 2); desk.material = wood;
+  const ledger = add(MB.CreateBox("wh-ledger", { width: 0.6, height: 0.06, depth: 0.42 }, scene), 0.01); ledger.position.set(desk.position.x - 0.4, 0.93, desk.position.z); ledger.material = P("#e8e0cc");
+  const lamp = add(MB.CreateBox("wh-deskLamp", { width: 0.2, height: 0.3, depth: 0.2 }, scene)); lamp.position.set(desk.position.x + 0.8, 1.05, desk.position.z); lamp.material = glow(scene, "wh-lampGlow", "#ffd36a");
+  PR.chair(W.sergeant.x, W.sergeant.z + 0.3, { ry: Math.PI });
+  const BE = W.bench; PR.bench((BE.x0 + BE.x1) / 2, (BE.z0 + BE.z1) / 2, { ry: 0 });
+  const R = W.rack, rack = add(MB.CreateBox("wh-rack", { width: R.x1 - R.x0, height: 1.8, depth: R.z1 - R.z0 }, scene), 0.02); rack.position.set((R.x0 + R.x1) / 2, 0.9, (R.z0 + R.z1) / 2); rack.material = wood;
+  for (let k = 0; k < 3; k++) { const sp = add(MB.CreateCylinder("wh-spear", { height: 2.4, diameter: 0.06, tessellation: 5 }, scene), 0.01); sp.position.set(R.x1 - 0.1, 1.2, R.z0 + 0.25 + k * 0.35); sp.material = P("#7a5a3a"); }
+  const board = add(MB.CreateBox("wh-board", { width: 0.08, height: 1.3, depth: 1.8 }, scene), 0.02); board.position.set(W.board.x - 0.15, 1.7, W.board.z); board.material = P("#8a6a46");
+  for (let k = 0; k < 5; k++) { const sheet = add(MB.CreatePlane("wh-poster", { width: 0.42, height: 0.5, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); sheet.position.set(W.board.x - 0.2, 1.45 + (k % 2) * 0.55, W.board.z - 0.6 + Math.floor(k / 2) * 0.55); sheet.rotation.y = Math.PI / 2; sheet.rotation.z = (k % 3 - 1) * 0.06; sheet.material = P(k === 2 ? "#f0e0b8" : "#e8e2d4"); }
+  PR.barrel(5.2, 0.6); PR.crate(4.6, 1.0, { ry: 0.4, s: 0.6 });
+  const warm = new BB.PointLight("wh-warm", new BB.Vector3(-2, 2.6, -1.4), scene); warm.diffuse = color3("#ffc890").clone(); warm.intensity = 0.5; warm.range = 13; K.lights.push(warm);
+  K.bake(room.keep);
+  const env = { clear: "#121418", fog: "#121418", fogDensity: 0.004, hemi: [0.62, "#e8e2d8", "#3a3a40"], sun: [0.45, "#e8d8c0", [0.3, -1, 0.4]], warm: 0 };
+  const toonEnv = { lightDir: [-0.3, 1, -0.4], fogColor: "#121418", fogDensity: 0.002, sky: [0.98, 0.98, 1.0], ground: [0.74, 0.72, 0.72], rim: [0.85, 0.9, 1.0] };
+  const self = { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true,
+    update(dt, t) { room.cutaway(scene.activeCamera, self.mood?.player); warm.intensity = 0.48 + Math.sin(t * 6) * 0.03; } };
+  return self;
+}
+
+/** Luke and Elsie's house in the Fens: plank walls, two cots, a stove, nets, the eel chest, Elsie's drawings. */
+function buildFenhome(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, H = FENHOME_LAYOUT;
+  const P = palette(scene, "fh"), PR = props(scene, K, P);
+  const room = buildRoom(scene, K, { prefix: "fh", half: H.half, height: 3.4, wall: "#8f8470", wainscot: "#5a4a3a", floorA: "#7a6446", floorB: "#6a563c", door: H.door,
+    windows: [["n", 2.2, 1.9, 1.0, 0.7], ["e", 1.4, 1.9, 0.8, 0.6]] });
+  const cotAt = (c, quilt) => {
+    const b = add(MB.CreateBox("fh-cot", { width: c.x1 - c.x0, height: 0.42, depth: c.z1 - c.z0 }, scene), 0.02); b.position.set((c.x0 + c.x1) / 2, 0.21, (c.z0 + c.z1) / 2); b.material = P("#6a4a2a");
+    const q = add(MB.CreateBox("fh-quilt", { width: c.x1 - c.x0 - 0.1, height: 0.1, depth: c.z1 - c.z0 - 0.5 }, scene), 0.01); q.position.set(b.position.x, 0.47, b.position.z - 0.2); q.material = P(quilt);
+  };
+  cotAt(H.lukeCot, "#3a5a8a"); cotAt(H.elsieCot, "#d8a040");
+  const S = H.stove, stove = add(MB.CreateBox("fh-stove", { width: S.x1 - S.x0, height: 1.1, depth: S.z1 - S.z0 }, scene), 0.03); stove.position.set((S.x0 + S.x1) / 2, 0.55, (S.z0 + S.z1) / 2); stove.material = P("#3a3a40");
+  const fire = add(MB.CreateBox("fh-fire", { width: 0.05, height: 0.3, depth: 0.5 }, scene)); fire.position.set(S.x1 + 0.01, 0.4, stove.position.z); fire.material = glow(scene, "fh-fireGlow", "#ff9a3a");
+  const T = H.table; PR.table((T.x0 + T.x1) / 2, (T.z0 + T.z1) / 2, { ry: 0, mugs: 2 }); PR.chair(T.x0 - 0.6, (T.z0 + T.z1) / 2, { ry: Math.PI / 2 });
+  const C = H.chest, chest = add(MB.CreateBox("fh-chest", { width: C.x1 - C.x0, height: 0.55, depth: C.z1 - C.z0 }, scene), 0.02); chest.position.set((C.x0 + C.x1) / 2, 0.28, (C.z0 + C.z1) / 2); chest.material = P("#5a3a22");
+  // Nets and eel traps on the west wall, Elsie's drawings pinned along the east wall, Luke's helmet on its peg.
+  for (let k = 0; k < 2; k++) { const net = add(MB.CreatePlane("fh-net", { width: 1.4, height: 1.1, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); net.position.set(-H.half[0] + 0.15, 2.0, 0.8 + k * 1.5); net.rotation.y = Math.PI / 2; net.material = P("#a89a78"); }
+  for (let k = 0; k < 4; k++) { const d = add(MB.CreatePlane("fh-drawing", { width: 0.42, height: 0.32, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); d.position.set(H.half[0] - 0.15, 1.5 + (k % 2) * 0.4, -1.9 + k * 0.45); d.rotation.y = Math.PI / 2; d.rotation.z = (k % 2 ? -1 : 1) * 0.08; d.material = P(["#f2ead2", "#e8dcc4", "#f6f1e8", "#ece2cc"][k]); }
+  const peg = add(MB.CreateCylinder("fh-peg", { height: 0.25, diameter: 0.05, tessellation: 5 }, scene)); peg.position.set(-H.half[0] + 0.2, 1.8, -2.4); peg.rotation.z = Math.PI / 2; peg.material = P("#5a3a22");
+  const helm = add(MB.CreateSphere("fh-helmet", { diameter: 0.4, segments: 8, slice: 0.55 }, scene), 0.012); helm.position.set(-H.half[0] + 0.35, 1.72, -2.4); helm.material = P("#c9d2dc");
+  PR.barrel(-3.8, -3.2); PR.sack(3.8, -3.2); PR.plant(3.9, 0.4, { s: 0.8 });
+  const warm = new BB.PointLight("fh-warm", new BB.Vector3(-2.6, 2.2, -0.4), scene); warm.diffuse = color3("#ffb070").clone(); warm.intensity = 0.55; warm.range = 10; K.lights.push(warm);
+  K.bake(room.keep);
+  const env = { clear: "#141218", fog: "#141218", fogDensity: 0.004, hemi: [0.66, "#ffe6c8", "#4a3a30"], sun: [0.45, "#ffd8a8", [0.3, -1, 0.4]], warm: 0 };
+  const toonEnv = { lightDir: [-0.3, 1, -0.4], fogColor: "#141218", fogDensity: 0.002, sky: [1.04, 0.98, 0.9], ground: [0.82, 0.74, 0.66], rim: [1.0, 0.84, 0.7] };
+  const self = { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true,
+    update(dt, t) { room.cutaway(scene.activeCamera, self.mood?.player); fire.scaling.y = 0.85 + Math.sin(t * 9) * 0.15; warm.intensity = 0.5 + Math.sin(t * 7) * 0.05; } };
   return self;
 }
 

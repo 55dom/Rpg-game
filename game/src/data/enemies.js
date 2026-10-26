@@ -87,7 +87,40 @@ const BANDIT_ABILITIES = Object.freeze({
     events: [glint(4), sound(16), { frame: 18, type: E.Projectile, key: "Thrown", value: 16 }] }),
 });
 
+// ---- The Watch (data/law.js): a guard with a spear, and anybody else who fights back ------------
+// Named Slash and Thrust so every townsperson's arms (ACOLYTE_POSES) swing with them.
+const GUARD_ABILITIES = Object.freeze({
+  Slash: defineAbility({ id: "Slash", startup: 13, active: 4, recovery: 20,
+    hit: hitSpec({ damage: 10, posture: 16, hitstop: 4, hitstun: 18, knockback: 2 }),
+    events: [sound(10), box(13, "Haft", 4)] }),
+  Thrust: defineAbility({ id: "Thrust", startup: 20, active: 4, recovery: 26,
+    hit: hitSpec({ damage: 15, posture: 22, hitstop: 5, hitstun: 22, knockback: 3 }),
+    events: [glint(2), { frame: 18, type: E.Move, value: 1.6 }, sound(18, "swingHeavy"), box(20, "Spear", 4)] }),
+});
+const BRAWLER_ABILITIES = Object.freeze({
+  Slash: defineAbility({ id: "Slash", startup: 12, active: 3, recovery: 18,
+    hit: hitSpec({ damage: 6, posture: 10, hitstop: 3, hitstun: 14, knockback: 1.2 }),
+    events: [sound(9), box(12, "Fist", 3)] }),
+  Thrust: defineAbility({ id: "Thrust", startup: 16, active: 4, recovery: 24,
+    hit: hitSpec({ damage: 8, posture: 14, hitstop: 4, hitstun: 18, knockback: 3.5 }),
+    events: [{ frame: 14, type: E.Move, value: 0.8 }, sound(14), box(16, "Fist", 4)] }),
+});
+
 export const ENEMIES = Object.freeze({
+  guard: {
+    stats: { name: "City Watch", maxHealth: 150, maxPosture: 70, runSpeed: 4.6, circleSpeed: 2.4, turnRate: 0.14, radius: 0.45, height: 2.0 },
+    hitboxes: { Haft: { center: [0, 1, 1.1], size: [2.0, 1.6, 1.9] }, Spear: { center: [0, 1.1, 1.8], size: [0.9, 1.2, 3.2] } },
+    abilities: GUARD_ABILITIES,
+    options: () => [new AttackOption(GUARD_ABILITIES.Slash, 0, 2.3, 3, 45), new AttackOption(GUARD_ABILITIES.Thrust, 1.8, 3.6, 2, 110)],
+    traits: { watch: true },
+  },
+  brawler: {
+    stats: { name: "Angry Townsperson", maxHealth: 90, maxPosture: 40, runSpeed: 4.2, circleSpeed: 2.4, turnRate: 0.15, radius: 0.42, height: 1.9 },
+    hitboxes: { Fist: { center: [0, 1, 0.9], size: [1.7, 1.5, 1.6] } },
+    abilities: BRAWLER_ABILITIES,
+    options: () => [new AttackOption(BRAWLER_ABILITIES.Slash, 0, 2.0, 3, 35), new AttackOption(BRAWLER_ABILITIES.Thrust, 0, 2.2, 1, 120)],
+    traits: { brawler: true },
+  },
   ...ASHFALL_ENEMIES, // the Iron Front (Arc 3)
   ...ECLIPSE_ENEMIES, // Mirrorlake (Ep 28): the Lion and the reflection
   acolyte: {

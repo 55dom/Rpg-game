@@ -50,6 +50,7 @@ export class Controls {
       if (e.code === "ArrowUp" || e.code === "KeyW") this.commands.push("navUp");     // menus and dialogue choices
       if (e.code === "ArrowDown" || e.code === "KeyS") this.commands.push("navDown");
       if (e.code === "KeyG") this.commands.push("frameData");
+      if (e.code === "KeyX") this.commands.push("steal"); // pickpocket (from behind), or surrender to the Watch
       if (e.code === "Escape") this.commands.push("pause");
     });
     addEventListener("keyup", (e) => this.keys.delete(e.code));

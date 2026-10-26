@@ -1003,6 +1003,14 @@ export class World {
           this._resolve(att, def, hb);
         }
       }
+      // Townsfolk (data/law.js): not fighters, but Rook's blade still lands on them, and somebody saw.
+      if (att === this.player && this.softTargets?.length) {
+        for (const hb of att.hitboxes) for (const t of this.softTargets) {
+          if (hb.hitSet.has(t) || !boxHitsCapsule(hb.def, att.pos, att.yaw, t.pos, t.radius, t.height)) continue;
+          hb.hitSet.add(t);
+          this.emit({ type: "softHit", target: t, attacker: att, ability: hb.ability });
+        }
+      }
       // Sword vs bolt: Rook's team can cut enemy projectiles out of the air.
       if (att.team === Team.Player && this.projectiles.length) {
         for (const hb of att.hitboxes) {
@@ -1032,6 +1040,10 @@ export class World {
       p.pos.x += p.dir.x * p.speed * dt * scale; p.pos.y += p.dir.y * p.speed * dt * scale; p.pos.z += p.dir.z * p.speed * dt * scale;
       p.life -= scale;
       if (p.life <= 0 || p.pos.y < 0 || outOfBounds(p.pos, this.bounds)) { p.dead = true; continue; }
+      if (p.owner === this.player && this.softTargets?.length) { // a spell into a crowd
+        const t = this.softTargets.find((q) => Math.hypot(q.pos.x - p.pos.x, q.pos.z - p.pos.z) < q.radius + p.def.size[0] / 2 && p.pos.y < q.height);
+        if (t) { p.dead = true; this.emit({ type: "softHit", target: t, attacker: p.owner, ability: p.ability }); continue; }
+      }
       for (const def of this.fighters) {
         if (def.team === p.team || !def.alive || p.hitSet.has(def) || def.submerged) continue;
         const grace = def.combatant.invulnerableFrames > 0 ? Tuning.nearMissGrace * 0.5 : 0;

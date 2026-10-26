@@ -48,6 +48,7 @@ export class Ambient {
     this.zone = zone;
     this.people = [];
     for (const c of [...zone.cast, ...(zone.extras ?? [])]) {
+      if (c.when && !truthy(compileExpr(c.when)(flags))) continue; // not here today (two entries can share an id: Luke at the market, Luke at the gate)
       const specs = c.routines ?? (c.routine ? [c.routine] : []);
       const spec = specs.find((r) => !r.when || truthy(compileExpr(r.when)(flags)));
       if (!spec) continue;
@@ -66,8 +67,10 @@ export class Ambient {
     for (const p of this.people) {
       const a = p.actor, r = p.rig;
       p.t += dt;
+      if (p.off) continue; // out of their day altogether: fighting you, or carried off (runtime/law.js)
       if (ctx.busy) { a.vel.x = a.vel.z = 0; continue; } // a conversation is on: everyone holds still
-      const out = p.routine.update({ pos: a.pos, player: ctx.player, combat: ctx.combat, raining: ctx.raining, night: ctx.night, dt });
+      // hold: something else is steering them for now (a guard coming to arrest you, someone running from you).
+      const out = p.hold?.(p, dt) ?? p.routine.update({ pos: a.pos, player: ctx.player, combat: ctx.combat, raining: ctx.raining, night: ctx.night, dt });
       const seat = p.routine.spec.seated; // someone at a table stays in their chair: only the head turns to look
       if (seat) {
         a.vel.x = a.vel.z = 0; a.targetYaw = seat.face;

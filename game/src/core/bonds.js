@@ -44,6 +44,14 @@ export class Bonds {
     return { gained: Math.max(0, next - p), rankUp: rank > before, rank };
   }
 
+  /** They think less of you (caught stealing from them, a fist they didn't ask for). Never below the rank you've reached. */
+  lose(id, n) {
+    if (!BONDS[id] || !n) return 0;
+    const p = this.points(id), floor = RANK_POINTS[this.rank(id) - 1] ?? 0, next = Math.max(floor, p - n);
+    this.flags.set(`BOND_${K(id)}`, next);
+    return p - next;
+  }
+
   /** First chat of the day with someone. Returns the gain result, or null if already talked today. */
   talk(id, day) {
     if (!BONDS[id] || Number(this.flags.get(`BOND_TALKDAY_${K(id)}`)) === day) return null;

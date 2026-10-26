@@ -54,6 +54,7 @@ import { FRAGMENTS, CLAUSE } from "./data/lore.js";
 import { rumorBoard } from "./data/rumors.js";
 import { ITEMS, SHOPS, SLOTS, BOUNTIES, slotKind } from "./data/items.js";
 import { squadRank } from "./core/quests.js";
+import { renownTier, LAW_REGIONS } from "./data/law.js";
 import { fillText } from "./core/script.js";
 
 const TRAIL_COLORS = { default: "#ffd98a", GaleCutter: PALETTE.gale, VacuumPull: PALETTE.gale, TempestEdge: "#a8f5dc", Counter: "#dff6ff", LanternBreak: "#ffcc55", enemy: "#ff5a4a" };
@@ -876,7 +877,7 @@ export function boot(doc = document) {
     stock.hidden = !shopId;
     shopModal.querySelector("[data-stock-h]").hidden = !shopId;
     if (shopId) {
-      const off = (Number(story.flags.get("RENOWN_AURELIN")) || 0) >= 10 ? 0.9 : 1; // renown buys you a discount
+      const off = renownTier(story.flags.get("RENOWN_AURELIN")).price; // standing in town: a hero's discount, an outlaw's mark-up (data/law.js)
       stock.innerHTML = SHOPS[shopId].stock.map((id) => { const it = ITEMS[id], own = inv.owned.has(id), price = Math.round(it.price * off);
         return `<button data-buy="${id}" ${own || inv.marks < price ? "disabled" : ""}><b>${own ? "OWNED" : `${price} M`}</b><span>${it.name} <em>${it.kind}</em><small>${modsText(it.mods)} — ${it.desc}</small></span></button>`; }).join("");
       for (const b of stock.querySelectorAll("[data-buy]")) b.addEventListener("click", () => {
@@ -937,7 +938,11 @@ export function boot(doc = document) {
     journal.querySelector("[data-rep]").innerHTML = [
       ["SQUAD RANK", `The Lanterns are ${["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th (last)"][rank.place]} of seven`],
       ["MERIT", `${f.get("MERIT") || 0}${rank.next ? ` · next rank at ${rank.next}` : " · top of the Crown's ranking"}`],
-      ["SQUAD REPUTATION", f.get("REP_SQUAD") || 0], ["RENOWN · AURELIN", f.get("RENOWN_AURELIN") || 0], ["RENOWN · GREYWATER FENS", f.get("RENOWN_FENS") || 0],
+      ["SQUAD REPUTATION", f.get("REP_SQUAD") || 0],
+      // Standing in each town, and any bounty on your head there (data/law.js).
+      ...["aurelin", "thornwick", "fens"].map((k) => { const r = LAW_REGIONS[k], v = Number(f.get(r.renown)) || 0, b = Number(f.get(`BOUNTY_${r.id}`)) || 0;
+        return [`RENOWN · ${r.name.replace(/^the /, "").toUpperCase()}`, `${v} · ${renownTier(v).name}${b ? ` · <b class="bounty">BOUNTY ${b}${f.get(`WANTED_${r.id}`) ? " · WANTED" : ""}</b>` : ""}`]; }),
+      ["THE CITY WATCH", `${4 + (Number(f.get("WATCH_STRENGTH")) || 0)} guards${f.get("LUKE_GUARD") ? " (Luke among them)" : ""}`],
     ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
     const bd = story.bonds;
     journal.querySelector("[data-bonds]").innerHTML = Object.entries(BONDS).map(([id, b]) => {
@@ -1404,6 +1409,7 @@ export function boot(doc = document) {
       }
       if (state.mode === "story" && (cmd === "boss" || cmd === "reset")) continue; // sandbox shortcuts are off in the story
       if (cmd === "confirm" && story.exploring?.near) { story.interact(); continue; }
+      if (cmd === "steal" && story.roaming) { story.law.action(); continue; } // X: pickpocket, or surrender to the Watch
       if (cmd === "pages" && story.roaming) { openMap(); continue; }
     if (cmd === "pages") { if (pageModal.hidden) openPages(); else { pageModal.hidden = true; state.modal = false; } }
       if (cmd === "lock") { const t = world.toggleLock(); if (!t) camera.yaw = world.player.yaw; sfx.play("ui"); }

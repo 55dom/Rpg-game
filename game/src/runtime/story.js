@@ -30,6 +30,7 @@ import { inRect, YARD } from "../sim/bounds.js";
 import { Ambient } from "./ambient.js";
 import { WorldClock } from "../sim/weather.js";
 import { RainFX } from "./weather.js";
+import { LawWatch } from "./law.js";
 
 /** Gesture poses for dialogue: weapon-arm and off-arm rotations, a bow, a head tilt. */
 const GESTURES = Object.freeze({
@@ -364,6 +365,9 @@ export class StoryPlayer {
     this.skipping = false;
     this.fight = null;
     this.waitingCard = null;
+    this.law = new LawWatch(this); // free roam: crimes, witnesses, the Watch (runtime/law.js)
+    r.querySelector("[data-steal]")?.addEventListener("click", (e) => { e.stopPropagation(); this.law.pickpocket(); });
+    r.querySelector("[data-surrender]")?.addEventListener("click", (e) => { e.stopPropagation(); this.law.surrender(); });
   }
 
   episodeById(id) { return this.episodes.find((e) => e.episode.id === id)?.episode; }
@@ -396,6 +400,7 @@ export class StoryPlayer {
       this.ambient.update({ dt, player: { x: p.pos.x, z: p.pos.z, moving: Math.hypot(p.vel.x, p.vel.z) > 0.4 }, combat: x.combat?.at ?? null,
         raining: !!this.weather?.raining, night: !!this.weather?.night, busy: x.busy });
     }
+    if (this.roaming && this.exploring) this.law.tick(dt);
     if (this.exploring) this._exploreTick(dt);
     this._guideTick(dt);
   }
@@ -510,6 +515,7 @@ export class StoryPlayer {
     }
     if (this.active && this.director.done && !this.flags.get(`${ep.id.toUpperCase()}_PAID`)) { // a little pay for finishing an episode
       this.flags.set(`${ep.id.toUpperCase()}_PAID`, 1);
+      this.flags.add("REP_SQUAD", 2); this.flags.add("RENOWN_AURELIN", 1); // a mission done: word gets around (GDD §12.3)
       this.inventory.earn(EPISODE_REWARD);
       this.gainXp(EPISODE_XP);
     }
@@ -763,6 +769,7 @@ export class StoryPlayer {
         break;
       }
       case "earn": this.inventory.earn(Number(args[0]) || 0); this.ctx.hud.toast(`+${args[0]} MARKS`, "clear"); break;
+      case "law": this.law.command(args); break; // <<law check>> (the bounty here, and whether you can pay), <<law pay>>
       case "gift": { // <<gift bas honeybun>>: give it; $GIFT_REACT says how it went (-1: already had one today)
         const r = this.bonds.give(args[0], args[1], this.day);
         this.flags.set("GIFT_REACT", r.react);
@@ -890,6 +897,7 @@ export class StoryPlayer {
     this.ambient = beat.zone ? new Ambient(this.stage, beat.zone, this.flags) : null;
     this.exploring = { beat, talked: new Set(), near: null, busy: false, pickups: this._makePickups(beat.pickups ?? []),
       encounters: (beat.encounters ?? []).map((e) => ({ ...e, cond: compileExpr(e.when ?? "1"), armed: true, done: false })), combat: null };
+    if (this.roaming) this.law.enter(); // its steal spots, and how big the Watch has grown
     this._objective();
     const done = new Promise((res) => { this.exploring.resolve = res; });
     if (beat.zone?.intro) this.sleep(0.4).then(() => this._intro(beat.zone));
@@ -899,6 +907,7 @@ export class StoryPlayer {
   }
 
   _endExplore() {
+    if (this.roaming) this.law.leave(); // walking out on the Watch is a crime of its own
     if (this.exploring?.combat) this._endCombat(false);
     const w = this.ctx.getWorld?.();
     if (w?.dummies?.length) { // the dummies stay on the set; their targets leave with the walk-around
@@ -966,13 +975,19 @@ export class StoryPlayer {
     if (!x || x.busy) return;
     if (x.cooldown > 0) x.cooldown -= dt;
     const pp = this.ctx.getWorld().player.pos;
+    if (x.combat?.law) { // a run-in with the law: no talking, but the way out is open (running is a choice)
+      if (!this.ui.talk.hidden) this.ui.talk.hidden = true;
+      x.near = null;
+      for (const e of x.beat.exits ?? []) if (inRect(pp, e.rect) && this._exitOpen(e)) { x.busy = true; x.resolve({ exit: e }); return; }
+      return;
+    }
     if (x.encounters.length && this._encounterTick(x, pp)) { // fighting: no talking, no leaving
       if (!this.ui.talk.hidden) this.ui.talk.hidden = true;
       x.near = null;
       return;
     }
     for (const e of x.beat.exits ?? []) {
-      if (!inRect(pp, e.rect)) continue;
+      if (!inRect(pp, e.rect) || !this._exitOpen(e)) continue;
       x.busy = true; x.resolve({ exit: e }); return; // leaving the zone
     }
     const p = this.ctx.getWorld().player;
@@ -1005,6 +1020,9 @@ export class StoryPlayer {
     }
     if (near && !near.pickup) { const a = this.stage.get(near.id); if (!a.down) a.targetYaw = Math.atan2(p.pos.x - a.pos.x, p.pos.z - a.pos.z); }
   }
+
+  /** A door that opens with the story (`when`), like Luke's house in the Fens. */
+  _exitOpen(e) { return !e.when || truthy(compileExpr(e.when)(this.flags)); }
 
   /**
    * An episode beat's sky (`sky: { daylight }`, 0 = night) on an outdoor set; a beat without one puts back the
@@ -1043,6 +1061,12 @@ export class StoryPlayer {
     const c = x.near;
     if (c.pickup) { // pick it up (or read it): set its flag (quests notice); most then disappear
       const pk = c.pickup;
+      if (pk.steal) { // a stall, a coin jar (runtime/law.js): somebody may be watching
+        this.law.steal(pk);
+        x.near = null; x.cooldown = 0.6; this._objective();
+        if (this.exploring && !this.exploring.busy) this.saveNow();
+        return true;
+      }
       if (pk.ui) { // a screen rather than a conversation: the squad board, the workbench
         x.busy = true; this.ui.talk.hidden = true;
         const p = this.ctx.getWorld().player; p.vel.x = p.vel.z = 0; p.moveInput.x = p.moveInput.z = 0;
@@ -1187,6 +1211,7 @@ export class StoryPlayer {
     if (won) {
       e.done = true;
       if (e.flag) { this.flags.set(e.flag, 1); this.flags.set(`${e.flag}_VISIT`, Number(this.flags.get(`VISITS_${this.zone.id.toUpperCase()}`)) || 1); }
+      if (e.mark) this.flags.set(e.mark, 1); // beaten at least once (the fight itself comes back)
       const p = world.player.combatant.health;
       p.add(p.max * 0.3); // catch your breath
       this.ctx.hud.banner(`${e.label ?? "AMBUSH"} · CLEARED`);
@@ -1243,6 +1268,7 @@ export class StoryPlayer {
       this.clock.setClimate(id);
       this.skyLabel = null; this.atmoT = 0;
       world.resetPlayer(); // a new zone: back to full health (explore puts Rook at the arrival point)
+      this.law.beforeZone(); // night or day, and how big the Watch is: who's here can depend on both
       const out = await this.explore({ id: `zone-${id}`, zone, stage: zone.stage, rook: at, cast: [...zone.cast, ...(zone.extras ?? [])].filter((c) => !c.when || truthy(compileExpr(c.when)(this.flags))), // who is here depends on the story exits: zone.exits, pickups: zone.pickups, encounters: zone.encounters,
         objective: zone.exits.map((e) => `<b>Exit:</b> ${e.label}`).join(" · ") });
       if (!this.active) return;
@@ -1346,6 +1372,8 @@ export class StoryPlayer {
   /** World events main.js forwards while a story fight runs. */
   onWorldEvent(ev) {
     const x = this.exploring;
+    if (ev.type === "softHit") { this.law.onSoftHit(ev); return; } // a blade or a spell landed on a townsperson
+    if (x?.combat?.law) { if (ev.type === "playerDown") this.law.fell(); return; } // the Watch, or a street fight
     if (x?.combat && !this.fight) {
       if (ev.type === "waveClear") this._endCombat(true);
       if (ev.type === "playerDown") this._fallInField();
@@ -1378,7 +1406,7 @@ export class StoryPlayer {
   }
 
   /** A subtitle line during a fight, with the player's name and pronouns filled in. */
-  say(speakerId, text) { this.ctx.hud.say(speakerName(speakerId, this.player.name, this.flags), fillText(text, { ...this.player, flags: this.flags })); }
+  say(speakerId, text, name = null) { this.ctx.hud.say(name ?? speakerName(speakerId, this.player.name, this.flags), fillText(text, { ...this.player, flags: this.flags })); }
 
   /** A tutorial pill; {Light}, {Dodge}… become the current device's buttons. */
   _showHint(text) {

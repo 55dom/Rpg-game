@@ -97,7 +97,36 @@ export const junoOptions = () => [
 export const junoSupports = () => [{ ability: JUNO_ABILITIES.Stitch, kind: "heal", cooldownFrames: 480 }];
 
 /** Party roster: how each companion is built and which move their Assist call performs. */
+// ---- Luke (the City Watch): beside you once, in the Lowmarket, when his soft spot shows (data/law.js) ----
+const LUKE_STATS = Object.freeze({
+  name: "Luke", maxHealth: 260, maxPosture: 110, runSpeed: 5.4, turnRate: 0.18, radius: 0.48, height: 2.1,
+  assistCooldownFrames: 420, reviveFrames: 540,
+});
+const LUKE_HITBOXES = Object.freeze({
+  Haft: { center: [0, 1, 1.1], size: [2.0, 1.6, 1.9] },
+  Spear: { center: [0, 1.1, 1.8], size: [0.9, 1.2, 3.2] },
+  Sweep: { center: [0, 1, 0.4], size: [4.0, 1.6, 4.0] },
+});
+const LUKE_ABILITIES = Object.freeze({ // Slash and Thrust: his arms swing with the townsfolk poses
+  Slash: defineAbility({ id: "Slash", startup: 11, active: 4, recovery: 18,
+    hit: hitSpec({ damage: 12, posture: 14, hitstop: 4, hitstun: 18, knockback: 2 }),
+    events: [swing(8), { frame: 11, type: E.SpawnHitbox, key: "Haft", value: 4 }] }),
+  Thrust: defineAbility({ id: "Thrust", startup: 16, active: 4, recovery: 22,
+    hit: hitSpec({ damage: 18, posture: 22, hitstop: 5, hitstun: 22, knockback: 3 }),
+    events: [{ frame: 14, type: E.Move, value: 1.4 }, swing(14, "swingHeavy"), { frame: 16, type: E.SpawnHitbox, key: "Spear", value: 4 }] }),
+  // Assist: a full turn of the spear around him, everyone close sent sprawling.
+  Sweep: defineAbility({ id: "Sweep", startup: 8, active: 5, recovery: 22, tags: ["assist"],
+    hit: hitSpec({ damage: 16, posture: 24, hitstop: 5, hitstun: 30, knockback: 6 }),
+    events: [swing(6, "swingHeavy"), { frame: 8, type: E.SpawnHitbox, key: "Sweep", value: 5 }, { frame: 8, type: E.CameraCue, key: "punch" }] }),
+});
+const LUKE_COMPANION = Object.freeze({
+  stats: LUKE_STATS, hitboxes: LUKE_HITBOXES, assist: LUKE_ABILITIES.Sweep, slot: [1.8, -1.6],
+  options: () => [new AttackOption(LUKE_ABILITIES.Slash, 0, 2.3, 3, 30), new AttackOption(LUKE_ABILITIES.Thrust, 1.6, 3.4, 2, 80)],
+  supports: () => [],
+});
+
 export const COMPANIONS = Object.freeze({
+  luke: LUKE_COMPANION,
   bas: { stats: BAS_STATS, hitboxes: BAS_HITBOXES, options: basOptions, supports: basSupports, assist: BAS_ABILITIES.PillarUppercut, slot: [1.8, -1.4], injured: BAS_INJURED },
   brannoc: BRANNOC_COMPANION, // fights beside the Lanterns on the Iron Front (Eps 20–22)
   juno: { stats: JUNO_STATS, hitboxes: JUNO_HITBOXES, options: junoOptions, supports: junoSupports, assist: JUNO_ABILITIES.SnareLine, slot: [-1.8, -1.4] },

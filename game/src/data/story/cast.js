@@ -57,6 +57,17 @@ export const CAST = Object.freeze({
   Traveler: { name: "Hooded Traveler", color: "#a8a8b8", actor: "traveler" },
   Hetty: { name: "Hetty", color: "#e8b48a", actor: "hetty" },
   Crowd: { name: "Candidates", color: "#aab4cc", actor: null },
+  // The law (data/law.js). "Watch" is whichever guard has stopped you (no actor of its own: the shot stays on him).
+  Watch: { name: "City Watch", color: "#c9d2dc", actor: null },
+  Sergeant: { name: "Sergeant Holt", color: "#9ab0e8", actor: "sergeant" },
+  Drunk: { name: "Cell Two", color: "#c9b48a", actor: "drunk" },
+  Patrol: { name: "City Watch", color: "#c9d2dc", actor: null }, // any of them: the shot stays on whoever you're talking to
+  Recruit: { name: "New Recruit", color: "#c9d2dc", actor: null },
+  Admirer: { name: "Admirer", color: "#f0a8c0", actor: null },
+  Watchman: { name: "Thornwick Watchman", color: "#c9d2dc", actor: null },
+  // Luke, who joined the Watch, and Elsie, the sister you pulled out of the Fens.
+  Luke: { name: "Luke", color: "#ffd98a", actor: "luke" },
+  Elsie: { name: "Elsie", color: "#c9e8a0", actor: "elsie" },
 });
 
 export const speakerName = (id, playerName, flags = null) => (id === "Rook" ? playerName : CAST[id]?.label ? CAST[id].label(flags) : CAST[id]?.name ?? id);

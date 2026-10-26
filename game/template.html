@@ -420,6 +420,15 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .exploring .hud-top .player-card, .exploring .combo, .exploring .fd, .exploring .prompt { opacity: 0; }
 .exploring .pad button:not(.b-light):not(.b-jump):not(.b-dodge) { visibility: hidden; }
 .in-scene .objective, .in-scene .talk { display: none; }
+/* The law (runtime/law.js): a red "Steal" in the prompt, the pickpocket chip, and SURRENDER in a fight with the Watch. */
+.talk .steal { color: #9a1c1c; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px; }
+.steal-chip { position: absolute; left: 50%; bottom: calc(26% + 50px); transform: translateX(-50%); pointer-events: auto; cursor: pointer;
+  font: 700 13px/1 var(--font-body); color: #fff1e8; background: #7a1f2a; border: 1px solid #c8414f; border-radius: 999px; padding: 9px 15px; box-shadow: 0 4px 18px rgba(0,0,0,0.4); }
+.steal-chip kbd, .surrender kbd { font: 700 11px/1 var(--font-mono); background: rgba(15,17,23,0.7); border-radius: 4px; padding: 3px 6px; margin-right: 7px; }
+.surrender { position: absolute; left: 50%; top: 24%; transform: translateX(-50%); pointer-events: auto; cursor: pointer; z-index: 6;
+  font: 700 13px/1 var(--font-mono); letter-spacing: 0.12em; color: #f6f1e8; background: rgba(20,24,34,0.88); border: 1px solid #f6f1e8; border-radius: 999px; padding: 10px 16px; }
+.in-scene .steal-chip, .in-scene .surrender { display: none; }
+.bounty { color: #ff6a5a; }
 .fade { position: absolute; inset: 0; background: #000; opacity: 0; transition: opacity 1s; }
 .fade.on { opacity: 1; }
 .caption { position: absolute; left: 50%; bottom: calc(7vh + 26px); transform: translateX(-50%); width: min(760px, calc(100vw - 32px)); margin: 0; text-align: center;
@@ -649,6 +658,8 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
     <div class="hint-pill" data-hint></div>
     <div class="objective" data-objective hidden></div>
     <button class="talk" data-talk hidden></button>
+    <button class="steal-chip" data-steal hidden><kbd>X</kbd>✋ PICKPOCKET</button>
+    <button class="surrender" data-surrender hidden><kbd>X</kbd>SURRENDER</button>
     <div class="fade" data-fade></div>
     <p class="caption" data-caption></p>
     <button class="cut-skip" data-cutskip>SKIP ▸▸</button>

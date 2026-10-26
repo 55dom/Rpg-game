@@ -202,6 +202,20 @@ export const LOOKS = {
 };
 // Bas with his left arm broken and bound in a sling (after Ep 26, until it heals).
 LOOKS.basSling = { ...LOOKS.bas, sling: true };
+// The Watch (data/law.js). Luke: the new recruit everybody stops to look at; tousled fair hair, collar open,
+// the spear held like he's bored of it. Off duty in the Fens he's in his old fen-green shirt.
+LOOKS.luke = { poses: ACOLYTE_POSES, scale: 1.04, skirt: 1.0, coat: "#2b4fa0", trim: "#e6b54e", hairColor: "#d8b060", skin: "#f0cfae",
+  head: "face", hair: "tousled", weapon: "spear", shoulders: 1.12, eyeColor: "#3a7a9a", trail: "#c9d2dc" };
+LOOKS.lukeHome = { ...LOOKS.luke, coat: "#4a6a4a", trim: "#c9b48a", weapon: "none" };
+// Elsie, his little sister, the one the Choir came back for: their hair, a patched fen dress.
+LOOKS.elsie = { poses: ACOLYTE_POSES, scale: 0.64, skirt: 1.05, coat: "#5a7a4a", trim: "#c9b48a", hairColor: "#d8b060", skin: "#f0cfae",
+  head: "face", hair: "ponytail", accent: "#e0a050", weapon: "none", eyeColor: "#3a7a9a", trail: "#c9b48a" };
+// The Watch Sergeant at the Watch House desk: grey, square, unimpressed.
+LOOKS.sergeant = { ...LOOKS.guard, coat: "#24407e", hairColor: "#7a7a7a", beard: "#7a7a7a", hair: "crop", shoulders: 1.22, weapon: "none" };
+// Someone who fights back in the street, if the fighter has no look of its own (it always should: their own).
+LOOKS.brawler = LOOKS.laborer;
+// One of the admirers at the south gate since Luke joined: her best dress, for no reason at all.
+LOOKS.admirer = { ...LOOKS.townswoman, coat: "#c0507a", trim: "#f2d4dc", hairColor: "#3a2a20" };
 // The Crown Archivist (Eps 25–26): grey robes, ink on her fingers, a ledger under her arm.
 LOOKS.archivist = { poses: ACOLYTE_POSES, scale: 0.95, skirt: 1.25, coat: "#5e5e68", trim: "#c8c8d0", hairColor: "#2e2a30", skin: "#ecd0b8",
   head: "face", hair: "long", weapon: "none", holds: "scroll", sash: true, eyeColor: "#3a3a4a", trail: "#c8c8d0" };

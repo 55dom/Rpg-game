@@ -142,6 +142,12 @@ export class Sfx {
           this._noise(t0, 0.3, { f0: f * 2, q: 12, gain: 0.012, attack: 0.04 });
         }
         break;
+      case "guardWhistle": // the Watch: a shrill trilled blast, twice (not a tune: that's someone else's)
+        for (const t0 of [t, t + 0.55]) {
+          this._tone(t0, 0.42, { type: "square", f0: 2650, f1: 2550, gain: 0.035, attack: 0.01 });
+          for (let k = 0; k < 8; k++) this._tone(t0 + k * 0.05, 0.03, { type: "sine", f0: 2900, gain: 0.03, attack: 0.005 });
+        }
+        break;
       case "door": // a door frame of light opening
         this._tone(t, 1.4, { type: "triangle", f0: 220, f1: 440, gain: 0.06, attack: 0.3 });
         for (const [i, f] of [440, 554, 659].entries()) this._tone(t + 0.3 + i * 0.12, 1.2, { type: "sine", f0: f, gain: 0.04, attack: 0.1 });

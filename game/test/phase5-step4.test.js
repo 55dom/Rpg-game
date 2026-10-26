@@ -11,7 +11,10 @@ import { WORLD_SCRIPT } from "../src/data/story/world.js";
 import { parseScript } from "../src/core/script.js";
 
 test("every regular foe drops a material; the counts live in flags (so they save)", () => {
-  for (const kind of Object.keys(ENEMIES)) if (kind !== "dummy") assert.ok(DROPS[kind] && MATERIALS[DROPS[kind][0]], `${kind} drops something`);
+  for (const kind of Object.keys(ENEMIES)) {
+    if (kind === "dummy" || ENEMIES[kind].traits.watch || ENEMIES[kind].traits.brawler) { assert.ok(!DROPS[kind], `${kind}: the Watch and the townsfolk aren't loot`); continue; }
+    assert.ok(DROPS[kind] && MATERIALS[DROPS[kind][0]], `${kind} drops something`);
+  }
   const f = new FlagStore(), c = new Crafting(f, new Inventory());
   assert.deepEqual(c.drop("hound", () => 0.9), [{ id: "hide", n: 1 }]);
   assert.deepEqual(c.drop("hound", () => 0.1), [{ id: "hide", n: 2 }]);
