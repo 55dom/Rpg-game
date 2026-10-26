@@ -1015,7 +1015,7 @@ export class StoryPlayer {
       if (near) {
         const c = this.ctx.controls;
         const device = c.device === "keyboard" && !c.keyboardUsed && this.ctx.root.classList.contains("is-touch") ? "touch" : c.device;
-        t.innerHTML = `<kbd>${this.ctx.hud.label(device, "Light")}</kbd>${near.pickup ? near.pickup.label : `Talk to ${Object.values(CAST).find((k) => k.actor === near.id)?.name ?? near.id}${this.roaming && this.bonds.eventReady(near.id) ? " <b class=\"bond-ready\">♥ BOND EVENT</b>" : ""}`}`;
+        t.innerHTML = `<kbd>${this.ctx.hud.label(device, "Light")}</kbd>${near.pickup ? near.pickup.label : `Talk to ${near.name ?? Object.values(CAST).find((k) => k.actor === near.id)?.name ?? near.id}${this.roaming && this.bonds.eventReady(near.id) ? " <b class=\"bond-ready\">♥ BOND EVENT</b>" : ""}`}`;
       }
     }
     if (near && !near.pickup) { const a = this.stage.get(near.id); if (!a.down) a.targetYaw = Math.atan2(p.pos.x - a.pos.x, p.pos.z - a.pos.z); }
@@ -1212,6 +1212,8 @@ export class StoryPlayer {
       e.done = true;
       if (e.flag) { this.flags.set(e.flag, 1); this.flags.set(`${e.flag}_VISIT`, Number(this.flags.get(`VISITS_${this.zone.id.toUpperCase()}`)) || 1); }
       if (e.mark) this.flags.set(e.mark, 1); // beaten at least once (the fight itself comes back)
+      const pp = world.player.pos; // a fight over the same ground waits until you've walked out and back in
+      for (const o of x.encounters) if (inRect(pp, o.rect)) o.armed = false;
       const p = world.player.combatant.health;
       p.add(p.max * 0.3); // catch your breath
       this.ctx.hud.banner(`${e.label ?? "AMBUSH"} · CLEARED`);
@@ -1269,7 +1271,9 @@ export class StoryPlayer {
       this.skyLabel = null; this.atmoT = 0;
       world.resetPlayer(); // a new zone: back to full health (explore puts Rook at the arrival point)
       this.law.beforeZone(); // night or day, and how big the Watch is: who's here can depend on both
-      const out = await this.explore({ id: `zone-${id}`, zone, stage: zone.stage, rook: at, cast: [...zone.cast, ...(zone.extras ?? [])].filter((c) => !c.when || truthy(compileExpr(c.when)(this.flags))), // who is here depends on the story exits: zone.exits, pickups: zone.pickups, encounters: zone.encounters,
+      const out = await this.explore({ id: `zone-${id}`, zone, stage: zone.stage, rook: at,
+        cast: [...zone.cast, ...(zone.extras ?? [])].filter((c) => !c.when || truthy(compileExpr(c.when)(this.flags))), // who is here depends on the story
+        exits: zone.exits, pickups: zone.pickups, encounters: zone.encounters,
         objective: zone.exits.map((e) => `<b>Exit:</b> ${e.label}`).join(" · ") });
       if (!this.active) return;
       this._fade(true, 0.35);

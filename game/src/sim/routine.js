@@ -7,6 +7,7 @@
 
 const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 const yawTo = (a, b) => Math.atan2(b.x - a.x, b.z - a.z);
+const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
 /** Steps: { do: "idle"|"work"|"walk"|"wander", at|to: [x, z], face?: yaw, anim?: string, dur?: [min, max], r?: number } */
 export class Routine {
@@ -40,11 +41,11 @@ export class Routine {
 
   /**
    * One tick.
-   * @param ctx {{ pos: {x,z}, player?: {x,z}, combat?: {x,z}|null, raining?: boolean, night?: boolean, dt: number }}
+   * @param ctx {{ pos: {x,z}, yaw?: number, player?: {x,z}, combat?: {x,z}|null, raining?: boolean, night?: boolean, dt: number }}
    * @returns {{ target: {x,z}|null, speed: number, face: number|null, activity: string, look: {x,z}|null, hidden?: boolean }}
    */
   update(ctx) {
-    const { pos, player, combat, raining, night, dt } = ctx;
+    const { pos, yaw, player, combat, raining, night, dt } = ctx;
     const out = { target: null, speed: this.speed, face: null, activity: "idle", look: null };
     // A fight nearby.
     if (combat && dist(pos, combat) < 24) {
@@ -71,7 +72,9 @@ export class Routine {
       return out;
     }
     // Someone stopped next to them: stop and look.
-    if (player && !player.moving && dist(pos, player) < 2.6) this.attending = true;
+    // (only someone they can see: whoever's standing right behind them goes unnoticed, which pickpockets count on)
+    const inView = !player || yaw == null || Math.abs(wrap(yawTo(pos, player) - yaw)) < 1.6;
+    if (player && !player.moving && dist(pos, player) < 2.6 && inView) this.attending = true;
     else if (!player || dist(pos, player) > 3.6) this.attending = false;
     if (this.attending) { this.state = "attend"; out.face = yawTo(pos, player); out.look = player; out.activity = "attend"; return out; }
     this.state = "routine";

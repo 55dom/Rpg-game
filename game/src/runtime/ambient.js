@@ -70,7 +70,7 @@ export class Ambient {
       if (p.off) continue; // out of their day altogether: fighting you, or carried off (runtime/law.js)
       if (ctx.busy) { a.vel.x = a.vel.z = 0; continue; } // a conversation is on: everyone holds still
       // hold: something else is steering them for now (a guard coming to arrest you, someone running from you).
-      const out = p.hold?.(p, dt) ?? p.routine.update({ pos: a.pos, player: ctx.player, combat: ctx.combat, raining: ctx.raining, night: ctx.night, dt });
+      const out = p.hold?.(p, dt) ?? p.routine.update({ pos: a.pos, yaw: a.yaw, player: ctx.player, combat: ctx.combat, raining: ctx.raining, night: ctx.night, dt });
       const seat = p.routine.spec.seated; // someone at a table stays in their chair: only the head turns to look
       if (seat) {
         a.vel.x = a.vel.z = 0; a.targetYaw = seat.face;

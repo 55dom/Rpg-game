@@ -449,7 +449,7 @@ export class LawWatch {
   _say(p, text) {
     if (!p || !text) return;
     const c = Object.values(CAST).find((k) => k.actor === p.id);
-    const name = c?.name ?? ROLE_NAMES[p.role] ?? "Townsperson";
+    const name = c?.name ?? p.cast?.name ?? ROLE_NAMES[p.role] ?? "Townsperson";
     this.story.say(null, text, name);
   }
 

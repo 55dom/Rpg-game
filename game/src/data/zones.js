@@ -136,7 +136,7 @@ const UC_HALF = 14;
 const A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT, IH = IRONHOLD_LAYOUT, WH = WATCH_LAYOUT, FH = FENHOME_LAYOUT;
 const rect = (r) => box(r.x0, r.z0, r.x1, r.z1);
 // The City Watch's patrols (data/law.js): one more walks the streets for every step $WATCH_STRENGTH takes.
-const patrol = (n, a, b) => ({ id: `patrol${n}`, look: "guard", x: a[0], z: a[1], yaw: 0, node: "W_Patrol", when: `$WATCH_STRENGTH >= ${n}`,
+const patrol = (n, a, b) => ({ id: `patrol${n}`, name: "City Watch", look: "guard", x: a[0], z: a[1], yaw: 0, node: "W_Patrol", when: `$WATCH_STRENGTH >= ${n}`,
   routine: { role: "guard", steps: [{ do: "walk", to: a }, { do: "idle", at: a, face: Math.atan2(b[0] - a[0], b[1] - a[1]), dur: [4, 7] }, { do: "walk", to: b }, { do: "idle", at: b, face: Math.atan2(a[0] - b[0], a[1] - b[1]), dur: [4, 7] }] } });
 const aurelinSolids = [
   ...A.houses.map((h) => box(h.x - h.w / 2, h.z - h.d / 2, h.x + h.w / 2, h.z + h.d / 2)),
@@ -255,13 +255,13 @@ export const ZONES = {
       { id: "luke", look: "luke", x: 2.6, z: -27.4, yaw: 0.2, node: "W_Luke", when: "$LUKE_GUARD",
         routine: { role: "guard", home: [-12.3, -20], steps: [{ do: "idle", at: [2.6, -27.4], face: 0.2, dur: [10, 14] }, { do: "wander", around: [1.8, -26.4], r: 1.3, dur: [5, 7] }] } },
       // Since Luke: people with somewhere they suddenly need to be, which happens to be past the south gate.
-      { id: "admirer1", look: "townswoman", x: 6.6, z: -24.4, yaw: -2.3, node: "W_Admirer", when: "$LUKE_GUARD",
+      { id: "admirer1", name: "Admirer", look: "townswoman", x: 6.6, z: -24.4, yaw: -2.3, node: "W_Admirer", when: "$LUKE_GUARD",
         routine: { steps: [{ do: "work", at: [6.6, -24.4], face: -2.3, anim: "chat", dur: [8, 12] }, { do: "idle", at: [6.2, -23.2], face: -2.5, dur: [4, 6] }] } },
-      { id: "admirer2", look: "admirer", x: 8.2, z: -25.2, yaw: -2.0, when: "$LUKE_GUARD",
+      { id: "admirer2", name: "Admirer", look: "admirer", x: 8.2, z: -25.2, yaw: -2.0, when: "$LUKE_GUARD",
         routine: { steps: [{ do: "work", at: [8.2, -25.2], face: -2.0, anim: "chat", dur: [9, 13] }, { do: "idle", at: [8.6, -24], face: -2.4, dur: [4, 6] }] } },
-      { id: "recruit1", look: "guard", x: -2.8, z: -21, yaw: 0, node: "W_Recruit", when: "$WATCH_STRENGTH >= 4",
+      { id: "recruit1", name: "New Recruit", look: "guard", x: -2.8, z: -21, yaw: 0, node: "W_Recruit", when: "$WATCH_STRENGTH >= 4",
         routine: { role: "guard", steps: [{ do: "work", at: [-2.8, -21], face: 0, anim: "practice", dur: [10, 14] }, { do: "idle", at: [-2.4, -21.6], face: 0.6, dur: [3, 5] }] } },
-      { id: "recruit2", look: "guard", x: -0.6, z: -21.4, yaw: 0, when: "$WATCH_STRENGTH >= 6",
+      { id: "recruit2", name: "New Recruit", look: "guard", x: -0.6, z: -21.4, yaw: 0, when: "$WATCH_STRENGTH >= 6",
         routine: { role: "guard", steps: [{ do: "work", at: [-0.6, -21.4], face: 0, anim: "practice", dur: [10, 14] }, { do: "idle", at: [-0.2, -22], face: -0.6, dur: [3, 5] }] } },
       patrol(1, [8, 3], [-8, 3]), patrol(2, [16, -3], [33, -3]), patrol(3, [-11, -26], [-11, 14]), patrol(4, [14, 20], [24, 22]),
       patrol(5, [3, -22], [-3, -22]), patrol(6, [22, 9], [22, 30]), patrol(7, [31, -16], [31, -30]), patrol(8, [33, 1.4], [41, 1.4]),
@@ -313,9 +313,9 @@ export const ZONES = {
       { id: "woodcutter", look: "laborer", x: -12.6, z: -9.6, yaw: Math.PI,
         routine: { role: "worker", home: [-10, -15.6], steps: [{ do: "work", at: [-12.6, -9.6], face: Math.PI, anim: "hoe", dur: [12, 18] }, { do: "walk", to: [-6.2, -5.4] }, { do: "idle", at: [-6.2, -5.4], face: 1.2, dur: [4, 6] }] } },
       // Thornwick's own watch: once the Watch has grown enough to spare them (data/law.js).
-      { id: "watchman1", look: "guard", x: -4, z: 6.6, yaw: 1.57, node: "W_Watchman", when: "$WATCH_STRENGTH >= 2",
+      { id: "watchman1", name: "Thornwick Watchman", look: "guard", x: -4, z: 6.6, yaw: 1.57, node: "W_Watchman", when: "$WATCH_STRENGTH >= 2",
         routine: { role: "guard", steps: [{ do: "walk", to: [4, 6.6] }, { do: "idle", at: [4, 6.6], face: 0, dur: [5, 8] }, { do: "walk", to: [-4, 6.6] }, { do: "idle", at: [-4, 6.6], face: 0, dur: [5, 8] }] } },
-      { id: "watchman2", look: "guard", x: 12.5, z: -6.5, yaw: -2.4, node: "W_Watchman", when: "$WATCH_STRENGTH >= 5",
+      { id: "watchman2", name: "Thornwick Watchman", look: "guard", x: 12.5, z: -6.5, yaw: -2.4, node: "W_Watchman", when: "$WATCH_STRENGTH >= 5",
         routine: { role: "guard", steps: [{ do: "idle", at: [12.5, -6.5], face: -2.4, dur: [8, 12] }, { do: "wander", around: [12, -5.5], r: 1.5, dur: [5, 7] }] } },
       { id: "waterman", look: "townsman", x: -3.6, z: -4.2, yaw: -1.6,
         routine: { home: [-15.2, -3], steps: [{ do: "work", at: [-3.7, -3.9], face: -1.9, anim: "work", dur: [6, 9] }, { do: "walk", to: [-13, 2] }, { do: "idle", at: [-13, 2], face: 0, dur: [5, 8] }] } },
@@ -344,7 +344,7 @@ export const ZONES = {
         ] }],
     extras: [
       // The Watch's man at the village, once Luke has brought Elsie home (data/law.js: the Fens have a watch now).
-      { id: "fenpost", look: "guard", x: 1.4, z: 9.6, yaw: Math.PI, node: "W_Patrol", when: "$LUKE_HOME_OPEN",
+      { id: "fenpost", name: "City Watch", look: "guard", x: 1.4, z: 9.6, yaw: Math.PI, node: "W_Patrol", when: "$LUKE_HOME_OPEN",
         routine: { role: "guard", steps: [{ do: "idle", at: [1.4, 9.6], face: Math.PI, dur: [8, 12] }, { do: "walk", to: [-2.6, 13.6] }, { do: "idle", at: [-2.6, 13.6], face: 2.6, dur: [6, 9] }, { do: "walk", to: [1.4, 9.6] }] } },
     ],
     pickups: [{ id: "hymn", x: -1.4, z: 15.2, show: "1", flag: "HYMN_READ", node: "W_Hymn", label: "Read the hymn nailed to the well" }, frag(4, -10.4, 9.5)],
