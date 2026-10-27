@@ -144,3 +144,46 @@ export const MASKED_PHASES = Object.freeze([
   { phase: 1, above: 0.75 }, { phase: 2, above: 0.5, undercut: true }, { phase: 3, above: 0.35, loops: true },
   { phase: 4, above: 0.25, line: true }, { phase: 5, above: 0, leave: true },
 ]);
+
+// ---- Encounter VI: "Go home, Lantern." (GDD §15.7 VI, Ep 43) --------------------------------------------------
+// The Archive road. The second full duel: everything from the vault (Reap, Cleave, Lunge, the blink at your left,
+// the floor that opens, left-left-back) and two things nobody has seen him do.
+//   Draw   (P2) a black tear opens under you and another a step in front of him. Still standing on yours when it
+//          closes, and you come out of his, into the Cleave already coming down: step off, jump it, or parry.
+//   Ring   (P3) tears open in a ring round where you stand and a cut comes out of each, one after another. The
+//          middle is the one place none of them reaches.
+// At 25% he takes the key's other half out of the case and leaves the way he came. The fight is won.
+export const MASKED_VI_STATS = Object.freeze({
+  ...MASKED_STATS, name: "The Sable Knight", maxHealth: 2600, maxPosture: 300, runSpeed: 4.8,
+  bossTitle: "THE SABLE KNIGHT · THE ARCHIVE ROAD", defeatText: "HE TAKES THE KEY", phaseMarks: [0.7, 0.45, 0.25],
+});
+
+export const MASKED_VI_TUNING = Object.freeze({
+  leaveAt: 0.25,
+  draw: { r: 1.3, delay: 44, front: 1.9 },   // the mark under you; how far in front of him you come out
+  ring: { n: 7, radius: 2.6, r: 1.05, delay: 46, gap: 7 },
+  ringCut: hitSpec({ damage: 13, posture: 14, hitstop: 4, hitstun: 18, knockback: 3 }),
+});
+
+export const MASKED_VI_ABILITIES = Object.freeze({
+  Draw: defineAbility({ id: "Draw", startup: 18, active: 2, recovery: 22, events: [sound(14, "dodge"), custom(18, "draw")] }),
+  Ring: defineAbility({ id: "Ring", startup: 24, active: 2, recovery: 40, events: [{ frame: 0, type: E.SpawnVfx, key: "glint" }, custom(24, "ring")] }),
+});
+/** What a cut out of the ring is called when it lands (the controller fires them). */
+export const RING_CUT = defineAbility({ id: "RingCut", startup: 1, active: 1, recovery: 1, hit: MASKED_VI_TUNING.ringCut, events: [] });
+
+export const maskedVIOptions = (phase) => {
+  const A = MASKED_ABILITIES, V = MASKED_VI_ABILITIES, late = phase >= 3;
+  return [
+    new AttackOption(A.Reap, 0, 2.8, 3, late ? 40 : 50),
+    new AttackOption(A.Cleave, 0, 2.6, 2, 100),
+    new AttackOption(A.Lunge, 2.6, 6.5, 2, late ? 110 : 150),
+    new AttackOption(A.Sever, 3, 18, 2, late ? 160 : 210),
+    ...(phase >= 2 ? [new AttackOption(A.Undercut, 2, 18, 1, 300), new AttackOption(V.Draw, 2.5, 14, 2, late ? 240 : 280)] : []),
+    ...(phase >= 3 ? [new AttackOption(V.Ring, 0, 9, 2, 330)] : []),
+  ];
+};
+
+export const MASKED_VI_PHASES = Object.freeze([
+  { phase: 1, above: 0.7 }, { phase: 2, above: 0.45, draw: true }, { phase: 3, above: 0.25, ring: true }, { phase: 4, above: 0, leave: true },
+]);

@@ -5,7 +5,7 @@
 import { Rig } from "./rig.js";
 import { FlagStore } from "../core/flags.js";
 import { parseScript, DialogueRunner, fillText } from "../core/script.js";
-import { EpisodeDirector, validateEpisode, BeatType } from "../sim/episode.js";
+import { EpisodeDirector, validateEpisode, BeatType, objectiveCount } from "../sim/episode.js";
 import { CAST, speakerName } from "../data/story/cast.js";
 import { maskIntegrity } from "../data/masked.js";
 import { CUTSCENES } from "../data/story/cutscenes.js";
@@ -197,6 +197,13 @@ class Stage {
       const entry = (p) => [...this.actors.values()].find((a) => a.actor === p);
       return wideShot(vis.map((p) => ({ x: p.pos.x, z: p.pos.z, y: p.pos.y ?? 0, scale: entry(p)?.rig.look.scale ?? 1, crowd: !!entry(p)?.crowd })), ids[0], this.walls);
     }
+    if (kind === "sky") { // <<shot sky x y z>>: low, just behind everyone, looking up at something in the sky (Ep 46: the Gate)
+      const [tx, ty, tz] = ids.map(Number);
+      const vis = pts.filter((p) => !p.hiddenActor && !(p === this.getWorld().player && this.playerHidden));
+      const c = vis.length ? vis.reduce((m, p) => ({ x: m.x + p.pos.x / vis.length, z: m.z + p.pos.z / vis.length }), { x: 0, z: 0 }) : { x: 0, z: 0 };
+      const dx = tx - c.x, dz = tz - c.z, d = Math.hypot(dx, dz) || 1;
+      return { pos: { x: c.x - (dx / d) * 4.5, y: 1.1, z: c.z - (dz / d) * 4.5 }, look: { x: tx, y: ty, z: tz }, fov: 0.78 };
+    }
     if (kind === "on") { // in front of their face, clear of everyone else and inside the set's walls (core/framing.js)
       const a = this.get(ids[0]);
       if (!a) return null;
@@ -385,6 +392,10 @@ export class StoryPlayer {
     if (this.theatre) this._theatreTick();
     if (this.fight) this._tutorial(dt);
     if (this.roaming && this.clock && this.exploring) this._weatherTick(dt);
+    else if (this.ep) { // an episode: the street keeps clear of the story (passers-by walked through close-ups and duels)
+      const set = this.ctx.sets?.built?.get(this.ctx.sets.current), p = this.ctx.getWorld().player.pos;
+      if (set) set.mood = { density: this.fight || this.exploring?.combat ? 0 : this.exploring ? 0.6 : 0.15, player: { x: p.x, z: p.z } };
+    }
     if (this.ambient && this.exploring) { // townsfolk go about their day (runtime/ambient.js)
       const p = this.ctx.getWorld().player, x = this.exploring;
       this.ambient.update({ dt, player: { x: p.pos.x, z: p.pos.z, moving: Math.hypot(p.vel.x, p.vel.z) > 0.4 }, combat: x.combat?.at ?? null,
@@ -954,11 +965,8 @@ export class StoryPlayer {
   }
 
   _objective() {
-    // {n}/{total} counts everyone there is to talk to, or only the ones the beat needs (counts: "required").
-    const x = this.exploring, b = x.beat, talkable = b.cast.filter((c) => c.node);
-    const npcs = b.counts === "required" ? talkable.filter((c) => b.required?.includes(c.id)) : talkable;
-    const n = npcs.filter((c) => x.talked.has(c.id)).length;
-    this.ui.objective.innerHTML = fillText(b.objective ?? "", { ...this.player, flags: this.flags }).replace("{n}", n).replace("{total}", npcs.length).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+    const x = this.exploring, b = x.beat, { n, total } = objectiveCount(b, x.talked); // sim/episode.js
+    this.ui.objective.innerHTML = fillText(b.objective ?? "", { ...this.player, flags: this.flags }).replace("{n}", n).replace("{total}", total).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
     if (this.roaming) {
       const q = this.quests.entries().find((e) => !e.done);
       const track = q ? ` · <b>Quest:</b> ${fillText(q.objective, { ...this.player, flags: this.flags })}` : "";

@@ -6,13 +6,13 @@
 import { PhasedBoss } from "./boss.js";
 import { constrain } from "./bounds.js";
 import { EventType } from "../core/abilities.js";
-import { MASKED_ABILITIES, MASKED_PHASES, MASKED_TUNING, UNDERCUT, maskedOptions } from "../data/masked.js";
+import { MASKED_ABILITIES, MASKED_PHASES, MASKED_TUNING, UNDERCUT, maskedOptions, MASKED_VI_PHASES, MASKED_VI_TUNING, RING_CUT, maskedVIOptions } from "../data/masked.js";
 
 const flat = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 
 export class MaskedController extends PhasedBoss {
-  constructor(world, f) {
-    super(world, f, MASKED_PHASES, maskedOptions);
+  constructor(world, f, phases = MASKED_PHASES, options = maskedOptions) {
+    super(world, f, phases, options);
     const T = MASKED_TUNING;
     this.exit = null; this.exposed = 0; this.left = false;
     this.evade = { cooldown: 60, step: 0 };
@@ -174,5 +174,62 @@ export class MaskedController extends PhasedBoss {
       f.controller.startDirect(MASKED_ABILITIES.SeverLine, this.world.frame);
     }
     this._evade();
+  }
+}
+
+/**
+ * Encounter VI (Ep 43, the Archive road): the vault's kit, plus the Draw (a tear under you, and you come out of one a
+ * step in front of him as the Cleave comes down) and the Ring of Edges (cuts out of a ring of tears round you, one
+ * after another; the middle is safe). No mouths and no Sever Line out on the road. At 25% he takes the key and goes.
+ */
+export class MaskedVIController extends MaskedController {
+  constructor(world, f) {
+    super(world, f, MASKED_VI_PHASES, maskedVIOptions);
+    this.draw = null;
+  }
+
+  get brainActive() { return super.brainActive && !this.draw; } // he waits for whoever he's drawing
+
+  onCustom(key) {
+    const w = this.world, f = this.f, V = MASKED_VI_TUNING;
+    if (key === "draw") {
+      const t = this._target();
+      this.draw = { who: t, at: { x: t.pos.x, z: t.pos.z }, frames: V.draw.delay };
+      w.emit({ type: "drawMark", fighter: f, target: t, at: { x: t.pos.x, y: 0, z: t.pos.z }, r: V.draw.r, frames: V.draw.delay });
+      return true;
+    }
+    if (key === "ring") {
+      const t = this._target(), R = V.ring, a0 = w.rng() * Math.PI * 2, c = { x: t.pos.x, z: t.pos.z };
+      for (let i = 0; i < R.n; i++) {
+        const a = a0 + (i / R.n) * Math.PI * 2;
+        w.addStrike(f, c.x + Math.sin(a) * R.radius, c.z + Math.cos(a) * R.radius, { delay: R.delay + i * R.gap, r: R.r, spec: V.ringCut, ability: RING_CUT, kind: "sever" });
+      }
+      w.emit({ type: "edgeRing", fighter: f, at: { x: c.x, y: 0, z: c.z }, radius: R.radius });
+      return true;
+    }
+    return super.onCustom(key);
+  }
+
+  enterPhase(p) { if (p === 4) this.leave(); }
+
+  /** Whoever's still on the mark when it closes comes out a step in front of him, facing him, as the Cleave starts. */
+  _drawIn() {
+    const d = this.draw, w = this.world, f = this.f, t = d.who, V = MASKED_VI_TUNING;
+    this.draw = null;
+    if (this.left || !t.alive || t.pos.y > 0.3 || flat(t.pos, d.at) > V.draw.r) return; // stepped off, or jumped it
+    let dx = d.at.x - f.pos.x, dz = d.at.z - f.pos.z;
+    const n = Math.hypot(dx, dz) || 1; dx /= n; dz /= n;
+    const to = constrain({ x: f.pos.x + dx * V.draw.front, z: f.pos.z + dz * V.draw.front }, t.stats.radius, w.bounds);
+    w.emit({ type: "drawn", fighter: t, from: { x: t.pos.x, y: 0, z: t.pos.z }, to: { x: to.x, y: 0, z: to.z } });
+    t.pos.x = t.prev.x = to.x; t.pos.z = t.prev.z = to.z; t.knock.x = t.knock.z = 0;
+    t.yaw = t.prevYaw = Math.atan2(f.pos.x - to.x, f.pos.z - to.z);
+    f.yaw = f.prevYaw = Math.atan2(to.x - f.pos.x, to.z - f.pos.z);
+    f.runner.interrupt();
+    f.controller.startDirect(MASKED_ABILITIES.Cleave, w.frame);
+  }
+
+  step() {
+    super.step();
+    if (this.draw && --this.draw.frames <= 0) this._drawIn();
   }
 }

@@ -48,9 +48,11 @@ export function tearMaterials(scene) {
   m = {
     pale: { edge: glow(scene, "tear-paleEdge", "#f6f2ff", 0.95, true), hole: glow(scene, "tear-paleHole", "#c4bce6", 0.6) },
     black: { edge: glow(scene, "tear-coldEdge", "#9cb8ff", 0.9, true), hole },
+    // The Gate (Eps 46–48): red at the edges, and through it a darker red, not black.
+    gate: { edge: glow(scene, "tear-gateEdge", "#ff6a3a", 0.95, true), hole: glow(scene, "tear-gateHole", "#3a0a08") },
   };
   // The hole always draws over its own edge, from either side (a depth bias, not a nudge in space).
-  m.pale.hole.zOffset = -4; hole.zOffset = -4;
+  m.pale.hole.zOffset = -4; hole.zOffset = -4; m.gate.hole.zOffset = -4; m.gate.hole.backFaceCulling = false; m.gate.hole.fogEnabled = false; m.gate.edge.fogEnabled = false;
   MATS.set(scene, m);
   return m;
 }

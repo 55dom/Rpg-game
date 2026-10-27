@@ -76,3 +76,12 @@ export class EpisodeDirector {
   /** Where to resume after a reload: the current beat, from its start. */
   get resumePoint() { return { episode: this.episode.id, beat: Math.max(0, this.index) }; }
 }
+
+/**
+ * A walk-around's {n}/{total}: everyone there is to talk to, or (counts: "required") everything the beat needs, people
+ * and things to find alike. done: the ids already seen to.
+ */
+export function objectiveCount(beat, done) {
+  const ids = beat.counts === "required" ? beat.required ?? [] : (beat.cast ?? []).filter((c) => c.node).map((c) => c.id);
+  return { n: ids.filter((id) => done.has(id)).length, total: ids.length };
+}

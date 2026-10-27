@@ -116,6 +116,7 @@ export const SHEETS = Object.freeze({
   stranger: { build: "slim", gait: "soldier", idle: "still",
     outfit: { top: "#141218", hem: "thigh", sleeves: "long", legs: "#141218", boots: "tall", bootColor: "#5a3a22", belt: "#3a2a1a", grime: 0 } },
   masked: MASKED_SHEET, // the masked knight (data/masked.js)
+  maskedVI: MASKED_SHEET,
   // ---- The Pale Choir ---------------------------------------------------------------------------------
   wraithe: { build: "lithe", gait: "prowl", idle: "still",
     outfit: { top: "#e2dfe8", hem: "knee", sleeves: "long", legs: "#4a4658", boots: "tall", bootColor: "#3a3646", belt: "#7a6a9a",

@@ -1,7 +1,7 @@
 // Story sets (Phase 3): each one is built on first use from primitives, carries its own sky, fog,
 // and lighting, and can be swapped in and out. "yard" is the original training yard (arena.js).
 
-import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT, ISLES_LAYOUT, OLDCITY_LAYOUT, HOLLOW_LAYOUT } from "../data/zones.js";
+import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT, ISLES_LAYOUT, OLDCITY_LAYOUT, HOLLOW_LAYOUT, ARCHIVE_LAYOUT, AURELIN_GATE } from "../data/zones.js";
 import { WARDEN_STARS } from "../data/isles.js";
 import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } from "./look.js";
 import { buildCrowd } from "./crowd.js";
@@ -54,7 +54,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, watchhouse: buildWatchhouse, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, hollow: buildHollow, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, archive: buildArchive, watchhouse: buildWatchhouse, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, hollow: buildHollow, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -847,15 +847,37 @@ function buildAurelin(scene, mobile) {
     paths: [{ cx: 0, cz: 0, r: 8, dir: 1 }, { cx: 0, cz: 0, r: 11, dir: -1 }, { line: [[-23, -26], [-23, 34]] }, { line: [[23, -26], [23, 34]] }, { line: [[-20, 20], [20, 20]] }, { line: [[8, -28], [8, 18]] }],
     chatters: [[-9, -14, 0.6], [14, 9, -1.2], [-20, 24, 2.1], [26, 10, 3.0]] });
   noticeBoard(scene, K, P, L.notice);
+  // The Gate (Eps 46–48): a tear across the sky above the Crown Ward, red at the edges, and the sky gone red round it.
+  // Through it, far off, rows of something standing very still. Cue "gateOpen" tears it open on screen; once the story
+  // has opened it ($GATE_OPEN) it's simply there.
+  const GT = AURELIN_GATE, gateRoot = new BB.TransformNode("au-gateRoot", scene); gateRoot.parent = K.root;
+  const gate = new BB.TransformNode("au-gate", scene); gate.parent = gateRoot; gate.position.set(GT.x, GT.y, GT.z); gate.rotation.y = Math.atan2(-GT.x, -GT.z); // facing the plaza
+  const gateTear = makeTear(scene, "au-gateTear", { r: 24, kind: "gate", seed: 46, ground: false, stretch: [1.55, 0.66] }); gateTear.parent = gate;
+  const rankM = toon(scene, "au-gateRank", "#120606");
+  for (let row = 0; row < 3; row++) for (let i = -11; i <= 11; i++) { // ranks, far off, very still: a field of spears
+    const x = i * 2.0 + (row % 2) * 1.0, y = -9.5 + row * 1.9, s = 1.6 - row * 0.2;
+    const body = add(MB.CreateBox("au-gateRank", { width: 0.55 * s, height: 1.4 * s, depth: 0.1 }, scene)); body.parent = gate; body.position.set(x, y, 2); body.material = rankM; // in front of the hole, not behind it
+    const spear = add(MB.CreateBox("au-gateSpear", { width: 0.08 * s, height: 2.6 * s, depth: 0.06 }, scene)); spear.parent = gate; spear.position.set(x + 0.32 * s, y + 0.6 * s, 2); spear.material = rankM;
+  }
+  const redSky = add(MB.CreateSphere("au-redSky", { diameter: 320, segments: 12, sideOrientation: BB.Mesh.BACKSIDE }, scene)); redSky.parent = gateRoot;
+  const redM = glow(scene, "au-redSkyM", "#ff3a1a", 0.0, true); redM.fogEnabled = false; redSky.material = redM; redSky.isPickable = false;
+  const gateFlag = K.when("$GATE_OPEN");
+  let gateOpen = 0, gateWant = 0;
+  gateRoot.setEnabled(false);
   K.bake([]);
   const env = { clear: "#a8cdf0", fog: "#c4dbf2", fogDensity: 0.008, hemi: [0.6, "#fff6e6", "#7a86a8"], sun: [0.8, "#fff1d0", [-0.4, -1, 0.55]], warm: 0 };
   const toonEnv = { lightDir: [0.4, 1, -0.55], fogColor: "#c4dbf2", fogDensity: 0.005, sky: [1.1, 1.08, 1.04], ground: [0.9, 0.88, 0.9], rim: [0.75, 0.85, 1] };
   return {
     env, toon: toonEnv, show: K.show,
     crowd, outdoor: true, windows: K.windows, lamps: K.lamps, conditions: K.conditions,
+    cue(name) { if (name === "gateOpen") gateWant = 1; if (name === "gateShut") { gateWant = 0; gateOpen = 0; } },
     update(dt, t) {
       crowd.update(dt, this.mood); critters.update(dt, this.mood ?? {});
       for (const [i, c] of poorCloths.entries()) c.rotation.x = Math.sin(t * 2 + i) * 0.12 * (1 + (this.mood?.wind ?? 0));
+      if (gateFlag.isEnabled() && !gateWant) { gateWant = 1; gateOpen = 1; } // already open in the story
+      gateOpen = Math.min(gateWant, gateOpen + dt * 0.55);
+      gateRoot.setEnabled(gateOpen > 0.01);
+      if (gateOpen > 0.01) { const e = 1 - (1 - gateOpen) ** 3; gateTear.scaling.set(e, 0.15 + 0.85 * e, 1); redM.alpha = 0.26 * e; gateTear.rotation.z = Math.sin(t * 0.3) * 0.01; }
     },
   };
 }
@@ -1583,6 +1605,82 @@ function buildHall(scene, mobile) {
       room.cutaway(scene.activeCamera, self.mood?.player);
       for (let i = 0; i < flames.length; i++) flames[i].scaling.y = (flames[i].name === "hl-brannocFlame" ? 1.15 : 1) * (0.88 + Math.sin(t * 8 + i * 1.7) * 0.12);
       warm.intensity = 0.56 + Math.sin(t * 5) * 0.04;
+    } };
+  return self;
+}
+
+/**
+ * The Grand Archive (Eps 44–48, data/zones.js ARCHIVE_LAYOUT): a long reading hall of pale stone between tall stacks of
+ * books, reading tables down the aisle under hanging lamps, the sealed stacks behind an iron grille, and at the far end
+ * the lock: a round door of dark stone set in a low dais, its keyhole in two halves, under a shaft of light from the eye
+ * in the dome.
+ */
+function buildArchive(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, L = ARCHIVE_LAYOUT, P = palette(scene, "ar");
+  const rng = mulberry(44);
+  const room = buildRoom(scene, K, { prefix: "ar", half: L.half, height: L.height, wall: "#e2d8c4", wainscot: "#5a4030", floorA: "#cfc4b0", floorB: "#b4a892", door: L.door,
+    windows: [["w", -9, 5.2, 1.2, 2.8], ["w", -2, 5.2, 1.2, 2.8], ["e", -9, 5.2, 1.2, 2.8], ["e", -2, 5.2, 1.2, 2.8]] });
+  const [hx, hz] = L.half;
+  const runner = add(MB.CreateGround("ar-runner", { width: 2.6, height: hz * 2 - 6 }, scene)); runner.position.set(0, 0.012, -3); runner.material = P("#2b3f6a");
+  // The stacks: a dark frame, five shelves a side, books in blocks of colour.
+  const wood = P("#3a2a1e"), bookMs = ["#7a2a2a", "#2b4f6a", "#4a5a2a", "#6a4a2a", "#5a3a6a", "#8a6a3a"].map((c) => P(c));
+  for (const [x, z0, z1] of L.stacks) {
+    const len = z1 - z0, cz = (z0 + z1) / 2;
+    const frame = add(MB.CreateBox("ar-stack", { width: 1.0, height: 4.2, depth: len }, scene), 0.03); frame.position.set(x, 2.1, cz); frame.material = wood;
+    for (const side of [-1, 1]) for (let t = 0; t < 5; t++) {
+      for (let a = z0 + 0.15; a < z1 - 0.3;) {
+        const w = 0.5 + rng() * 0.7, run = Math.min(w, z1 - 0.15 - a);
+        const b = add(MB.CreateBox("ar-books", { width: 0.06, height: 0.5 + rng() * 0.12, depth: run - 0.04 }, scene));
+        b.position.set(x + side * 0.51, 0.45 + t * 0.78, a + run / 2); b.material = bookMs[Math.floor(rng() * bookMs.length)];
+        a += run;
+      }
+    }
+  }
+  // Reading tables with a lamp each.
+  const lampM = glow(scene, "ar-lamp", "#ffd890");
+  for (const [x, z] of L.tables) {
+    const top = add(MB.CreateBox("ar-table", { width: 1.0, height: 0.08, depth: 2.4 }, scene), 0.02); top.position.set(x, 0.78, z); top.material = P("#5a3a26");
+    for (const [dx, dz] of [[-0.4, -1.05], [0.4, -1.05], [-0.4, 1.05], [0.4, 1.05]]) { const leg = add(MB.CreateBox("ar-leg", { width: 0.08, height: 0.76, depth: 0.08 }, scene)); leg.position.set(x + dx, 0.38, z + dz); leg.material = P("#3a2618"); }
+    const lamp = add(MB.CreateBox("ar-tableLamp", { width: 0.18, height: 0.26, depth: 0.18 }, scene)); lamp.position.set(x, 0.95, z + 0.6); lamp.material = lampM;
+    const book = add(MB.CreateBox("ar-openBook", { width: 0.5, height: 0.04, depth: 0.36 }, scene)); book.position.set(x, 0.84, z - 0.3); book.material = P("#efe6d2");
+  }
+  // Lamps hung over the aisle.
+  for (const z of [-10, -4, 2]) {
+    const l = add(MB.CreateBox("ar-hangLamp", { width: 0.5, height: 0.7, depth: 0.5 }, scene), 0.02); l.position.set(0, 5.6, z); l.material = lampM;
+    const c = add(MB.CreateCylinder("ar-chain", { height: L.height - 6, diameter: 0.04, tessellation: 4 }, scene)); c.position.set(0, 5.95 + (L.height - 6) / 2, z); c.material = P("#2a2a30");
+  }
+  // The sealed stacks: an iron grille (bars), its gate standing open, a lectern with the old book on it.
+  const S = L.sealed, barM = P("#2a2a30");
+  const bars = (x0, z0, x1, z1) => {
+    const len = Math.hypot(x1 - x0, z1 - z0), n = Math.max(2, Math.round(len / 0.22));
+    for (let i = 0; i <= n; i++) { const b = add(MB.CreateCylinder("ar-bar", { height: 3.2, diameter: 0.05, tessellation: 4 }, scene)); b.position.set(x0 + ((x1 - x0) * i) / n, 1.6, z0 + ((z1 - z0) * i) / n); b.material = barM; }
+    const rail = add(MB.CreateBox("ar-grilleRail", { width: Math.abs(x1 - x0) || 0.08, height: 0.08, depth: Math.abs(z1 - z0) || 0.08 }, scene)); rail.position.set((x0 + x1) / 2, 3.2, (z0 + z1) / 2); rail.material = barM;
+  };
+  bars(S.x0, S.z0, S.gate[0], S.z0); bars(S.gate[1], S.z0, S.x1, S.z0); bars(S.x1, S.z0, S.x1, S.z1);
+  bars(S.gate[0], S.z0, S.gate[0], S.z0 + (S.gate[1] - S.gate[0])); // the gate, swung open (inward): bars too
+  const lec = add(MB.CreateCylinder("ar-lectern", { height: 1.1, diameterTop: 0.3, diameterBottom: 0.5, tessellation: 8 }, scene), 0.02); lec.position.set(L.lectern.x, 0.55, L.lectern.z); lec.material = P("#3a2618");
+  const old = add(MB.CreateBox("ar-oldBook", { width: 0.56, height: 0.1, depth: 0.42 }, scene)); old.position.set(L.lectern.x, 1.16, L.lectern.z); old.rotation.x = -0.3; old.material = P("#4a2a20");
+  // The lock: a low dais, a round door of dark stone in it with a ring of script, and a keyhole in two halves.
+  const D = L.dais;
+  const dais = add(MB.CreateCylinder("ar-dais", { height: 0.4, diameter: D.r * 2, tessellation: 40 }, scene), 0.03); dais.position.set(D.x, 0.2, D.z); dais.material = P("#9a9284");
+  const door = add(MB.CreateCylinder("ar-lockDoor", { height: 0.06, diameter: D.r * 1.36, tessellation: 40 }, scene)); door.position.set(D.x, 0.42, D.z); door.material = P("#26232c");
+  const ringM = glow(scene, "ar-lockRing", "#e8d49a");
+  const ring = add(MB.CreateTorus("ar-lockRing", { diameter: D.r * 1.2, thickness: 0.05, tessellation: 48 }, scene)); ring.position.set(D.x, 0.46, D.z); ring.material = ringM;
+  for (const s of [-1, 1]) { // the two halves of the keyhole, each a crescent cut into the stone
+    const half = add(MB.CreateBox("ar-keyhole", { width: 0.16, height: 0.04, depth: 0.7 }, scene)); half.position.set(D.x + s * 0.14, 0.46, D.z); half.rotation.y = s * 0.35; half.material = P("#0e0d12");
+  }
+  // The eye in the dome: a shaft of daylight on the lock.
+  const shaftM = glow(scene, "ar-shaft", "#fff4d8", 0.12, true);
+  const shaft = add(MB.CreateCylinder("ar-shaft", { height: L.height, diameterTop: 2.6, diameterBottom: 3.4, tessellation: 24 }, scene)); shaft.position.set(D.x, L.height / 2, D.z); shaft.material = shaftM; shaft.isPickable = false;
+  const warm = new BB.PointLight("ar-warm", new BB.Vector3(0, 5, -3), scene); warm.diffuse = color3("#ffcf88").clone(); warm.intensity = 0.55; warm.range = 26; K.lights.push(warm);
+  const cool = new BB.PointLight("ar-eye", new BB.Vector3(D.x, L.height - 0.5, D.z), scene); cool.diffuse = color3("#fff0d0").clone(); cool.intensity = 0.5; cool.range = 12; K.lights.push(cool);
+  K.bake([...room.keep, shaft, ring]);
+  const env = { clear: "#16141a", fog: "#16141a", fogDensity: 0.004, hemi: [0.62, "#fff0dc", "#3a3440"], sun: [0.45, "#ffe0b0", [0.2, -1, 0.4]], warm: 0 };
+  const toonEnv = { lightDir: [-0.2, 1, -0.4], fogColor: "#16141a", fogDensity: 0.002, sky: [1.04, 1.0, 0.94], ground: [0.8, 0.76, 0.72], rim: [1.0, 0.88, 0.72] };
+  const self = { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true,
+    update(dt, t) {
+      room.cutaway(scene.activeCamera, self.mood?.player);
+      ringM.alpha = 0.75 + Math.sin(t * 1.3) * 0.2;
     } };
   return self;
 }

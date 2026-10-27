@@ -14,3 +14,16 @@ export const AFTER_EP41 = Object.freeze({ ...AFTER_EP40, EP41_DONE: 1, VEY_TOLD:
 
 /** By the end of Episode 42: the second clause is written on Elodie's wrist, and the door couldn't read her. */
 export const AFTER_EP42 = Object.freeze({ ...AFTER_EP41, EP42_DONE: 1, CLAUSE_II: "nobody", HESPER_REFUSED: 1 });
+
+/** By the end of Episode 43: Encounter VI. The masked knight took the Paragon's half of the key on the road under the Hall. */
+export const AFTER_EP43 = Object.freeze({ ...AFTER_EP42, EP43_DONE: 1, KEY_CARRIED: 1, KEY_TAKEN: 1, SABLE_ENCOUNTER: 6 });
+
+/** By the end of Episode 44: the first Paragon's account was cut; Lio found the hymnal: the invitation needs no key, only a name. */
+export const AFTER_EP44 = Object.freeze({ ...AFTER_EP43, EP44_DONE: 1, ACCOUNT_CUT: 1, HYMNAL_FOUND: 1, INVITATION_KNOWN: 1 });
+
+/** By the end of Episode 45: Founding Eve. The clause on Elodie's wrist is fading, and she heard a knock from the other side. */
+export const AFTER_EP45 = Object.freeze({ ...AFTER_EP44, EP45_DONE: 1, CLAUSE_FADING: 1, KNOCK_HEARD: 1 });
+
+/** By the end of Episode 46: Hesper took Elodie again; the Chancellor's Lances tried to take the Archive and Halvard stopped them; Elodie
+ *  wrote her name on the lock and it turned from the other side; the Gate is open in the sky over the Crown Ward. */
+export const AFTER_EP46 = Object.freeze({ ...AFTER_EP45, EP46_DONE: 1, ELODIE_TAKEN_AGAIN: 1, LOCK_TURNED: 1, GATE_OPEN: 1 });

@@ -27,8 +27,8 @@ import { HalvardController } from "./halvard.js";
 import { ERASER_STATS, ERASER_HITBOXES, eraserOptions } from "../data/eraser.js";
 import { EraserController } from "./eraser.js";
 import { WraitheController } from "./wraithe.js";
-import { MASKED_STATS, MASKED_HITBOXES, maskedOptions } from "../data/masked.js";
-import { MaskedController } from "./masked.js";
+import { MASKED_STATS, MASKED_HITBOXES, maskedOptions, MASKED_VI_STATS, maskedVIOptions } from "../data/masked.js";
+import { MaskedController, MaskedVIController } from "./masked.js";
 import { ECLIPSED_STATS, ECLIPSED_FINAL_STATS, ECLIPSED_HITBOXES, eclipsedOptions, eclipsedFinalOptions } from "../data/eclipse.js";
 import { EclipseController, EclipseFinalController } from "./eclipse.js";
 import { INSCRIPTION, INSCRIPTION_HITBOXES } from "../data/inscription.js";
@@ -74,6 +74,8 @@ const BOSSES = {
   gullmaw: { stats: GULLMAW_STATS, hitboxes: GULLMAW_HITBOXES, options: gullmawOptions, traits: { heavy: true, armoredAttacks: true }, Controller: GullmawController, z: 7 },
   wraithe: { stats: WRAITHE_STATS, hitboxes: WRAITHE_HITBOXES, options: wraitheOptions, traits: {}, Controller: WraitheController, z: 6 },
   masked: { stats: MASKED_STATS, hitboxes: MASKED_HITBOXES, options: maskedOptions, traits: { heavy: true }, Controller: MaskedController, z: 7 },
+  // Arc 5: Encounter VI on the Archive road (Ep 43), the second full duel.
+  maskedVI: { stats: MASKED_VI_STATS, hitboxes: MASKED_HITBOXES, options: maskedVIOptions, traits: { heavy: true }, Controller: MaskedVIController, z: 7 },
   // Ep 27: Severin at the Tower steps, the night he reads the page (his exam kit, a harder fight).
   severinDuel: { stats: { ...SEVERIN_STATS, maxHealth: 1400, bossTitle: "SEVERIN VALCOURT · THE TOWER STEPS", defeatText: "SEVERIN YIELDS" }, hitboxes: SEVERIN_HITBOXES, options: severinOptions, traits: {}, Controller: SeverinController, z: 6 },
   eclipsed: { stats: ECLIPSED_STATS, hitboxes: ECLIPSED_HITBOXES, options: eclipsedOptions, traits: {}, Controller: EclipseController, z: 6 },

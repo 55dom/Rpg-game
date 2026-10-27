@@ -53,6 +53,10 @@ import { EPISODE_39, EP39_SCRIPT } from "./data/story/ep39.js";
 import { EPISODE_40, EP40_SCRIPT } from "./data/story/ep40.js";
 import { EPISODE_41, EP41_SCRIPT } from "./data/story/ep41.js";
 import { EPISODE_42, EP42_SCRIPT } from "./data/story/ep42.js";
+import { EPISODE_43, EP43_SCRIPT } from "./data/story/ep43.js";
+import { EPISODE_44, EP44_SCRIPT } from "./data/story/ep44.js";
+import { EPISODE_45, EP45_SCRIPT } from "./data/story/ep45.js";
+import { EPISODE_46, EP46_SCRIPT } from "./data/story/ep46.js";
 import { theatreList } from "./data/theatre.js";
 import { PlaytestLog, SURVEYS } from "./core/playtest.js";
 import { keyItemsHeld } from "./data/keyItems.js";
@@ -359,6 +363,16 @@ export function boot(doc = document) {
           break;
         }
         case "severExposed": vfx.flash({ x: ev.fighter.pos.x, y: 1.2, z: ev.fighter.pos.z }, 1.6, "#9cb8ff", 0.1); break;
+        // Encounter VI (Ep 43): the Draw (a tear under you, and out of one in front of him) and the Ring of Edges.
+        case "drawMark": tearFx.open({ x: ev.at.x, y: 0.05, z: ev.at.z }, { r: ev.r, kind: "black", life: ev.frames / 60, ground: true }); sfx.play("tear", 0.6); break;
+        case "drawn": {
+          const yaw = Math.atan2(ev.to.x - ev.from.x, ev.to.z - ev.from.z);
+          tearFx.open({ x: ev.to.x, y: 1.15, z: ev.to.z }, { r: 0.9, kind: "black", life: 0.5, yaw });
+          vfx.flash({ x: ev.to.x, y: 1.15, z: ev.to.z }, 1.4, "#9cb8ff", 0.1); sfx.play("tear"); camera.shake(0.3);
+          if (ev.fighter === world.player) hud.toast("DRAWN IN · PARRY!", "danger");
+          break;
+        }
+        case "edgeRing": vfx.ring({ x: ev.at.x, y: 0.06, z: ev.at.z }, ev.radius, "#9cb8ff", 0.35); sfx.play("tear", 0.8); break;
         case "severMouths":
           mouthTears = ev.mouths.map((m) => tearFx.open({ x: m.x, y: 1.4, z: m.z }, { r: 1.25, kind: "black", life: 9999, grow: 0.5, yaw: Math.atan2(-m.x, -m.z) }));
           sfx.play("tear");
@@ -837,7 +851,9 @@ export function boot(doc = document) {
     { episode: EPISODE_34, script: EP34_SCRIPT }, { episode: EPISODE_35, script: EP35_SCRIPT }, { episode: EPISODE_36, script: EP36_SCRIPT },
     { episode: EPISODE_37, script: EP37_SCRIPT }, { episode: EPISODE_38, script: EP38_SCRIPT },
     { episode: EPISODE_39, script: EP39_SCRIPT }, { episode: EPISODE_40, script: EP40_SCRIPT },
-    { episode: EPISODE_41, script: EP41_SCRIPT }, { episode: EPISODE_42, script: EP42_SCRIPT }], [WORLD_SCRIPT]);
+    { episode: EPISODE_41, script: EP41_SCRIPT }, { episode: EPISODE_42, script: EP42_SCRIPT },
+    { episode: EPISODE_43, script: EP43_SCRIPT }, { episode: EPISODE_44, script: EP44_SCRIPT },
+    { episode: EPISODE_45, script: EP45_SCRIPT }, { episode: EPISODE_46, script: EP46_SCRIPT }], [WORLD_SCRIPT]);
   annotationNow = () => !!story.flags.get("ANNOTATION"); // after Mirrorlake, Rook's spells write ink
   revisionNow = () => !!story.flags.get("REVISION");     // after the Paragon's spar, the page rewinds
   const playtest = new PlaytestLog(story.flags, { where: () => ({ episode: story.ep?.id ?? null, beat: story.director?.beat?.id ?? null }) });
@@ -1045,6 +1061,7 @@ export function boot(doc = document) {
     gullmaw: { 2: ["THE FLOOD", "PHASE 2 · THE WATER JET · JUMP IT"], 3: ["SWALLOWED", "PHASE 3 · BURST THE SLIME BUBBLE"] },
     eclipsed: { 2: ["THE LION", "PHASE 2 · A ZODIAC BEAST · HE'S WARDED WHILE IT STANDS"], 3: ["MIRRORLAKE", "PHASE 3 · HIS REFLECTION · THE ONE IN THE WATER IS REAL"],
       4: ["THE ECLIPSE", "PHASE 4 · HE READS A CLAUSE · YOUR SURGE IS GONE"] },
+    maskedVI: { 2: ["DRAW", "PHASE 2 · A TEAR UNDER YOU PULLS YOU TO HIS GLAIVE · STEP OFF IT, OR PARRY"], 3: ["RING OF EDGES", "PHASE 3 · CUTS FROM A RING OF TEARS · THE MIDDLE IS SAFE"] },
     masked: { 2: ["THE FLOOR OPENS", "PHASE 2 · A BLACK TEAR UNDER YOU · STEP OFF, OR JUMP OR DASH BEFORE YOU LAND"],
       3: ["NO WAY OUT", "PHASE 3 · EVERY WAY OUT LEADS BACK IN"], 4: ["…", "PHASE 4"] },
     warden: { 2: ["THE RODS RISE", "PHASE 2 · IT'S CHARGED WHILE ANY ROD STANDS · BREAK THEM"], 3: ["THE STAR CHART", "PHASE 3 · THUNDER ALONG THE CONSTELLATION'S LINES"] },

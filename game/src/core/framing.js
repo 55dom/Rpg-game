@@ -187,7 +187,7 @@ export function cameraFits(pos, walls, margin = 0.3) {
 
 // Solids that stand above a camera's sight line: buildings, walls of shelves, columns, trees. A bench or a sign
 // board is under it.
-const tall = (sd) => !sd.low && (sd.circle ? sd.circle[2] >= 0.3 : (sd.box[2] - sd.box[0]) * (sd.box[3] - sd.box[1]) > 3);
+const tall = (sd) => sd.tall || (!sd.low && (sd.circle ? sd.circle[2] >= 0.3 : (sd.box[2] - sd.box[0]) * (sd.box[3] - sd.box[1]) > 3));
 const inSolid = (x, z, sd, m = 0) => sd.circle ? Math.hypot(x - sd.circle[0], z - sd.circle[1]) < sd.circle[2] + m
   : x > sd.box[0] - m && x < sd.box[2] + m && z > sd.box[1] - m && z < sd.box[3] + m;
 

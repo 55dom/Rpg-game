@@ -104,6 +104,7 @@ export const LOOKS = {
     head: "face", hair: "long", angry: true, weapon: "staff", orb: "#9ad8ff", shoulders: 1.3, eyeColor: "#3a6aa0", trail: "#9ad8ff" },
   engine: { form: "object", shape: "engine", trail: "#ffd36a" },
   masked: MASKED_LOOK, // the masked knight on the ridge (data/masked.js)
+  maskedVI: MASKED_LOOK, // the same, on the Archive road (Ep 43)
   // Wraithe, the Pale Choir's rift-walker (Ep 23): ash-pale wrappings, a hood, a cloth bound over the mouth
   // (the silent school), two needle blades. riftwalk: inside a tear he's simply gone (no sinking into the ground).
   wraithe: { poses: WRAITHE_POSES, scale: 1.03, skirt: 1.1, coat: "#e2dfe8", trim: "#7a6a9a", hairColor: "#d8d4e4", skin: "#e8dcd4",
@@ -251,6 +252,8 @@ LOOKS.mag = { ...LOOKS.townswoman, coat: "#6a5646", trim: "#c9b48a", hairColor: 
 LOOKS.kit = { ...LOOKS.kid, coat: "#7a6a4a", trim: "#c9a26a", hairColor: "#6a4a2a" };
 LOOKS.nell = { ...LOOKS.kid, coat: "#e8e0d0", trim: "#c9b48a", hair: "long", hairColor: "#c98a4a", skirt: 1.3 };
 LOOKS.tobin = { ...LOOKS.kid, coat: "#4a7a5a", trim: "#d8c890", hairColor: "#2a2018" };
+// Archivist Ottoline of the Grand Archive (Ep 44): ink on her cuffs, spectacles, her hair pinned up out of the way.
+LOOKS.archivist = { ...LOOKS.gossip, coat: "#3a4a6a", trim: "#e6d8b0", hair: "bun", hairColor: "#6a4a32", glasses: "#2a2a30", holds: "scroll", scale: 0.95, eyeColor: "#4a3a2a", trail: "#e6d8b0" };
 // Mother Vey (Ep 41), who taught Lio to read in the Choir's silent school: an old cantor in plain grey, no halo, no mask.
 LOOKS.vey = { ...LOOKS.keeper, coat: "#8a8794", trim: "#c9c4d4", hairColor: "#ecebf0", beard: undefined, hair: "bun", hood: "#76727f", sash: false, stoop: 0.16, eyeColor: "#6a6478", trail: "#c9c4d4" };
 // The Crown Archivist (Eps 25–26): grey robes, ink on her fingers, a ledger under her arm.

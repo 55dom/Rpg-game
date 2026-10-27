@@ -6,6 +6,8 @@ const box = (x0, z0, x1, z1) => ({ box: [x0, z0, x1, z1] });
 const circle = (x, z, r) => ({ circle: [x, z, r] });
 // Under a camera's sight line (a table, a well, a cart, a hole in the floor): it stops feet, not a scene's view (core/framing.js).
 const low = (s) => ({ ...s, low: true });
+// Thin, but a camera shouldn't look through it (a grille of bars).
+const bars = (s) => ({ ...s, tall: true });
 
 // ---- Aurelin, the capital -------------------------------------------------------------------
 // The plaza is in the middle; the Hall of Lanterns to the north; the Lowmarket to the east;
@@ -44,6 +46,10 @@ export const AURELIN_LAYOUT = (() => {
   };
 })();
 
+
+// The Gate (Eps 46–48): where it tears open in the sky, above the Crown Ward to the north-west, high enough to be seen
+// over the Hall of Lanterns' roof from the plaza and the streets round it (runtime/sets.js buildAurelin).
+export const AURELIN_GATE = Object.freeze({ x: -38, y: 40, z: 62 });
 
 // ---- Interiors: the Gilded Spoon café and a Lowmarket home (runtime/sets.js buildCafe, buildHome) ----
 export const CAFE_LAYOUT = {
@@ -134,6 +140,17 @@ export const HOLLOW_LAYOUT = {
   stairs: [[-19, -15, 0.7], [18, 18, -2.4]],
   pillar: { x: 0, z: 16 }, // where Elodie is held, in a column of pale light
 };
+// The Grand Archive at the top of the Crown Ward (Eps 44–48): a long reading hall between tall stacks, the sealed stacks
+// behind an iron grille in the north-west corner, and at the far end the lock: a round door of dark stone set in a low
+// dais, its keyhole in two halves, under the open eye in the dome.
+export const ARCHIVE_LAYOUT = {
+  half: [11, 15], door: { x: 0, z: -15 }, height: 8,
+  stacks: [[-8.6, -12, -3.2], [-5.6, -12, -3.2], [5.6, -12, -3.2], [8.6, -12, -3.2], [-8.6, -1, 5.4], [-5.6, -1, 5.4], [5.6, -1, 5.4], [8.6, -1, 5.4]], // [x, z0, z1], a metre deep
+  tables: [[-2.4, -8], [2.4, -8], [-2.4, -2.4], [2.4, -2.4]], // reading tables, 1 × 2.4
+  dais: { x: 0, z: 10.4, r: 3.3 },
+  sealed: { x0: -11, z0: 8.6, x1: -6.6, z1: 15, gate: [-9.2, -7.8] }, // the grille runs along z0 and x1; the gate's in the z0 side
+  lectern: { x: -9.0, z: 12.2 },
+};
 // The Watch House by Aurelin's south gate (data/law.js): the sergeant's desk by the door, the wanted board,
 // and two cells along the back wall (bars along z = cellZ; cell one's door stands open, cell two has a guest).
 export const WATCH_LAYOUT = {
@@ -168,7 +185,7 @@ export const THORNWICK_LAYOUT = {
 export const UNDERCROFT_BANDS = [[-34, -22, 6], [-22, -14, 2], [-14, 2, 10], [2, 10, 2], [10, 26, 12], [26, 32, 2], [32, 46, 14]];
 const UC_HALF = 14;
 
-const A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT, IH = IRONHOLD_LAYOUT, WH = WATCH_LAYOUT, FH = FENHOME_LAYOUT, SI = ISLES_LAYOUT;
+const A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT, IH = IRONHOLD_LAYOUT, WH = WATCH_LAYOUT, FH = FENHOME_LAYOUT, SI = ISLES_LAYOUT, AR = ARCHIVE_LAYOUT;
 const rect = (r) => box(r.x0, r.z0, r.x1, r.z1);
 // The City Watch's patrols (data/law.js): one more walks the streets for every step $WATCH_STRENGTH takes.
 const patrol = (n, a, b) => ({ id: `patrol${n}`, name: "City Watch", look: "guard", x: a[0], z: a[1], yaw: 0, node: "W_Patrol", when: `$WATCH_STRENGTH >= ${n}`,
@@ -575,6 +592,22 @@ export const ZONES = {
     id: "hollow", name: "The Hollow", region: "Through the door", stage: "hollow", dungeon: true,
     bounds: { radius: HW.radius, solids: [...HW.voids.map(([x, z, r]) => low(circle(x, z, r))), ...HW.doors.map(([x, z]) => circle(x, z, 0.8)), low(circle(HW.pillar.x, HW.pillar.z, 1.4))] }, // the pillar is light: you see through it
     spawn: { x: 0, z: -22, yaw: 0 },
+    cast: [], pickups: [], encounters: [], exits: [], arrivals: {},
+  },
+  // The Grand Archive (Eps 44–48): story only, no way in from the map.
+  archive: {
+    id: "archive", name: "The Grand Archive", region: "Crown Ward, Aurelin", stage: "archive", interior: true,
+    bounds: { rect: [-AR.half[0] + 0.25, -AR.half[1] + 0.25, AR.half[0] - 0.25, AR.half[1] - 0.25], solids: [
+      ...AR.stacks.map(([x, z0, z1]) => box(x - 0.5, z0, x + 0.5, z1)),
+      ...AR.tables.map(([x, z]) => low(box(x - 0.5, z - 1.2, x + 0.5, z + 1.2))),
+      low(circle(AR.dais.x, AR.dais.z, AR.dais.r)), // the lock: a low dais (nobody stands on it until the night it opens)
+      // The grille: bars a camera shouldn't look through (thin, so marked to count anyway), and its gate swung open, inward.
+      bars(box(AR.sealed.x0, AR.sealed.z0 - 0.1, AR.sealed.gate[0], AR.sealed.z0 + 0.1)), bars(box(AR.sealed.gate[1], AR.sealed.z0 - 0.1, AR.sealed.x1, AR.sealed.z0 + 0.1)),
+      bars(box(AR.sealed.x1 - 0.1, AR.sealed.z0, AR.sealed.x1 + 0.1, AR.sealed.z1)),
+      bars(box(AR.sealed.gate[0] - 0.08, AR.sealed.z0, AR.sealed.gate[0] + 0.08, AR.sealed.z0 + (AR.sealed.gate[1] - AR.sealed.gate[0]))),
+      low(circle(AR.lectern.x, AR.lectern.z, 0.35)),
+    ] },
+    spawn: { x: 0, z: -13.4, yaw: 0 },
     cast: [], pickups: [], encounters: [], exits: [], arrivals: {},
   },
   // The Watch House (data/law.js): where you pay a bounty, or wake up in a cell having not paid it.
