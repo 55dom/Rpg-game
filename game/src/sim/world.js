@@ -31,6 +31,8 @@ import { MASKED_STATS, MASKED_HITBOXES, maskedOptions, MASKED_VI_STATS, maskedVI
 import { MaskedController, MaskedVIController } from "./masked.js";
 import { MASK_FINAL_STATS, maskFinalOptions, UNMASKED_STATS, UNMASKED_HITBOXES, unmaskedOptions } from "../reveal/duel.js";
 import { MaskFinalController, UnmaskedController } from "../reveal/duelSim.js";
+import { TRIAL_KNIGHT_STATS, HERO_HITBOXES, trialKnightOptions } from "../reveal/backlash.js";
+import { TrialKnightController } from "../reveal/backlashSim.js";
 import { ECLIPSED_STATS, ECLIPSED_FINAL_STATS, ECLIPSED_HITBOXES, eclipsedOptions, eclipsedFinalOptions } from "../data/eclipse.js";
 import { EclipseController, EclipseFinalController } from "./eclipse.js";
 import { INSCRIPTION, INSCRIPTION_HITBOXES } from "../data/inscription.js";
@@ -81,6 +83,8 @@ const BOSSES = {
   // The reveal (src/reveal/): the third duel on the bridge, and the fight after the face in the smoke (Ep 48).
   maskFinal: { stats: MASK_FINAL_STATS, hitboxes: MASKED_HITBOXES, options: maskFinalOptions, traits: { heavy: true }, Controller: MaskFinalController, z: 7 },
   unmasked: { stats: UNMASKED_STATS, hitboxes: UNMASKED_HITBOXES, options: unmaskedOptions, traits: {}, Controller: UnmaskedController, z: 6 },
+  // Backlash (Ep 49): Trial 5's Knight Hero. The order is to kill him.
+  trialKnight: { stats: TRIAL_KNIGHT_STATS, hitboxes: HERO_HITBOXES, options: trialKnightOptions, traits: { heavy: true }, Controller: TrialKnightController, z: 7 },
   // Ep 27: Severin at the Tower steps, the night he reads the page (his exam kit, a harder fight).
   severinDuel: { stats: { ...SEVERIN_STATS, maxHealth: 1400, bossTitle: "SEVERIN VALCOURT · THE TOWER STEPS", defeatText: "SEVERIN YIELDS" }, hitboxes: SEVERIN_HITBOXES, options: severinOptions, traits: {}, Controller: SeverinController, z: 6 },
   eclipsed: { stats: ECLIPSED_STATS, hitboxes: ECLIPSED_HITBOXES, options: eclipsedOptions, traits: {}, Controller: EclipseController, z: 6 },
@@ -514,6 +518,7 @@ export class World {
       brain, x, z, circleSign: n % 2 ? 1 : -1,
     });
     f.yaw = angleTo(f.pos, this.player.pos);
+    if (def.Controller) f.boss = new def.Controller(this, f); // an enemy with moments of its own (the Saint's prayer), not a boss
     this.emit({ type: "spawn", fighter: f });
     return this.add(f);
   }
@@ -1142,6 +1147,7 @@ export class World {
     if (pd && pd !== 1) spec = { ...spec, damage: spec.damage * pd };
     if (att === this.player && this.annotation && spec.damage > 0 && def.tags.has("INSCRIBED")) spec = { ...spec, damage: spec.damage * INSCRIPTION.bonus }; // ink marks it
     if (att === this.player && (this.mods.attack || this.mods.posture)) spec = { ...spec, damage: spec.damage * (1 + this.mods.attack), posture: spec.posture * (1 + this.mods.posture) };
+    if (att === this.player && this.wearing?.attackScale) spec = { ...spec, damage: spec.damage * this.wearing.attackScale, posture: spec.posture * this.wearing.attackScale }; // a body with less in it (0★)
     if (def === this.player && this.mods.defense) spec = { ...spec, damage: spec.damage * (1 - this.mods.defense) };
     if (def.tags.has("RUSTED")) spec = { ...spec, damage: spec.damage * GALEN_TUNING.rustFactor }; // Galen's rot eats your guard
     if (def.boss && ((def.boss.damageFactor ?? 1) !== 1 || (def.boss.postureFactor ?? 1) !== 1)) spec = { ...spec, damage: spec.damage * (def.boss.damageFactor ?? 1), posture: spec.posture * (def.boss.postureFactor ?? 1) }; // shields and oaths
@@ -1197,6 +1203,7 @@ export class World {
           this.emit({ type: "inscribed", attacker: att, defender: def, at: { x: def.pos.x, y: 1.4, z: def.pos.z } });
         }
         def.boss?.onHit?.(att, hb.ability, HitOutcome.Hit);
+        if (att === this.player && hb.ability?.tags.includes("drill")) this.emit({ type: "drill", attacker: att, defender: def }); // left, left, back, cut: it landed (Ep 49)
         if (spec.pull > 0 && !heavyBody) this._pull(att, def, spec.pull);
         if (def === this.player) { this.comboCount = 0; def.buffer.clear(); }
         this.emit({ type: "hit", ...base });

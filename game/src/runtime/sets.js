@@ -7,7 +7,7 @@ import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } fro
 import { buildCrowd } from "./crowd.js";
 import { buildCritters } from "./critters.js";
 import { palette, props } from "./props.js";
-import { makeTear } from "./tears.js";
+import { makeTear, makeDoor } from "./tears.js";
 import { MASKED_BOUNTY } from "../data/masked.js";
 import { buildCamp, buildThrone, buildCaverns } from "../reveal/sets.js";
 
@@ -893,20 +893,21 @@ function buildGate(scene, K, prefix, at) {
   const redSky = add(MB.CreateSphere(`${prefix}-redSky`, { diameter: 320, segments: 12, sideOrientation: BB.Mesh.BACKSIDE }, scene)); redSky.parent = root;
   const redM = glow(scene, `${prefix}-redSkyM`, "#ff3a1a", 0.0, true); redM.fogEnabled = false; redSky.material = redM; redSky.isPickable = false;
   const isOpen = K.when("$GATE_OPEN"), thronePinned = K.when("$GATE_THRONE"), shifted = K.when("$COFFIN_SHIFTED");
-  let open = 0, want = 0, showThrone = false, shift = 0, shiftWant = 0;
+  let open = 0, want = 0, showThrone = false, shift = 0, shiftWant = 0, sealed = false;
   root.setEnabled(false);
   return {
     cue(name) {
-      if (name === "gateOpen") want = 1;
+      if (name === "gateOpen") { want = 1; sealed = false; }
       if (name === "gateShut") { want = 0; open = 0; }
+      if (name === "gateSeal") { want = 0; sealed = true; } // closed from the other side (Ep 50): it draws shut, slowly
       if (name === "gateThrone") showThrone = true;
       if (name === "coffinShift") shiftWant = 1;
     },
     update(dt, t) {
-      if (isOpen.isEnabled() && !want) { want = 1; open = 1; } // already open in the story
+      if (isOpen.isEnabled() && !want && !sealed) { want = 1; open = 1; } // already open in the story
       if (thronePinned.isEnabled()) showThrone = true;
       if (shifted.isEnabled() && !shiftWant) { shiftWant = 1; shift = 1; }
-      open = Math.min(want, open + dt * 0.55);
+      open = sealed ? Math.max(0, open - dt * 0.35) : Math.min(want, open + dt * 0.55);
       root.setEnabled(open > 0.01);
       if (open <= 0.01) return;
       const e = 1 - (1 - open) ** 3;
@@ -1794,6 +1795,8 @@ function buildBridge(scene, mobile) {
     return m;
   });
   let shardT = -1;
+  // A golden door frame standing on the deck, its lower edge at sitting height (cue doorSeat, Ep 50: he sits on it).
+  const seat = makeDoor(scene, "br-doorSeat", { w: 1.6, h: 2.6 }); seat.parent = K.root; seat.position.set(L.seat.x, 0.55 + 1.3, L.seat.z + 0.12); seat.setEnabled(false);
   K.bake([...smoke, ...fires, ...shards]);
   // Smoke-dimmed afternoon light, warm from the fires; the red is in the sky, not on everything.
   const env = { clear: "#2a1412", fog: "#3a2a28", fogDensity: 0.009, hemi: [0.6, "#f2dcd0", "#2e2626"], sun: [0.55, "#ffd2b0", [-0.3, -1, 0.5]], warm: 0 };
@@ -1803,6 +1806,7 @@ function buildBridge(scene, mobile) {
     cue(name) {
       if (name === "collapse1") fall(0); if (name === "collapse2") fall(1);
       if (name === "maskShards") { shardT = 0; for (const m of shards) { m.setEnabled(true); m.position.y = 1.9; } }
+      if (name === "doorSeat" || name === "doorSeatOff") seat.setEnabled(name === "doorSeat");
       gate.cue(name);
     },
     update(dt, t) {

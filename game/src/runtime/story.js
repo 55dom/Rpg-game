@@ -13,7 +13,7 @@ import { CUTSCENES } from "../data/story/cutscenes.js";
 import { validateCutscene, sampleCamera, eventsBetween, sampleMove } from "../core/timeline.js";
 import { wideShot, closeUp, segDist } from "../core/framing.js";
 import { B, toon2, glow, color3 } from "./look.js";
-import { makeTear } from "./tears.js";
+import { makeTear, makeDoor, makeVoid } from "./tears.js";
 import { GuideTrail } from "./trail.js";
 import { theatreMark, theatreNotes } from "../data/theatre.js";
 import { findPath, trailMarks, guideTarget } from "../sim/guide.js";
@@ -44,6 +44,8 @@ const GESTURES = Object.freeze({
   cross: { arm: [0.85, -1.15, 0], off: [-0.5, 0, 1.25] },
   bow: { bow: 0.38 },
   tilt: { tilt: -0.2 },
+  sit: { arm: [0.75, -0.3, 0], bow: 0.05, seated: 0.5 },   // on a bunk, a bench
+  kneel: { arm: [0.6, -0.4, 0], bow: 0.32, seated: 0.42 }, // down on one knee, head bowed
   fist: { arm: [0.35, -0.3, 0.2] },
 });
 
@@ -86,6 +88,7 @@ class Stage {
       p.yaw = p.prevYaw = r.yaw ?? 0; p.vel.x = p.vel.y = p.vel.z = 0;
     }
     p.relaxed = true;
+    if (beat.rookStars != null) this.playerStar = { stars: beat.rookStars }; // what the King sees over you (Ep 49)
     for (const c of (beat.cast ?? beat.actors ?? []).filter((c) => !c.when || !this.when || this.when(c.when))) this.add(c); // `when`: only if the story says they're here
   }
 
@@ -95,17 +98,60 @@ class Stage {
     actor.pos.y = actor.prev.y = c.y ?? 0;
     const rig = new Rig(this.scene, c.look, `story-${c.id}`);
     if (c.hidden) { rig.setVisible(false); actor.hiddenActor = true; }
-    this.actors.set(c.id, { actor, rig, look: c.look, crowd: !!c.crowd });
+    this.actors.set(c.id, { actor, rig, look: c.look, crowd: !!c.crowd, stars: c.stars });
+    if (c.pose) this.pose(c.id, c.pose); // sitting at a bench, kneeling, a hand up
+    if (this.starsOn && c.stars != null) this._starOver(c.id);
     return actor;
   }
 
+  /**
+   * What the King sees (Backlash, Ep 49): a star over everyone's head, or a hollow one where there's nothing left.
+   * Cast entries carry `stars`; <<stars on|off>> shows them, <<star X n>> changes one.
+   */
+  showStars(on) {
+    this.starsOn = on;
+    for (const [id, a] of this._starred()) { if (on && a.stars != null) this._starOver(id); else { a.starMesh?.dispose(false, true); a.starMesh = null; } }
+  }
+
+  setStars(id, n) {
+    const a = id === "player" ? (this.playerStar ??= {}) : this.actors.get(id);
+    if (!a) return;
+    a.stars = n;
+    if (this.starsOn) this._starOver(id);
+  }
+
+  /** Everyone who can carry a star: the cast, and the player (a scene's `rookStars`). */
+  _starred() { return [...this.actors, ...(this.playerStar ? [["player", this.playerStar]] : [])]; }
+
+  _starOver(id) {
+    const a = id === "player" ? this.playerStar : this.actors.get(id), BB = B(), n = a.stars;
+    const root = id === "player" ? this.playerRoot?.() : a.rig.root;
+    a.starMesh?.dispose(false, true); a.starMesh = null;
+    if (!root) return;
+    const w = Math.max(1, n), tex = new BB.DynamicTexture(`stars-${id}`, { width: 96 * w, height: 96 }, this.scene, true), c = tex.getContext();
+    c.clearRect(0, 0, 96 * w, 96);
+    for (let k = 0; k < w; k++) { // a five-pointed star, drawn (no font needed): filled gold, or only its outline
+      c.beginPath();
+      for (let i = 0; i < 10; i++) { const r = i % 2 ? 18 : 42, t = (i / 10) * Math.PI * 2 - Math.PI / 2; c[i ? "lineTo" : "moveTo"](48 + k * 96 + Math.cos(t) * r, 50 + Math.sin(t) * r); }
+      c.closePath();
+      if (n > 0) { c.fillStyle = "#ffd36a"; c.fill(); } else { c.strokeStyle = "#ffe8b0"; c.lineWidth = 5; c.stroke(); }
+    }
+    tex.hasAlpha = true; tex.update();
+    const mat = new BB.StandardMaterial(`starsM-${id}`, this.scene);
+    mat.diffuseTexture = tex; mat.emissiveTexture = tex; mat.opacityTexture = tex; mat.disableLighting = true; mat.backFaceCulling = false;
+    const plane = BB.MeshBuilder.CreatePlane(`stars-${id}`, { width: 0.36 * w, height: 0.36 }, this.scene);
+    plane.material = mat; plane.billboardMode = BB.Mesh.BILLBOARDMODE_ALL; plane.isPickable = false;
+    plane.parent = root; plane.position.set(0, 2.65, 0);
+    a.starMesh = plane;
+  }
+
   /** Walk an actor to (x, z) over `dur` seconds (or at walking pace). */
-  move(id, x, z, dur) {
+  move(id, x, z, dur, y = null, ease = "inOut") {
     const a = this.get(id);
     if (!a) return 0;
     const d = Math.hypot(x - a.pos.x, z - a.pos.z);
     const time = dur ?? Math.max(0.4, d / 2.4);
-    a.move = { from: [a.pos.x, a.pos.z], to: [x, z], t: 0, dur: time };
+    a.move = { from: [a.pos.x, a.pos.z], to: [x, z], t: 0, dur: time, y: y == null ? null : [a.pos.y ?? 0, y], ease }; // y: up a step, down off a throne; "linear": a steady march
     a.targetYaw = Math.atan2(x - a.pos.x, z - a.pos.z);
     if (a === this.getWorld().player) a.yaw = a.prevYaw = a.targetYaw;
     return time;
@@ -117,6 +163,7 @@ class Stage {
     if (!a) return;
     if (name === "down" || name === "up") { a.down = name === "down"; return; } // on the ground, flat on their back (and up again)
     a.armPose = g.arm ?? null; a.offPose = g.off ?? null; a.bow = g.bow ?? 0; a.headTilt = g.tilt ?? 0;
+    if ("seated" in g || name === "none") a.seated = g.seated ?? 0; // a hand raised doesn't get you out of your chair
   }
 
   face(id, targetId) {
@@ -130,11 +177,13 @@ class Stage {
 
   clear() {
     const p = this.getWorld()?.player;
-    if (p) { p.relaxed = false; p.armPose = p.offPose = null; p.bow = p.headTilt = 0; p.move = null; }
+    if (p) { p.relaxed = false; p.armPose = p.offPose = null; p.bow = p.headTilt = p.seated = 0; p.move = null; }
     this.setPlayerVisible?.(true);
     this.setSquadVisible?.(true);
-    for (const { rig } of this.actors.values()) rig.dispose();
+    for (const { rig, starMesh } of this.actors.values()) { starMesh?.dispose(false, true); rig.dispose(); }
     this.actors.clear();
+    this.playerStar?.starMesh?.dispose(false, true); this.playerStar = null;
+    this.starsOn = false;
   }
 
   /** "player" or a cast id → something with pos and yaw. */
@@ -181,8 +230,9 @@ class Stage {
   _step(a, dt) {
     const m = a.move;
     m.t += dt;
-    const [x, z] = sampleMove(m.from, m.to, 0, m.dur, m.t);
+    const [x, z] = sampleMove(m.from, m.to, 0, m.dur, m.t, m.ease);
     a.prev.x = a.pos.x = x; a.prev.z = a.pos.z = z;
+    if (m.y) a.prev.y = a.pos.y = m.y[0] + (m.y[1] - m.y[0]) * Math.min(1, m.t / m.dur);
     const moving = m.t < m.dur;
     const speed = moving ? Math.hypot(m.to[0] - m.from[0], m.to[1] - m.from[1]) / m.dur : 0;
     a.vel.x = Math.sin(a.targetYaw ?? a.yaw) * speed; a.vel.z = Math.cos(a.targetYaw ?? a.yaw) * speed;
@@ -205,11 +255,26 @@ class Stage {
       const dx = tx - c.x, dz = tz - c.z, d = Math.hypot(dx, dz) || 1;
       return { pos: { x: c.x - (dx / d) * 4.5, y: 1.1, z: c.z - (dz / d) * 4.5 }, look: { x: tx, y: ty, z: tz }, fov: 0.78 };
     }
+    if (kind === "board") { // <<shot board>>: high over the set, looking down on everyone like pieces on a board (Ep 50)
+      const vis = pts.filter((p) => !p.hiddenActor && !(p === this.getWorld().player && this.playerHidden));
+      const c = vis.length ? vis.reduce((m, p) => ({ x: m.x + p.pos.x / vis.length, z: m.z + p.pos.z / vis.length }), { x: 0, z: 0 }) : { x: 0, z: 0 };
+      return { pos: { x: c.x, y: 26, z: c.z - 4 }, look: { x: c.x, y: 0, z: c.z }, fov: 0.85 };
+    }
+    if (kind === "eye") { // <<shot eye X [Y]>>: through X's eyes (Ep 49: the King's), at Y, or down and ahead of them
+      const a = this.get(ids[0]);
+      if (!a) return null;
+      const sc = a === this.getWorld().player ? 1 : this.actors.get(ids[0])?.rig.look.scale ?? 1, yaw = a.targetYaw ?? a.yaw;
+      const sit = a.seated ? Math.max(0, (0.86 - a.seated / sc) * sc) : 0; // as core/framing.js closeUp
+      const eye = { x: a.pos.x + Math.sin(yaw) * 0.5 * sc, y: (a.pos.y ?? 0) + 1.9 * sc - sit, z: a.pos.z + Math.cos(yaw) * 0.5 * sc };
+      const t = ids[1] ? this.get(ids[1]) : null;
+      const look = t ? { x: t.pos.x, y: (t.pos.y ?? 0) + 2.1, z: t.pos.z } : { x: eye.x + Math.sin(yaw) * 12, y: eye.y - 2.4, z: eye.z + Math.cos(yaw) * 12 };
+      return { pos: eye, look, fov: t ? 0.42 : 0.9 };
+    }
     if (kind === "on") { // in front of their face, clear of everyone else and inside the set's walls (core/framing.js)
       const a = this.get(ids[0]);
       if (!a) return null;
       const scale = a === this.getWorld().player ? 1 : this.actors.get(ids[0])?.rig.look.scale ?? 1;
-      return closeUp({ x: a.pos.x, z: a.pos.z, y: a.pos.y ?? 0, yaw: a.targetYaw ?? a.yaw, scale, down: !!a.down },
+      return closeUp({ x: a.pos.x, z: a.pos.z, y: a.pos.y ?? 0, yaw: a.targetYaw ?? a.yaw, scale, down: !!a.down, seated: a.seated ?? 0 },
         pts.filter((p) => p !== a).map((p) => p.pos), this.walls);
     }
     if (kind === "two") { // over the shoulder of ids[1], looking at ids[0]
@@ -349,6 +414,7 @@ export class StoryPlayer {
     this.stage = new Stage(ctx.scene, ctx.getWorld);
     this.stage.when = (cond) => truthy(compileExpr(cond)(this.flags));
     this.stage.setPlayerVisible = (on) => ctx.setPlayerVisible?.(on);
+    this.stage.playerRoot = () => ctx.playerRoot?.();
     this.stage.setSquadVisible = (on) => ctx.setSquadVisible?.(on);
     this.tweens = [];
     this.time = 0;
@@ -583,10 +649,13 @@ export class StoryPlayer {
     this.roaming = false; this.zone = null;
     this.rain?.stop(); this.weather = null;
     this.ctx.root.classList.remove("in-scene");
+    this.ctx.setMemory?.(false, true);
     this.ctx.camera.release();
   }
 
   async runBeat(beat) {
+    this.ctx.setMemory?.(!!(beat.memory ?? this.ep?.memory), true); // inside a memory (Ep 49): ash grey, the red kept (runtime/grade.js)
+    if (beat.fresh) this.ctx.makeWorld({ ...this.ep?.world }); // back in your own body after wearing someone else's (Ep 50)
     switch (beat.type) {
       case BeatType.ColdOpen: return this.coldOpen(beat);
       case BeatType.Cutscene: { this._enterScene(true); await this.playCutscene(beat.cutscene); return {}; }
@@ -767,6 +836,8 @@ export class StoryPlayer {
       case "sfx": this.ctx.sfx.play(args[0]); break;
       case "shake": if (!this.skipping) this.ctx.camera.shake(Number(args[0]) || 0.4); break;
       case "timer": this.choiceTimer = Number(args[0]) || 8; break; // the next choice has this long; then the last one is taken
+      case "stars": this.stage.showStars(args[0] !== "off"); break; // what the King sees (Ep 49)
+      case "star": this.stage.setStars(actorOf(args[0]), Number(args[1]) || 0); break;
       case "clash": await this._clash(Number(args[0]) || 6); break;
       case "fx": await this.fx(args); break;
       case "survey": if (!this.skipping) await this.ctx.openSurvey?.(args[0]); break; // the playtest kit's end-of-arc survey (core/playtest.js)
@@ -778,6 +849,7 @@ export class StoryPlayer {
       case "pose": this.stage.pose(actorOf(args[0]), args[1] ?? "none"); break;
       case "face": this.stage.face(actorOf(args[0]), actorOf(args[1])); break;
       case "cue": this.ctx.sets?.cue(args[0]); break;
+      case "splice": this._splice(); break; // a memory, cut (Ep 49): a door-frame outline for four frames
       case "show": case "hide": this.stage.show(actorOf(args[0]), name === "show"); break;
       case "quest": if (args[0] === "start") this.quests.start(args[1]); break;
       case "pay": { // <<pay N>>: spend Marks; $PAID says whether it worked
@@ -873,14 +945,18 @@ export class StoryPlayer {
   }
 
   /** A tear at a point: it opens fast, hangs for `life` seconds, and seals (cutscenes place them with `tear` events). */
-  tearAt(at, yaw, { kind = "pale", r = 0.85, life = 3, ground = false } = {}) {
-    const node = makeTear(this.ctx.scene, "story-rift", { r, kind, seed: kind === "black" ? 13 : 7, ground });
+  /** A tear (or a golden door, or the void) opens at a point: `grow` seconds to open (half a second by default). */
+  tearAt(at, yaw, { kind = "pale", r = 0.85, life = 3, ground = false, grow = 0.5 } = {}) {
+    const scene = this.ctx.scene;
+    const node = kind === "gold" ? makeDoor(scene, "story-door", { w: r * 1.6, h: r * 2.8, ground })
+      : kind === "void" ? makeVoid(scene, "story-void", { r }) // the void makes no sound of its own
+      : makeTear(scene, "story-rift", { r, kind, seed: kind === "black" ? 13 : 7, ground });
     node.position.set(at.x, at.y ?? 0, at.z);
     if (!ground) node.rotation.y = yaw;
     node.scaling.setAll(0.01);
-    this.ctx.sfx.play(kind === "black" ? "tear" : "rift");
+    if (kind !== "void") this.ctx.sfx.play(kind === "black" ? "tear" : kind === "gold" ? "door" : "rift");
     const dur = this.skipping ? 0.05 : life;
-    this.tweens.push({ t: 0, dur, fn: (k) => node.scaling.setAll(Math.max(0.01, Math.min(1, k * dur * 2, (1 - k) * dur * 1.3))), done: () => node.dispose(false, false) });
+    this.tweens.push({ t: 0, dur, fn: (k) => node.scaling.setAll(Math.max(0.01, Math.min(1, (k * dur) / Math.max(0.05, grow), (1 - k) * dur * 1.3))), done: () => node.dispose(false, false) });
   }
 
   /** A grimoire floats down out of the light into someone's hands. */
@@ -966,7 +1042,7 @@ export class StoryPlayer {
     if (beat.sentries) this._makeSentries(beat);
     this._objective();
     const done = new Promise((res) => { this.exploring.resolve = res; });
-    if (beat.zone?.intro) this.sleep(0.4).then(() => this._intro(beat.zone));
+    if (beat.intro || beat.zone?.intro) this.sleep(0.4).then(() => this._intro(beat.intro ? { intro: { node: beat.intro } } : beat.zone)); // an opening line before you can move
     const out = await done;
     this._endExplore();
     return out ?? {};
@@ -1446,12 +1522,14 @@ export class StoryPlayer {
       if (e.sfx) this.ctx.sfx.play(e.sfx);
       if (e.show) this.stage.show(e.show, true);
       if (e.hide) this.stage.show(e.hide, false);
-      if (e.move) this.stage.move(e.move.id, e.move.to[0], e.move.to[1], e.move.dur);
+      if (e.move) this.stage.move(e.move.id, e.move.to[0], e.move.to[1], e.move.dur, e.move.to[2], e.move.ease);
+      if (e.face) this.stage.face(e.face[0], e.face[1]); // turn to look at someone
       if (e.pose) this.stage.pose(e.pose.id, e.pose.name);
       if (e.cue) this.ctx.sets?.cue(e.cue);
       if (e.tear) { const [x, y, z] = e.tear.at; this.tearAt({ x, y, z }, e.tear.yaw ?? 0, e.tear); }
       if (e.fade) this._fade(e.fade === "out", e.dur ?? 1); // dur: a cut to black (0), or a slow fade
       if (e.flash) this._flash(e.flash);                   // an impact frame: white, for a fraction of a second
+      if ("memory" in e) this.ctx.setMemory?.(!!e.memory, false); // into a memory (Ep 49): the colour drains out over a second and a half
     }
     c.prev = c.t;
     const cam = sampleCamera(cs.camera, c.t);
@@ -1473,6 +1551,15 @@ export class StoryPlayer {
     el.textContent = text;
     el.className = `caption${CAPS.test(text) ? " caps" : ""}`;
     void el.offsetWidth; el.classList.add("show");
+  }
+
+  /** A visible cut in a memory (BACKLASH.md §15.2): a thin door-frame outline flickers across the screen. */
+  _splice() {
+    if (this.skipping) return;
+    const el = document.createElement("div");
+    el.className = "splice";
+    this.ctx.root.appendChild(el);
+    setTimeout(() => el.remove(), 140);
   }
 
   _flash(seconds) {
@@ -1510,6 +1597,13 @@ export class StoryPlayer {
       for (const [who, text] of beat.lines ?? []) this.say(who, text); // squad chatter as the fight starts
       const won = await new Promise((res) => { this.fight.resolve = res; });
       if (this.siege) { this.siege.end(); this.ctx.onEvents(world.drainEvents()); this.siege = null; }
+      if (won && (beat.endOn || beat.siege)) { // the story ended it, not the last blow: whoever's still standing (and any guest) leaves the set with the fight
+        for (const f of world.fighters.filter((x) => x.team !== world.player.team || x.guest)) world.emit({ type: "despawn", fighter: f });
+        world.fighters = world.fighters.filter((x) => x.team === world.player.team && !x.guest);
+        world.companions = world.companions.filter((c) => !c.guest);
+        if (world.boss && !world.fighters.includes(world.boss)) world.boss = null;
+        this.ctx.onEvents(world.drainEvents());
+      }
       this._hint("");
       if (won) { // fighting side by side brings the squad closer
         const comp = this.ep?.world?.companions, party = comp === true || comp === undefined ? ["bas", "juno"] : Array.isArray(comp) ? comp : [];
@@ -1517,7 +1611,7 @@ export class StoryPlayer {
       }
       if (won || !beat.retry) { this.fight = null; return { won }; }
       this.fight = null;
-      this.say("Rook", beat.retry);
+      this.say(beat.retryBy ?? "Rook", beat.retry); // inside a memory (Ep 49) it is the narrator who corrects it
       await this.sleep(2.2);
     }
   }
@@ -1533,6 +1627,8 @@ export class StoryPlayer {
       if (k.say) this.say(k.say[0], k.say[1]);
       for (const [flag, v] of Object.entries(k.set ?? {})) this.flags.set(flag, v);
       if (k.shake) this.ctx.camera.shake(k.shake);
+      if (k.remove) for (const e of w.liveEnemies.filter((x) => x.kind === k.remove)) { e.combatant.floor = 0; e.combatant.takeDamage(1e9); } // one of them falls, for good (Ep 49: the archer)
+      if (k.join && !w.companions.some((c) => c.kind === k.join)) w.addCompanion(k.join); // back at your side (Ep 50: the Links)
     }
     if (s.done && !f.done) { f.done = true; this.sleep(0.3).then(() => f.resolve(true)); }
   }

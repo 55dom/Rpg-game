@@ -22,11 +22,16 @@ const sound = (frame, key = "swing") => ({ frame, type: E.PlaySound, key });
 const box = (frame, key, frames) => ({ frame, type: E.SpawnHitbox, key, value: frames });
 
 // ---- The body ----
-/** A Rook move re-cut for the ash-glaive and a soldier's body: new timing, the glaive's boxes, the same routes. */
-function recut(base, id, { startup, active, recovery, hit, events, tags } = {}) {
-  const s = startup ?? base.startup, a = active ?? base.active, r = recovery ?? base.recovery;
-  return defineAbility({ id, animation: id, startup: s, active: a, recovery: r, tags: tags ?? base.tags, hit: hit ?? base.hit,
-    cancels: (base.cancels ?? []).map((c) => ({ ...c, from: c.from + (s - base.startup), to: c.to + (s - base.startup) + 4 })),
+/**
+ * A Rook move re-cut for the ash-glaive and a soldier's body: new timing, the glaive's boxes, the same routes. It keeps
+ * the move's id (the world knows a dodge, a jump, by its id) and gets a new animation.
+ */
+export function recut(base, animation, { startup, active, recovery, hit, events, tags } = {}) {
+  const s = startup ?? base.startup, a = active ?? base.active, r = recovery ?? base.recovery, last = s + a + r - 1;
+  return defineAbility({ id: base.id, animation, startup: s, active: a, recovery: r, tags: tags ?? base.tags, hit: hit ?? base.hit,
+    cancels: (base.cancels ?? []).map((c) => { // the same windows, later (a slower body), and never past the move's end
+      const from = Math.min(last, c.from + (s - base.startup)); return { ...c, from, to: Math.max(from, Math.min(last, c.to + (s - base.startup) + 4)) };
+    }),
     events: events ?? base.events });
 }
 const thrust = hitSpec({ damage: 10, posture: 9, hitstop: 3, hitstun: 15, knockback: 0.8 });
@@ -44,8 +49,8 @@ export const ASH_KIT = Object.freeze({
   // The drill: out of the dodge (the backstep), the rising cleave. Bonus posture damage.
   DashStrike: recut(R.DashStrike, "DemonSlash", { startup: 10, active: 5, recovery: 18,
     hit: hitSpec({ damage: 16, posture: 30, hitstop: 3, hitstun: 22, knockback: 3 }), tags: ["drill"],
-    events: [sound(0, "dodge"), { frame: 1, type: E.Move, value: -0.8 }, sound(8, "swingHeavy"), { frame: 9, type: E.Move, value: 2.2 }, box(10, "Cut", 5)] }),
-  Dodge: recut(R.Dodge, "Step", { startup: 0, active: 6, recovery: 30, events: [{ frame: 0, type: E.Invulnerable, value: 6 }, { frame: 0, type: E.Move, value: 3.0 }, sound(0, "dodge")] }),
+    events: [sound(0, "dodge"), { frame: 1, type: E.Move, value: -0.6 }, sound(8, "swingHeavy"), { frame: 9, type: E.Move, value: 3.0 }, box(10, "Cut", 5)] }), // back, then up and through: it lands about where the backstep began
+  Dodge: recut(R.Dodge, "Step", { startup: 0, active: 6, recovery: 30, events: [{ frame: 0, type: E.Invulnerable, value: 6 }, { frame: 0, type: E.Move, value: 2.2 }, sound(0, "dodge")] }),
   Jump: recut(R.Jump, "Hop", { events: [{ frame: 0, type: E.Custom, key: "jump", value: 6 }, sound(0, "jump")] }), // a short hop, no more
   AirJump: recut(R.AirJump, "Hop2", { events: [] }),
   AirDash: recut(R.AirDash, "Stumble", { events: [] }),
@@ -58,7 +63,7 @@ export const ASH_KIT = Object.freeze({
 export const ASH_STATS = Object.freeze({ ...ROOK_STATS, name: "Ash Line Eleven", maxHealth: 150, maxMana: 0, manaRegenPerSecond: 0, runSpeed: 5.0, turnRate: 0.22 });
 export const ASH_HITBOXES = Object.freeze({ ...ROOK_HITBOXES, ...LINE_HITBOXES });
 /** Worn for the whole memory (sim/world.js `kit`). */
-export const ASH_WEAR = Object.freeze({ kind: "ashSoldier", stats: ASH_STATS, hitboxes: ASH_HITBOXES, abilities: ASH_KIT, loadout: {} });
+export const ASH_WEAR = Object.freeze({ kind: "ashSoldier", title: "THE LINE", stats: ASH_STATS, hitboxes: ASH_HITBOXES, abilities: ASH_KIT, loadout: {} });
 /** At 0★, after the kneel (Ch 5): weaker than he has ever been, never explained. */
 export const ASH_EMPTY = Object.freeze({ ...ASH_WEAR, stats: { ...ASH_STATS, maxHealth: 110 }, attackScale: 0.55 });
 
@@ -79,7 +84,7 @@ const HERO_POSES = Object.freeze({
   Arrow: { from: [-0.4, 0.8, 0], to: [-0.4, 0.8, 0], lean: -0.1 },
   Pray: { from: [-0.2, 0.9, 0], to: [-0.2, 0.9, 0], lean: 0.25 },
 });
-const HERO_HITBOXES = Object.freeze({
+export const HERO_HITBOXES = Object.freeze({
   Blade: { center: [0, 1.1, 1.3], size: [2.2, 1.4, 2.2] },
   Shield: { center: [0, 1.1, 1.0], size: [1.8, 1.8, 1.4] },
   Rush: { center: [0, 1.1, 1.0], size: [1.8, 1.8, 1.8] },
@@ -94,8 +99,11 @@ export const HERO_ABILITIES = Object.freeze({
   Charge: defineAbility({ id: "Charge", startup: 36, active: 14, recovery: 30, hit: hitSpec({ damage: 24, posture: 40, hitstop: 7, hitstun: 30, knockback: 6, unblockable: true }),
     events: [{ frame: 0, type: E.SpawnVfx, key: "glint" }, sound(30, "swingHeavy"), { frame: 34, type: E.Move, value: 9.0 }, box(36, "Rush", 14), { frame: 49, type: E.Custom, key: "chargeEnd" }] }),
   Arrow: defineAbility({ id: "Arrow", startup: 18, active: 2, recovery: 26, tags: ["projectile"], events: [sound(14, "glint"), { frame: 18, type: E.Projectile, key: "Arrow", value: 26 }] }),
-  // The Saint's prayers: ten seconds, a voice through the chaos.
-  Pray: defineAbility({ id: "Pray", startup: 1, active: 600, recovery: 20, events: [{ frame: 0, type: E.Custom, key: "prayStart" }, sound(0, "hymn"), { frame: 300, type: E.PlaySound, key: "hymn" }, { frame: 599, type: E.Custom, key: "prayEnd" }] }),
+  // The Saint's prayer: ten seconds, a voice through the chaos, and whoever's hurt worst is mended.
+  Pray: defineAbility({ id: "Pray", startup: 1, active: 600, recovery: 20,
+    events: [sound(0, "hymn"), ...[120, 240, 360, 480, 599].map((frame) => ({ frame, type: E.Custom, key: "heal", value: 40 })), sound(300, "hymn")] }),
+  // And the other one (Ch 4): not her healing prayer. SACRIFICE. Ten syllables; nothing stops it.
+  Sacrifice: defineAbility({ id: "Pray", startup: 1, active: 600, recovery: 20, events: [{ frame: 0, type: E.Custom, key: "prayStart" }, sound(0, "hymn"), sound(300, "hymn"), { frame: 599, type: E.Custom, key: "prayEnd" }] }),
 });
 
 export const HERO_ENEMIES = Object.freeze({
@@ -111,12 +119,35 @@ export const HERO_ENEMIES = Object.freeze({
     options: () => [new AttackOption(HERO_ABILITIES.Pray, 0, 30, 1, 900)],
     traits: { ranged: true },
   },
+  // Ch 4: the Trial that went wrong for them. She kneels, and it isn't the healing prayer.
+  heroSacrifice: {
+    stats: { name: "Maelis, the Goddess Saint", maxHealth: 360, maxPosture: 100, runSpeed: 4.0, circleSpeed: 2, turnRate: 0.15, radius: 0.42, height: 1.9 },
+    hitboxes: HERO_HITBOXES, abilities: HERO_ABILITIES, poses: HERO_POSES,
+    options: () => [new AttackOption(HERO_ABILITIES.Sacrifice, 0, 40, 1, 9999)],
+    traits: { ranged: true },
+  },
   heroArcher: {
     stats: { name: "Teo, \"King A\"", maxHealth: 420, maxPosture: 110, runSpeed: 5.0, circleSpeed: 3, turnRate: 0.2, radius: 0.42, height: 1.9 },
     hitboxes: HERO_HITBOXES, abilities: HERO_ABILITIES, poses: HERO_POSES,
     options: () => [new AttackOption(HERO_ABILITIES.Arrow, 4, 20, 3, 70), new AttackOption(HERO_ABILITIES.Cut, 0, 2.2, 1, 90)],
     traits: { ranged: true },
   },
+  // Ch 5, the Last Line: the Knight after the Saint's light went into him. Faster; the charge more often.
+  heroKnightSurge: {
+    stats: { name: "Corin, the Knight Hero", maxHealth: 1400, maxPosture: 320, runSpeed: 6.4, circleSpeed: 3, turnRate: 0.22, radius: 0.5, height: 2.1 },
+    hitboxes: HERO_HITBOXES, abilities: HERO_ABILITIES, poses: HERO_POSES,
+    options: () => [new AttackOption(HERO_ABILITIES.Cut, 0, 2.4, 4, 24), new AttackOption(HERO_ABILITIES.Bash, 0, 2.0, 2, 100), new AttackOption(HERO_ABILITIES.Charge, 3, 14, 3, 200)],
+    traits: { heavy: true, frontalGuard: true },
+  },
+});
+
+/** The morning drill's sparring partner (Ch 1): he can't be beaten down; the drill is what's being taught. */
+export const DRILL_PARTNER = Object.freeze({
+  stats: { name: "Sparring Soldier", maxHealth: 400, maxPosture: 90, runSpeed: 2.2, circleSpeed: 1.2, turnRate: 0.1, radius: 0.46, height: 2.1 },
+  hitboxes: LINE_HITBOXES, abilities: LINE_ABILITIES, poses: LINE_POSES,
+  options: () => [new AttackOption(LINE_ABILITIES.Thrust, 1.2, 3.0, 4, 120), new AttackOption(LINE_ABILITIES.Chop, 0, 2.2, 1, 200)],
+  traits: {}, // a sparring partner: he lets the cut land (the Line's wall of shields is for the Trial)
+  floor: 0.3,
 });
 
 /** Trial 5's Knight (a boss: the order is to kill him). He can't be killed here; what matters is whether you try. */
@@ -130,12 +161,22 @@ export const trialKnightOptions = () => [new AttackOption(HERO_ABILITIES.Charge,
 export function backlashLooks(LOOKS) {
   const knight = { poses: HERO_POSES, scale: 1.1, skirt: 0.9, coat: "#dfe6f2", trim: "#3a6ab8", hairColor: "#c8a050", skin: "#f0d0b4",
     head: "face", hair: "crop", weapon: "spear", shield: true, shieldColor: "#3a6ab8", shoulders: 1.35, eyeColor: "#2a4a8a", trail: "#cfe0ff" };
+  const saint = { poses: HERO_POSES, scale: 0.98, skirt: 1.35, coat: "#f6f2e8", trim: "#e6c040", hairColor: "#e8d8a8", skin: "#f3dcc8",
+    head: "face", hair: "long", halo: true, weapon: "staff", orb: "#fff2c0", eyeColor: "#5a7ab0", trail: "#fff2c0" };
+  const soldier = LEGION_LOOKS.lineSoldier;
   return {
-    ashSoldier: { ...LEGION_LOOKS.lineSoldier },
-    lineAlly: { ...LEGION_LOOKS.lineSoldier },
+    ashSoldier: { ...soldier },
+    lineAlly: { ...soldier },
+    drillPartner: { ...soldier },
+    // The end of the Last Line: the faceplate split half away. A demon's face under it, one eye half-open; at the very
+    // end of the memory, the grin.
+    ashSoldierBare: { ...soldier, head: "face", hair: "crop", hairColor: "#0e0a0a", skin: "#5a3a3e", eyeColor: "#e0502a", jaw: 1.05, scar: "#2a0e0e" },
+    ashSoldierGrin: { ...soldier, head: "face", hair: "crop", hairColor: "#0e0a0a", skin: "#5a3a3e", eyeColor: "#e0502a", jaw: 1.05, scar: "#2a0e0e", grin: true },
+    lineSergeant: { ...LEGION_LOOKS.lineMarshal, scale: 1.2, shoulders: 1.45 },
     heroKnight: knight, trialKnight: knight,
-    heroSaint: { poses: HERO_POSES, scale: 0.98, skirt: 1.35, coat: "#f6f2e8", trim: "#e6c040", hairColor: "#e8d8a8", skin: "#f3dcc8",
-      head: "face", hair: "long", halo: true, weapon: "staff", orb: "#fff2c0", eyeColor: "#5a7ab0", trail: "#fff2c0" },
+    heroKnightSurge: { ...knight, coat: "#fff6dc", trim: "#e8c050", shieldColor: "#e8c050", trail: "#fff2a0" }, // her light, in him
+    heroKnightBlaze: { ...knight, coat: "#ffffff", trim: "#ffe27a", hairColor: "#fff0b0", shieldColor: "#ffe27a", trail: "#ffffff" }, // all of it
+    heroSaint: saint, heroSacrifice: saint,
     heroArcher: { poses: HERO_POSES, scale: 1.02, skirt: 1.0, coat: "#3a6a3a", trim: "#c8a050", hairColor: "#3a2a1a", skin: "#d8a888",
       head: "face", hair: "tousled", hood: "#2a4a2a", weapon: "rod", eyeColor: "#2a3a1a", trail: "#c8e8a0" },
     // The King: vast, black and gold, a crown of horns. He never stands, until the end.
@@ -143,8 +184,11 @@ export function backlashLooks(LOOKS) {
     // The Commanders, Ghorran (the Left Wing) and Vaelith (the Right): tall, dark, cloaked like folded wings.
     commanderL: { ...LEGION_LOOKS.lineMarshal, scale: 1.55, coat: "#2a0a0a", cape: "#140404", trail: "#c8402a" },
     commanderR: { ...LEGION_LOOKS.lineMarshal, scale: 1.5, coat: "#1a0a14", cape: "#0e040c", maskColor: "#1a0c14", trail: "#a04ac8" },
+    // And what the King's aura made of them (the dying view, through smoke): wingless, robed, human-shaped.
+    commanderLRobed: { poses: LOOKS.acolyte.poses, scale: 1.05, skirt: 1.45, coat: "#1a0606", trim: "#0a0404", hairColor: "#0a0404", skin: "#0a0404", head: "hood", weapon: "none", trail: "#c8402a" },
+    commanderRRobed: { poses: LOOKS.acolyte.poses, scale: 1.0, skirt: 1.45, coat: "#140610", trim: "#0a0408", hairColor: "#0a0408", skin: "#0a0408", head: "hood", weapon: "none", trail: "#a04ac8" },
     // The two who arrive through the circle: identical black suits, gloves, and featureless black masks.
     unkA: { poses: LOOKS.acolyte.poses, scale: 1.04, skirt: 0.6, coat: "#0a0a0c", trim: "#0a0a0c", hairColor: "#0a0a0c", skin: "#0a0a0c", head: "blank", weapon: "none", trail: "#202024" },
-    unkB: { poses: LOOKS.acolyte.poses, scale: 0.98, skirt: 0.6, coat: "#0a0a0c", trim: "#0a0a0c", hairColor: "#0a0a0c", skin: "#0a0a0c", head: "blank", weapon: "none", lute: true, trail: "#202024" },
+    unkB: { poses: LOOKS.acolyte.poses, scale: 0.98, skirt: 0.6, coat: "#0a0a0c", trim: "#0a0a0c", hairColor: "#0a0a0c", skin: "#0a0a0c", head: "blank", weapon: "none", trail: "#202024" },
   };
 }

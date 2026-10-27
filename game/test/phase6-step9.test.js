@@ -73,7 +73,7 @@ test("The Gate over Aurelin: a red tear in the sky the story can open (cue gateO
   const g = sets.slice(sets.indexOf("function buildGate("), sets.indexOf("// ---- Thornwick"));
   assert.match(g, /makeTear\(scene, `\$\{prefix\}-gateTear`, \{[^}]*kind: "gate"/);
   assert.match(g, /K\.when\("\$GATE_OPEN"\)/);
-  assert.match(g, /if \(name === "gateOpen"\) want = 1;/);
+  assert.match(g, /if \(name === "gateOpen"\) \{ want = 1;/);
   assert.match(g, /if \(name === "gateThrone"\) showThrone = true;/);
   assert.match(g, /if \(name === "coffinShift"\) shiftWant = 1;/);
   assert.match(src("runtime/tears.js"), /gate: \{ edge: glow\(scene, "tear-gateEdge"/);

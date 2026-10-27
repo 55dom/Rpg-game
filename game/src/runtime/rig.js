@@ -19,6 +19,8 @@ import { WRAITHE_POSES } from "../data/wraithe.js";
 import { MASKED_LOOK } from "../data/masked.js";
 import { LEGION_LOOKS } from "../reveal/legion.js";
 import { revealLooks } from "../reveal/looks.js";
+import { backlashLooks } from "../reveal/backlash.js";
+import { finaleLooks } from "../reveal/finale.js";
 import { EventType } from "../core/abilities.js";
 import { buildBody, skinBake } from "./body.js";
 import { animateHumanoid } from "./motion.js";
@@ -284,6 +286,8 @@ LOOKS.lion = { form: "stars" };
 // Quartermaster Hale of the Iron Wardens (Ep 26): a Warden's steel and a keyring, grey in the beard.
 LOOKS.quartermaster = { ...LOOKS.guard, coat: "#4a5462", trim: "#9aa2ae", hairColor: "#6a6a6a", beard: "#6a6a6a", hair: "crop", shoulders: 1.2 };
 Object.assign(LOOKS, revealLooks(LOOKS)); // the reveal's own looks (src/reveal/looks.js), grown from the ones above
+Object.assign(LOOKS, backlashLooks(LOOKS)); // and Backlash's (src/reveal/backlash.js)
+Object.assign(LOOKS, finaleLooks(LOOKS)); // and Ep 50's (src/reveal/finale.js)
 
 export class Rig {
   /** @param {*} scene @param {string} kind a LOOKS key @param {string} id */
@@ -353,7 +357,11 @@ export class Rig {
           const nose = add(MB.CreateSphere("nose", { diameter: 0.034, segments: 4 }, scene), this.head, 0, -0.03, 0.226, 0);
           nose.scaling.set(0.8, 1.1, 0.8); nose.material = M("nose", L.skin);
         }
-        if (!L.beard && !L.mask) { const mouth = add(MB.CreateBox("mouth", { width: 0.05, height: 0.011, depth: 0.012 }, scene), this.head, 0, -0.1, 0.218, 0); mouth.rotation.x = -0.4; mouth.material = M("mouth", "#8a4a42"); }
+        if (L.grin) { // the end of the memory (Ep 49): wide, the corners all the way up, teeth showing
+          const curve = (w, lift, y0, z0) => Array.from({ length: 9 }, (_, i) => { const u = (i - 4) / 4; return new BB.Vector3(u * w, y0 + u * u * lift, z0 - u * u * 0.03); });
+          const lip = add(MB.CreateTube("grin", { path: curve(0.07, 0.035, -0.105, 0.222), radius: 0.006, tessellation: 5 }, scene), this.head, 0, 0, 0, 0); lip.material = M("mouth", "#3a0a0a");
+          const teeth = add(MB.CreateTube("grinTeeth", { path: curve(0.058, 0.026, -0.098, 0.22), radius: 0.0045, tessellation: 5 }, scene), this.head, 0, 0, 0, 0); teeth.material = M("teeth", "#ece4d8");
+        } else if (!L.beard && !L.mask) { const mouth = add(MB.CreateBox("mouth", { width: 0.05, height: 0.011, depth: 0.012 }, scene), this.head, 0, -0.1, 0.218, 0); mouth.rotation.x = -0.4; mouth.material = M("mouth", "#8a4a42"); }
       }
       if (L.mask) { // a cloth mask over the nose and mouth (bandits)
         const m = add(animeHead(MB.CreateSphere("faceMask", { diameter: 0.475, segments: 12, slice: 0.42, updatable: true }, scene), 0.2375), this.head, 0, 0, 0.006, 0);

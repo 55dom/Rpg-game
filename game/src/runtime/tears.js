@@ -76,6 +76,27 @@ export function makeTear(scene, name, { r = 1.5, kind = "pale", seed = 1, ground
  * A golden door frame (his doors, before they went black): four bars of gold light and a pane of light inside, centred
  * on the node. ground: lying flat on the floor (the Drop opens under you).
  */
+const VOID_MATS = new WeakMap();
+/**
+ * The void (Ep 49): a perfect black circle. Not a portal, not a tear: no edge, no glow, a hole punched through the
+ * world. Unlit and unfogged, so nothing in the scene can make it anything but black.
+ */
+export function makeVoid(scene, name, { r = 1.2 } = {}) {
+  const BB = B();
+  let m = VOID_MATS.get(scene);
+  if (!m) {
+    m = new BB.StandardMaterial("void-black", scene);
+    m.diffuseColor = BB.Color3.Black(); m.specularColor = BB.Color3.Black(); m.emissiveColor = BB.Color3.Black();
+    m.disableLighting = true; m.fogEnabled = false; m.backFaceCulling = false;
+    VOID_MATS.set(scene, m);
+  }
+  const node = new BB.TransformNode(name, scene);
+  const disc = BB.MeshBuilder.CreateDisc(`${name}-disc`, { radius: r, tessellation: 64 }, scene);
+  disc.parent = node; disc.material = m; disc.isPickable = false;
+  scene.effectLayers?.find((l) => l.name === "glow")?.addExcludedMesh(disc);
+  return node;
+}
+
 export function makeDoor(scene, name, { w = 1.4, h = 2.5, ground = false } = {}) {
   const BB = B(), MB = BB.MeshBuilder;
   let m = DOOR_MATS.get(scene);
@@ -97,6 +118,7 @@ export class TearFx {
   /** at {x, y, z}; life in seconds; grow: seconds to open. Returns the node (so it can be closed early). */
   open(at, { r = 1, kind = "pale", life = 0.7, grow = 0.12, ground = false, yaw = 0, seed } = {}) {
     const node = kind === "gold" ? makeDoor(this.scene, `door-${++this.n}`, { w: r * 1.6, h: r * 2.8, ground }) // a golden door, not a tear
+      : kind === "void" ? makeVoid(this.scene, `void-${++this.n}`, { r })
       : makeTear(this.scene, `tear-${++this.n}`, { r, kind, seed: seed ?? this.n, ground });
     node.position.set(at.x, at.y ?? 0, at.z);
     if (!ground) node.rotation.y = yaw;

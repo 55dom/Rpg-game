@@ -205,8 +205,55 @@ export class Sfx {
       case "kill": this._tone(t, 0.6, { f0: 330, f1: 165, gain: 0.08 }); break;
       case "wave": for (const [i, f] of [392, 523, 659].entries()) this._tone(t + i * 0.09, 0.4, { type: "triangle", f0: f, gain: 0.1 }); break;
       case "ui": this._tone(t, 0.05, { f0: 1200, gain: 0.05 }); break;
+      // Backlash (Ep 49): the memory, and the void.
+      case "heartbeat": for (const k of [0, 0.32, 1.1, 1.42]) this._tone(t + k, 0.16, { f0: 62, f1: 40, gain: (k % 1.1 ? 0.22 : 0.3) * p, attack: 0.008 }); break;
+      case "breath": // slow, heavy, close: in, and out
+        this._noise(t, 1.1, { type: "bandpass", f0: 700, f1: 1100, q: 0.7, gain: 0.05 * p, attack: 0.5 });
+        this._noise(t + 1.3, 1.5, { type: "bandpass", f0: 900, f1: 420, q: 0.7, gain: 0.04 * p, attack: 0.2 });
+        break;
+      case "click": this._tone(t, 0.012, { type: "square", f0: 3200, gain: 0.05 }); break; // the only sound in the game from outside the world
+      case "voidOpen": // felt more than heard: a sub-bass bed, and a thin high tone over it
+        this._tone(t, 5.5, { f0: 34, f1: 28, gain: 0.5 * p, attack: 2.5 });
+        this._tone(t, 5.5, { f0: 48, f1: 41, gain: 0.22 * p, attack: 2.8 });
+        this._tone(t + 1.5, 4.0, { f0: 9800, gain: 0.006 * p, attack: 1.5 });
+        break;
+      case "starRing": for (const f of [2093, 2637, 3136]) this._tone(t, 2.4, { f0: f, f1: f * 1.004, gain: 0.018 * p, attack: 0.4 }); break; // the "sound" of stars
+      case "arrow": this._noise(t, 0.06, { f0: 3800, f1: 1200, q: 2, gain: 0.12 }); this._tone(t + 0.05, 0.14, { f0: 160, f1: 70, gain: 0.3 }); break;
+      case "step": this._noise(t, 0.07, { type: "lowpass", f0: 900, f1: 300, gain: 0.14 * p, attack: 0.002 }); break; // dry, close, clear
+      case "unkSpeechA": this._speech(t, { base: 104, n: 7, seed: 3, gain: 0.16 * p }); break;
+      case "unkSpeechB": this._speech(t, { base: 196, n: 6, seed: 11, gain: 0.14 * p }); break;
+      case "unkSpeechFaint": this._speech(t, { base: 96, n: 3, seed: 5, gain: 0.05 * p, breathy: true }); break;
       default: break;
     }
+  }
+
+  /**
+   * A language nobody has heard (Ep 49, the void): quiet, conversational, unhurried, dry, in a small carpeted room
+   * that doesn't exist. Syllables come from one fixed set of sounds (seeded, so the language always sounds the same),
+   * and nothing about it is ever written down.
+   */
+  _speech(t0, { base = 110, n = 6, seed = 1, gain = 0.15, breathy = false }) {
+    const c = this.ctx, SOUNDS = [[310, 2300], [420, 1900], [650, 1080], [380, 900], [520, 1500], [290, 2600], [700, 1250]];
+    let r = seed * 9301 + 49297;
+    const rnd = () => ((r = (r * 9301 + 49297) % 233280) / 233280);
+    const out = c.createGain(); out.gain.value = 1;
+    const room = c.createBiquadFilter(); room.type = "lowpass"; room.frequency.value = 3200; // soft walls
+    const delay = c.createDelay(0.1); delay.delayTime.value = 0.021; const fb = c.createGain(); fb.gain.value = 0.22;
+    out.connect(room).connect(this.master); room.connect(delay); delay.connect(fb).connect(delay); delay.connect(this.master);
+    let t = t0;
+    for (let i = 0; i < n; i++) {
+      const [f1, f2] = SOUNDS[Math.floor(rnd() * SOUNDS.length)], dur = 0.09 + rnd() * 0.12, f = base * (0.94 + rnd() * 0.12);
+      const o = c.createOscillator(); o.type = "sawtooth";
+      o.frequency.setValueAtTime(f, t); o.frequency.linearRampToValueAtTime(f * (i === n - 1 ? 0.88 : 0.98 + rnd() * 0.05), t + dur);
+      const g = c.createGain();
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain * (breathy ? 0.4 : 1), t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      for (const ff of [f1, f2]) { const bp = c.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = ff; bp.Q.value = 5; o.connect(bp).connect(g); }
+      g.connect(out);
+      o.start(t); o.stop(t + dur + 0.05);
+      if (breathy) this._noise(t, dur, { type: "bandpass", f0: f2, q: 2, gain: gain * 0.6 });
+      t += dur + 0.03 + rnd() * (i % 3 === 2 ? 0.16 : 0.05); // little phrases
+    }
+    setTimeout(() => { try { out.disconnect(); delay.disconnect(); } catch { /* already gone */ } }, (t - t0 + 1) * 1000);
   }
 
   /**

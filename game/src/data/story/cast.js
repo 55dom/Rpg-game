@@ -4,6 +4,7 @@
 // `voice: "mask"`: his lines are heard through the mask (runtime/audio.js maskVoice).
 
 import { maskedLabel } from "../masked.js";
+import { REVEAL_CAST } from "../../reveal/cast.js";
 
 export const CAST = Object.freeze({
   Rook: { name: null, color: "#ffd98a", actor: "player" },
@@ -80,6 +81,8 @@ export const CAST = Object.freeze({
   Ottoline: { name: "Archivist Ottoline", color: "#e6d8b0", actor: "archivist" },
   // Ep 47: the brute at the back of the Line. He never says a word.
   Marshal: { name: "Line Marshal", color: "#c8502a", actor: "marshal" },
+  // Ep 49: inside the memory (src/reveal/cast.js).
+  ...REVEAL_CAST,
 });
 
 export const speakerName = (id, playerName, flags = null) => (id === "Rook" ? playerName : CAST[id]?.label ? CAST[id].label(flags) : CAST[id]?.name ?? id);

@@ -19,7 +19,7 @@ export const EASE = Object.freeze({
   inOut: (k) => (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2),
 });
 
-const EVENT_KEYS = ["caption", "sfx", "fx", "move", "show", "hide", "fade", "pose", "cue", "tear", "flash"];
+const EVENT_KEYS = ["caption", "sfx", "fx", "move", "show", "hide", "fade", "pose", "cue", "tear", "flash", "memory", "face"];
 
 export function validateCutscene(cs) {
   if (!cs?.id) throw new Error("cutscene needs an id");
@@ -40,6 +40,8 @@ export function validateCutscene(cs) {
     if (!EVENT_KEYS.some((key) => key in e)) throw new Error(`${where}: event at ${e.t} does nothing`);
     for (const key of ["show", "hide"]) if (e[key] && !ids.has(e[key])) throw new Error(`${where}: unknown actor ${e[key]}`);
     if (e.move && !ids.has(e.move.id)) throw new Error(`${where}: unknown actor ${e.move.id}`);
+    if (e.move?.ease && !EASE[e.move.ease]) throw new Error(`${where}: unknown ease "${e.move.ease}"`);
+    for (const id of e.face ?? []) if (!ids.has(id)) throw new Error(`${where}: unknown actor ${id}`);
   }
   return cs;
 }
@@ -61,7 +63,7 @@ export function eventsBetween(events, from, to) {
 }
 
 /** Where a moving actor is at time t (straight line, eased start and stop). */
-export function sampleMove(from, to, start, dur, t) {
-  const k = EASE.inOut(Math.max(0, Math.min(1, (t - start) / Math.max(1e-6, dur))));
+export function sampleMove(from, to, start, dur, t, ease = "inOut") {
+  const k = EASE[ease](Math.max(0, Math.min(1, (t - start) / Math.max(1e-6, dur))));
   return [from[0] + (to[0] - from[0]) * k, from[1] + (to[1] - from[1]) * k];
 }

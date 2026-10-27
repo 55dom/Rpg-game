@@ -17,6 +17,7 @@ import { Vfx, Trail } from "./runtime/vfx.js";
 import { Sfx } from "./runtime/audio.js";
 import { Controls } from "./runtime/controls.js";
 import { FollowCamera } from "./runtime/camera.js";
+import { MemoryGrade } from "./runtime/grade.js";
 import { Hud } from "./runtime/hud.js";
 import { buildArena } from "./runtime/arena.js";
 import { StoryPlayer } from "./runtime/story.js";
@@ -59,6 +60,8 @@ import { EPISODE_45, EP45_SCRIPT } from "./data/story/ep45.js";
 import { EPISODE_46, EP46_SCRIPT } from "./data/story/ep46.js";
 import { EPISODE_47, EP47_SCRIPT } from "./data/story/ep47.js";
 import { EPISODE_48, EP48_SCRIPT } from "./reveal/ep48.js";
+import { EPISODE_49, EP49_SCRIPT } from "./reveal/ep49.js";
+import { EPISODE_50, EP50_SCRIPT } from "./reveal/ep50.js";
 import { theatreList } from "./data/theatre.js";
 import { PlaytestLog, SURVEYS } from "./core/playtest.js";
 import { keyItemsHeld } from "./data/keyItems.js";
@@ -110,6 +113,7 @@ export function boot(doc = document) {
   const setBog = (on, instant = false) => sets.setBog(on, instant);
   const constellation = new Constellation(scene);
   const camera = new FollowCamera(scene, { mobile });
+  const grade = new MemoryGrade(scene, camera.cam); // inside a memory (Ep 49)
   camera.reduceMotion = reduced;
   const gl = new BB.GlowLayer("glow", scene, { mainTextureRatio: mobile ? 0.35 : 0.5, blurKernelSize: mobile ? 24 : 40 });
   // Performance (Phase 4 Step 5): the glow pass draws only things that glow (unlit or emissive
@@ -792,6 +796,11 @@ export function boot(doc = document) {
     root.classList.toggle("solo", !world.companions.length);
     root.dataset.locked = [...Object.entries(world.loadout).filter(([, a]) => !a).map(([k]) => k), ...(world.pageGrowth ? [] : ["pages"])].join(" ");
     handle.world = world;
+    { // someone else's body (Ep 49): their name on the card, not Rook's
+      const card = root.querySelector(".player-card .name"), small = card?.querySelector("small");
+      if (world.wearing && card?.firstChild) { card.firstChild.textContent = `${world.wearing.stats.name.toUpperCase()} `; if (small) small.textContent = world.wearing.title ?? ""; root.classList.add("wearing"); }
+      else if (root.classList.contains("wearing") && card?.firstChild) { root.classList.remove("wearing"); card.firstChild.textContent = `${(story?.player?.name ?? "Rook").toUpperCase()} `; if (small) small.textContent = "LANTERN SQUIRE"; }
+    }
     addView(world.player);
     for (const c of world.companions) addView(c);
     world.drainEvents();
@@ -828,6 +837,8 @@ export function boot(doc = document) {
   const story = new StoryPlayer({
     root, scene, camera, hud, sfx, vfx, controls, saves, sets, mobile,
     setPlayerVisible: (on) => views.get(world.player)?.setVisible(on),
+    playerRoot: () => views.get(world.player)?.root,
+    setMemory: (on, instant) => grade.set(on, instant),
     setSquadVisible: (on) => { for (const c of world.companions) views.get(c)?.setVisible(on); },
     getWorld: () => world,
     makeWorld: (opts) => newWorld({ ...opts, mods: statMods(partyOf(opts.companions)), progress: story.progress, teamAttacks: story.bonds.teamAttacks(), pageXpBonus: story.crafting.pageXpBonus }),
@@ -879,7 +890,8 @@ export function boot(doc = document) {
     { episode: EPISODE_41, script: EP41_SCRIPT }, { episode: EPISODE_42, script: EP42_SCRIPT },
     { episode: EPISODE_43, script: EP43_SCRIPT }, { episode: EPISODE_44, script: EP44_SCRIPT },
     { episode: EPISODE_45, script: EP45_SCRIPT }, { episode: EPISODE_46, script: EP46_SCRIPT },
-    { episode: EPISODE_47, script: EP47_SCRIPT }, { episode: EPISODE_48, script: EP48_SCRIPT }], [WORLD_SCRIPT]);
+    { episode: EPISODE_47, script: EP47_SCRIPT }, { episode: EPISODE_48, script: EP48_SCRIPT },
+    { episode: EPISODE_49, script: EP49_SCRIPT }, { episode: EPISODE_50, script: EP50_SCRIPT }], [WORLD_SCRIPT]);
   annotationNow = () => !!story.flags.get("ANNOTATION"); // after Mirrorlake, Rook's spells write ink
   revisionNow = () => !!story.flags.get("REVISION");     // after the Paragon's spar, the page rewinds
   const playtest = new PlaytestLog(story.flags, { where: () => ({ episode: story.ep?.id ?? null, beat: story.director?.beat?.id ?? null }) });
@@ -1490,6 +1502,7 @@ export function boot(doc = document) {
     const dt = Math.min(0.1, (now - last) / 1000);
     last = now;
     state.time += dt;
+    grade.update(dt);
 
     controls.poll(dt);
     let running = state.started && !state.paused && !state.help && !state.frozen && !state.modal && !story.blocking;

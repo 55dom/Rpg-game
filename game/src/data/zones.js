@@ -66,6 +66,7 @@ export const BRIDGE_LAYOUT = Object.freeze({
   gate: { x: -34, y: 44, z: 78 },       // the Gate, over the Crown Ward, high enough to clear the dome from the deck
   dome: { x: 0, z: 96, r: 16 },         // the Archive on its hill
   shards: { x: 0.3, z: 5.7 },           // Ep 48: where the pieces of the mask come down (cue maskShards)
+  seat: { x: 0, z: 7.2 },               // Ep 50: the golden door frame he sits on (cue doorSeat)
 });
 
 // ---- Interiors: the Gilded Spoon café and a Lowmarket home (runtime/sets.js buildCafe, buildHome) ----

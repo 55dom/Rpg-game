@@ -21,7 +21,9 @@ export function actorsAt(cs, t, scaleOf = () => 1) {
     if (e.pose && out.has(e.pose.id) && (e.pose.name === "down" || e.pose.name === "up")) out.get(e.pose.id).down = e.pose.name === "down";
     if (e.move && out.has(e.move.id)) {
       const a = out.get(e.move.id), dur = e.move.dur ?? Math.hypot(e.move.to[0] - a.x, e.move.to[1] - a.z) / 2.4;
-      [a.x, a.z] = sampleMove([a.x, a.z], e.move.to, e.t, dur, t);
+      const k = Math.max(0, Math.min(1, (t - e.t) / Math.max(1e-6, dur)));
+      [a.x, a.z] = sampleMove([a.x, a.z], e.move.to, e.t, dur, t, e.move.ease);
+      if (e.move.to.length > 2) a.y += (e.move.to[2] - a.y) * k; // up off the floor (held in the air), or down from a throne
     }
   }
   return [...out.values()];
@@ -215,8 +217,9 @@ export const standsInWall = (p, walls, r = 0.3, low = false) => (walls?.solids ?
  * subject: { x, z, y?, yaw, scale?, down? }; others: [{ x, z }]; walls: see cameraFits. Returns { pos, look, fov }.
  */
 export function closeUp(subject, others = [], walls = null) {
-  const { x, z, y = 0, yaw, scale = 1, down = false } = subject;
-  const look = { x, y: y + (down ? 0.4 : 1.82 * scale), z }; // the middle of the face (heads run 1.6–2.22 m)
+  const { x, z, y = 0, yaw, scale = 1, down = false, seated = 0 } = subject;
+  const sit = seated ? Math.max(0, (0.86 - seated / scale) * scale) : 0; // sitting (a throne, a bunk): the head comes down with the hips
+  const look = { x, y: y + (down ? 0.4 : 1.82 * scale - sit), z }; // the middle of the face (heads run 1.6–2.22 m)
   const dist = (down ? 3.3 : 2.7) * Math.max(1, scale); // big characters need a step back to fit
   let best = null, bestScore = -Infinity;
   for (const near of [1, 0.72, 0.5]) {

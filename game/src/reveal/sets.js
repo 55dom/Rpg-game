@@ -52,9 +52,29 @@ export function buildCamp(scene) {
     const ban = add(MB.CreateBox("cp-banner", { width: 1.1, height: 2.2, depth: 0.04 }, scene)); ban.position.set(x + 0.6, 4.6, z); ban.material = red;
   }
   const light = new BB.PointLight("cp-fires", new BB.Vector3(0, 6, 4), scene); light.diffuse = color3("#ff8a4a").clone(); light.intensity = 0.4; light.range = 40; K.lights.push(light);
-  K.bake(fires);
+  const pillar = lightPillar(scene, K, "cp", L.pillar);
+  K.bake([...fires, pillar.mesh]);
   return { env: ASH_ENV, toon: ASH_TOON, show: K.show, conditions: K.conditions, outdoor: true,
-    update(dt, t) { fires.forEach((f, i) => { f.scaling.y = 0.8 + Math.sin(t * 9 + i * 1.7) * 0.2; }); } };
+    cue: (name) => pillar.cue(name),
+    update(dt, t) { fires.forEach((f, i) => { f.scaling.y = 0.8 + Math.sin(t * 9 + i * 1.7) * 0.2; }); pillar.update(dt, t); } };
+}
+
+/**
+ * A pillar of light out of the sky (cues "pillar" / "pillarOff"): where the Hero Party leaves at a Trial's end, where
+ * the Saint comes back (Ch 4), and what tears the broken heroes out of the world at the very end (Ch 5).
+ */
+function lightPillar(scene, K, prefix, at) {
+  const BB = B(), m = glow(scene, `${prefix}-pillarM`, "#fff2c0", 0.5, true);
+  const mesh = K.noGlow(K.add(BB.MeshBuilder.CreateCylinder(`${prefix}-pillar`, { height: 60, diameter: 3.2, tessellation: 24 }, scene)));
+  mesh.position.set(at.x, 30, at.z); mesh.material = m; mesh.setEnabled(false);
+  let target = 0, k = 0;
+  return { mesh,
+    cue(name) { if (name === "pillar") { target = 1; mesh.setEnabled(true); } if (name === "pillarOff") target = 0; },
+    update(dt, t) {
+      k += (target - k) * Math.min(1, dt * 3);
+      mesh.scaling.set(Math.max(0.01, k), 1, Math.max(0.01, k)); m.alpha = 0.45 * k + Math.sin(t * 7) * 0.04 * k;
+      if (target === 0 && k < 0.02) mesh.setEnabled(false);
+    } };
 }
 
 /** The throne chamber: black pillars, a red runner, the dais and the throne, the two places beside it, the coffin behind. */
@@ -62,9 +82,16 @@ export function buildThrone(scene) {
   const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, L = THRONE_LAYOUT;
   const room = buildRoom(scene, K, { prefix: "tr", half: L.half, height: 12, wall: "#1e181a", wainscot: "#120e10", floorA: "#2a2426", floorB: "#221c1e", door: L.door, windows: [] });
   const black = toon(scene, "tr-black", "#141012"), gold = toon(scene, "tr-gold", "#8a6a2a"), red = toon(scene, "tr-red", "#5a1414");
+  let lid = null;
   const runner = add(MB.CreateGround("tr-runner", { width: 3, height: L.half[1] * 2 - 8 }, scene)); runner.position.set(0, 0.012, -4); runner.material = red;
+  let foldTop = null;
   for (const z of L.pillars) for (const x of [-5, 5]) {
-    const p = add(MB.CreateCylinder("tr-pillar", { height: 12, diameter: 1.4, tessellation: 8 }, scene), 0.04); p.position.set(x, 6, z); p.material = black;
+    if (x === L.fold.x && z === L.fold.z) { // the one the King looks at (Ch 3): in two halves, so the top can fold
+      const lo = add(MB.CreateCylinder("tr-pillarLo", { height: 6, diameter: 1.4, tessellation: 8 }, scene), 0.04); lo.position.set(x, 3, z); lo.material = black;
+      foldTop = new BB.TransformNode("tr-foldHinge", scene); foldTop.parent = K.root; foldTop.position.set(x, 6, z);
+      const hi = add(MB.CreateCylinder("tr-pillarHi", { height: 6, diameter: 1.4, tessellation: 8 }, scene), 0.04); hi.parent = foldTop; hi.position.set(0, 3, 0); hi.material = black;
+      foldTop.keep = [lo, hi];
+    } else { const p = add(MB.CreateCylinder("tr-pillar", { height: 12, diameter: 1.4, tessellation: 8 }, scene), 0.04); p.position.set(x, 6, z); p.material = black; }
     const fire = add(MB.CreateBox("tr-sconce", { width: 0.3, height: 0.5, depth: 0.3 }, scene)); fire.position.set(x + (x < 0 ? 0.8 : -0.8), 3.4, z); fire.material = glow(scene, "tr-sconceM", "#ff6a2a");
   }
   const dais = add(MB.CreateCylinder("tr-dais", { height: 0.6, diameter: L.dais.r * 2, tessellation: 32 }, scene), 0.03); dais.position.set(0, 0.3, L.dais.z); dais.material = black;
@@ -80,14 +107,30 @@ export function buildThrone(scene) {
   { // the coffin, behind the throne
     const C = L.coffin;
     const body = add(MB.CreateBox("tr-coffin", { width: 1.5, height: 1.0, depth: 3.0 }, scene), 0.03); body.position.set(C.x, 0.5, C.z); body.rotation.y = Math.PI / 2; body.material = toon(scene, "tr-coffinM", "#0a0808");
-    const lid = add(MB.CreateBox("tr-lid", { width: 1.6, height: 0.2, depth: 3.1 }, scene), 0.02); lid.position.set(C.x, 1.1, C.z); lid.rotation.y = Math.PI / 2; lid.material = gold;
+    lid = add(MB.CreateBox("tr-lid", { width: 1.6, height: 0.2, depth: 3.1 }, scene), 0.02); lid.position.set(C.x, 1.1, C.z); lid.rotation.y = Math.PI / 2; lid.material = gold;
   }
   const warm = new BB.PointLight("tr-warm", new BB.Vector3(0, 7, 6), scene); warm.diffuse = color3("#ff7a3a").clone(); warm.intensity = 0.5; warm.range = 34; K.lights.push(warm);
-  K.bake(room.keep);
+  const pillar = lightPillar(scene, K, "tr", L.pillar);
+  K.bake([...room.keep, ...foldTop.keep, lid, pillar.mesh]);
+  // Cues: "fold" (the pillar folds in half), "lidOpen" / "lidClose" (the coffin: open until he lies down), the light pillar.
+  let fold = 0, foldTo = 0, lidK = 0, lidTo = 0;
+  const lidAt = () => { const C = L.coffin; lid.position.set(C.x + 1.3 * lidK, 1.1 - 0.5 * lidK, C.z); lid.rotation.z = 1.1 * lidK; };
+  const cue = (name) => {
+    if (name === "fold") foldTo = 1;
+    if (name === "unfold") fold = foldTo = 0;
+    if (name === "lidOpen") lidK = lidTo = 1;
+    if (name === "lidClose") lidTo = 0;
+    pillar.cue(name);
+  };
   const env = { clear: "#0a0708", fog: "#120c0c", fogDensity: 0.012, hemi: [0.5, "#e0c8c0", "#1a1214"], sun: [0.35, "#ffb090", [0.1, -1, 0.3]], warm: 0 };
   const toonEnv = { lightDir: [0.1, 1, -0.3], fogColor: "#120c0c", fogDensity: 0.006, sky: [0.9, 0.8, 0.78], ground: [0.6, 0.52, 0.52], rim: [1.0, 0.62, 0.48] };
-  const self = { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true,
-    update() { room.cutaway(scene.activeCamera, self.mood?.player); } };
+  const self = { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true, cue,
+    update(dt, t) {
+      room.cutaway(scene.activeCamera, self.mood?.player);
+      fold += (foldTo - fold) * Math.min(1, dt * 9); foldTop.rotation.z = -1.9 * fold; // folds over, away from the runner
+      lidK += (lidTo - lidK) * Math.min(1, dt * 2.5); lidAt();
+      pillar.update(dt, t);
+    } };
   return self;
 }
 
@@ -110,7 +153,7 @@ export function buildCaverns(scene) {
   { // the mural: a king of some forgotten age, wounded, pouring black from his chest into two winged figures who kneel
     const M = L.mural, tex = new BB.DynamicTexture("cv-muralTex", { width: 512, height: 256 }, scene, true), c = tex.getContext();
     c.fillStyle = "#5a4e44"; c.fillRect(0, 0, 512, 256);
-    c.fillStyle = "#3a2e28"; for (let i = 0; i < 40; i++) c.fillRect(Math.random() * 512, Math.random() * 256, 2 + Math.random() * 12, 1 + Math.random() * 3); // age
+    c.fillStyle = "#3a2e28"; for (let i = 0; i < 40; i++) c.fillRect(rng() * 512, rng() * 256, 2 + rng() * 12, 1 + rng() * 3); // age
     const fig = (x, y, s, kneel) => { c.beginPath(); c.arc(x, y - 52 * s, 9 * s, 0, Math.PI * 2); c.fill(); c.fillRect(x - 8 * s, y - 44 * s, 16 * s, kneel ? 26 * s : 44 * s); };
     c.fillStyle = "#1a1210"; fig(256, 210, 1.5, false); // the king, standing, crowned
     c.beginPath(); c.moveTo(238, 128); c.lineTo(244, 112); c.lineTo(250, 126); c.lineTo(256, 108); c.lineTo(262, 126); c.lineTo(268, 112); c.lineTo(274, 128); c.fill();

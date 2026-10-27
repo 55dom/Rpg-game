@@ -20,6 +20,7 @@ export const CAMP_LAYOUT = Object.freeze({
   carts: [[9, 12], [12, 15]],
   braziers: [[-10, -4], [10, -4], [-6, 16], [6, 16]],
   wall: { z: 26, gate: 4 },                                       // the castle wall, its gate ±4 m wide
+  pillar: { x: 6, z: 8 },                                         // where the light comes down for the Hero Party
 });
 
 export const THRONE_LAYOUT = Object.freeze({
@@ -30,6 +31,8 @@ export const THRONE_LAYOUT = Object.freeze({
   places: [[-3.2, 15.6], [3.2, 15.6]],                            // the two places beside the throne
   coffin: { x: 0, z: 20.6 },
   door: { x: 0, z: -22 },
+  fold: { x: 5, z: 3 },                                           // the pillar that folds when the King looks at it
+  pillar: { x: -2.4, z: 7.4 },                                    // the light that takes the heroes away, at the very end
 });
 
 export const CAVERN_LAYOUT = Object.freeze({
