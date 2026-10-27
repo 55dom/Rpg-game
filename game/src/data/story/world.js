@@ -68,6 +68,7 @@ Tamsin: I finished the song! Well. Two lines of it. It still doesn't rhyme.
 title: W_Cal
 ---
 Cal: Mind the step on your way out. Honestly, one of these days I'll fix it.
+<<set $HEARD_S2 to 1>>
 Cal: ...Probably not.
 ===
 

@@ -7,6 +7,9 @@ import { CUTSCENES } from "../src/data/story/cutscenes.js";
 import { LOOKS } from "../src/runtime/rig.js";
 
 const scaleOf = (look) => LOOKS[look]?.scale ?? 1;
+// Every episode file: the story's, and the reveal's own (src/reveal/, the sanctioned exception to the leak rules).
+const EPISODE_FILES = [["../src/data/story/", "data/story"], ["../src/reveal/", "reveal"]].flatMap(([dir]) =>
+  readdirSync(new URL(dir, import.meta.url)).filter((f) => /^ep\d+\.js$/.test(f)).map((f) => new URL(dir + f, import.meta.url).href));
 // A beat's set walls, as the runtime finds them (runtime/story.js Stage.setup).
 const wallsFor = (b) => { const z = Object.values(ZONES).find((z) => z.stage === (b.stage ?? "yard") && !z.roamOnly); return z ? { ...z.bounds, interior: !!z.interior } : null; };
 const still = (pos, look, fov = 0.6) => [{ t: 0, cut: true, pos, look, fov }];
@@ -73,10 +76,10 @@ test("every cutscene: nobody stands or walks through anybody else", () => {
 
 test("every scene and walk-around: nobody stands inside anybody else, or inside a building, a column or a wall, Rook included", async () => {
   const R = (look) => 0.42 * scaleOf(look);
-  const files = readdirSync(new URL("../src/data/story/", import.meta.url)).filter((f) => /^ep\d+\.js$/.test(f));
+  const files = EPISODE_FILES;
   let checked = 0;
   for (const f of files) {
-    const mod = await import(`../src/data/story/${f}`);
+    const mod = await import(f);
     for (const ep of Object.values(mod).filter((v) => v?.beats)) {
       for (const b of ep.beats.filter((x) => x.type === "scene" || x.type === "explore")) {
         // Everyone a `when` might bring on, all at once: stricter than any one playthrough.
@@ -106,10 +109,10 @@ test("a scene's wide shot swings round the group until nobody's hidden behind an
 });
 
 test("every scene's wide shot, from where everyone starts: nobody hidden behind anybody or behind the set, nobody looming over the lens, never in a wall", async () => {
-  const files = readdirSync(new URL("../src/data/story/", import.meta.url)).filter((f) => /^ep\d+\.js$/.test(f));
+  const files = EPISODE_FILES;
   let checked = 0;
   for (const f of files) {
-    const mod = await import(`../src/data/story/${f}`);
+    const mod = await import(f);
     const scripts = Object.values(mod).filter((v) => typeof v === "string").join("\n");
     for (const ep of Object.values(mod).filter((v) => v?.beats)) {
       for (const b of ep.beats.filter((x) => x.type === "scene")) {

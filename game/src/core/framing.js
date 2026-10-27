@@ -34,6 +34,8 @@ export function actorsAt(cs, t, scaleOf = () => 1) {
  *  cropped  the subject (whoever stands at the look point) has the top of their head out of frame
  *  hidden   someone mostly covered by the people in front of them (one, or a column of them)
  *  looms    someone else's head huge in the foreground; a key's `ots: id` marks a deliberate over-the-shoulder
+ * A key's `ecu: true` marks an extreme close-up (an eye, a hand, a scar): the subject is meant to fill the frame, so
+ * the subject itself is never "in the lens" or "cropped" (everyone else still is).
  */
 export function shotProblems(cs, t, scaleOf = () => 1) {
   const cam = sampleCamera(cs.camera, t), [px, py, pz] = cam.pos, [qx, qy, qz] = cam.look;
@@ -46,13 +48,13 @@ export function shotProblems(cs, t, scaleOf = () => 1) {
     const h = BODY * a.scale, ax = a.x - px, az = a.z - pz;
     const along = ax * ux + az * uz, side = Math.abs(ax * -uz + az * ux), dist = Math.hypot(ax, az);
     const camInBody = py > a.y - 0.2 && py < a.y + h + 0.2;
-    if (dist < 0.9 * a.scale && camInBody && along > -0.3) { out.push({ kind: "lens", id: a.id, t }); continue; }
     const subject = Math.hypot(a.x - qx, a.z - qz) < 0.7;
+    if (dist < 0.9 * a.scale && camInBody && along > -0.3 && !(key.ecu && subject && dist > 0.25)) { out.push({ kind: "lens", id: a.id, t }); continue; }
     if (!subject && along > 0.2 && along < L - 1 && side < 0.42 * a.scale) {
       const yAt = py + (qy - py) * (along / L); // the sight line's height as it passes them
       if (yAt > a.y + 0.25 && yAt < a.y + h) out.push({ kind: "blocks", id: a.id, t });
     }
-    if (subject && along > 0.5) {
+    if (subject && along > 0.5 && !key.ecu) {
       const top = Math.atan2(a.y + h + 0.08 - py, along) - pitch;
       if (top > half) out.push({ kind: "cropped", id: a.id, t });
     }
@@ -217,14 +219,14 @@ export function closeUp(subject, others = [], walls = null) {
   const look = { x, y: y + (down ? 0.4 : 1.82 * scale), z }; // the middle of the face (heads run 1.6–2.22 m)
   const dist = (down ? 3.3 : 2.7) * Math.max(1, scale); // big characters need a step back to fit
   let best = null, bestScore = -Infinity;
-  for (const near of [1, 0.72]) {
-    for (const off of down ? [1.6, -1.6, 2.4, -2.4] : [0.3, -0.3, 0.7, -0.7, 1.1, -1.1, 1.6, -1.6]) {
+  for (const near of [1, 0.72, 0.5]) {
+    for (const off of down ? [1.6, -1.6, 2.4, -2.4] : [0.3, -0.3, 0.7, -0.7, 1.1, -1.1, 1.6, -1.6, 2.2, -2.2, 2.8, -2.8]) {
       const ang = yaw + off, d = dist * near;
       const pos = { x: x + Math.sin(ang) * d, y: down ? 2.9 : look.y + 0.15, z: z + Math.cos(ang) * d };
       let clear = 9;
       for (const o of others) clear = Math.min(clear, segDist(pos, look, o));
-      const side = Math.abs(off) > 1.2 ? 0.6 : 0; // past a right angle it's their ear, or the back of their head: only if nothing nearer the front fits
-      const score = Math.min(clear, 1.2) - Math.abs(off) * 0.05 - side - (near < 1 ? 0.2 : 0) - (cameraFits(pos, walls) ? 0 : 10) - (sightBlocked(pos, look, walls) ? 3 : 0);
+      const side = Math.abs(off) > 2.0 ? 1.2 : Math.abs(off) > 1.2 ? 0.6 : 0; // past a right angle it's their ear, or the back of their head: only if nothing nearer the front fits
+      const score = Math.min(clear, 1.2) - Math.abs(off) * 0.05 - side - (near < 1 ? (near < 0.6 ? 0.5 : 0.2) : 0) - (cameraFits(pos, walls) ? 0 : 10) - (sightBlocked(pos, look, walls) ? 3 : 0);
       if (score > bestScore) { bestScore = score; best = pos; }
     }
   }

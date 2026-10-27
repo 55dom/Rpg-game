@@ -13,6 +13,7 @@ Dagrun: Nobody else wanted it. That's sort of our whole thing.
 <<pose Cal raise>>
 <<shot on Cal>>
 Cal: Mind the step. It's been loose since before the sea dried up.
+<<set $HEARD_S2 to 1>>
 <<pose Cal none>>
 <<move Cal -1.2 7.4 wait>>
 <<face Cal Rook>>

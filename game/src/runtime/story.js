@@ -651,9 +651,10 @@ export class StoryPlayer {
       if (s.type === "line") await this.showLine(s);
       else if (s.type === "options") {
         this.skipping = false;
-        const i = await this.view.options(s.options, this.choiceTimer ?? 0);
+        const shown = s.options.filter((o) => o.enabled || !o.tags?.includes("secret")); // #secret: a line you only see if you've earned it
+        const i = await this.view.options(shown, this.choiceTimer ?? 0);
         this.choiceTimer = 0;
-        r.choose(i);
+        r.choose(shown[i].index);
       } else if (s.type === "command") await this.command(s.name, s.args);
       if (!this.active) return;
     }
@@ -1449,7 +1450,8 @@ export class StoryPlayer {
       if (e.pose) this.stage.pose(e.pose.id, e.pose.name);
       if (e.cue) this.ctx.sets?.cue(e.cue);
       if (e.tear) { const [x, y, z] = e.tear.at; this.tearAt({ x, y, z }, e.tear.yaw ?? 0, e.tear); }
-      if (e.fade) this._fade(e.fade === "out", 1);
+      if (e.fade) this._fade(e.fade === "out", e.dur ?? 1); // dur: a cut to black (0), or a slow fade
+      if (e.flash) this._flash(e.flash);                   // an impact frame: white, for a fraction of a second
     }
     c.prev = c.t;
     const cam = sampleCamera(cs.camera, c.t);
@@ -1471,6 +1473,14 @@ export class StoryPlayer {
     el.textContent = text;
     el.className = `caption${CAPS.test(text) ? " caps" : ""}`;
     void el.offsetWidth; el.classList.add("show");
+  }
+
+  _flash(seconds) {
+    if (this.skipping) return;
+    const el = document.createElement("div");
+    el.className = "impact-white";
+    this.ctx.root.appendChild(el);
+    setTimeout(() => el.remove(), Math.max(40, seconds * 1000));
   }
 
   _fade(black, seconds) {
@@ -1550,6 +1560,7 @@ export class StoryPlayer {
     }
     if (this.siege) this.siege.onEvent(ev);
     if (ev.type === "waveClear" && !this.siege) { f.done = true; this.sleep(0.4).then(() => f.resolve(true)); }
+    if (f.beat.endOn && ev.type === f.beat.endOn) { f.done = true; this.sleep(0.6).then(() => f.resolve(true)); } // a fight the story ends (Ep 48: the Underline)
     if (ev.type === "playerDown") {
       f.falls++;
       if (f.getUps > 0) { // story duels: you can get back up a few times

@@ -107,6 +107,7 @@ export const LOOKS = {
   engine: { form: "object", shape: "engine", trail: "#ffd36a" },
   masked: MASKED_LOOK, // the masked knight on the ridge (data/masked.js)
   knightAlly: MASKED_LOOK, // the same, fighting beside the Lanterns on the bridge (Ep 47)
+  maskFinal: MASKED_LOOK, // and on the bridge against Rook (Ep 48)
   ...LEGION_LOOKS, // the Line, through the Gate (src/reveal/legion.js)
   maskedVI: MASKED_LOOK, // the same, on the Archive road (Ep 43)
   // Wraithe, the Pale Choir's rift-walker (Ep 23): ash-pale wrappings, a hood, a cloth bound over the mouth
@@ -481,12 +482,13 @@ export class Rig {
         sl.rotation.y = Math.atan2(x, zf); sl.material = slitMat;
       }
       const seam = add(MB.CreateBox("maskSeam", { width: 0.014, height: 0.17, depth: 0.02 }, scene), this.head, 0, -0.03, 0.254, 0); seam.material = maskMat;
-      if (L.maskCrack) { // cracked down the middle, not broken; and from under it, blood
-        const crackM = M("maskCrack", L.maskCrack);
-        [[0.0, 0.15, 0.3], [0.012, 0.09, -0.4], [-0.006, 0.03, 0.35], [0.01, -0.03, -0.3], [-0.004, -0.09, 0.4], [0.008, -0.15, -0.2]].forEach(([x, y, r]) => {
-          const c = add(MB.CreateBox("maskCrack", { width: 0.008, height: 0.065, depth: 0.016 }, scene), this.head, x, y, 0.262 - Math.abs(y) * 0.15, 0); c.rotation.z = r; c.material = crackM;
+      if (L.maskCrack) { // cracked down the middle, not broken (bright, so it reads in any light); and from under it, blood
+        const crackM = glow(scene, `${id}-maskCrack`, L.maskCrack); crackM.metadata = { noGlow: true };
+        const onMask = (y) => 1.06 * Math.sqrt(Math.max(0, 0.24 * 0.24 - (y / 1.1) ** 2)) + 0.016; // just proud of the shell
+        [[0.0, 0.17, 0.3], [0.014, 0.11, -0.45], [-0.008, 0.05, 0.4], [0.012, -0.01, -0.35], [-0.006, -0.07, 0.45], [0.01, -0.13, -0.25], [0, -0.19, 0.2]].forEach(([x, y, r]) => {
+          const c = add(MB.CreateBox("maskCrack", { width: 0.013, height: 0.07, depth: 0.012 }, scene), this.head, x, y, onMask(y), 0); c.rotation.z = r; c.material = crackM;
         });
-        if (L.maskBlood) { const b = add(MB.CreateBox("maskBlood", { width: 0.012, height: 0.12, depth: 0.012 }, scene), this.head, 0.02, -0.12, 0.25, 0); b.material = M("maskBlood", L.maskBlood); }
+        if (L.maskBlood) { const b = add(MB.CreateBox("maskBlood", { width: 0.016, height: 0.14, depth: 0.012 }, scene), this.head, 0.03, -0.16, onMask(-0.16) - 0.004, 0); b.material = glow(scene, `${id}-maskBlood`, L.maskBlood); b.metadata = { noGlow: true }; }
       }
     } else if (L.head === "lump") { // a bog brute: a heavy skull, a brow ridge over slanted eyes, a jaw full of fangs, horns
       const hide = dark, bone = M("fang", "#e8dfc4"), maw = M("maw", "#2a0a0a"), horn = M("horn", "#2a2620");

@@ -1,6 +1,7 @@
 // Cutscene timelines (see core/timeline.js for the format). Times are in seconds.
 
 import { IRONHOLD_LAYOUT, VAULT_LAYOUT } from "../zones.js";
+import { REVEAL_CUTSCENES } from "../../reveal/cutscenes.js";
 
 const PI = Math.PI;
 const RG = IRONHOLD_LAYOUT.ridge, EN = IRONHOLD_LAYOUT.engine;
@@ -373,3 +374,5 @@ export const CUTSCENES = {
     ],
   },
 };
+
+Object.assign(CUTSCENES, REVEAL_CUTSCENES); // the reveal's own (src/reveal/cutscenes.js)

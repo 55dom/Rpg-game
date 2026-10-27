@@ -23,7 +23,7 @@ import { StoryPlayer } from "./runtime/story.js";
 import { Sets } from "./runtime/sets.js";
 import { Constellation, StarFigure } from "./runtime/constellation.js";
 import { LION_FIGURE } from "./data/eclipse.js";
-import { TearFx, makeTear, tearMaterials } from "./runtime/tears.js";
+import { TearFx, makeTear, makeDoor, tearMaterials } from "./runtime/tears.js";
 import { SaveStore, cleanName } from "./core/save.js";
 import { EPISODE_1, EP1_SCRIPT } from "./data/story/ep1.js";
 import { EPISODE_2, EP2_SCRIPT } from "./data/story/ep2.js";
@@ -58,6 +58,7 @@ import { EPISODE_44, EP44_SCRIPT } from "./data/story/ep44.js";
 import { EPISODE_45, EP45_SCRIPT } from "./data/story/ep45.js";
 import { EPISODE_46, EP46_SCRIPT } from "./data/story/ep46.js";
 import { EPISODE_47, EP47_SCRIPT } from "./data/story/ep47.js";
+import { EPISODE_48, EP48_SCRIPT } from "./reveal/ep48.js";
 import { theatreList } from "./data/theatre.js";
 import { PlaytestLog, SURVEYS } from "./core/playtest.js";
 import { keyItemsHeld } from "./data/keyItems.js";
@@ -364,6 +365,28 @@ export function boot(doc = document) {
           break;
         }
         case "severExposed": vfx.flash({ x: ev.fighter.pos.x, y: 1.2, z: ev.fighter.pos.z }, 1.6, "#9cb8ff", 0.1); break;
+        // The reveal's fights (Ep 48): rain from tears, the Underline, golden doors and the swap, the scramble, spatial blades, Godfall.
+        case "severRain": vfx.flash({ x: ev.at.x, y: 2.6, z: ev.at.z }, 3, "#9cb8ff", 0.1); sfx.play("tear"); break;
+        case "underline":
+          vfx.flash(ev.at, 4, "#f2efe6", 0.25); vfx.ring({ x: ev.at.x, y: 0.06, z: ev.at.z }, 4, "#5a7ad8", 0.6);
+          hud.toast("UNDERLINE", "finisher"); sfx.play("finisher"); camera.shake(0.9); impact(8, true);
+          break;
+        case "doorOpen": {
+          const p = world.player.pos, yaw = Math.atan2(p.x - ev.at.x, p.z - ev.at.z);
+          tearFx.open({ x: ev.at.x, y: 1.3, z: ev.at.z }, { r: 0.9, kind: "gold", life: ev.role === "mark" ? 0.5 : ev.role === "in" ? 1.0 : 0.42, yaw });
+          if (ev.role !== "out") vfx.flash({ x: ev.at.x, y: 1.3, z: ev.at.z }, 1.2, "#ffd36a", 0.08);
+          sfx.play("door", ev.role === "mark" ? 0.5 : 0.9);
+          break;
+        }
+        case "doorSwap":
+          for (const at of [ev.a, ev.b]) tearFx.open({ x: at.x, y: 1.3, z: at.z }, { r: 0.9, kind: "gold", life: 0.6 });
+          sfx.play("door"); camera.shake(0.3); if (ev.target === world.player) hud.toast("SWAPPED", "danger");
+          break;
+        case "scramble": tearFx.open({ x: ev.from.x, y: 1.2, z: ev.from.z }, { r: 0.8, kind: "black", life: 0.4 }); tearFx.open({ x: ev.to.x, y: 1.2, z: ev.to.z }, { r: 0.8, kind: "black", life: 0.6 }); if (ev.fighter === world.player) { hud.toast("SCRAMBLED", "danger"); camera.shake(0.3); } break;
+        case "blades": sfx.play("glint"); break;
+        case "godfall": groundFx.lane(ev.from, { x: ev.from.x + ev.dir.x * ev.length, z: ev.from.z + ev.dir.z * ev.length }, 1.6); hud.toast("GODFALL", "danger"); sfx.play("bossIntro", 0.7); camera.shake(0.4); break;
+        case "regen": vfx.flash({ x: ev.fighter.pos.x, y: 1.4, z: ev.fighter.pos.z }, 1.4, "#ffd36a", 0.06); break;
+        case "evolve": if (ev.phase === 2) for (const r of [0.6, 1.2]) vfx.ring({ x: ev.fighter.pos.x, y: 0.06, z: ev.fighter.pos.z }, 3 * r, "#9cb8ff", 0.4); break;
         // Encounter VI (Ep 43): the Draw (a tear under you, and out of one in front of him) and the Ring of Edges.
         case "drawMark": tearFx.open({ x: ev.at.x, y: 0.05, z: ev.at.z }, { r: ev.r, kind: "black", life: ev.frames / 60, ground: true }); sfx.play("tear", 0.6); break;
         case "drawn": {
@@ -528,7 +551,8 @@ export function boot(doc = document) {
           hud.toast("UPROOTED", "afterimage");
           break;
         case "bossPhase":
-          if (BOSS_PHASE_TEXT[ev.fighter.kind]) { const t = BOSS_PHASE_TEXT[ev.fighter.kind][ev.phase]; if (t) { hud.toast(t[0], t[2] ?? "danger"); hud.banner(t[1]); } sfx.play("bossIntro"); camera.shake(0.6); break; }
+          { const pt = BOSS_PHASE_TEXT[ev.fighter.kind] ?? ev.fighter.stats.phaseText; // (a boss can carry its own)
+            if (pt) { const t = pt[ev.phase]; if (t) { hud.toast(t[0], t[2] ?? "danger"); hud.banner(t[1]); } sfx.play("bossIntro"); camera.shake(0.6); break; } }
           if (ev.drained) { setBog(false); hud.toast("THE BOG DRAINS", "clear"); hud.banner("PHASE 3 · EXPOSED"); }
           else if (ev.fighter.kind === "severin") { hud.toast("CONSTELLATION", "afterimage"); hud.banner("PHASE 2 · POLARIS"); }
           else { hud.toast("HASK ENRAGES", "danger"); hud.banner(`PHASE ${ev.phase}`); }
@@ -855,7 +879,7 @@ export function boot(doc = document) {
     { episode: EPISODE_41, script: EP41_SCRIPT }, { episode: EPISODE_42, script: EP42_SCRIPT },
     { episode: EPISODE_43, script: EP43_SCRIPT }, { episode: EPISODE_44, script: EP44_SCRIPT },
     { episode: EPISODE_45, script: EP45_SCRIPT }, { episode: EPISODE_46, script: EP46_SCRIPT },
-    { episode: EPISODE_47, script: EP47_SCRIPT }], [WORLD_SCRIPT]);
+    { episode: EPISODE_47, script: EP47_SCRIPT }, { episode: EPISODE_48, script: EP48_SCRIPT }], [WORLD_SCRIPT]);
   annotationNow = () => !!story.flags.get("ANNOTATION"); // after Mirrorlake, Rook's spells write ink
   revisionNow = () => !!story.flags.get("REVISION");     // after the Paragon's spar, the page rewinds
   const playtest = new PlaytestLog(story.flags, { where: () => ({ episode: story.ep?.id ?? null, beat: story.director?.beat?.id ?? null }) });
@@ -1080,6 +1104,10 @@ export function boot(doc = document) {
     const sunMat = glow(scene, "strikeSun", "#ffd36a", 0.3, true); // the Paragon's light
     return {
       warn(s) {
+        if (s.kind === "gold") { // a golden door opening in the floor under you (the Drop)
+          const t = makeDoor(scene, "dropWarn", { w: s.r * 1.6, h: s.r * 2.2, ground: true });
+          t.position.set(s.x, 0.06, s.z); t.scaling.setAll(0.2); strikes.set(s, t); sfx.play("door", 0.5); return;
+        }
         if (s.kind === "rift" || s.kind === "sever") { // the floor opening: a tear in the ground (pale: Wraithe; black: the masked knight), not a ring
           const black = s.kind === "sever";
           const t = makeTear(scene, "riftWarn", { r: s.r, kind: black ? "black" : "pale", seed: Math.round(s.x * 31 + s.z * 17), ground: true });
@@ -1093,6 +1121,7 @@ export function boot(doc = document) {
         const at = { x: s.x, y: 0.1, z: s.z };
         if (s.kind === "rift") { vfx.flash({ x: s.x, y: 0.3, z: s.z }, 1.8, "#f0ecff", 0.12); sfx.play("rift", 0.8); return; } // it seals
         if (s.kind === "sever") { vfx.flash({ x: s.x, y: 0.3, z: s.z }, 1.8, "#9cb8ff", 0.12); sfx.play("tear", 0.8); return; }
+        if (s.kind === "gold") { vfx.flash({ x: s.x, y: 0.3, z: s.z }, 1.8, "#ffd36a", 0.12); sfx.play("door", 0.8); return; }
         if (s.kind === "debris") { vfx.ring(at, s.r * 2.2, "#ff9a5a", 0.3); vfx.sparksAt({ x: s.x, y: 0.4, z: s.z }, 10, "gold", 8, 6); vfx.flash({ x: s.x, y: 0.8, z: s.z }, 2.2, "#ffb070", 0.12); sfx.play("slam", 0.55); }
         else { vfx.pillar(at, 6, 0.35); vfx.flash({ x: s.x, y: 1.4, z: s.z }, 2.6, "#cfeaff", 0.1); vfx.sparksAt({ x: s.x, y: 0.5, z: s.z }, 10, "white", 9, 5); sfx.play("ultActivate", 0.5); }
         camera.shake(0.18);

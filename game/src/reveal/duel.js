@@ -33,6 +33,7 @@ const custom = (frame, key, value = 0) => ({ frame, type: E.Custom, key, value }
 export const MASK_FINAL_STATS = Object.freeze({
   ...MASKED_STATS, name: "The Sable Knight", maxHealth: 3000, maxPosture: 260, runSpeed: 5.0,
   bossTitle: "THE SABLE KNIGHT · THE LOWMARKET BRIDGE", defeatText: "UNDERLINE", phaseMarks: [0.7, 0.45], finisherName: "UNDERLINE",
+  phaseText: { 2: ["HE ESCALATES", "PHASE 2 · THE FLOOR AND THE RING"], 3: ["NEVER SEEN", "PHASE 3 · RAIN FROM TEARS · BREAK HIS GUARD"] },
 });
 
 export const MASK_FINAL_TUNING = Object.freeze({
@@ -70,6 +71,7 @@ export const MASK_FINAL_PHASES = Object.freeze([{ phase: 1, above: 0.7 }, { phas
 export const UNMASKED_STATS = Object.freeze({
   name: "Cal", maxHealth: 3400, maxPosture: 320, runSpeed: 5.4, circleSpeed: 2.8, turnRate: 0.18, radius: 0.46, height: 2.0,
   boss: true, bossTitle: "CALDER WYNN", defeatText: "...", phaseMarks: [0.7, 0.4],
+  phaseText: { 2: ["EVOLUTION", "PHASE 2 · THE DOORS GO BLACK"], 3: ["WHAT HE IS", "PHASE 3 · GODFALL: LEAVE THE LINE"] },
 });
 
 export const UNMASKED_HITBOXES = Object.freeze({

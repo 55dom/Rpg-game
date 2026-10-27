@@ -1,3 +1,4 @@
+import { REVEAL_ZONES } from "../reveal/places.js";
 // Explorable zones (GDD §13: large interconnected zones, not a seamless open world).
 // Each zone names its set, bounds and solids (also used to build the set's buildings),
 // where you arrive, who's there, and its exits. Talk nodes live in data/story/world.js.
@@ -64,6 +65,7 @@ export const BRIDGE_LAYOUT = Object.freeze({
   wrecks: [[-3.6, -2.6, 0.9], [4.0, 13.2, 1.0], [-3.2, 18.6, 0.8]], // [x, z, r]: an overturned cart, a barricade, a dropped wagon (low)
   gate: { x: -34, y: 44, z: 78 },       // the Gate, over the Crown Ward, high enough to clear the dome from the deck
   dome: { x: 0, z: 96, r: 16 },         // the Archive on its hill
+  shards: { x: 0.3, z: 5.7 },           // Ep 48: where the pieces of the mask come down (cue maskShards)
 });
 
 // ---- Interiors: the Gilded Spoon café and a Lowmarket home (runtime/sets.js buildCafe, buildHome) ----
@@ -673,6 +675,8 @@ export const ZONES = {
     arrivals: { fens: { x: 0, z: -2.8, yaw: 0 } },
   },
 };
+
+Object.assign(ZONES, REVEAL_ZONES); // a memory's places (src/reveal/places.js): story only
 
 /** Where you appear when entering `zone` through `arrival` (an arrivals key), or the zone's spawn. */
 export const arrivalPoint = (zone, arrival) => zone.arrivals?.[arrival] ?? zone.spawn;

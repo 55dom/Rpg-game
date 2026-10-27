@@ -9,6 +9,7 @@ import { buildCritters } from "./critters.js";
 import { palette, props } from "./props.js";
 import { makeTear } from "./tears.js";
 import { MASKED_BOUNTY } from "../data/masked.js";
+import { buildCamp, buildThrone, buildCaverns } from "../reveal/sets.js";
 
 const mulberry = (seed) => () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 
@@ -54,7 +55,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, archive: buildArchive, bridge: buildBridge, watchhouse: buildWatchhouse, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, hollow: buildHollow, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, archive: buildArchive, bridge: buildBridge, camp: buildCamp, throne: buildThrone, caverns: buildCaverns, watchhouse: buildWatchhouse, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, hollow: buildHollow, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -1784,18 +1785,39 @@ function buildBridge(scene, mobile) {
   const drum = add(MB.CreateCylinder("br-drum", { height: 10, diameter: D.r * 2, tessellation: 28 }, scene), 0.05); drum.position.set(D.x, 13, D.z); drum.material = P("#d8cdb6");
   const dome = add(MB.CreateSphere("br-dome", { diameter: D.r * 2, segments: 18, slice: 0.5 }, scene), 0.05); dome.position.set(D.x, 18, D.z); dome.material = P("#4a6a8a");
   const gate = buildGate(scene, K, "br", L.gate);
-  K.bake([...smoke, ...fires]);
+  // Pieces of a mask, falling onto the stone one by one (cue maskShards, Ep 48).
+  const shardM = toon(scene, "br-shard", "#1e1e26");
+  const shards = Array.from({ length: 7 }, (_, i) => {
+    const m = add(MB.CreateBox("br-shard", { width: 0.07 + rng() * 0.08, height: 0.1 + rng() * 0.08, depth: 0.02 }, scene)); m.material = shardM; m.isPickable = false;
+    m.position.set(L.shards.x + (rng() - 0.5) * 0.7, 1.9, L.shards.z + (rng() - 0.5) * 0.5); m.setEnabled(false);
+    m.metadata = { delay: i * 0.18, spin: (rng() - 0.5) * 6, land: 0.012 + rng() * 0.01 };
+    return m;
+  });
+  let shardT = -1;
+  K.bake([...smoke, ...fires, ...shards]);
   // Smoke-dimmed afternoon light, warm from the fires; the red is in the sky, not on everything.
   const env = { clear: "#2a1412", fog: "#3a2a28", fogDensity: 0.009, hemi: [0.6, "#f2dcd0", "#2e2626"], sun: [0.55, "#ffd2b0", [-0.3, -1, 0.5]], warm: 0 };
   const toonEnv = { lightDir: [0.3, 1, -0.5], fogColor: "#3a2a28", fogDensity: 0.005, sky: [1.02, 0.94, 0.9], ground: [0.74, 0.68, 0.66], rim: [1.0, 0.72, 0.58] };
   const fall = (i) => { const f = fallen[i]; if (!f || f.down) return; f.down = true; f.span.setEnabled(false); f.rubble.setEnabled(true); };
   return { env, toon: toonEnv, show: K.show, conditions: K.conditions, outdoor: true,
-    cue(name) { if (name === "collapse1") fall(0); if (name === "collapse2") fall(1); gate.cue(name); },
+    cue(name) {
+      if (name === "collapse1") fall(0); if (name === "collapse2") fall(1);
+      if (name === "maskShards") { shardT = 0; for (const m of shards) { m.setEnabled(true); m.position.y = 1.9; } }
+      gate.cue(name);
+    },
     update(dt, t) {
       fallen.forEach((f, i) => { if (f.flag.isEnabled()) fall(i); });
       fires.forEach((f, i) => { f.scaling.y = 0.8 + Math.sin(t * 9 + i * 1.3) * 0.2; f.scaling.x = 0.9 + Math.sin(t * 6 + i) * 0.1; });
       fireLights.forEach((l, i) => { l.intensity = 0.62 + Math.sin(t * 7 + i * 2) * 0.12; });
       for (const m of smoke) { m.position.y += dt * m.metadata.v; m.position.x += dt * 0.8; if (m.position.y > 40) { m.position.y = 6; m.position.x -= 30; } }
+      if (shardT >= 0) {
+        shardT += dt;
+        for (const m of shards) {
+          const k = Math.max(0, shardT - m.metadata.delay);
+          m.position.y = Math.max(m.metadata.land, 1.9 - 4.9 * k * k);
+          if (m.position.y > m.metadata.land) { m.rotation.x += dt * m.metadata.spin; m.rotation.z += dt * m.metadata.spin * 0.6; } else m.rotation.x = Math.PI / 2;
+        }
+      }
       gate.update(dt, t);
     } };
 }
@@ -2258,3 +2280,5 @@ function buildCrypt(scene, mobile) {
     } };
   return self;
 }
+
+export { kit, buildRoom, mulberry }; // for the memory's sets (src/reveal/sets.js)

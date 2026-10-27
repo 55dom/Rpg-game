@@ -29,6 +29,8 @@ import { EraserController } from "./eraser.js";
 import { WraitheController } from "./wraithe.js";
 import { MASKED_STATS, MASKED_HITBOXES, maskedOptions, MASKED_VI_STATS, maskedVIOptions } from "../data/masked.js";
 import { MaskedController, MaskedVIController } from "./masked.js";
+import { MASK_FINAL_STATS, maskFinalOptions, UNMASKED_STATS, UNMASKED_HITBOXES, unmaskedOptions } from "../reveal/duel.js";
+import { MaskFinalController, UnmaskedController } from "../reveal/duelSim.js";
 import { ECLIPSED_STATS, ECLIPSED_FINAL_STATS, ECLIPSED_HITBOXES, eclipsedOptions, eclipsedFinalOptions } from "../data/eclipse.js";
 import { EclipseController, EclipseFinalController } from "./eclipse.js";
 import { INSCRIPTION, INSCRIPTION_HITBOXES } from "../data/inscription.js";
@@ -76,6 +78,9 @@ const BOSSES = {
   masked: { stats: MASKED_STATS, hitboxes: MASKED_HITBOXES, options: maskedOptions, traits: { heavy: true }, Controller: MaskedController, z: 7 },
   // Arc 5: Encounter VI on the Archive road (Ep 43), the second full duel.
   maskedVI: { stats: MASKED_VI_STATS, hitboxes: MASKED_HITBOXES, options: maskedVIOptions, traits: { heavy: true }, Controller: MaskedVIController, z: 7 },
+  // The reveal (src/reveal/): the third duel on the bridge, and the fight after the face in the smoke (Ep 48).
+  maskFinal: { stats: MASK_FINAL_STATS, hitboxes: MASKED_HITBOXES, options: maskFinalOptions, traits: { heavy: true }, Controller: MaskFinalController, z: 7 },
+  unmasked: { stats: UNMASKED_STATS, hitboxes: UNMASKED_HITBOXES, options: unmaskedOptions, traits: {}, Controller: UnmaskedController, z: 6 },
   // Ep 27: Severin at the Tower steps, the night he reads the page (his exam kit, a harder fight).
   severinDuel: { stats: { ...SEVERIN_STATS, maxHealth: 1400, bossTitle: "SEVERIN VALCOURT · THE TOWER STEPS", defeatText: "SEVERIN YIELDS" }, hitboxes: SEVERIN_HITBOXES, options: severinOptions, traits: {}, Controller: SeverinController, z: 6 },
   eclipsed: { stats: ECLIPSED_STATS, hitboxes: ECLIPSED_HITBOXES, options: eclipsedOptions, traits: {}, Controller: EclipseController, z: 6 },
@@ -328,6 +333,7 @@ export class World {
       id: "rook", kind: "player", team: Team.Player, stats: this.playerStats, hitboxes: { ...ROOK_HITBOXES, ...PAGE_HITBOXES, ...INSCRIPTION_HITBOXES },
       graph: buildRookGraph(() => this.player.context(), ROOK_ABILITIES, this.loadout, { ultimate: this.ultimate }), x: 0, z: -4,
     }));
+    if (o.kit) this._wear(o.kit); // somebody else's body (Ep 49: a soldier, in a memory)
     this.assist = !!o.assist;
     this.teamAttacks = new Set(o.teamAttacks ?? []); // companions with a Team Attack unlocked (bond rank 5)
     // Tag-swap party (GDD §10): Rook plus whoever can tag in. Only one is on the field; the other waits
@@ -397,6 +403,22 @@ export class World {
    * and a moment of invulnerability. Their own health and mana come with them.
    * @param {boolean} forced the one on the field just fell: no cooldown, and the fall doesn't count
    */
+  /**
+   * Play as someone else for a whole fight (a memory, Ep 49): their look (kind), stats, hitboxes and moves on Rook's
+   * frame data and routes, no spells unless they bring a loadout, no ultimate. kit: { kind, stats, hitboxes, abilities, loadout? }
+   */
+  _wear(kit) {
+    const p = this.player;
+    p.kind = kit.kind; p.stats = kit.stats; p.hitboxDefs = kit.hitboxes;
+    p.combatant.health.max = kit.stats.maxHealth; p.combatant.health.fill();
+    if (p.mana) { p.mana.max = kit.stats.maxMana ?? 0; p.mana.set(kit.stats.maxMana ?? 0); }
+    this.loadout = { ...(kit.loadout ?? {}) };
+    this.ultimate = false;
+    const graph = buildRookGraph(() => p.context(), kit.abilities, this.loadout, { ultimate: false });
+    graph.runner = p.runner; p.controller.resolver = graph;
+    this.wearing = kit;
+  }
+
   tagSwap(forced = false) {
     const p = this.player, to = this.bench;
     if (!to || (!forced && (!p.alive || this.frame < this.swapReadyFrame || this.stopFrames > 0))) return false;

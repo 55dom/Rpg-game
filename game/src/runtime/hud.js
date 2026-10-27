@@ -207,7 +207,7 @@ export class Hud {
     // Context prompts: tell the player the reward is available, in their device's words.
     let prompt = "", kind = "";
     if (p.alive && p.surge.isFull && p.grounded && !p.current?.surgeCost) { prompt = `${this.label(device, "Ultimate")} · SKYRENDER`; kind = "ultimate"; }
-    else if (p.alive && world.brokenTarget(p) && p.grounded) { prompt = `${this.label(device, "Heavy")} · LANTERN BREAK`; kind = "finisher"; }
+    else if (p.alive && world.brokenTarget(p) && p.grounded) { prompt = `${this.label(device, "Heavy")} · ${world.brokenTarget(p).stats.finisherName ?? "LANTERN BREAK"}`; kind = "finisher"; }
     else if (p.counterFrames > 0) { prompt = `${this.label(device, "Light")} · COUNTER`; kind = "counter"; }
     this.set("prompt", e.prompt, "text", prompt);
     this.set("promptCls", e.prompt, "class", prompt ? `prompt show ${kind}` : "prompt");

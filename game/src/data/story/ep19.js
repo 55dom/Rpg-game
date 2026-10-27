@@ -212,7 +212,7 @@ export const EPISODE_19 = {
   id: "ep19",
   number: 19,
   unlockAt: 5, // Arc 2 (Eps 5–18) isn't written yet: Arc 3 opens as its own chapter once Episode 4 is done
-  setup: { CAL_STATE: 1, LANTERN_LIT: 1, HAS_BRASS_KEY: 1, ARC2_DONE: 1 }, // what Arcs 1–2 leave behind, if you start here
+  setup: { CAL_STATE: 1, LANTERN_LIT: 1, HAS_BRASS_KEY: 1, ARC2_DONE: 1, HEARD_S2: 1 }, // what Arcs 1–2 leave behind, if you start here
   title: "An Empty Chair",
   arc: "Arc 3 · Ashes and Echoes",
   world: { companions: false, ultimate: false },

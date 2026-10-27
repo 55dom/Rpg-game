@@ -72,13 +72,32 @@ export function makeTear(scene, name, { r = 1.5, kind = "pale", seed = 1, ground
   return node;
 }
 
+/**
+ * A golden door frame (his doors, before they went black): four bars of gold light and a pane of light inside, centred
+ * on the node. ground: lying flat on the floor (the Drop opens under you).
+ */
+export function makeDoor(scene, name, { w = 1.4, h = 2.5, ground = false } = {}) {
+  const BB = B(), MB = BB.MeshBuilder;
+  let m = DOOR_MATS.get(scene);
+  if (!m) { m = { frame: glow(scene, "door-frame", "#ffd36a"), pane: glow(scene, "door-pane", "#fff3d0", 0.35, true) }; DOOR_MATS.set(scene, m); }
+  const node = new BB.TransformNode(name, scene), t = 0.12;
+  for (const [bw, bh, x, y] of [[t, h + t, -w / 2, 0], [t, h + t, w / 2, 0], [w + t, t, 0, h / 2], [w + t, t, 0, -h / 2]]) {
+    const b = MB.CreateBox(`${name}-bar`, { width: bw, height: bh, depth: 0.08 }, scene); b.parent = node; b.position.set(x, y, 0); b.material = m.frame; b.isPickable = false;
+  }
+  const pane = MB.CreatePlane(`${name}-pane`, { width: w, height: h, sideOrientation: BB.Mesh.DOUBLESIDE }, scene); pane.parent = node; pane.material = m.pane; pane.isPickable = false;
+  if (ground) { const inner = new BB.TransformNode(`${name}-flat`, scene); for (const c of node.getChildren()) c.parent = inner; inner.parent = node; inner.rotation.x = Math.PI / 2; }
+  return node;
+}
+const DOOR_MATS = new Map();
+
 /** Tears that open, hang for a moment and seal (fights). Call update(dt) every frame. */
 export class TearFx {
   constructor(scene) { this.scene = scene; this.live = []; this.n = 0; }
 
   /** at {x, y, z}; life in seconds; grow: seconds to open. Returns the node (so it can be closed early). */
   open(at, { r = 1, kind = "pale", life = 0.7, grow = 0.12, ground = false, yaw = 0, seed } = {}) {
-    const node = makeTear(this.scene, `tear-${++this.n}`, { r, kind, seed: seed ?? this.n, ground });
+    const node = kind === "gold" ? makeDoor(this.scene, `door-${++this.n}`, { w: r * 1.6, h: r * 2.8, ground }) // a golden door, not a tear
+      : makeTear(this.scene, `tear-${++this.n}`, { r, kind, seed: seed ?? this.n, ground });
     node.position.set(at.x, at.y ?? 0, at.z);
     if (!ground) node.rotation.y = yaw;
     node.scaling.setAll(0.01);
