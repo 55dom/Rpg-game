@@ -10,7 +10,7 @@ import { CAST, speakerName } from "../data/story/cast.js";
 import { maskIntegrity } from "../data/masked.js";
 import { CUTSCENES } from "../data/story/cutscenes.js";
 import { validateCutscene, sampleCamera, eventsBetween, sampleMove } from "../core/timeline.js";
-import { wideShot } from "../core/framing.js";
+import { wideShot, closeUp, segDist } from "../core/framing.js";
 import { B, toon2, glow, color3 } from "./look.js";
 import { makeTear } from "./tears.js";
 import { GuideTrail } from "./trail.js";
@@ -59,12 +59,9 @@ function makeActor(x, z, yaw, down = false) {
   };
 }
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
-/** Ground-plane distance from point p to the segment a→b (for camera occlusion checks). */
-function segDist(a, b, p) {
-  const dx = b.x - a.x, dz = b.z - a.z, L = dx * dx + dz * dz || 1;
-  const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / L));
-  return Math.hypot(a.x + dx * t - p.x, a.z + dz * t - p.z);
-}
+// The follow camera's limits for a zone. Indoors it stays in the room: from behind a wall (which isn't drawn from
+// outside) whatever hangs on it, a banner or a shelf, would fill the screen.
+const cameraBounds = (zone) => (zone.interior ? { ...zone.bounds, interior: true } : zone.bounds);
 
 /** Actors on the current set, plus the shot math for scenes. */
 class Stage {
@@ -76,6 +73,9 @@ class Stage {
 
   setup(beat) {
     this.clear();
+    // The set's walls, for close-ups: an episode beat on a zone's set (or the zone it names) has that zone's walls.
+    const zone = beat.zone ?? Object.values(ZONES).find((z) => z.stage === (beat.stage ?? "yard") && !z.roamOnly); // free roam passes the zone itself
+    this.walls = zone ? { ...zone.bounds, interior: !!zone.interior } : null;
     const p = this.getWorld().player;
     const r = beat.rook === undefined ? { x: 0, z: -4, yaw: 0 } : beat.rook;
     this.setPlayerVisible?.(!!r); this.playerHidden = !r;
@@ -195,26 +195,14 @@ class Stage {
       const vis = pts.filter((p) => !p.hiddenActor && !(p === this.getWorld().player && this.playerHidden));
       if (!vis.length) return null;
       const entry = (p) => [...this.actors.values()].find((a) => a.actor === p);
-      return wideShot(vis.map((p) => ({ x: p.pos.x, z: p.pos.z, y: p.pos.y ?? 0, scale: entry(p)?.rig.look.scale ?? 1, crowd: !!entry(p)?.crowd })), ids[0]);
+      return wideShot(vis.map((p) => ({ x: p.pos.x, z: p.pos.z, y: p.pos.y ?? 0, scale: entry(p)?.rig.look.scale ?? 1, crowd: !!entry(p)?.crowd })), ids[0], this.walls);
     }
-    if (kind === "on") {
+    if (kind === "on") { // in front of their face, clear of everyone else and inside the set's walls (core/framing.js)
       const a = this.get(ids[0]);
       if (!a) return null;
       const scale = a === this.getWorld().player ? 1 : this.actors.get(ids[0])?.rig.look.scale ?? 1;
-      const down = !!a.down;
-      const look = { x: a.pos.x, y: (a.pos.y ?? 0) + (down ? 0.4 : 1.82 * scale), z: a.pos.z }; // the middle of the face (heads run 1.6–2.22 m)
-      // Try a few angles around the subject and keep the one with the clearest line of sight.
-      const others = pts.filter((p) => p !== a);
-      let best = null, bestScore = -1;
-      for (const off of down ? [1.6, -1.6, 2.4, -2.4] : [0.3, -0.3, 0.7, -0.7, 1.1, -1.1]) {
-        const ang = (a.targetYaw ?? a.yaw) + off, dist = (down ? 3.3 : 2.7) * Math.max(1, scale); // big characters need a step back to fit
-        const pos = { x: a.pos.x + Math.sin(ang) * dist, y: down ? 2.9 : look.y + 0.15, z: a.pos.z + Math.cos(ang) * dist };
-        let clear = 9;
-        for (const o of others) clear = Math.min(clear, segDist(pos, look, o.pos));
-        const score = Math.min(clear, 1.2) - Math.abs(off) * 0.05;
-        if (score > bestScore) { bestScore = score; best = pos; }
-      }
-      return { pos: best, look, fov: down ? 0.7 : 0.55 };
+      return closeUp({ x: a.pos.x, z: a.pos.z, y: a.pos.y ?? 0, yaw: a.targetYaw ?? a.yaw, scale, down: !!a.down },
+        pts.filter((p) => p !== a).map((p) => p.pos), this.walls);
     }
     if (kind === "two") { // over the shoulder of ids[1], looking at ids[0]
       const a = this.get(ids[0]), b = this.get(ids[1]);
@@ -892,7 +880,7 @@ export class StoryPlayer {
     p.relaxed = true;
     // Episode beats on a zone's set use that zone's walls and buildings, so nothing can be walked through.
     const zone = beat.zone ?? Object.values(ZONES).find((z) => z.stage === beat.stage && !z.roamOnly);
-    if (zone && !beat.zone) { world.bounds = zone.bounds; this.ctx.camera.bounds = zone.bounds; }
+    if (zone && !beat.zone) { world.bounds = zone.bounds; this.ctx.camera.bounds = cameraBounds(zone); }
     else if (!zone && !beat.zone) { world.bounds = YARD; this.ctx.camera.bounds = null; } // a set with no zone (the vault): its round floor
     // The Lighthouse's straw dummies are real targets: hit them as long as you like.
     const set = this.ctx.sets?.get?.(beat.stage);
@@ -1335,7 +1323,7 @@ export class StoryPlayer {
       this.zone = zone; this.arrival = arr;
       const world = this.ctx.getWorld();
       world.bounds = zone.bounds;
-      this.ctx.camera.bounds = zone.bounds;
+      this.ctx.camera.bounds = cameraBounds(zone);
       this.ctx.saves.write("auto", { player: this.player, flags: this.flags.snapshot(), inv: this.inventory.toJSON(), prog: this.progress.toJSON(), zone: id, arrival: arr, episode: null, beat: 0, clock: this.clock?.toJSON() });
       this.ctx.onZone?.(zone);
       const at = arrivalPoint(zone, arr);
@@ -1432,6 +1420,9 @@ export class StoryPlayer {
     this.stage.clear();
     this.ctx.sets?.use(beat.stage ?? "yard"); this._refreshSet(); this._sky(beat); // set pieces follow the story (a cairn, a wreck…)
     const world = this.ctx.makeWorld({ ...this.ep.world, ...(beat.world ?? {}), tokens: beat.tokens ?? this.ep.world?.tokens }); // a fight can change the rules (Mirrorlake: the margin)
+    // A new world frees the camera; indoors (the Hall of Lanterns in Ep 41) it has to stay in the room.
+    const room = Object.values(ZONES).find((z) => z.stage === (beat.stage ?? "yard") && !z.roamOnly && z.interior);
+    if (room) this.ctx.camera.bounds = cameraBounds(room);
     for (;;) {
       world.resetPlayer();
       world.spawnWave(beat.wave);

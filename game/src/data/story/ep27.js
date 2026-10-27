@@ -144,7 +144,7 @@ export const EPISODE_27 = {
     { id: "letter", type: "scene", node: "Ep27_Letter", ...LH,
       rook: { x: 6.6, z: 4.4, yaw: -0.6 },
       cast: [
-        { id: "juno", look: "juno", x: 5.2, z: 5.6, yaw: 2.2 },
+        { id: "juno", look: "juno", x: 3.5, z: 4.6, yaw: 1.6 }, // by the table, not in it
         { id: "bas", look: "basSling", x: 3.6, z: 6.2, yaw: Math.PI / 2 },
         { id: "dagrun", look: "dagrun", x: 7.4, z: 6.8, yaw: -2.6 },
         { id: "lio", look: "lio", x: 4.6, z: 3, yaw: 0.6, when: "$LIO_STATUS == 2" },

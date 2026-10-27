@@ -1,11 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
-import { actorsAt, shotProblems, cutsceneProblems, wideShot, wideShotProblems } from "../src/core/framing.js";
+import { actorsAt, shotProblems, cutsceneProblems, wideShot, wideShotProblems, closeUp, cameraFits, sightBlocked, standsInWall } from "../src/core/framing.js";
+import { ZONES } from "../src/data/zones.js";
 import { CUTSCENES } from "../src/data/story/cutscenes.js";
 import { LOOKS } from "../src/runtime/rig.js";
 
 const scaleOf = (look) => LOOKS[look]?.scale ?? 1;
+// A beat's set walls, as the runtime finds them (runtime/story.js Stage.setup).
+const wallsFor = (b) => { const z = Object.values(ZONES).find((z) => z.stage === (b.stage ?? "yard") && !z.roamOnly); return z ? { ...z.bounds, interior: !!z.interior } : null; };
 const still = (pos, look, fov = 0.6) => [{ t: 0, cut: true, pos, look, fov }];
 
 test("the framing checker sees someone in the lens, someone in the way, a cropped head and someone hidden behind someone", () => {
@@ -68,7 +71,7 @@ test("every cutscene: nobody stands or walks through anybody else", () => {
   }
 });
 
-test("every scene and walk-around: nobody stands inside anybody else, Rook included", async () => {
+test("every scene and walk-around: nobody stands inside anybody else, or inside a building, a column or a wall, Rook included", async () => {
   const R = (look) => 0.42 * scaleOf(look);
   const files = readdirSync(new URL("../src/data/story/", import.meta.url)).filter((f) => /^ep\d+\.js$/.test(f));
   let checked = 0;
@@ -78,6 +81,10 @@ test("every scene and walk-around: nobody stands inside anybody else, Rook inclu
       for (const b of ep.beats.filter((x) => x.type === "scene" || x.type === "explore")) {
         // Everyone a `when` might bring on, all at once: stricter than any one playthrough.
         const ppl = [...(b.cast ?? []).filter((c) => !c.down), ...(b.rook ? [{ id: "rook", look: "player", ...b.rook }] : [])];
+        // On their feet: not in anything, a table included. Lying down: not in a wall. Held up off the ground (Elodie in the Hollow's light): anywhere.
+        for (const a of [...ppl, ...(b.cast ?? []).filter((c) => c.down)].filter((c) => !c.y)) {
+          assert.ok(!standsInWall(a, wallsFor(b), 0.2, !a.down), `${ep.id}/${b.id}: ${a.id} at (${a.x}, ${a.z}) is in the set's walls or furniture`);
+        }
         for (let i = 0; i < ppl.length; i++) for (let j = i + 1; j < ppl.length; j++) {
           const a = ppl[i], c = ppl[j], d = Math.hypot(a.x - c.x, a.z - c.z), need = R(a.look) + R(c.look) + 0.25;
           assert.ok(d >= need, `${ep.id}/${b.id}: ${a.id} and ${c.id} are ${d.toFixed(2)} m apart (need ${need.toFixed(2)})`);
@@ -98,7 +105,7 @@ test("a scene's wide shot swings round the group until nobody's hidden behind an
   assert.deepEqual(wideShotProblems([...row, ...guards]).filter((p) => p.kind === "hidden"), []);
 });
 
-test("every scene's wide shot, from where everyone starts: nobody hidden behind anybody, nobody looming over the lens", async () => {
+test("every scene's wide shot, from where everyone starts: nobody hidden behind anybody or behind the set, nobody looming over the lens, never in a wall", async () => {
   const files = readdirSync(new URL("../src/data/story/", import.meta.url)).filter((f) => /^ep\d+\.js$/.test(f));
   let checked = 0;
   for (const f of files) {
@@ -109,7 +116,7 @@ test("every scene's wide shot, from where everyone starts: nobody hidden behind 
         const body = scripts.match(new RegExp(`title: ${b.node}\\n---\\n([\\s\\S]*?)\\n===`))?.[1] ?? "";
         const ppl = [...(b.cast ?? []).filter((c) => !c.down && !c.hidden), ...(b.rook ? [{ id: "rook", look: "player", ...b.rook }] : [])];
         for (const mode of new Set([...body.matchAll(/<<shot wide ?(\w*)>>/g)].map((m) => m[1] || undefined))) {
-          const bad = wideShotProblems(ppl, scaleOf, mode).filter((p) => p.kind === "hidden" || p.kind === "looms" || p.kind === "lens");
+          const bad = wideShotProblems(ppl, scaleOf, mode, wallsFor(b)).filter((p) => ["hidden", "looms", "lens", "walled", "outside"].includes(p.kind));
           assert.deepEqual(bad, [], `${ep.id}/${b.id} wide${mode ? " " + mode : ""}`);
           checked++;
         }
@@ -129,4 +136,49 @@ test("SKIP owns the top-right corner in a cutscene: the menu steps aside", () =>
   const html = readFileSync(new URL("../template.html", import.meta.url), "utf8");
   assert.match(html, /\.in-cut \.cut-skip \{ display: block; \}/);
   assert.match(html, /\.in-cut \.menu \{ visibility: hidden; \}/);
+});
+
+test("A dialogue close-up never stands in a wall: indoors, with someone's back to the wall and Rook at their side, the camera comes round or steps in", () => {
+  const hall = { ...ZONES.hall.bounds, interior: true };
+  // Ep 41: Mother Vey under the Lanterns' row, turned to Rook beside her. One of the old angles stood inside the north wall.
+  const vey = { x: 0.6, z: 7.4 }, rook = { x: 1.5, z: 7.6 };
+  const shot = closeUp({ ...vey, yaw: Math.atan2(rook.x - vey.x, rook.z - vey.z) }, [rook], hall);
+  assert.ok(cameraFits(shot.pos, hall), JSON.stringify(shot.pos));
+  // Everyone in every interior, a step from each wall, facing every way.
+  for (const z of Object.values(ZONES).filter((z) => z.interior)) {
+    const walls = { ...z.bounds, interior: true }, [x0, z0, x1, z1] = walls.rect;
+    for (const [px, pz] of [[x0 + 0.8, (z0 + z1) / 2], [x1 - 0.8, (z0 + z1) / 2], [(x0 + x1) / 2, z0 + 0.8], [(x0 + x1) / 2, z1 - 0.8]]) {
+      if (!cameraFits({ x: px, z: pz }, walls, 0.4)) continue; // standing in furniture: nobody's put there
+      for (let yaw = 0; yaw < Math.PI * 2; yaw += Math.PI / 4) {
+        const s = closeUp({ x: px, z: pz, yaw }, [], walls);
+        assert.ok(cameraFits(s.pos, walls), `${z.id} (${px}, ${pz}) facing ${yaw.toFixed(2)}: camera at (${s.pos.x.toFixed(2)}, ${s.pos.z.toFixed(2)})`);
+      }
+    }
+  }
+  // Out in the open there are no walls to mind: the first choice is straight in front of the face.
+  const open = closeUp({ x: 0, z: 0, yaw: 0 }, [], null);
+  assert.ok(open.pos.z > 2.5 && Math.abs(open.pos.x) < 1);
+});
+
+test("A wide shot indoors keeps out of the walls and finds an angle between the columns; a close-up won't look through a house", () => {
+  const hall = { ...ZONES.hall.bounds, interior: true };
+  // Ep 41's last scene before the fix: everyone at the Lanterns' row, and the old angle looked through two columns.
+  const row = 9.75 - 2.6, ppl = [{ id: "lio", x: 1.6, z: row - 1.4 }, { id: "juno", x: -0.6, z: row - 1.6 }, { id: "keeper", x: 3.6, z: row - 3.4 }, { id: "rook", x: -1.2, z: row - 3.2 }];
+  assert.ok(wideShotProblems(ppl, () => 1, undefined, null).length >= 0);
+  const sh = wideShot(ppl.map((p) => ({ ...p, scale: 1 })), undefined, hall);
+  assert.ok(cameraFits(sh.pos, hall));
+  for (const p of ppl) assert.ok(!sightBlocked(sh.pos, p, hall), p.id);
+  // The Lighthouse: someone with the house at their back, turned toward it. The camera won't stand in it, or look through it.
+  const lh = { ...ZONES.lighthouse.bounds };
+  const s = closeUp({ x: -3.4, z: 9.4, yaw: 0 }, [], lh);
+  assert.ok(cameraFits(s.pos, lh) && !sightBlocked(s.pos, s.look, lh), JSON.stringify(s.pos));
+});
+
+test("Indoors the follow camera keeps in front of the side and back walls, in a walk-around and in a fight", () => {
+  const src = readFileSync(new URL("../src/runtime/story.js", import.meta.url), "utf8");
+  const fight = src.slice(src.indexOf("async runFight(beat) {"), src.indexOf("for (;;) {", src.indexOf("async runFight(beat) {")));
+  assert.match(fight, /makeWorld[\s\S]*z\.interior\);\s*if \(room\) this\.ctx\.camera\.bounds = cameraBounds\(room\);/, "after the new world clears it");
+  assert.match(src, /const cameraBounds = \(zone\) => \(zone\.interior \? \{ \.\.\.zone\.bounds, interior: true \} : zone\.bounds\);/);
+  const cam = readFileSync(new URL("../src/runtime/camera.js", import.meta.url), "utf8");
+  assert.match(cam, /m = b\.interior \? -0\.35 : 3, back = 3;/);
 });

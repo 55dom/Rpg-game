@@ -74,6 +74,8 @@ export const CAST = Object.freeze({
   Kit: { name: "Kit", color: "#e6d29a", actor: "kit" },
   // Arc 5: the Paragon of Liraen.
   Paragon: { name: "The Paragon", color: "#ffd98a", actor: "paragon" },
+  // Ep 41: Lio's old teacher from the silent school.
+  Vey: { name: "Mother Vey", color: "#c9c4d4", actor: "vey" },
 });
 
 export const speakerName = (id, playerName, flags = null) => (id === "Rook" ? playerName : CAST[id]?.label ? CAST[id].label(flags) : CAST[id]?.name ?? id);

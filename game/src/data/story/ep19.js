@@ -277,7 +277,7 @@ export const EPISODE_19 = {
         { id: "bas", look: "bas", x: -3.6, z: 6.8, yaw: 2.4 },
         { id: "tamsin", look: "tamsin", x: 1.4, z: 6.4, yaw: Math.PI },
         { id: "lio", look: "lio", x: -0.4, z: 6.2, yaw: Math.PI },
-        { id: "warden", look: "guard", x: 0.2, z: -8.6, yaw: 0 },
+        { id: "warden", look: "guard", x: 0.2, z: -5, yaw: 0 }, // a few steps in from the door, so the wide shot sees past the columns
       ],
       set: { EP19_DONE: 1 } },
     { id: "preview", type: "preview", next: "Episode 20 · The Iron Front", nextEpisode: "ep20",

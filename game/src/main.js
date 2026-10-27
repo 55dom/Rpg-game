@@ -51,6 +51,8 @@ import { EPISODE_37, EP37_SCRIPT } from "./data/story/ep37.js";
 import { EPISODE_38, EP38_SCRIPT } from "./data/story/ep38.js";
 import { EPISODE_39, EP39_SCRIPT } from "./data/story/ep39.js";
 import { EPISODE_40, EP40_SCRIPT } from "./data/story/ep40.js";
+import { EPISODE_41, EP41_SCRIPT } from "./data/story/ep41.js";
+import { EPISODE_42, EP42_SCRIPT } from "./data/story/ep42.js";
 import { theatreList } from "./data/theatre.js";
 import { PlaytestLog, SURVEYS } from "./core/playtest.js";
 import { keyItemsHeld } from "./data/keyItems.js";
@@ -834,7 +836,8 @@ export function boot(doc = document) {
     { episode: EPISODE_32, script: EP32_SCRIPT }, { episode: EPISODE_33, script: EP33_SCRIPT },
     { episode: EPISODE_34, script: EP34_SCRIPT }, { episode: EPISODE_35, script: EP35_SCRIPT }, { episode: EPISODE_36, script: EP36_SCRIPT },
     { episode: EPISODE_37, script: EP37_SCRIPT }, { episode: EPISODE_38, script: EP38_SCRIPT },
-    { episode: EPISODE_39, script: EP39_SCRIPT }, { episode: EPISODE_40, script: EP40_SCRIPT }], [WORLD_SCRIPT]);
+    { episode: EPISODE_39, script: EP39_SCRIPT }, { episode: EPISODE_40, script: EP40_SCRIPT },
+    { episode: EPISODE_41, script: EP41_SCRIPT }, { episode: EPISODE_42, script: EP42_SCRIPT }], [WORLD_SCRIPT]);
   annotationNow = () => !!story.flags.get("ANNOTATION"); // after Mirrorlake, Rook's spells write ink
   revisionNow = () => !!story.flags.get("REVISION");     // after the Paragon's spar, the page rewinds
   const playtest = new PlaytestLog(story.flags, { where: () => ({ episode: story.ep?.id ?? null, beat: story.director?.beat?.id ?? null }) });
@@ -1007,7 +1010,7 @@ export function boot(doc = document) {
     const found = FRAGMENTS.filter((f) => story.flags.get(`FRAG_${f.n}`));
     journal.querySelector("[data-lore]").innerHTML = `<p class="mats"><b>Page fragments: ${found.length}/${FRAGMENTS.length}</b> · ${story.flags.get("CLAUSE_1") ? `<b>${CLAUSE.name}</b> restored: ${CLAUSE.desc}` : `Find ${CLAUSE.need} to restore a clause of the under-text.`}</p>` +
       found.map((f) => `<p class="mats"><i>"${f.text}"</i> · ${f.where}</p>`).join("") +
-      (story.flags.get("REVISION") ? `<p class="mats"><b>Revision</b> (the second stage): the page turns back. With half a Surge gauge, a fall comes undone: the last three seconds rewind for you alone, and what you did to them stands. Ink comes back faster in a fight.</p>` : "") +
+      (story.flags.get("REVISION") ? `<p class="mats"><b>Revision</b> (the second stage): the page turns back. With half a Surge gauge, a fall comes undone: the last three seconds rewind for you alone, and what you did to them stands. Ink comes back faster in a fight.${story.flags.get("CLAUSE_II") ? ` <i>Written on Elodie's wrist: "${story.flags.get("CLAUSE_II") === "stays" ? "Elodie stays" : "Elodie is nobody's page"}."</i>` : ""}</p>` : "") +
       (story.flags.get("ANNOTATION") ? `<p class="mats"><b>Annotation</b> (the first stage): the margin is open. Your spells leave ink on what they hit, and your hits land harder on anything inked.${story.flags.get("CLAUSE_I") ? ` <i>Written in the margin: "Severin comes home${story.flags.get("CLAUSE_I") === "home-anyway" ? ". Whether he likes it or not" : ""}."</i>` : ""}</p>` : "");
     const pt = journal.querySelector("[data-playtest]");
     pt.innerHTML = playtest.optIn

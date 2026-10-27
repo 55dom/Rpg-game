@@ -4,6 +4,8 @@
 
 const box = (x0, z0, x1, z1) => ({ box: [x0, z0, x1, z1] });
 const circle = (x, z, r) => ({ circle: [x, z, r] });
+// Under a camera's sight line (a table, a well, a cart, a hole in the floor): it stops feet, not a scene's view (core/framing.js).
+const low = (s) => ({ ...s, low: true });
 
 // ---- Aurelin, the capital -------------------------------------------------------------------
 // The plaza is in the middle; the Hall of Lanterns to the north; the Lowmarket to the east;
@@ -177,10 +179,10 @@ const aurelinSolids = [
   ...A.houses.map((h) => box(h.x - h.w / 2, h.z - h.d / 2, h.x + h.w / 2, h.z + h.d / 2)),
   ...A.stalls.map((s) => box(s.x - 1.4, s.z - 1, s.x + 1.4, s.z + 1)),
   box(A.hall.x0, A.hall.z0, A.hall.x1, A.hall.z1),
-  circle(A.fountain.x, A.fountain.z, A.fountain.r),
+  low(circle(A.fountain.x, A.fountain.z, A.fountain.r)),
   box(A.chapel.x - A.chapel.w / 2, A.chapel.z - A.chapel.d / 2, A.chapel.x + A.chapel.w / 2, A.chapel.z + A.chapel.d / 2),
   ...A.shacks.map((h) => box(h.x - h.w / 2, h.z - h.d / 2, h.x + h.w / 2, h.z + h.d / 2)),
-  circle(-8.5, -27.5, 1.3), circle(-8.5, -25.2, 0.9), // the cart by the gate, and its horse
+  low(circle(-8.5, -27.5, 1.3)), low(circle(-8.5, -25.2, 0.9)), // the cart by the gate, and its horse
   circle(A.notice.x, A.notice.z, 0.9), // the notice board
   // City walls on either side of the south gate, and the gate's two towers.
   box(-42, -36, -4, -33), box(4, -36, 42, -33), circle(-5, -34.5, 2.1), circle(5, -34.5, 2.1),
@@ -189,11 +191,11 @@ const aurelinSolids = [
   ...A.houses.filter((h) => h.rich).map((h) => { const f = h.x < 0 ? 1 : -1, x = h.x + f * (h.w / 2 + 1.6); return box(x - 0.5, h.z - (h.d - 1) / 2, x + 0.5, h.z + (h.d - 1) / 2); }),
   ...A.lamps.map(([x, z]) => circle(x, z, 0.22)),
   // The tavern's yard furniture and the cooper's barrels.
-  circle(A.tavern.x + 4.5, A.tavern.z - 4.5, 0.6), box(A.tavern.x + 4.9, A.tavern.z - 3, A.tavern.x + 6.3, A.tavern.z - 2.2), circle(A.tavern.x + 5.4, A.tavern.z + 2.8, 0.75),
+  low(circle(A.tavern.x + 4.5, A.tavern.z - 4.5, 0.6)), low(box(A.tavern.x + 4.9, A.tavern.z - 3, A.tavern.x + 6.3, A.tavern.z - 2.2)), low(circle(A.tavern.x + 5.4, A.tavern.z + 2.8, 0.75)),
   circle(25.5, 15.2, 1.1),
   // The café: walls all round (the way in is its door, an exit to the inside), and its terrace tables.
   box(A.cafe.x - A.cafe.w / 2, A.cafe.z - A.cafe.d / 2, A.cafe.x + A.cafe.w / 2, A.cafe.z + A.cafe.d / 2),
-  ...A.cafe.terrace.map(([x, z]) => circle(x, z, 0.75)),
+  ...A.cafe.terrace.map(([x, z]) => low(circle(x, z, 0.75))),
 ];
 
 const T = THORNWICK_LAYOUT;
@@ -202,17 +204,17 @@ const thornwickSolids = [
   box(T.orphanage.x0, T.orphanage.z0, T.orphanage.x1, T.orphanage.z1),
   ...T.houses.map((h) => box(h.x - h.w / 2, h.z - h.d / 2, h.x + h.w / 2, h.z + h.d / 2)),
   box(T.smithy.x - 1.8, T.smithy.z, T.smithy.x - 0.2, T.smithy.z + 1.4), // the forge (the smithy itself is open-sided)
-  circle(T.smithy.x + 1, T.smithy.z - 0.4, 0.45),                          // the anvil
+  low(circle(T.smithy.x + 1, T.smithy.z - 0.4, 0.45)),                     // the anvil
   circle(T.mill.x, T.mill.z, T.mill.r),
-  circle(T.well.x, T.well.z, 0.9),
-  circle(25.5, -9.5, 1.3), // the mill cart
+  low(circle(T.well.x, T.well.z, 0.9)),
+  low(circle(25.5, -9.5, 1.3)), // the mill cart
 ];
 // The Fens set's own houses, ponds and well (runtime/sets.js buildFens).
 const fensSolids = [
   ...[[-12, 14], [-4, 19], [6, 18], [14, 11], [-15, 4]].map(([x, z]) => circle(x, z, 2.5)),
-  ...[[-22, 8, 9], [20, -16, 11], [24, 14, 7], [-18, -22, 8]].map(([x, z, r]) => circle(x, z, r - 1.2)),
+  ...[[-22, 8, 9], [20, -16, 11], [24, 14, 7], [-18, -22, 8]].map(([x, z, r]) => low(circle(x, z, r - 1.2))),
   circle(3, 12, 0.9),
-  circle(-8.5, 9.5, 1.2), // the overturned cart
+  low(circle(-8.5, 9.5, 1.2)), // the overturned cart
 ];
 // Everything outside the rooms and passages is rock.
 const undercroftSolids = [
@@ -228,7 +230,7 @@ const gate = (z) => [-2, z - 0.3, 2, z + 0.3];
 export const ZONES = {
   lighthouse: {
     id: "lighthouse", name: "The Lantern Lighthouse", region: "Dry Sea of Marrow", stage: "lighthouse",
-    bounds: { rect: [-17, -17, 17, 17], solids: [circle(-9, 9, 2.6), box(-7.6, 10.6, -0.4, 15.6), box(4.1, 3.4, 5.9, 8.6),
+    bounds: { rect: [-17, -17, 17, 17], solids: [circle(-9, 9, 2.6), box(-7.6, 10.6, -0.4, 15.6), low(box(4.1, 3.4, 5.9, 8.6)),
       box(-10.45, 2.05, -8.55, 2.95), box(0.25, 11.5, 1.75, 11.7)] }, // + the workbench and the squad board
     spawn: { x: 0, z: 2, yaw: 0 },
     cast: [
@@ -439,7 +441,7 @@ export const ZONES = {
     id: "cafe", name: "The Gilded Spoon", region: "Lowmarket, Aurelin", stage: "cafe", interior: true,
     bounds: { rect: [-6.75, -5.75, 6.75, 5.75], solids: [
       box(CF.counter.x0, CF.counter.z0, CF.counter.x1, CF.counter.z1), box(CF.stove.x0, CF.stove.z0, CF.stove.x1, CF.stove.z1),
-      ...CF.tables.map(([, x, z]) => circle(x, z, 0.5)),
+      ...CF.tables.map(([, x, z]) => low(circle(x, z, 0.5))),
       circle(-6.4, -5.4, 0.35), circle(6.4, -5.4, 0.35), circle(-6.4, 5.4, 0.4), circle(-1.6, -5.2, 0.4),
     ] },
     spawn: { x: 0, z: -4.4, yaw: 0 },
@@ -481,7 +483,7 @@ export const ZONES = {
     id: "home", name: "The Vendor's House", region: "Lowmarket, Aurelin", stage: "home", interior: true,
     bounds: { rect: [-4.75, -3.75, 4.75, 3.75], solids: [
       box(HM.bed.x0, HM.bed.z0, HM.bed.x1, HM.bed.z1), box(HM.hearth.x0, HM.hearth.z0, HM.hearth.x1, HM.hearth.z1),
-      box(HM.table.x - 0.6, HM.table.z - 0.4, HM.table.x + 0.6, HM.table.z + 0.4), circle(4.3, -3.3, 0.4), circle(4.2, -2.3, 0.4), circle(-4.4, -3.4, 0.35),
+      low(box(HM.table.x - 0.6, HM.table.z - 0.4, HM.table.x + 0.6, HM.table.z + 0.4)), low(circle(4.3, -3.3, 0.4)), low(circle(4.2, -2.3, 0.4)), low(circle(-4.4, -3.4, 0.35)),
     ] },
     spawn: { x: 0, z: -2.6, yaw: 0 },
     cast: [{ id: "hetty", look: "hetty", x: 2.2, z: 2.6, yaw: 0, node: "W_Hetty",
@@ -495,9 +497,9 @@ export const ZONES = {
       box(IH.rect[0], IH.wallZ - 0.9, -IH.gateHalf, IH.wallZ + 0.9), box(IH.gateHalf, IH.wallZ - 0.9, IH.rect[2], IH.wallZ + 0.9), // the wall, with its gate
       circle(-IH.gateHalf - 1.6, IH.wallZ, 1.7), circle(IH.gateHalf + 1.6, IH.wallZ, 1.7), // gatehouse towers
       ...IH.tents.map(([x, z]) => box(x - 2.1, z - 1.6, x + 2.1, z + 1.6)), box(IH.command.x - 3.2, IH.command.z - 2.4, IH.command.x + 3.2, IH.command.z + 2.4),
-      ...IH.braziers.map(([x, z]) => circle(x, z, 0.45)),
-      ...IH.barricades.map(([x, z]) => circle(x, z, 1.4)),
-      circle(IH.cairn.x, IH.cairn.z, 0.8),
+      ...IH.braziers.map(([x, z]) => low(circle(x, z, 0.45))),
+      ...IH.barricades.map(([x, z]) => low(circle(x, z, 1.4))),
+      low(circle(IH.cairn.x, IH.cairn.z, 0.8)),
     ] },
     spawn: { x: 0, z: -29, yaw: Math.PI },
     cast: [
@@ -539,7 +541,7 @@ export const ZONES = {
   isles: {
     id: "isles", name: "The Severed Isles", region: "Over the Spindle Peaks", stage: "isles", mapWhen: "$EP30_DONE",
     bounds: { radius: SI.radius, solids: [
-      ...SI.chasms.map(([x, z, r]) => circle(x, z, r)), ...SI.pillars.map(([x, z]) => circle(x, z, 0.9)),
+      ...SI.chasms.map(([x, z, r]) => low(circle(x, z, r))), ...SI.pillars.map(([x, z]) => circle(x, z, 0.9)),
       box(SI.mural.x - SI.mural.w / 2, SI.mural.z - 0.6, SI.mural.x + SI.mural.w / 2, SI.mural.z + 0.6),
     ] },
     spawn: { x: SI.dock.x, z: SI.dock.z + 2.4, yaw: 0 },
@@ -556,8 +558,8 @@ export const ZONES = {
     id: "oldcity", name: "The Old City", region: "Beneath the Lowmarket", stage: "oldcity", dungeon: true,
     bounds: { rect: [-OC.half, OC.south, OC.half, OC.north], solids: [
       ...OC.houses.map(([x, z, w, d]) => box(x - w / 2, z - d / 2, x + w / 2, z + d / 2)),
-      box(-OC.half - 1, OC.canal.z0, -OC.canal.bridge, OC.canal.z1), box(OC.canal.bridge, OC.canal.z0, OC.half + 1, OC.canal.z1),
-      ...OC.pillars.map(([x, z]) => circle(x, z, 0.7)), ...OC.statues.map(([x, z]) => circle(x, z, 0.9)), ...OC.braziers.map(([x, z]) => circle(x, z, 0.45)),
+      low(box(-OC.half - 1, OC.canal.z0, -OC.canal.bridge, OC.canal.z1)), low(box(OC.canal.bridge, OC.canal.z0, OC.half + 1, OC.canal.z1)),
+      ...OC.pillars.map(([x, z]) => circle(x, z, 0.7)), ...OC.statues.map(([x, z]) => circle(x, z, 0.9)), ...OC.braziers.map(([x, z]) => low(circle(x, z, 0.45))),
     ] },
     spawn: { x: 0, z: OC.stairs.z + 2, yaw: 0 },
     cast: [],
@@ -571,7 +573,7 @@ export const ZONES = {
   // The Hollow (Eps 37–38): story only, there's no road to it.
   hollow: {
     id: "hollow", name: "The Hollow", region: "Through the door", stage: "hollow", dungeon: true,
-    bounds: { radius: HW.radius, solids: [...HW.voids.map(([x, z, r]) => circle(x, z, r)), ...HW.doors.map(([x, z]) => circle(x, z, 0.8)), circle(HW.pillar.x, HW.pillar.z, 1.4)] },
+    bounds: { radius: HW.radius, solids: [...HW.voids.map(([x, z, r]) => low(circle(x, z, r))), ...HW.doors.map(([x, z]) => circle(x, z, 0.8)), low(circle(HW.pillar.x, HW.pillar.z, 1.4))] }, // the pillar is light: you see through it
     spawn: { x: 0, z: -22, yaw: 0 },
     cast: [], pickups: [], encounters: [], exits: [], arrivals: {},
   },

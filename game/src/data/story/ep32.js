@@ -204,7 +204,7 @@ export const EPISODE_32 = {
     { id: "home", type: "scene", node: "Ep32_Home", ...LH, sky: { daylight: 0.15 },
       rook: { x: TABLE.x + 1.6, z: TABLE.z - 2.2, yaw: -0.6 },
       cast: [
-        { id: "elodie", look: "elodie", x: TABLE.x + 0.4, z: TABLE.z - 0.6, yaw: 0, down: false },
+        { id: "elodie", look: "elodie", x: TABLE.x + 0.2, z: TABLE.z - 3.6, yaw: 0, down: false }, // at the near end of the table, not in it
         { id: "severin", look: "severin", x: TABLE.x + 1.6, z: TABLE.z + 2.9, yaw: Math.PI },
         { id: "dagrun", look: "dagrun", x: TABLE.x - 1.4, z: TABLE.z - 2.6, yaw: 0.6 },
         { id: "juno", look: "juno", x: TABLE.x - 1.35, z: TABLE.z + 1.0, yaw: Math.PI / 2 },

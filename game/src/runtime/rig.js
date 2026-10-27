@@ -251,6 +251,8 @@ LOOKS.mag = { ...LOOKS.townswoman, coat: "#6a5646", trim: "#c9b48a", hairColor: 
 LOOKS.kit = { ...LOOKS.kid, coat: "#7a6a4a", trim: "#c9a26a", hairColor: "#6a4a2a" };
 LOOKS.nell = { ...LOOKS.kid, coat: "#e8e0d0", trim: "#c9b48a", hair: "long", hairColor: "#c98a4a", skirt: 1.3 };
 LOOKS.tobin = { ...LOOKS.kid, coat: "#4a7a5a", trim: "#d8c890", hairColor: "#2a2018" };
+// Mother Vey (Ep 41), who taught Lio to read in the Choir's silent school: an old cantor in plain grey, no halo, no mask.
+LOOKS.vey = { ...LOOKS.keeper, coat: "#8a8794", trim: "#c9c4d4", hairColor: "#ecebf0", beard: undefined, hair: "bun", hood: "#76727f", sash: false, stoop: 0.16, eyeColor: "#6a6478", trail: "#c9c4d4" };
 // The Crown Archivist (Eps 25–26): grey robes, ink on her fingers, a ledger under her arm.
 LOOKS.archivist = { poses: ACOLYTE_POSES, scale: 0.95, skirt: 1.25, coat: "#5e5e68", trim: "#c8c8d0", hairColor: "#2e2a30", skin: "#ecd0b8",
   head: "face", hair: "long", weapon: "none", holds: "scroll", sash: true, eyeColor: "#3a3a4a", trail: "#c8c8d0" };

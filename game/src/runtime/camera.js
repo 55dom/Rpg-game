@@ -162,8 +162,14 @@ export class FollowCamera {
     }
     // Keep the camera inside the play area so walls and pillars never block the view.
     if (b?.rect) {
-      const [x0, z0, x1, z1] = b.rect;
-      pos.x = Math.min(x1 + 3, Math.max(x0 - 3, pos.x)); pos.z = Math.min(z1 + 3, Math.max(z0 - 3, pos.z));
+      // Outdoors, a little past the edge. Indoors, inside the side and back walls (shelves and banners hang on them, and
+      // from behind they'd fill the screen); every room's door is in its near (−z) wall, with nothing on it, so the
+      // camera may still back out through that one.
+      const [x0, z0, x1, z1] = b.rect, m = b.interior ? -0.35 : 3, back = 3;
+      const was = Math.hypot(pos.x - this.focus.x, pos.z - this.focus.z);
+      pos.x = Math.min(x1 + m, Math.max(x0 - m, pos.x)); pos.z = Math.min(z1 + m, Math.max(z0 - back, pos.z));
+      const now = Math.hypot(pos.x - this.focus.x, pos.z - this.focus.z);
+      if (b.interior && was > 0.01 && now < was) pos.y = this.focus.y + (pos.y - this.focus.y) * Math.max(now / was, 0.15); // pulled in by a wall: come down with it, at the same angle
     } else {
       const R = (b?.radius ?? 17) + 2, r = Math.hypot(pos.x, pos.z);
       if (r > R) { pos.x *= R / r; pos.z *= R / r; }

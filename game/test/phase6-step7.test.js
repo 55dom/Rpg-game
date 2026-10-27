@@ -4,8 +4,10 @@ import { World } from "../src/sim/world.js";
 import { EPISODE_38 } from "../src/data/story/ep38.js";
 import { EPISODE_39, EP39_SCRIPT } from "../src/data/story/ep39.js";
 import { EPISODE_40, EP40_SCRIPT } from "../src/data/story/ep40.js";
+import { EPISODE_41, EP41_SCRIPT } from "../src/data/story/ep41.js";
+import { EPISODE_42, EP42_SCRIPT } from "../src/data/story/ep42.js";
 import { AFTER_EP38 } from "../src/data/story/arc4.js";
-import { AFTER_EP39 } from "../src/data/story/arc5.js";
+import { AFTER_EP39, AFTER_EP40, AFTER_EP41 } from "../src/data/story/arc5.js";
 import { CAST } from "../src/data/story/cast.js";
 import { parseScript, DialogueRunner } from "../src/core/script.js";
 import { FlagStore } from "../src/core/flags.js";
@@ -13,8 +15,10 @@ import { validateEpisode } from "../src/sim/episode.js";
 import { REVISION } from "../src/data/inscription.js";
 import { PARAGON_TUNING, PARAGON_STATS } from "../src/data/paragon.js";
 import { LOOKS } from "../src/runtime/rig.js";
+import { ZONES } from "../src/data/zones.js";
+import { readFileSync } from "node:fs";
 
-const nodes = { ...parseScript(EP39_SCRIPT, "e39"), ...parseScript(EP40_SCRIPT, "e40") };
+const nodes = { ...parseScript(EP39_SCRIPT, "e39"), ...parseScript(EP40_SCRIPT, "e40"), ...parseScript(EP41_SCRIPT, "e41"), ...parseScript(EP42_SCRIPT, "e42") };
 const play = (node, f = new FlagStore(), pick = 0) => {
   const r = new DialogueRunner(nodes, f, { name: "Rook" }).start(node), lines = [];
   for (let s = r.next(); s.type !== "end"; s = r.next()) { if (s.type === "line") lines.push(s); if (s.type === "options") r.choose(pick); }
@@ -93,4 +97,62 @@ test("Revision wakes in the middle of the spar, as the Dawnbreak comes, and the 
   assert.equal(EPISODE_40.beats.find((b) => b.id === "after").set.REVISION, 1, "whether or not the page had to turn");
   assert.match(play("Ep40_After").text, /Revision/);
   assert.match(play("Ep39_Visit").text, /broke its key in half/);
+});
+
+test("Eps 41–42 follow Ep 40, each startable from the menu with what came before", () => {
+  for (const ep of [EPISODE_41, EPISODE_42]) {
+    validateEpisode(ep);
+    for (const b of ep.beats) { if (b.node) assert.ok(nodes[b.node], b.node); for (const c of b.cast ?? []) if (c.node) assert.ok(nodes[c.node], c.node); }
+  }
+  const next = (ep) => ep.beats.find((b) => b.type === "preview").nextEpisode;
+  assert.deepEqual([EPISODE_40, EPISODE_41, EPISODE_42].map(next), ["ep41", "ep42", "ep43"]);
+  assert.deepEqual([EPISODE_41.setup, EPISODE_42.setup], [{ ...AFTER_EP40 }, { ...AFTER_EP41 }]);
+  assert.ok(CAST.Vey && LOOKS[CAST.Vey.actor]);
+  const main = readFileSync(new URL("../src/main.js", import.meta.url), "utf8");
+  assert.match(main, /episode: EPISODE_41, script: EP41_SCRIPT/);
+  assert.match(main, /episode: EPISODE_42, script: EP42_SCRIPT/);
+});
+
+test("Ep 41: Mother Vey says what Hesper needs (a page, a child with nothing written on her), the silent school follows her into the Hall, and she dies there", () => {
+  const vey = play("Ep41_Vey");
+  assert.match(vey.text, /a page/);
+  assert.match(vey.text, /nothing written on her/);
+  assert.equal(vey.f.get("VEY_TOLD"), 1);
+  const hall = EPISODE_41.beats.find((b) => b.id === "hall");
+  assert.deepEqual(hall.required, ["vey"]);
+  const fight = EPISODE_41.beats.find((b) => b.type === "fight");
+  assert.equal(fight.stage, "hall");
+  assert.deepEqual(fight.world.bounds, ZONES.hall.bounds, "the fight stays inside the Hall's walls");
+  assert.ok(fight.wave.includes("cantor") && fight.wave.includes("acolyte"));
+  assert.match(fight.tutorial[0].text, /Gale/, "the hint says what actually breaks a hymn");
+  const last = EPISODE_41.beats.find((b) => b.id === "last");
+  assert.ok(last.cast.find((c) => c.id === "vey").down);
+  const end = play("Ep41_Last");
+  assert.equal(end.f.get("VEY_DEAD"), 1);
+  assert.match(end.text, /Tonight we do/);
+});
+
+test("Ep 42: the second clause, the player's words, goes on Elodie's wrist; the Choir comes over the wall; the door can't read her", () => {
+  const nobody = play("Ep42_Margin", new FlagStore(), 0), stays = play("Ep42_Margin", new FlagStore(), 1);
+  assert.equal(nobody.f.get("CLAUSE_II"), "nobody");
+  assert.equal(stays.f.get("CLAUSE_II"), "stays");
+  const fight = EPISODE_42.beats.find((b) => b.type === "fight");
+  assert.equal(fight.stage, "lighthouse");
+  assert.ok(fight.wave.length >= 5);
+  const seam = play("Ep42_Seam");
+  assert.equal(seam.f.get("HESPER_REFUSED"), 1);
+  assert.match(seam.text, /written on you/);
+  assert.ok(EPISODE_42.beats.find((b) => b.id === "seam").cast.find((c) => c.id === "hesper").hidden, "she comes through a seam");
+  const main = readFileSync(new URL("../src/main.js", import.meta.url), "utf8");
+  assert.match(main, /Written on Elodie's wrist/, "the Journal keeps the clause");
+});
+
+test("Eps 41–42 don't name the masked knight or point at anyone, and keep to the leak rules", () => {
+  for (const f of ["ep41.js", "ep42.js", "arc5.js"]) {
+    const src = readFileSync(new URL(`../src/data/story/${f}`, import.meta.url), "utf8");
+    assert.doesNotMatch(src, /\bsable\b/i, f);
+    assert.doesNotMatch(src, /\bdemons?\b|ash line|ash eleven/i, f);
+    assert.doesNotMatch(src, /\bcal\b|calder|CAL_[A-Z]/, f);
+    assert.doesNotMatch(src, /\bB4\b|\bB6\b|red cord|wrist cord/i, f);
+  }
 });

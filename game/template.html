@@ -183,7 +183,8 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .toast.counter { color: #e8f8ff; }
 .toast.clear { color: var(--gale); }
 
-.wave { position: absolute; left: 50%; top: 14%; transform: translateX(-50%); font: 400 14px/1 var(--font-mono); letter-spacing: 0.5em; color: var(--muted); opacity: 0; pointer-events: none; }
+/* A phase banner can be long: as wide as the screen allows, and if it still wraps it grows upward, never into the hint pill under it. */
+.wave { position: absolute; left: 50%; bottom: 84%; transform: translateX(-50%); width: max-content; max-width: 92vw; text-align: center; font: 400 14px/1.3 var(--font-mono); letter-spacing: 0.5em; color: var(--muted); opacity: 0; pointer-events: none; }
 .wave.show { animation: wave 2s ease-out forwards; }
 @keyframes wave { 0% { opacity: 0; } 15%, 70% { opacity: 1; } 100% { opacity: 0; } }
 
