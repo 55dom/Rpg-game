@@ -6,6 +6,7 @@ import { Rig } from "./rig.js";
 import { FlagStore } from "../core/flags.js";
 import { parseScript, DialogueRunner, fillText } from "../core/script.js";
 import { EpisodeDirector, validateEpisode, BeatType, objectiveCount } from "../sim/episode.js";
+import { Siege } from "../sim/siege.js";
 import { CAST, speakerName } from "../data/story/cast.js";
 import { maskIntegrity } from "../data/masked.js";
 import { CUTSCENES } from "../data/story/cutscenes.js";
@@ -259,10 +260,12 @@ class DialogueView {
     return new Promise((res) => { this.waiting = res; });
   }
 
-  options(opts) {
+  /** timer: seconds to choose, or 0. When it runs out, the last choice is taken (Ep 48: the memory, under the glaive). */
+  options(opts, timer = 0) {
     this.more.hidden = true;
     this.sel = opts.findIndex((o) => o.enabled);
     this.choices.innerHTML = "";
+    this.timeMax = this.timeLeft = timer;
     opts.forEach((o, i) => {
       const li = document.createElement("li");
       const b = document.createElement("button");
@@ -271,6 +274,7 @@ class DialogueView {
       li.appendChild(b); this.choices.appendChild(li);
     });
     this.opts = opts;
+    if (timer > 0) { const li = document.createElement("li"); li.className = "choice-timer"; li.innerHTML = "<i></i>"; this.choices.appendChild(li); this.timerBar = li.firstChild; }
     this.highlight();
     return new Promise((res) => { this.choosing = res; });
   }
@@ -297,6 +301,11 @@ class DialogueView {
   }
 
   update(dt, fast) {
+    if (this.choosing && this.timeLeft > 0) {
+      this.timeLeft -= dt;
+      if (this.timerBar) this.timerBar.style.width = `${Math.max(0, (this.timeLeft / this.timeMax) * 100)}%`;
+      if (this.timeLeft <= 0) { const last = this.opts.map((o, i) => (o.enabled ? i : -1)).filter((i) => i >= 0).pop(); this.pick(last); }
+    }
     if (!this.typing) return;
     this.shown = fast ? this.full.length : Math.min(this.full.length, this.shown + Math.max(1, Math.floor(dt * CPS + Math.random())));
     this.say.textContent = this.full.slice(0, this.shown);
@@ -377,6 +386,7 @@ export class StoryPlayer {
     if (paused) return;
     this.time += dt;
     this.view.update(dt, this.skipping);
+    if (this.clash) this.clash.update(dt);
     if (this.skipping && !this.view.typing && this.view.waiting) this.view.advance();
     for (const a of this.stage.actors.values()) a.actor.talking = a.actor === this.talker && this.view.typing;
     this.stage.update(dt, this.time);
@@ -391,6 +401,7 @@ export class StoryPlayer {
     if (this.cut) this._cutStep(dt);
     if (this.theatre) this._theatreTick();
     if (this.fight) this._tutorial(dt);
+    if (this.fight && this.siege) this._siegeTick();
     if (this.roaming && this.clock && this.exploring) this._weatherTick(dt);
     else if (this.ep) { // an episode: the street keeps clear of the story (passers-by walked through close-ups and duels)
       const set = this.ctx.sets?.built?.get(this.ctx.sets.current), p = this.ctx.getWorld().player.pos;
@@ -491,6 +502,7 @@ export class StoryPlayer {
 
   /** Light / Enter / tap while a scene or card is up. */
   confirm() {
+    if (this.clash) { this.clash.press(); return; } // the Clash takes every press (timed, never mashed)
     if (this.theatre) { this.theatreControl("pause"); return; } // in the Theatre, a tap pauses
     if (this.cut) { this.cut.t = this.cut.cs.duration; return; } // skip the cutscene
     if (this.waitingCard) { const r = this.waitingCard; this.waitingCard = null; r(); return; }
@@ -639,7 +651,8 @@ export class StoryPlayer {
       if (s.type === "line") await this.showLine(s);
       else if (s.type === "options") {
         this.skipping = false;
-        const i = await this.view.options(s.options);
+        const i = await this.view.options(s.options, this.choiceTimer ?? 0);
+        this.choiceTimer = 0;
         r.choose(i);
       } else if (s.type === "command") await this.command(s.name, s.args);
       if (!this.active) return;
@@ -751,6 +764,9 @@ export class StoryPlayer {
       }
       case "wait": await this.sleep(this.skipping ? 0 : Number(args[0]) || 0.5); break;
       case "sfx": this.ctx.sfx.play(args[0]); break;
+      case "shake": if (!this.skipping) this.ctx.camera.shake(Number(args[0]) || 0.4); break;
+      case "timer": this.choiceTimer = Number(args[0]) || 8; break; // the next choice has this long; then the last one is taken
+      case "clash": await this._clash(Number(args[0]) || 6); break;
       case "fx": await this.fx(args); break;
       case "survey": if (!this.skipping) await this.ctx.openSurvey?.(args[0]); break; // the playtest kit's end-of-arc survey (core/playtest.js)
       case "move": { // <<move Severin x z>> walks there; add "wait" to finish first
@@ -803,7 +819,48 @@ export class StoryPlayer {
     if (kind === "door") { await this.doorOfLight(CAST[who]?.actor ?? who); return; }
     if (kind === "rift") { this.riftAt(CAST[who]?.actor ?? who); return; } // a pale seam where someone is about to step out
     if (kind === "tear") { this.riftAt(CAST[who]?.actor ?? who, "black"); return; } // a black one
+    if (kind === "floor") { // a black tear in the ground under someone (Ep 47: under the Line Marshal)
+      const a = this.stage.get(CAST[who]?.actor ?? who);
+      if (a) this.tearAt({ x: a.pos.x, y: 0.05, z: a.pos.z }, 0, { kind: "black", r: 1.7 * (this.stage.actors.get(CAST[who]?.actor ?? who)?.rig.look.scale ?? 1), ground: true });
+      return;
+    }
     if (kind === "book") await this.bookDescends(CAST[who]?.actor ?? who, who === "Severin" ? "tome" : "thin");
+  }
+
+  /**
+   * The Clash (Ep 48, GDD §15.8 Phase 5): two ultimates meet, and it's held by timing, not by mashing. A ring closes on a
+   * mark; press as they meet. Too early or too late and the ring starts again. Every hit pushes the ink a little further
+   * against the black light. If nothing lands for a while the memory of every fight so far carries the press anyway:
+   * the Clash can be lost a hundred times and never fail. (The outcome is the story's; the timing is yours.)
+   */
+  _clash(n) {
+    if (this.skipping) return Promise.resolve();
+    const root = this.ctx.root, el = document.createElement("div");
+    el.className = "clash";
+    el.innerHTML = `<div class="clash-bar"><i></i></div><div class="clash-mark"></div><div class="clash-ring"></div><p class="clash-label">${this.ctx.hud?.label?.(this.ctx.controls?.device ?? "keyboard", "Light") ?? "PRESS"}</p>`;
+    root.appendChild(el);
+    const bar = el.querySelector(".clash-bar i"), ring = el.querySelector(".clash-ring");
+    const PERIOD = 1.15, WINDOW = 0.17, GIVE = 6;
+    return new Promise((resolve) => {
+      const c = this.clash = {
+        hits: 0, t: 0, idle: 0,
+        update: (dt) => {
+          c.t += dt; c.idle += dt;
+          ring.style.transform = `translate(-50%, -50%) scale(${Math.max(0.3, 1 + 2.2 * (1 - c.t / PERIOD))})`;
+          ring.classList.toggle("near", Math.abs(c.t - PERIOD) <= WINDOW);
+          if (c.t > PERIOD + WINDOW + 0.25) c.t = 0; // missed it: round again
+          if (c.idle > GIVE) c.land(); // the memory carries it
+        },
+        press: () => { if (Math.abs(c.t - PERIOD) <= WINDOW) c.land(); else { c.t = 0; this.ctx.sfx.play("ui"); } },
+        land: () => {
+          c.hits++; c.t = 0; c.idle = 0;
+          bar.style.width = `${50 + (c.hits / n) * 50}%`;
+          this.ctx.sfx.play("clash"); this.ctx.camera.shake(0.25 + c.hits * 0.05);
+          el.classList.remove("hit"); void el.offsetWidth; el.classList.add("hit");
+          if (c.hits >= n) { this.clash = null; el.remove(); resolve(); }
+        },
+      };
+    });
   }
 
   /** A tear in the air at an actor's spot (pale, or black), facing where they face. It doesn't hold up the script. */
@@ -1433,11 +1490,16 @@ export class StoryPlayer {
     if (room) this.ctx.camera.bounds = cameraBounds(room);
     for (;;) {
       world.resetPlayer();
-      world.spawnWave(beat.wave);
+      if (beat.siege) { // a staged battle, not a wave to clear (sim/siege.js: the Siege of Aurelin)
+        for (const e of world.enemies) world.emit({ type: "despawn", fighter: e });
+        world.fighters = world.fighters.filter((f) => f.team === world.player.team);
+        this.siege = new Siege(world, beat.siege).start(); this.siegeFrame = world.frame;
+      } else world.spawnWave(beat.wave);
       this.ctx.onEvents(world.drainEvents());
       this.fight = { beat, t: 0, hints: [...(beat.tutorial ?? [])], result: null, getUps: beat.getUps ?? 0, falls: 0 };
       for (const [who, text] of beat.lines ?? []) this.say(who, text); // squad chatter as the fight starts
       const won = await new Promise((res) => { this.fight.resolve = res; });
+      if (this.siege) { this.siege.end(); this.ctx.onEvents(world.drainEvents()); this.siege = null; }
       this._hint("");
       if (won) { // fighting side by side brings the squad closer
         const comp = this.ep?.world?.companions, party = comp === true || comp === undefined ? ["bas", "juno"] : Array.isArray(comp) ? comp : [];
@@ -1448,6 +1510,21 @@ export class StoryPlayer {
       this.say("Rook", beat.retry);
       await this.sleep(2.2);
     }
+  }
+
+  /** A staged battle runs on the world's frames: the meter, the Line's ranks, the lines spoken; and it says when it's over. */
+  _siegeTick() {
+    const s = this.siege, f = this.fight, w = this.ctx.getWorld();
+    while (this.siegeFrame < w.frame) { s.step(); this.siegeFrame++; }
+    for (const [who, text] of s.drainLines()) this.say(who, text);
+    for (const k of s.drainMarks()) {
+      if (k.cue) this.ctx.sets?.cue(k.cue);
+      if (k.sfx) this.ctx.sfx.play(k.sfx);
+      if (k.say) this.say(k.say[0], k.say[1]);
+      for (const [flag, v] of Object.entries(k.set ?? {})) this.flags.set(flag, v);
+      if (k.shake) this.ctx.camera.shake(k.shake);
+    }
+    if (s.done && !f.done) { f.done = true; this.sleep(0.3).then(() => f.resolve(true)); }
   }
 
   /** World events main.js forwards while a story fight runs. */
@@ -1471,7 +1548,8 @@ export class StoryPlayer {
       if (wake.flag === "REVISION") { w.revision = true; w.player.surge?.fill(); }
       if (wake.say) this.say(wake.say[0], wake.say[1]);
     }
-    if (ev.type === "waveClear") { f.done = true; this.sleep(0.4).then(() => f.resolve(true)); }
+    if (this.siege) this.siege.onEvent(ev);
+    if (ev.type === "waveClear" && !this.siege) { f.done = true; this.sleep(0.4).then(() => f.resolve(true)); }
     if (ev.type === "playerDown") {
       f.falls++;
       if (f.getUps > 0) { // story duels: you can get back up a few times

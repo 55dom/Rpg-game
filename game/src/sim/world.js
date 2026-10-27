@@ -356,6 +356,7 @@ export class World {
     });
     if (hurt) { f.injured = true; f.look = hurt.look; }
     f.assistAbility = c.assist;
+    f.guest = !!c.guest; // beside the squad, not one of it: not on the party panel, never called for an Assist
     this.companions.push(f);
     this.emit({ type: "spawn", fighter: f });
     return this.add(f);

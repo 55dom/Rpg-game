@@ -67,10 +67,15 @@ test("Ep 46, The Gate: Elodie taken before dawn, the Lances in the Archive and H
 
 test("The Gate over Aurelin: a red tear in the sky the story can open (cue gateOpen) and that stays open ($GATE_OPEN); a shot that looks up at it", () => {
   const sets = src("runtime/sets.js");
-  const au = sets.slice(sets.indexOf("function buildAurelin("), sets.indexOf("function buildThornwick("));
-  assert.match(au, /makeTear\(scene, "au-gateTear", \{[^}]*kind: "gate"/);
-  assert.match(au, /K\.when\("\$GATE_OPEN"\)/);
-  assert.match(au, /if \(name === "gateOpen"\) gateWant = 1;/);
+  const au = sets.slice(sets.indexOf("function buildAurelin("), sets.indexOf("function buildGate("));
+  assert.match(au, /buildGate\(scene, K, "au", AURELIN_GATE\)/);
+  assert.match(au, /cue: gate\.cue,/);
+  const g = sets.slice(sets.indexOf("function buildGate("), sets.indexOf("// ---- Thornwick"));
+  assert.match(g, /makeTear\(scene, `\$\{prefix\}-gateTear`, \{[^}]*kind: "gate"/);
+  assert.match(g, /K\.when\("\$GATE_OPEN"\)/);
+  assert.match(g, /if \(name === "gateOpen"\) want = 1;/);
+  assert.match(g, /if \(name === "gateThrone"\) showThrone = true;/);
+  assert.match(g, /if \(name === "coffinShift"\) shiftWant = 1;/);
   assert.match(src("runtime/tears.js"), /gate: \{ edge: glow\(scene, "tear-gateEdge"/);
   assert.match(src("runtime/story.js"), /if \(kind === "sky"\) \{/);
 });

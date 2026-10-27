@@ -51,6 +51,21 @@ export const AURELIN_LAYOUT = (() => {
 // over the Hall of Lanterns' roof from the plaza and the streets round it (runtime/sets.js buildAurelin).
 export const AURELIN_GATE = Object.freeze({ x: -38, y: 40, z: 62 });
 
+// The Lowmarket Bridge (Eps 47–48): the old stone bridge over the dry canal between the Lowmarket and the Crown Ward,
+// houses crowding both banks, the Archive's dome on the hill to the north, and the Gate over it all. The deck runs
+// north–south; the Line comes on from the north end. Its southern spans fall in during the siege (cues collapse1,
+// collapse2), behind the people holding it, and the district burns.
+export const BRIDGE_LAYOUT = Object.freeze({
+  deck: { half: 5.5, z0: -34, z1: 34 }, // 11 m wide
+  canal: { half: 13, depth: 6 },        // the dry canal under it, bank to bank
+  piers: [-20, -6, 8, 22],              // under the deck, between the arches
+  collapse: [[-30, -24], [-23, -17]],   // the spans that fall in, south of the fight
+  hold: -12,                            // where the Lanterns hold the line: nobody goes further south than this
+  wrecks: [[-3.6, -2.6, 0.9], [4.0, 13.2, 1.0], [-3.2, 18.6, 0.8]], // [x, z, r]: an overturned cart, a barricade, a dropped wagon (low)
+  gate: { x: -34, y: 44, z: 78 },       // the Gate, over the Crown Ward, high enough to clear the dome from the deck
+  dome: { x: 0, z: 96, r: 16 },         // the Archive on its hill
+});
+
 // ---- Interiors: the Gilded Spoon café and a Lowmarket home (runtime/sets.js buildCafe, buildHome) ----
 export const CAFE_LAYOUT = {
   half: [7, 6],
@@ -185,7 +200,7 @@ export const THORNWICK_LAYOUT = {
 export const UNDERCROFT_BANDS = [[-34, -22, 6], [-22, -14, 2], [-14, 2, 10], [2, 10, 2], [10, 26, 12], [26, 32, 2], [32, 46, 14]];
 const UC_HALF = 14;
 
-const A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT, IH = IRONHOLD_LAYOUT, WH = WATCH_LAYOUT, FH = FENHOME_LAYOUT, SI = ISLES_LAYOUT, AR = ARCHIVE_LAYOUT;
+const A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT, IH = IRONHOLD_LAYOUT, WH = WATCH_LAYOUT, FH = FENHOME_LAYOUT, SI = ISLES_LAYOUT, AR = ARCHIVE_LAYOUT, BR = BRIDGE_LAYOUT;
 const rect = (r) => box(r.x0, r.z0, r.x1, r.z1);
 // The City Watch's patrols (data/law.js): one more walks the streets for every step $WATCH_STRENGTH takes.
 const patrol = (n, a, b) => ({ id: `patrol${n}`, name: "City Watch", look: "guard", x: a[0], z: a[1], yaw: 0, node: "W_Patrol", when: `$WATCH_STRENGTH >= ${n}`,
@@ -592,6 +607,13 @@ export const ZONES = {
     id: "hollow", name: "The Hollow", region: "Through the door", stage: "hollow", dungeon: true,
     bounds: { radius: HW.radius, solids: [...HW.voids.map(([x, z, r]) => low(circle(x, z, r))), ...HW.doors.map(([x, z]) => circle(x, z, 0.8)), low(circle(HW.pillar.x, HW.pillar.z, 1.4))] }, // the pillar is light: you see through it
     spawn: { x: 0, z: -22, yaw: 0 },
+    cast: [], pickups: [], encounters: [], exits: [], arrivals: {},
+  },
+  // The Lowmarket Bridge in the Siege (Eps 47–48): story only. The fight keeps to the deck north of where the Lanterns hold.
+  bridge: {
+    id: "bridge", name: "The Lowmarket Bridge", region: "Aurelin", stage: "bridge", dungeon: true,
+    bounds: { rect: [-BR.deck.half + 0.4, BR.hold, BR.deck.half - 0.4, BR.deck.z1 - 0.5], solids: BR.wrecks.map(([x, z, r]) => low(circle(x, z, r))) },
+    spawn: { x: 0, z: BR.hold + 3, yaw: 0 },
     cast: [], pickups: [], encounters: [], exits: [], arrivals: {},
   },
   // The Grand Archive (Eps 44–48): story only, no way in from the map.

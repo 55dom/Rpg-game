@@ -21,7 +21,7 @@ export const DROPS = Object.freeze({
   hask: ["heart", 2], ilse: ["thread", 4], galen: ["plate", 4], gullmaw: ["heart", 5],
   ashLegion: ["plate", 0.35], ashMage: ["gear", 0.3], varka: ["plate", 5],
   lion: ["starglass", 0.5], reflection: ["starglass", 0], // a reflection never falls: it fades
-  lance: ["plate", 0.35], rider: ["strap", 0.4], wisp: ["starglass", 0.25], warden: ["starglass", 4], shell: ["plate", 0.5], halvard: ["plate", 3], eraser: ["starglass", 4], paragon: ["starglass", 2], // Arcs 4–5
+  lance: ["plate", 0.35], rider: ["strap", 0.4], wisp: ["starglass", 0.25], warden: ["starglass", 4], shell: ["plate", 0.5], halvard: ["plate", 3], eraser: ["starglass", 4], paragon: ["starglass", 2], lineSoldier: ["plate", 0.3], lineMarshal: ["plate", 4], // Arcs 4–5
 });
 
 /** Tempering: what each level adds, by kind of gear, and what it costs. Charms grow their own effect by 30% a level. */

@@ -27,3 +27,8 @@ export const AFTER_EP45 = Object.freeze({ ...AFTER_EP44, EP45_DONE: 1, CLAUSE_FA
 /** By the end of Episode 46: Hesper took Elodie again; the Chancellor's Lances tried to take the Archive and Halvard stopped them; Elodie
  *  wrote her name on the lock and it turned from the other side; the Gate is open in the sky over the Crown Ward. */
 export const AFTER_EP46 = Object.freeze({ ...AFTER_EP45, EP46_DONE: 1, ELODIE_TAKEN_AGAIN: 1, LOCK_TURNED: 1, GATE_OPEN: 1 });
+
+/** By the end of Episode 47: the Lanterns held the Lowmarket Bridge; the masked knight came down out of the sky and broke the Line;
+ *  the Marshal fell; through the Gate, a throne and a coffin whose lid moved. Rook stood in his way. */
+export const AFTER_EP47 = Object.freeze({ ...AFTER_EP46, EP47_DONE: 1, BRIDGE_FALLEN: 2, SIEGE_FIRST: "juno", SIEGE_ARRIVAL: 1, MARSHAL_DOWN: 1,
+  GATE_THRONE: 1, COFFIN_SHIFTED: 1, SIEGE_TURN: 1 });

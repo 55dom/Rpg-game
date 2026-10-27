@@ -193,7 +193,7 @@ test("the masked knight follows the Disguise Bible: full mask with slits, glaive
 
 // ---- Leak prevention (GDD §15.11): his name stays in his own files; tears are never round ----
 const files = (dir) => readdirSync(dir).flatMap((n) => { const p = join(dir, n); return statSync(p).isDirectory() ? files(p) : p.endsWith(".js") ? [p] : []; });
-const SRC = files(new URL("../src", import.meta.url).pathname);
+const SRC = files(new URL("../src", import.meta.url).pathname).filter((p) => !p.includes("/src/reveal/")); // the reveal's own folder is the sanctioned exception (GDD §15.11)
 
 test("leak test: only the knight's own files carry his name; everything else calls him 'masked'", () => {
   const named = SRC.filter((p) => /\bsable\b/i.test(readFileSync(p, "utf8"))).map((p) => p.split("/src/")[1]).sort();

@@ -108,7 +108,7 @@ export class Hud {
       el.remove(); this.partyEls.delete(c);
       for (const k of [...this.cache.keys()]) if (/^a(hp|cd|cls|key|st)\d/.test(k)) this.cache.delete(k);
     }
-    world.companions.forEach((c, i) => {
+    world.companions.filter((c) => !c.guest).forEach((c, i) => {
       let el = this.partyEls.get(c);
       if (!el) {
         el = document.createElement("div");
@@ -216,9 +216,15 @@ export class Hud {
 
     this.updateParty(world, device);
 
-    // Boss bar.
-    const b = world.boss?.alive ? world.boss : null;
-    this.set("bossOn", e.boss, "hidden", !b);
+    // Boss bar. A gauge the story sets (the Siege's Defense meter) takes its place while it's up.
+    const g = world.gauge, b = !g && world.boss?.alive ? world.boss : null;
+    this.set("bossOn", e.boss, "hidden", !b && !g);
+    if (g) {
+      if (this.marksFor !== g) { this.marksFor = g; e.bossHp.parentElement.querySelectorAll("s").forEach((x) => x.remove()); }
+      this.set("bossName", e.bossName, "text", g.label.toUpperCase());
+      this.set("bossHp", e.bossHp, "width", pct(g.value));
+      this.set("bossPost", e.bossPosture, "width", "0%");
+    }
     if (b) {
       if (this.marksFor !== b) { // phase marks on the boss bar
         this.marksFor = b;

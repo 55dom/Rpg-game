@@ -78,6 +78,8 @@ export const CAST = Object.freeze({
   Vey: { name: "Mother Vey", color: "#c9c4d4", actor: "vey" },
   // Ep 44: the keeper of the Grand Archive.
   Ottoline: { name: "Archivist Ottoline", color: "#e6d8b0", actor: "archivist" },
+  // Ep 47: the brute at the back of the Line. He never says a word.
+  Marshal: { name: "Line Marshal", color: "#c8502a", actor: "marshal" },
 });
 
 export const speakerName = (id, playerName, flags = null) => (id === "Rook" ? playerName : CAST[id]?.label ? CAST[id].label(flags) : CAST[id]?.name ?? id);

@@ -91,9 +91,11 @@ test("after Ep 18 Cal is gone from the Lighthouse; the key's text changes near t
 
 // ---- Leak prevention (GDD §15.11): file names and strings are what dataminers read ----
 const files = (dir) => readdirSync(dir).flatMap((n) => { const p = join(dir, n); return statSync(p).isDirectory() ? files(p) : p.endsWith(".js") ? [p] : []; });
-const SRC = files(new URL("../src", import.meta.url).pathname);
+// The reveal (Eps 47–50, Backlash) is the one sanctioned exception (GDD §15.11): only src/reveal/ may name him, or
+// the army on the other side of the door. Everything else is checked as before.
+const SRC = files(new URL("../src", import.meta.url).pathname).filter((p) => !p.includes("/src/reveal/"));
 
-test("leak test: no source file that mentions the masked knight also mentions Cal; no demons in the build yet", () => {
+test("leak test: no source file that mentions the masked knight also mentions Cal; no demons in the build outside the reveal", () => {
   for (const p of SRC) {
     const s = readFileSync(p, "utf8");
     if (/\bsable\b/i.test(s)) assert.ok(!/\bcal\b|calder|CAL_[A-Z]/i.test(s), `${p} links the two`);

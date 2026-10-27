@@ -174,6 +174,24 @@ export class Sfx {
           this._noise(t + k * 0.62, 0.16, { type: "lowpass", f0: 420, f1: 120, gain: 0.08 * p });
         }
         break;
+      case "warHorn": // from the other side of the Gate: one long low call, and a second under it
+        this._tone(t, 2.4, { type: "sawtooth", f0: 98, f1: 92, gain: 0.07 * p, attack: 0.3 });
+        this._tone(t + 0.1, 2.3, { type: "sawtooth", f0: 65, f1: 61, gain: 0.06 * p, attack: 0.4 });
+        this._noise(t, 2.2, { type: "lowpass", f0: 300, f1: 180, gain: 0.05 * p, attack: 0.5 });
+        break;
+      case "wind": this._noise(t, 3.2, { type: "bandpass", f0: 500, f1: 900, q: 0.6, gain: 0.06 * p, attack: 1.0 }); break;
+      case "clash": // ink against black light: a bright crack with a ring under it
+        this._noise(t, 0.25, { f0: 2400, f1: 900, q: 1.2, gain: 0.16 * p });
+        this._tone(t, 0.6, { type: "triangle", f0: 1320, f1: 1280, gain: 0.06 * p, attack: 0.005 });
+        break;
+      case "tuneMarch": // the Lighthouse Tune, all four notes, at last: low and steady, like a march
+        for (const [i, f] of [330, 392, 440, 294].entries()) {
+          const t0 = t + i * 0.7;
+          this._tone(t0, 0.62, { type: "triangle", f0: f, gain: 0.08 * p, attack: 0.03 });
+          this._tone(t0, 0.62, { type: "sine", f0: f / 2, gain: 0.06 * p, attack: 0.03 });
+          this._tone(t0, 0.2, { f0: 70, f1: 46, gain: 0.12 * p, attack: 0.01 }); // the drum under each note
+        }
+        break;
       case "hum": // the door under the Lowmarket: two low notes that won't quite agree
         this._tone(t, 2.6, { type: "sine", f0: 55, gain: 0.16 * p, attack: 0.6 });
         this._tone(t, 2.6, { type: "sine", f0: 57.5, gain: 0.12 * p, attack: 0.6 });

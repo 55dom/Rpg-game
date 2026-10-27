@@ -17,6 +17,7 @@ export class MaskedController extends PhasedBoss {
     this.exit = null; this.exposed = 0; this.left = false;
     this.evade = { cooldown: 60, step: 0 };
     this.mouths = null; this.line = null; this.lineUsed = false;
+    this.tearMoves = new Set(["Sever", "Chain"]); // moves that go through a tear and come out again
     f.combatant.floor = Math.ceil(f.stats.maxHealth * T.leaveAt); // this fight can't finish him
   }
 
@@ -30,7 +31,7 @@ export class MaskedController extends PhasedBoss {
   _target() { const t = this.f.target; return t?.alive ? t : this.world.player; }
   _tear(at, role) { this.world.emit({ type: "severOpen", fighter: this.f, at: { x: at.x, y: 0, z: at.z }, role }); }
 
-  onCustom(key) {
+  onCustom(key, value = 0) {
     const w = this.world, f = this.f, T = MASKED_TUNING;
     if (key === "severOut") { // into a black tear: gone
       this._tear(f.pos, "out");
@@ -38,9 +39,10 @@ export class MaskedController extends PhasedBoss {
       this.exit = null;
       return true;
     }
-    if (key === "severMark") { // the way back opens at his target's left
-      const t = this._target(), fw = t.forward;
-      this.exit = constrain({ x: t.pos.x - fw.z * T.flank, z: t.pos.z + fw.x * T.flank }, f.stats.radius + 0.3, w.bounds);
+    if (key === "severMark") { // the way back opens at his target's left (or, chained: the right, then behind)
+      const t = this._target(), fw = t.forward, side = value === 1 ? -1 : 1;
+      this.exit = value === 2 ? constrain({ x: t.pos.x - fw.x * T.flank, z: t.pos.z - fw.z * T.flank }, f.stats.radius + 0.3, w.bounds)
+        : constrain({ x: t.pos.x - fw.z * T.flank * side, z: t.pos.z + fw.x * T.flank * side }, f.stats.radius + 0.3, w.bounds);
       this._tear(this.exit, "mark");
       return true;
     }
@@ -165,7 +167,7 @@ export class MaskedController extends PhasedBoss {
   step() {
     const f = this.f;
     if (this.left) return;
-    if (f.submerged && f.runner.current?.id !== "Sever") this._emerge(false); // interrupted inside a tear: back out
+    if (f.submerged && !this.tearMoves.has(f.runner.current?.id)) this._emerge(false); // interrupted inside a tear: back out
     if (this.exposed > 0 && --this.exposed === 0) { this.damageFactor = 1; this.postureFactor = 1; this.world.emit({ type: "severClosed", fighter: f }); }
     if (this.line && --this.line.frames <= 0) this._closeLine();
     if (this.mouths) this._loops();
@@ -183,14 +185,14 @@ export class MaskedController extends PhasedBoss {
  * after another; the middle is safe). No mouths and no Sever Line out on the road. At 25% he takes the key and goes.
  */
 export class MaskedVIController extends MaskedController {
-  constructor(world, f) {
-    super(world, f, MASKED_VI_PHASES, maskedVIOptions);
+  constructor(world, f, phases = MASKED_VI_PHASES, options = maskedVIOptions) {
+    super(world, f, phases, options);
     this.draw = null;
   }
 
   get brainActive() { return super.brainActive && !this.draw; } // he waits for whoever he's drawing
 
-  onCustom(key) {
+  onCustom(key, value = 0) {
     const w = this.world, f = this.f, V = MASKED_VI_TUNING;
     if (key === "draw") {
       const t = this._target();
@@ -207,7 +209,7 @@ export class MaskedVIController extends MaskedController {
       w.emit({ type: "edgeRing", fighter: f, at: { x: c.x, y: 0, z: c.z }, radius: R.radius });
       return true;
     }
-    return super.onCustom(key);
+    return super.onCustom(key, value);
   }
 
   enterPhase(p) { if (p === 4) this.leave(); }

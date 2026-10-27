@@ -1,7 +1,7 @@
 // Story sets (Phase 3): each one is built on first use from primitives, carries its own sky, fog,
 // and lighting, and can be swapped in and out. "yard" is the original training yard (arena.js).
 
-import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT, ISLES_LAYOUT, OLDCITY_LAYOUT, HOLLOW_LAYOUT, ARCHIVE_LAYOUT, AURELIN_GATE } from "../data/zones.js";
+import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT, ISLES_LAYOUT, OLDCITY_LAYOUT, HOLLOW_LAYOUT, ARCHIVE_LAYOUT, AURELIN_GATE, BRIDGE_LAYOUT } from "../data/zones.js";
 import { WARDEN_STARS } from "../data/isles.js";
 import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } from "./look.js";
 import { buildCrowd } from "./crowd.js";
@@ -54,7 +54,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, archive: buildArchive, watchhouse: buildWatchhouse, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, hollow: buildHollow, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, archive: buildArchive, bridge: buildBridge, watchhouse: buildWatchhouse, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, hollow: buildHollow, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -847,37 +847,72 @@ function buildAurelin(scene, mobile) {
     paths: [{ cx: 0, cz: 0, r: 8, dir: 1 }, { cx: 0, cz: 0, r: 11, dir: -1 }, { line: [[-23, -26], [-23, 34]] }, { line: [[23, -26], [23, 34]] }, { line: [[-20, 20], [20, 20]] }, { line: [[8, -28], [8, 18]] }],
     chatters: [[-9, -14, 0.6], [14, 9, -1.2], [-20, 24, 2.1], [26, 10, 3.0]] });
   noticeBoard(scene, K, P, L.notice);
-  // The Gate (Eps 46–48): a tear across the sky above the Crown Ward, red at the edges, and the sky gone red round it.
-  // Through it, far off, rows of something standing very still. Cue "gateOpen" tears it open on screen; once the story
-  // has opened it ($GATE_OPEN) it's simply there.
-  const GT = AURELIN_GATE, gateRoot = new BB.TransformNode("au-gateRoot", scene); gateRoot.parent = K.root;
-  const gate = new BB.TransformNode("au-gate", scene); gate.parent = gateRoot; gate.position.set(GT.x, GT.y, GT.z); gate.rotation.y = Math.atan2(-GT.x, -GT.z); // facing the plaza
-  const gateTear = makeTear(scene, "au-gateTear", { r: 24, kind: "gate", seed: 46, ground: false, stretch: [1.55, 0.66] }); gateTear.parent = gate;
-  const rankM = toon(scene, "au-gateRank", "#120606");
-  for (let row = 0; row < 3; row++) for (let i = -11; i <= 11; i++) { // ranks, far off, very still: a field of spears
-    const x = i * 2.0 + (row % 2) * 1.0, y = -9.5 + row * 1.9, s = 1.6 - row * 0.2;
-    const body = add(MB.CreateBox("au-gateRank", { width: 0.55 * s, height: 1.4 * s, depth: 0.1 }, scene)); body.parent = gate; body.position.set(x, y, 2); body.material = rankM; // in front of the hole, not behind it
-    const spear = add(MB.CreateBox("au-gateSpear", { width: 0.08 * s, height: 2.6 * s, depth: 0.06 }, scene)); spear.parent = gate; spear.position.set(x + 0.32 * s, y + 0.6 * s, 2); spear.material = rankM;
-  }
-  const redSky = add(MB.CreateSphere("au-redSky", { diameter: 320, segments: 12, sideOrientation: BB.Mesh.BACKSIDE }, scene)); redSky.parent = gateRoot;
-  const redM = glow(scene, "au-redSkyM", "#ff3a1a", 0.0, true); redM.fogEnabled = false; redSky.material = redM; redSky.isPickable = false;
-  const gateFlag = K.when("$GATE_OPEN");
-  let gateOpen = 0, gateWant = 0;
-  gateRoot.setEnabled(false);
+  const gate = buildGate(scene, K, "au", AURELIN_GATE); // the Gate (Eps 46–48), over the Crown Ward
   K.bake([]);
   const env = { clear: "#a8cdf0", fog: "#c4dbf2", fogDensity: 0.008, hemi: [0.6, "#fff6e6", "#7a86a8"], sun: [0.8, "#fff1d0", [-0.4, -1, 0.55]], warm: 0 };
   const toonEnv = { lightDir: [0.4, 1, -0.55], fogColor: "#c4dbf2", fogDensity: 0.005, sky: [1.1, 1.08, 1.04], ground: [0.9, 0.88, 0.9], rim: [0.75, 0.85, 1] };
   return {
     env, toon: toonEnv, show: K.show,
     crowd, outdoor: true, windows: K.windows, lamps: K.lamps, conditions: K.conditions,
-    cue(name) { if (name === "gateOpen") gateWant = 1; if (name === "gateShut") { gateWant = 0; gateOpen = 0; } },
+    cue: gate.cue,
     update(dt, t) {
       crowd.update(dt, this.mood); critters.update(dt, this.mood ?? {});
       for (const [i, c] of poorCloths.entries()) c.rotation.x = Math.sin(t * 2 + i) * 0.12 * (1 + (this.mood?.wind ?? 0));
-      if (gateFlag.isEnabled() && !gateWant) { gateWant = 1; gateOpen = 1; } // already open in the story
-      gateOpen = Math.min(gateWant, gateOpen + dt * 0.55);
-      gateRoot.setEnabled(gateOpen > 0.01);
-      if (gateOpen > 0.01) { const e = 1 - (1 - gateOpen) ** 3; gateTear.scaling.set(e, 0.15 + 0.85 * e, 1); redM.alpha = 0.26 * e; gateTear.rotation.z = Math.sin(t * 0.3) * 0.01; }
+      gate.update(dt, t);
+    },
+  };
+}
+
+/**
+ * The Gate (Eps 46–48): a tear across the sky, red at the edges, and the sky gone red round it. Through it, far off,
+ * rows of something standing very still, like a field of spears; and later (cue "gateThrone", or $GATE_THRONE once it's
+ * been seen) a vast empty throne with a sealed black coffin before it, whose lid shifts, very slightly (cue
+ * "coffinShift", or $COFFIN_SHIFTED). Cue "gateOpen" tears it open on screen; once the story has opened it
+ * ($GATE_OPEN) it's simply there. at: where it hangs ({ x, y, z }); it faces the middle of the set.
+ */
+function buildGate(scene, K, prefix, at) {
+  const BB = B(), MB = BB.MeshBuilder, add = K.add;
+  const root = new BB.TransformNode(`${prefix}-gateRoot`, scene); root.parent = K.root;
+  const gate = new BB.TransformNode(`${prefix}-gate`, scene); gate.parent = root; gate.position.set(at.x, at.y, at.z); gate.rotation.y = Math.atan2(-at.x, -at.z);
+  const tear = makeTear(scene, `${prefix}-gateTear`, { r: 24, kind: "gate", seed: 46, ground: false, stretch: [1.55, 0.66] }); tear.parent = gate;
+  const dark = toon(scene, `${prefix}-gateRank`, "#120606");
+  for (let row = 0; row < 3; row++) for (let i = -11; i <= 11; i++) { // ranks, far off, very still: a field of spears
+    const x = i * 2.0 + (row % 2) * 1.0, y = -9.5 + row * 1.9, s = 1.6 - row * 0.2;
+    const body = add(MB.CreateBox(`${prefix}-gateRank`, { width: 0.55 * s, height: 1.4 * s, depth: 0.1 }, scene)); body.parent = gate; body.position.set(x, y, 2); body.material = dark; // in front of the hole, not behind it
+    const spear = add(MB.CreateBox(`${prefix}-gateSpear`, { width: 0.08 * s, height: 2.6 * s, depth: 0.06 }, scene)); spear.parent = gate; spear.position.set(x + 0.32 * s, y + 0.6 * s, 2); spear.material = dark;
+  }
+  // The throne and the coffin, framed above the ranks.
+  const throne = new BB.TransformNode(`${prefix}-gateThrone`, scene); throne.parent = gate; throne.setEnabled(false);
+  const tm = toon(scene, `${prefix}-gateThroneM`, "#0a0303");
+  const part = (w, h, d, x, y, z, m = tm) => { const b = add(MB.CreateBox(`${prefix}-gateThronePart`, { width: w, height: h, depth: d }, scene)); b.parent = throne; b.position.set(x, y, z); b.material = m; return b; };
+  part(5.2, 9.5, 0.3, 0, 3.2, 2.4); part(6.4, 1.2, 0.4, 0, -0.9, 2.3); part(0.7, 4.2, 0.4, -2.9, 0.6, 2.3); part(0.7, 4.2, 0.4, 2.9, 0.6, 2.3); // back, seat, arms
+  part(0.9, 1.6, 0.3, -2.6, 8.6, 2.4); part(0.9, 1.6, 0.3, 2.6, 8.6, 2.4); // the back's two horns of stone
+  part(6.2, 1.3, 0.4, 0, -3.6, 1.6); // the coffin, before it
+  const lid = part(6.4, 0.32, 0.45, 0, -2.78, 1.5, toon(scene, `${prefix}-gateLidM`, "#140606"));
+  const redSky = add(MB.CreateSphere(`${prefix}-redSky`, { diameter: 320, segments: 12, sideOrientation: BB.Mesh.BACKSIDE }, scene)); redSky.parent = root;
+  const redM = glow(scene, `${prefix}-redSkyM`, "#ff3a1a", 0.0, true); redM.fogEnabled = false; redSky.material = redM; redSky.isPickable = false;
+  const isOpen = K.when("$GATE_OPEN"), thronePinned = K.when("$GATE_THRONE"), shifted = K.when("$COFFIN_SHIFTED");
+  let open = 0, want = 0, showThrone = false, shift = 0, shiftWant = 0;
+  root.setEnabled(false);
+  return {
+    cue(name) {
+      if (name === "gateOpen") want = 1;
+      if (name === "gateShut") { want = 0; open = 0; }
+      if (name === "gateThrone") showThrone = true;
+      if (name === "coffinShift") shiftWant = 1;
+    },
+    update(dt, t) {
+      if (isOpen.isEnabled() && !want) { want = 1; open = 1; } // already open in the story
+      if (thronePinned.isEnabled()) showThrone = true;
+      if (shifted.isEnabled() && !shiftWant) { shiftWant = 1; shift = 1; }
+      open = Math.min(want, open + dt * 0.55);
+      root.setEnabled(open > 0.01);
+      if (open <= 0.01) return;
+      const e = 1 - (1 - open) ** 3;
+      tear.scaling.set(e, 0.15 + 0.85 * e, 1); redM.alpha = 0.26 * e; tear.rotation.z = Math.sin(t * 0.3) * 0.01;
+      throne.setEnabled(showThrone && open > 0.9);
+      shift = Math.min(shiftWant, shift + dt * 0.25); // a hand's breadth, slowly
+      lid.position.x = shift * 0.55; lid.rotation.z = -shift * 0.03;
     },
   };
 }
@@ -1683,6 +1718,86 @@ function buildArchive(scene, mobile) {
       ringM.alpha = 0.75 + Math.sin(t * 1.3) * 0.2;
     } };
   return self;
+}
+
+/**
+ * The Lowmarket Bridge in the Siege of Aurelin (Eps 47–48, data/zones.js BRIDGE_LAYOUT): an old stone bridge over the
+ * dry riverbed between the Lowmarket and the Crown Ward, the houses on both banks burning, smoke going up, the Archive's
+ * dome on its hill to the north, and over it all the Gate (buildGate). Its southern spans fall in during the fight
+ * (cues collapse1 and collapse2, or $BRIDGE_FALLEN once they have), behind the people holding it.
+ */
+function buildBridge(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, L = BRIDGE_LAYOUT, P = palette(scene, "br"), rng = mulberry(47);
+  const stone = P("#8a8070"), stoneDark = P("#5e564a"), soot = P("#2e2622");
+  const H = L.deck.half, C = L.canal;
+  // The riverbed, long dry, far below; the embankments; the streets on both banks.
+  const bed = add(MB.CreateGround("br-bed", { width: 200, height: (L.deck.z1 - L.deck.z0) + 4 }, scene)); bed.position.set(0, -C.depth, 0); bed.material = P("#4a3e34");
+  for (const z of [L.deck.z0 - 1, L.deck.z1 + 1]) {
+    const wall = add(MB.CreateBox("br-embank", { width: 200, height: C.depth, depth: 2 }, scene), 0.03); wall.position.set(0, -C.depth / 2, z); wall.material = stoneDark;
+    const bank = add(MB.CreateGround("br-bank", { width: 200, height: 60 }, scene)); bank.position.set(0, 0, z + Math.sign(z) * 31); bank.material = P("#6a6258");
+  }
+  // The deck, span by span. The two southern spans can fall in.
+  const spans = [[L.deck.z0, L.collapse[0][0]], ...L.collapse, [L.collapse[1][1], L.deck.z1]];
+  const fallen = [];
+  spans.forEach(([z0, z1], i) => {
+    const n = new BB.TransformNode(`br-span${i}`, scene); n.parent = K.root;
+    const d = add(MB.CreateBox("br-deck", { width: H * 2, height: 0.8, depth: z1 - z0 }, scene), 0.03); d.parent = n; d.position.set(0, -0.4, (z0 + z1) / 2); d.material = stone;
+    for (const sx of [-1, 1]) { const par = add(MB.CreateBox("br-parapet", { width: 0.45, height: 0.9, depth: z1 - z0 }, scene), 0.02); par.parent = n; par.position.set(sx * (H + 0.2), 0.45, (z0 + z1) / 2); par.material = stoneDark; }
+    const ci = L.collapse.findIndex(([a, b]) => a === z0 && b === z1);
+    if (ci >= 0) {
+      const rub = new BB.TransformNode(`br-rubble${ci}`, scene); rub.parent = K.root; rub.setEnabled(false);
+      for (let k = 0; k < 6; k++) { const r = add(MB.CreateBox("br-rubble", { width: 1 + rng() * 2, height: 0.6 + rng(), depth: 1 + rng() * 1.6 }, scene)); r.parent = rub; r.position.set((rng() - 0.5) * H * 1.6, -C.depth + 0.4, z0 + rng() * (z1 - z0)); r.rotation.set(rng(), rng() * 3, rng()); r.material = stoneDark; }
+      for (const zz of [z0, z1]) { const e = add(MB.CreateBox("br-brokenEdge", { width: H * 2, height: 1.2, depth: 0.6 }, scene)); e.parent = rub; e.position.set(0, -0.9, zz); e.rotation.x = zz === z0 ? 0.3 : -0.3; e.material = soot; }
+      fallen.push({ span: n, rubble: rub, flag: K.when(`$BRIDGE_FALLEN >= ${ci + 1}`), down: false });
+    }
+  });
+  for (const z of L.piers) {
+    const pier = add(MB.CreateBox("br-pier", { width: H * 2 - 1, height: C.depth, depth: 2.4 }, scene), 0.03); pier.position.set(0, -0.8 - C.depth / 2, z); pier.material = stoneDark;
+    const arch = add(MB.CreateCylinder("br-arch", { height: H * 2 - 0.6, diameter: 9, tessellation: 18, arc: 0.5 }, scene)); arch.rotation.z = Math.PI / 2; arch.position.set(0, -C.depth + 0.4, z + 7); arch.material = soot;
+  }
+  // Lamps on the parapets, the wrecks on the deck.
+  const lampM = K.lampMat ? K.lampMat("br-lamp", "#ffc070") : glow(scene, "br-lamp", "#ffc070");
+  for (let z = L.deck.z0 + 4; z < L.deck.z1; z += 10) for (const sx of [-1, 1]) {
+    const post = add(MB.CreateCylinder("br-lampPost", { height: 3, diameter: 0.14, tessellation: 6 }, scene)); post.position.set(sx * (H + 0.2), 2.4, z); post.material = soot;
+    const head = add(MB.CreateBox("br-lampHead", { width: 0.4, height: 0.5, depth: 0.4 }, scene)); head.position.set(sx * (H + 0.2), 4.1, z); head.material = lampM;
+  }
+  for (const [x, z, r] of L.wrecks) {
+    const w = add(MB.CreateBox("br-wreck", { width: r * 2.2, height: 1.0, depth: r * 1.4 }, scene), 0.03); w.position.set(x, 0.5, z); w.rotation.set(0.1, rng() * 3, 0.2); w.material = P("#5a3e2a");
+    const wheel = add(MB.CreateCylinder("br-wheel", { height: 0.15, diameter: 1.1, tessellation: 12 }, scene)); wheel.position.set(x + r * 0.9, 0.55, z); wheel.rotation.z = Math.PI / 2; wheel.material = soot;
+  }
+  // The banks: rows of houses, many of them burning.
+  const fires = [], fireM = glow(scene, "br-fire", "#ff7a2a", 0.95, true), wallMs = ["#c8b89a", "#b8a888", "#d0c0a0"].map((c) => P(c)), roofMs = ["#6a2a22", "#3a3a4a"].map((c) => P(c));
+  for (const zb of [L.deck.z0 - 8, L.deck.z1 + 8]) for (let x = -44; x <= 44; x += 9) {
+    if (Math.abs(x) < 8) continue; // the street off the bridge
+    const h = 6 + rng() * 4, zz = zb + Math.sign(zb) * rng() * 3;
+    const house = add(MB.CreateBox("br-house", { width: 7.5, height: h, depth: 7 }, scene), 0.05); house.position.set(x, h / 2, zz); house.material = wallMs[Math.floor(rng() * 3)];
+    const roof = add(MB.CreateCylinder("br-roof", { height: 7.6, diameter: 7.8, tessellation: 3 }, scene), 0.05); roof.position.set(x, h + 1.4, zz); roof.rotation.set(Math.PI / 2, 0, Math.PI / 2); roof.scaling.set(0.55, 1, 1); roof.material = roofMs[Math.floor(rng() * 2)];
+    if (rng() < 0.55) { const f = add(MB.CreateBox("br-flame", { width: 3 + rng() * 2, height: 2.2, depth: 2.4 }, scene)); f.position.set(x + (rng() - 0.5) * 3, h + 2.4, zz); f.material = fireM; fires.push(f); }
+  }
+  const fireLights = [[-17, L.deck.z1 + 8], [17, L.deck.z0 - 8]].map(([x, z], i) => { const l = new BB.PointLight(`br-fireLight${i}`, new BB.Vector3(x, 8, z), scene); l.diffuse = color3("#ff7a3a").clone(); l.intensity = 0.7; l.range = 40; K.lights.push(l); return l; });
+  // Smoke, going up and drifting off with the wind.
+  const smokeM = glow(scene, "br-smoke", "#1a1210", 0.32); smokeM.fogEnabled = true;
+  const smoke = Array.from({ length: 9 }, (_, i) => { const m = add(MB.CreateSphere("br-smoke", { diameter: 6 + rng() * 5, segments: 6 }, scene)); m.material = smokeM; m.isPickable = false; m.position.set(-40 + rng() * 80, 6 + rng() * 20, (i % 2 ? L.deck.z1 + 10 : L.deck.z0 - 10) + (rng() - 0.5) * 6); m.metadata = { v: 1 + rng() }; return m; });
+  // The Archive on its hill, and the Gate.
+  const D = L.dome;
+  const hill = add(MB.CreateCylinder("br-hill", { height: 8, diameterTop: D.r * 3, diameterBottom: D.r * 4.5, tessellation: 24 }, scene)); hill.position.set(D.x, 4, D.z); hill.material = P("#5a5248");
+  const drum = add(MB.CreateCylinder("br-drum", { height: 10, diameter: D.r * 2, tessellation: 28 }, scene), 0.05); drum.position.set(D.x, 13, D.z); drum.material = P("#d8cdb6");
+  const dome = add(MB.CreateSphere("br-dome", { diameter: D.r * 2, segments: 18, slice: 0.5 }, scene), 0.05); dome.position.set(D.x, 18, D.z); dome.material = P("#4a6a8a");
+  const gate = buildGate(scene, K, "br", L.gate);
+  K.bake([...smoke, ...fires]);
+  // Smoke-dimmed afternoon light, warm from the fires; the red is in the sky, not on everything.
+  const env = { clear: "#2a1412", fog: "#3a2a28", fogDensity: 0.009, hemi: [0.6, "#f2dcd0", "#2e2626"], sun: [0.55, "#ffd2b0", [-0.3, -1, 0.5]], warm: 0 };
+  const toonEnv = { lightDir: [0.3, 1, -0.5], fogColor: "#3a2a28", fogDensity: 0.005, sky: [1.02, 0.94, 0.9], ground: [0.74, 0.68, 0.66], rim: [1.0, 0.72, 0.58] };
+  const fall = (i) => { const f = fallen[i]; if (!f || f.down) return; f.down = true; f.span.setEnabled(false); f.rubble.setEnabled(true); };
+  return { env, toon: toonEnv, show: K.show, conditions: K.conditions, outdoor: true,
+    cue(name) { if (name === "collapse1") fall(0); if (name === "collapse2") fall(1); gate.cue(name); },
+    update(dt, t) {
+      fallen.forEach((f, i) => { if (f.flag.isEnabled()) fall(i); });
+      fires.forEach((f, i) => { f.scaling.y = 0.8 + Math.sin(t * 9 + i * 1.3) * 0.2; f.scaling.x = 0.9 + Math.sin(t * 6 + i) * 0.1; });
+      fireLights.forEach((l, i) => { l.intensity = 0.62 + Math.sin(t * 7 + i * 2) * 0.12; });
+      for (const m of smoke) { m.position.y += dt * m.metadata.v; m.position.x += dt * 0.8; if (m.position.y > 40) { m.position.y = 6; m.position.x -= 30; } }
+      gate.update(dt, t);
+    } };
 }
 
 /**

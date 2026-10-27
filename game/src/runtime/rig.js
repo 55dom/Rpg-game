@@ -17,6 +17,8 @@ import { CAL_POSES } from "../data/cal.js";
 import { BRANNOC_POSES, VARKA_POSES } from "../data/ashfall.js";
 import { WRAITHE_POSES } from "../data/wraithe.js";
 import { MASKED_LOOK } from "../data/masked.js";
+import { LEGION_LOOKS } from "../reveal/legion.js";
+import { revealLooks } from "../reveal/looks.js";
 import { EventType } from "../core/abilities.js";
 import { buildBody, skinBake } from "./body.js";
 import { animateHumanoid } from "./motion.js";
@@ -104,6 +106,8 @@ export const LOOKS = {
     head: "face", hair: "long", angry: true, weapon: "staff", orb: "#9ad8ff", shoulders: 1.3, eyeColor: "#3a6aa0", trail: "#9ad8ff" },
   engine: { form: "object", shape: "engine", trail: "#ffd36a" },
   masked: MASKED_LOOK, // the masked knight on the ridge (data/masked.js)
+  knightAlly: MASKED_LOOK, // the same, fighting beside the Lanterns on the bridge (Ep 47)
+  ...LEGION_LOOKS, // the Line, through the Gate (src/reveal/legion.js)
   maskedVI: MASKED_LOOK, // the same, on the Archive road (Ep 43)
   // Wraithe, the Pale Choir's rift-walker (Ep 23): ash-pale wrappings, a hood, a cloth bound over the mouth
   // (the silent school), two needle blades. riftwalk: inside a tear he's simply gone (no sinking into the ground).
@@ -278,6 +282,7 @@ LOOKS.severinDuel = LOOKS.severin;
 LOOKS.lion = { form: "stars" };
 // Quartermaster Hale of the Iron Wardens (Ep 26): a Warden's steel and a keyring, grey in the beard.
 LOOKS.quartermaster = { ...LOOKS.guard, coat: "#4a5462", trim: "#9aa2ae", hairColor: "#6a6a6a", beard: "#6a6a6a", hair: "crop", shoulders: 1.2 };
+Object.assign(LOOKS, revealLooks(LOOKS)); // the reveal's own looks (src/reveal/looks.js), grown from the ones above
 
 export class Rig {
   /** @param {*} scene @param {string} kind a LOOKS key @param {string} id */
@@ -476,6 +481,13 @@ export class Rig {
         sl.rotation.y = Math.atan2(x, zf); sl.material = slitMat;
       }
       const seam = add(MB.CreateBox("maskSeam", { width: 0.014, height: 0.17, depth: 0.02 }, scene), this.head, 0, -0.03, 0.254, 0); seam.material = maskMat;
+      if (L.maskCrack) { // cracked down the middle, not broken; and from under it, blood
+        const crackM = M("maskCrack", L.maskCrack);
+        [[0.0, 0.15, 0.3], [0.012, 0.09, -0.4], [-0.006, 0.03, 0.35], [0.01, -0.03, -0.3], [-0.004, -0.09, 0.4], [0.008, -0.15, -0.2]].forEach(([x, y, r]) => {
+          const c = add(MB.CreateBox("maskCrack", { width: 0.008, height: 0.065, depth: 0.016 }, scene), this.head, x, y, 0.262 - Math.abs(y) * 0.15, 0); c.rotation.z = r; c.material = crackM;
+        });
+        if (L.maskBlood) { const b = add(MB.CreateBox("maskBlood", { width: 0.012, height: 0.12, depth: 0.012 }, scene), this.head, 0.02, -0.12, 0.25, 0); b.material = M("maskBlood", L.maskBlood); }
+      }
     } else if (L.head === "lump") { // a bog brute: a heavy skull, a brow ridge over slanted eyes, a jaw full of fangs, horns
       const hide = dark, bone = M("fang", "#e8dfc4"), maw = M("maw", "#2a0a0a"), horn = M("horn", "#2a2620");
       const skull = add(MB.CreateSphere("head", { diameter: 0.56, segments: 10 }, scene), this.head, 0, -0.04, 0.06);
@@ -579,6 +591,14 @@ export class Rig {
         for (const sx of [-1, 1]) { const mo = add(MB.CreateCylinder("moustache", { height: 0.12, diameterTop: 0.05, diameterBottom: 0.02, tessellation: 6 }, scene), this.head, sx * 0.05, -0.07, 0.215, 0); mo.rotation.z = sx * 1.9; mo.material = beard.material; }
         for (const sx of [-1, 1]) { const b = add(MB.CreateCylinder("bushyBrow", { height: 0.1, diameter: 0.035, tessellation: 6 }, scene), this.head, sx * 0.088, 0.125, 0.2, 0); b.rotation.z = Math.PI / 2 + sx * 0.25; b.material = beard.material; }
       }
+    }
+    if (L.scar && L.head === "face") { // a scar across the left brow
+      const sc = add(MB.CreateBox("scar", { width: 0.014, height: 0.12, depth: 0.012 }, scene), this.head, -0.095, 0.095, 0.208, 0);
+      sc.rotation.set(-0.4, 0, 0.4); sc.material = M("scar", L.scar);
+    }
+    if (L.eyeRing && L.head === "face") { // a faint ring of starlight round the iris of one eye (his left)
+      const ring = add(MB.CreateTorus("eyeRing", { diameter: 0.064, thickness: 0.008, tessellation: 18 }, scene), this.head, -0.085, 0.03, 0.252, 0);
+      ring.rotation.x = Math.PI / 2; ring.scaling.set(0.82, 1, 1.4); ring.material = glow(scene, `${id}-eyeRing`, L.eyeRing); ring.metadata = { noGlow: true };
     }
     if (L.wrinkles && L.head === "face") { // age lines under the eyes and across the brow
       const line = M("wrinkle", "#a07a62");

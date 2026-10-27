@@ -440,6 +440,19 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
   color: var(--muted); background: rgba(10, 11, 16, 0.6); border: 1px solid #343a50; border-radius: 999px; padding: 7px 11px; cursor: pointer; }
 .in-cut .cut-skip { display: block; }
 .in-cut .menu { visibility: hidden; } /* a cutscene has nothing to save mid-shot, and SKIP sits where SAVE would be on a phone */
+/* The Clash (Ep 48): a ring closing on a mark, and a bar of ink pushing against black light. */
+.clash { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
+.clash-bar { position: absolute; left: 50%; top: 16%; width: min(420px, 80vw); height: 10px; transform: translateX(-50%); background: #0c0c12; border: 1px solid rgba(156, 184, 255, 0.6); border-radius: 5px; overflow: hidden; }
+.clash-bar i { display: block; height: 100%; width: 50%; background: linear-gradient(90deg, #5a7ad8, #f2efe6); transition: width 0.25s; }
+.clash-mark, .clash-ring { position: absolute; left: 50%; top: 46%; width: 96px; height: 96px; border-radius: 50%; transform: translate(-50%, -50%); }
+.clash-mark { border: 3px solid rgba(242, 239, 230, 0.85); box-shadow: 0 0 18px rgba(242, 239, 230, 0.5); }
+.clash-ring { border: 3px solid #9cb8ff; }
+.clash-ring.near { border-color: #ffd36a; }
+.clash-label { position: absolute; left: 50%; top: calc(46% + 70px); transform: translateX(-50%); font: 600 13px/1 var(--font-mono); letter-spacing: 0.2em; color: #f2efe6; }
+.clash.hit .clash-mark { animation: clashHit 0.3s ease-out; }
+@keyframes clashHit { 0% { box-shadow: 0 0 60px #fff; } 100% { box-shadow: 0 0 18px rgba(242, 239, 230, 0.5); } }
+.choice-timer { list-style: none; height: 4px; margin-top: 8px; background: rgba(255,255,255,0.12); border-radius: 2px; overflow: hidden; }
+.choice-timer i { display: block; height: 100%; width: 100%; background: var(--danger, #e05a4a); }
 .hint-pill { position: absolute; left: 50%; top: 18%; transform: translate(-50%, -6px); opacity: 0; transition: opacity 260ms, transform 260ms;
   font: 400 14px/1.4 var(--font-body); background: rgba(15, 17, 23, 0.9); border: 1px solid var(--gale); color: var(--text); padding: 9px 16px; border-radius: 999px;
   max-width: calc(100vw - 32px); text-align: center; }

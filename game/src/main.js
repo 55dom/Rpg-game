@@ -57,6 +57,7 @@ import { EPISODE_43, EP43_SCRIPT } from "./data/story/ep43.js";
 import { EPISODE_44, EP44_SCRIPT } from "./data/story/ep44.js";
 import { EPISODE_45, EP45_SCRIPT } from "./data/story/ep45.js";
 import { EPISODE_46, EP46_SCRIPT } from "./data/story/ep46.js";
+import { EPISODE_47, EP47_SCRIPT } from "./data/story/ep47.js";
 import { theatreList } from "./data/theatre.js";
 import { PlaytestLog, SURVEYS } from "./core/playtest.js";
 import { keyItemsHeld } from "./data/keyItems.js";
@@ -853,7 +854,8 @@ export function boot(doc = document) {
     { episode: EPISODE_39, script: EP39_SCRIPT }, { episode: EPISODE_40, script: EP40_SCRIPT },
     { episode: EPISODE_41, script: EP41_SCRIPT }, { episode: EPISODE_42, script: EP42_SCRIPT },
     { episode: EPISODE_43, script: EP43_SCRIPT }, { episode: EPISODE_44, script: EP44_SCRIPT },
-    { episode: EPISODE_45, script: EP45_SCRIPT }, { episode: EPISODE_46, script: EP46_SCRIPT }], [WORLD_SCRIPT]);
+    { episode: EPISODE_45, script: EP45_SCRIPT }, { episode: EPISODE_46, script: EP46_SCRIPT },
+    { episode: EPISODE_47, script: EP47_SCRIPT }], [WORLD_SCRIPT]);
   annotationNow = () => !!story.flags.get("ANNOTATION"); // after Mirrorlake, Rook's spells write ink
   revisionNow = () => !!story.flags.get("REVISION");     // after the Paragon's spar, the page rewinds
   const playtest = new PlaytestLog(story.flags, { where: () => ({ episode: story.ep?.id ?? null, beat: story.director?.beat?.id ?? null }) });
