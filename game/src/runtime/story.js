@@ -146,14 +146,16 @@ class Stage {
   }
 
   /** Walk an actor to (x, z) over `dur` seconds (or at walking pace). */
-  move(id, x, z, dur, y = null, ease = "inOut") {
+  move(id, x, z, dur, y = null, ease = "inOut", back = false) {
     const a = this.get(id);
     if (!a) return 0;
     const d = Math.hypot(x - a.pos.x, z - a.pos.z);
     const time = dur ?? Math.max(0.4, d / 2.4);
     a.move = { from: [a.pos.x, a.pos.z], to: [x, z], t: 0, dur: time, y: y == null ? null : [a.pos.y ?? 0, y], ease }; // y: up a step, down off a throne; "linear": a steady march
-    a.targetYaw = Math.atan2(x - a.pos.x, z - a.pos.z);
-    if (a === this.getWorld().player) a.yaw = a.prevYaw = a.targetYaw;
+    if (d > 0.05 && !back) { // thrown back (or lifted straight up), they keep facing the way they were
+      a.targetYaw = Math.atan2(x - a.pos.x, z - a.pos.z);
+      if (a === this.getWorld().player) a.yaw = a.prevYaw = a.targetYaw;
+    }
     return time;
   }
 
@@ -946,9 +948,9 @@ export class StoryPlayer {
 
   /** A tear at a point: it opens fast, hangs for `life` seconds, and seals (cutscenes place them with `tear` events). */
   /** A tear (or a golden door, or the void) opens at a point: `grow` seconds to open (half a second by default). */
-  tearAt(at, yaw, { kind = "pale", r = 0.85, life = 3, ground = false, grow = 0.5 } = {}) {
+  tearAt(at, yaw, { kind = "pale", r = 0.85, life = 3, ground = false, grow = 0.5, pane = true } = {}) {
     const scene = this.ctx.scene;
-    const node = kind === "gold" ? makeDoor(scene, "story-door", { w: r * 1.6, h: r * 2.8, ground })
+    const node = kind === "gold" ? makeDoor(scene, "story-door", { w: r * 1.6, h: r * 2.8, ground, pane })
       : kind === "void" ? makeVoid(scene, "story-void", { r }) // the void makes no sound of its own
       : makeTear(scene, "story-rift", { r, kind, seed: kind === "black" ? 13 : 7, ground });
     node.position.set(at.x, at.y ?? 0, at.z);
@@ -1522,7 +1524,7 @@ export class StoryPlayer {
       if (e.sfx) this.ctx.sfx.play(e.sfx);
       if (e.show) this.stage.show(e.show, true);
       if (e.hide) this.stage.show(e.hide, false);
-      if (e.move) this.stage.move(e.move.id, e.move.to[0], e.move.to[1], e.move.dur, e.move.to[2], e.move.ease);
+      if (e.move) this.stage.move(e.move.id, e.move.to[0], e.move.to[1], e.move.dur, e.move.to[2], e.move.ease, e.move.back);
       if (e.face) this.stage.face(e.face[0], e.face[1]); // turn to look at someone
       if (e.pose) this.stage.pose(e.pose.id, e.pose.name);
       if (e.cue) this.ctx.sets?.cue(e.cue);

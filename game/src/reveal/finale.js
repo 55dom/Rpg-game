@@ -45,8 +45,9 @@ export const FINALE_ENEMIES = Object.freeze({
     options: () => [new AttackOption(R.L1, 0, 2.2, 4, 26), new AttackOption(R.L3, 0, 2.4, 2, 70), new AttackOption(R.DashStrike, 2, 6, 2, 130), new AttackOption(R.Launcher, 0, 2.0, 1, 160)],
     traits: {},
   },
-  junoFoe: { ...COMPANIONS.juno, stats: { ...COMPANIONS.juno.stats, maxHealth: 700 }, traits: {} },
-  basFoe: { ...COMPANIONS.bas, stats: { ...COMPANIONS.bas.stats, maxHealth: 900 }, traits: { heavy: true } },
+  // Companions never circle, so their stats carry no circleSpeed: an enemy brain needs one (sim/world.js).
+  junoFoe: { ...COMPANIONS.juno, stats: { ...COMPANIONS.juno.stats, maxHealth: 700, circleSpeed: 3.2 }, traits: {} },
+  basFoe: { ...COMPANIONS.bas, stats: { ...COMPANIONS.bas.stats, maxHealth: 900, circleSpeed: 2.2 }, traits: { heavy: true } },
 });
 
 // ---- Wearing him (the Cal perspective) ----

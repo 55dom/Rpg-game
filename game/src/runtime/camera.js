@@ -74,6 +74,12 @@ export class FollowCamera {
   }
 
   update(dt, playerPos, lockPos, look, playerYaw = 0) {
+    // Every blend below eases from the last value, so one bad frame (a NaN from anywhere) would blank the view for good.
+    if (![this.shotPos.x, this.shotPos.y, this.shotPos.z, this.shotLook.x, this.focus.x, this.focus.y, this.focus.z, this.yaw, this.trauma, this.cam.fov].every(Number.isFinite)) {
+      this.shotPos.set(0, 4, -12); this.shotLook.set(0, 1.3, 0); this.focus.set(0, 1.3, -4);
+      this.yaw = 0; this.trauma = 0; this.cam.fov = this.baseFov;
+      if (this.scripted) this.scripted.cut = true;
+    }
     if (this.scripted && !this.shot) {
       const s = this.scripted;
       const k = s.cut ? 1 : 1 - Math.exp(-s.ease * dt);

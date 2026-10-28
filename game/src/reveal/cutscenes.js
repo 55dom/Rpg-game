@@ -182,7 +182,7 @@ export const REVEAL_CUTSCENES = {
     ],
     events: [
       { t: 0.6, pose: { id: "cal", name: "raise" } }, { t: 2.6, hide: "rook" }, // his eyes now: the door opens round the lens
-      { t: 2.7, tear: { kind: "gold", at: [0, 1.6, 4.3], r: 0.7, life: 4.4, grow: 0.7 } },
+      { t: 2.7, tear: { kind: "gold", at: [0, 1.6, 4.3], r: 0.7, life: 4.4, grow: 0.7, pane: false } }, // the frame round the lens, and him through it
       { t: 3.4, memory: true }, { t: 3.4, sfx: "hum" },
       { t: 5.2, flash: 2.4 }, { t: 5.4, sfx: "heartbeat" }, { t: 5.4, hide: "cal" }, // white
     ],
@@ -311,19 +311,19 @@ export const REVEAL_CUTSCENES = {
       // 002 ground level: the Knight's boots step over him without pausing; the Saint's hem follows.
       { t: 1.5, cut: true, pos: [2.1, 0.7, -5.0], look: [0.6, 0.45, -5.0], fov: 0.72, ecu: true },
       // 003 CU: his face on the stone, the faceplate split half away. Behind him, the chamber, far off.
-      { t: 4.0, cut: true, pos: [HEAD.x + 0.95, 0.72, HEAD.z + 0.35], look: [HEAD.x, 0.5, HEAD.z + 0.1], fov: 0.44, ecu: true },
+      { t: 4.0, cut: true, pos: [HEAD.x + 1.2, 1.35, HEAD.z + 0.45], look: [HEAD.x, 0.5, HEAD.z + 0.1], fov: 0.44, ecu: true },
       // 004 past his head, up the chamber: the King, seated; the Knight's charge stops in mid-air.
       { t: 7.0, cut: true, pos: [HEAD.x + 0.2, 0.75, HEAD.z - 1.0], look: [0, 2.4, 14], fov: 0.3 },
       // 005 back to him. A slow blink.
-      { t: 9.5, cut: true, pos: [HEAD.x + 0.95, 0.72, HEAD.z + 0.35], look: [HEAD.x, 0.5, HEAD.z + 0.1], fov: 0.42, ecu: true },
+      { t: 9.5, cut: true, pos: [HEAD.x + 1.2, 1.35, HEAD.z + 0.45], look: [HEAD.x, 0.5, HEAD.z + 0.1], fov: 0.42, ecu: true },
       // 006 up the chamber: she kneels; her light pours into the Knight, who blazes. "...Five."
       { t: 11.0, cut: true, pos: [HEAD.x + 0.2, 0.75, HEAD.z - 1.0], look: [-0.3, 2.0, 11], fov: 0.3 },
       // 007 back to him. Slower.
-      { t: 14.0, cut: true, pos: [HEAD.x + 0.9, 0.72, HEAD.z + 0.3], look: [HEAD.x, 0.5, HEAD.z + 0.1], fov: 0.4, ecu: true },
+      { t: 14.0, cut: true, pos: [HEAD.x + 1.15, 1.3, HEAD.z + 0.42], look: [HEAD.x, 0.5, HEAD.z + 0.1], fov: 0.4, ecu: true },
       // 008 one glance from the throne: the Knight thrown across the chamber; she falls; the light takes them.
       { t: 15.5, cut: true, pos: [HEAD.x + 0.2, 0.75, HEAD.z - 1.0], look: [-1.2, 2.0, 9], fov: 0.34 },
       // 009 back to him. Nearly closed.
-      { t: 18.5, cut: true, pos: [HEAD.x + 0.85, 0.72, HEAD.z + 0.3], look: [HEAD.x, 0.5, HEAD.z + 0.1], fov: 0.38, ecu: true },
+      { t: 18.5, cut: true, pos: [HEAD.x + 1.1, 1.25, HEAD.z + 0.4], look: [HEAD.x, 0.5, HEAD.z + 0.1], fov: 0.38, ecu: true },
       // 010 the King, motionless, looking at his own open palm.
       { t: 20.0, cut: true, pos: [HEAD.x + 0.2, 0.75, HEAD.z - 1.0], look: [0, 2.8, 16], fov: 0.24 },
       // 011 time passes: the two Commanders kneel; the aura goes out of him into them, and they change.
@@ -331,11 +331,11 @@ export const REVEAL_CUTSCENES = {
       // 011a the King rises, walks behind his throne, and lies down in a black coffin. The lid closes.
       { t: 29.99, pos: [2.4, 1.0, -3.8], look: [-0.6, 2.0, 19], fov: 0.34, ease: "linear" },
       // 012 ECU: his mouth, behind the broken plate. Three syllables nobody can make out.
-      { t: 30.0, cut: true, pos: [HEAD.x + 0.5, 0.68, HEAD.z + 0.2], look: [HEAD.x, 0.52, HEAD.z + 0.12], fov: 0.3, ecu: true },
+      { t: 30.0, cut: true, pos: [HEAD.x + 0.7, 1.15, HEAD.z + 0.3], look: [HEAD.x, 0.5, HEAD.z + 0.1], fov: 0.5, ecu: true },
       // 013 CU, as 003: one last breath out. Then nothing.
-      { t: 32.5, cut: true, pos: [HEAD.x + 0.95, 0.72, HEAD.z + 0.35], look: [HEAD.x, 0.5, HEAD.z + 0.1], fov: 0.44, ecu: true },
+      { t: 32.5, cut: true, pos: [HEAD.x + 1.2, 1.35, HEAD.z + 0.45], look: [HEAD.x, 0.5, HEAD.z + 0.1], fov: 0.44, ecu: true },
       // 014–016 the hold. Do not cut. A ripple in the air behind his head.
-      { t: 43.5, pos: [HEAD.x + 0.95, 0.72, HEAD.z + 0.35], look: [HEAD.x, 0.5, HEAD.z + 0.1], fov: 0.44, ecu: true },
+      { t: 43.5, pos: [HEAD.x + 1.2, 1.35, HEAD.z + 0.45], look: [HEAD.x, 0.5, HEAD.z + 0.1], fov: 0.44, ecu: true },
       // 017 wide over the body: the air bends round a point behind him; light drains toward it. Slow crane up.
       { t: 43.5, cut: true, pos: [3.6, 1.6, -2.0], look: [VOID.x, 1.0, VOID.z + 0.8], fov: 0.62 },
       { t: 46.5, pos: [3.9, 3.2, -1.6], look: [VOID.x, 1.0, VOID.z + 0.8], fov: 0.62, ease: "linear" },
@@ -347,7 +347,7 @@ export const REVEAL_CUTSCENES = {
       { t: 51.5, cut: true, pos: [-3.6, 2.2, 1.5], look: [0, 1.6, 19], fov: 0.5 },
       { t: 55.5, pos: [0.4, 2.4, 6.5], look: [0, 1.4, 19], fov: 0.46, ease: "linear" },
       // 021 ECU, off-centre: his eye. The lid lifts.
-      { t: 55.5, cut: true, pos: [HEAD.x + 0.45, 0.74, HEAD.z + 0.05], look: [HEAD.x + 0.05, 0.6, HEAD.z], fov: 0.3, ecu: true },
+      { t: 55.5, cut: true, pos: [HEAD.x + 0.65, 1.2, HEAD.z + 0.2], look: [HEAD.x + 0.05, 0.55, HEAD.z], fov: 0.45, ecu: true },
       // 022–023 MS, the void: one figure steps out onto the ash, then the other.
       { t: 56.5, cut: true, pos: [1.51, 2.4, -4.22], look: [0.6, 1.5, -7.6], fov: 0.6 },
       { t: 60.99, pos: [2.11, 2.4, -4.02], look: [1.2, 1.5, -7.4], fov: 0.6, ease: "linear" },
@@ -364,7 +364,7 @@ export const REVEAL_CUTSCENES = {
       // 028b MS: both stop mid-step. For the first time they move out of step: one head turns first.
       { t: 73.5, cut: true, pos: [0.8, 1.6, 8.1], look: [0.8, 1.5, 3.6], fov: 0.5 },
       // 028c CU: the only thing moving in the frozen world. He lifts his head an inch off the stone.
-      { t: 75.0, cut: true, pos: [HEAD.x + 0.9, 0.8, HEAD.z + 0.4], look: [HEAD.x, 0.55, HEAD.z], fov: 0.4, ecu: true },
+      { t: 75.0, cut: true, pos: [HEAD.x + 1.0, 1.25, HEAD.z + 0.45], look: [HEAD.x, 0.6, HEAD.z], fov: 0.4, ecu: true },
       // 028d two-shot: one crouches beside him, studying him. A question; an answer.
       { t: 77.0, cut: true, pos: [5.06, 1.2, -1.95], look: [0.3, 0.8, -5.6], fov: 0.6 },
       // 029 MS: the other's mask turns to the first; a small, unmistakable lift in the shoulders.
@@ -375,12 +375,12 @@ export const REVEAL_CUTSCENES = {
       { t: 83.0, cut: true, pos: [-2.43, 3.2, -9.63], look: [0.4, 1.3, -6.8], fov: 0.6 },
       { t: 85.99, pos: [-2.43, 3.2, -10.23], look: [0.4, 1.3, -7.4], fov: 0.6, ease: "linear" },
       // 032 orbit, close, round his face over the shoulder. His eyes are open. Calm.
-      { t: 86.0, cut: true, pos: [CARRIED_HEAD.x + 0.9, CARRIED_HEAD.y + 0.2, CARRIED_HEAD.z + 0.5], look: [CARRIED_HEAD.x, CARRIED_HEAD.y, CARRIED_HEAD.z], fov: 0.4, ecu: true, ots: "unkA" },
-      { t: 87.5, pos: [CARRIED_HEAD.x + 0.6, CARRIED_HEAD.y + 0.3, CARRIED_HEAD.z + 0.9], look: [CARRIED_HEAD.x, CARRIED_HEAD.y, CARRIED_HEAD.z], fov: 0.4, ecu: true },
-      { t: 89.0, pos: [CARRIED_HEAD.x + 0.1, CARRIED_HEAD.y + 0.35, CARRIED_HEAD.z + 1.0], look: [CARRIED_HEAD.x, CARRIED_HEAD.y, CARRIED_HEAD.z], fov: 0.4, ecu: true },
-      // 033 ECU: a slight smile. 034: the smile becomes a grin.
-      { t: 89.0, cut: true, pos: [CARRIED_HEAD.x + 0.1, CARRIED_HEAD.y + 1.25, CARRIED_HEAD.z + 0.4], look: [CARRIED_HEAD.x, CARRIED_HEAD.y + 0.1, CARRIED_HEAD.z], fov: 0.42, ecu: true },
-      { t: 92.5, pos: [CARRIED_HEAD.x + 0.1, CARRIED_HEAD.y + 1.1, CARRIED_HEAD.z + 0.36], look: [CARRIED_HEAD.x, CARRIED_HEAD.y + 0.1, CARRIED_HEAD.z], fov: 0.38, ecu: true, ease: "linear" },
+      { t: 86.0, cut: true, pos: [CARRIED_HEAD.x + 1.0, CARRIED_HEAD.y + 1.0, CARRIED_HEAD.z - 0.3], look: [CARRIED_HEAD.x, CARRIED_HEAD.y, CARRIED_HEAD.z], fov: 0.45, ecu: true, ots: "unkA" },
+      { t: 87.5, pos: [CARRIED_HEAD.x + 0.75, CARRIED_HEAD.y + 1.1, CARRIED_HEAD.z - 0.65], look: [CARRIED_HEAD.x, CARRIED_HEAD.y, CARRIED_HEAD.z], fov: 0.45, ecu: true },
+      { t: 89.0, pos: [CARRIED_HEAD.x + 0.25, CARRIED_HEAD.y + 1.15, CARRIED_HEAD.z - 0.8], look: [CARRIED_HEAD.x, CARRIED_HEAD.y, CARRIED_HEAD.z], fov: 0.45, ecu: true },
+      // 033 ECU: a slight smile. 034: the smile becomes a grin. (From the body's side, so his face is the right way up.)
+      { t: 89.0, cut: true, pos: [CARRIED_HEAD.x + 0.1, CARRIED_HEAD.y + 1.25, CARRIED_HEAD.z - 0.42], look: [CARRIED_HEAD.x, CARRIED_HEAD.y + 0.1, CARRIED_HEAD.z], fov: 0.42, ecu: true },
+      { t: 92.5, pos: [CARRIED_HEAD.x + 0.1, CARRIED_HEAD.y + 1.1, CARRIED_HEAD.z - 0.38], look: [CARRIED_HEAD.x, CARRIED_HEAD.y + 0.1, CARRIED_HEAD.z], fov: 0.38, ecu: true, ease: "linear" },
     ],
     events: [
       { t: 0, cue: "lidOpen" }, { t: 0, cue: "unfold" },
@@ -397,7 +397,7 @@ export const REVEAL_CUTSCENES = {
       { t: 12.6, caption: "\"...Five.\"" }, { t: 13.8, caption: null },
       { t: 14.2, sfx: "breath" },
       // One glance.
-      { t: 15.8, move: { id: "knightBlaze", to: [-4.0, 6.0, 0], dur: 0.35 } }, { t: 15.8, sfx: "slam" },
+      { t: 15.8, move: { id: "knightBlaze", to: [-4.0, 6.0, 0], dur: 0.35, back: true } }, { t: 15.8, sfx: "slam" },
       { t: 16.0, pose: { id: "maelis", name: "down" } }, { t: 16.2, pose: { id: "knightBlaze", name: "down" } },
       { t: 16.6, cue: "pillar" }, { t: 16.7, sfx: "hymn" },
       { t: 17.4, hide: "knightBlaze" }, { t: 17.4, hide: "maelis" }, { t: 18.2, cue: "pillarOff" },
@@ -438,7 +438,7 @@ export const REVEAL_CUTSCENES = {
       { t: 79.6, face: ["unkB", "unkA"] }, { t: 80.1, pose: { id: "unkB", name: "hand" } },
       // Up, onto a shoulder, in one motion; and back to the void.
       { t: 81.3, pose: { id: "unkA", name: "none" } }, { t: 81.3, hide: "eleven" }, { t: 81.3, show: "carried" },
-      { t: 81.3, move: { id: "unkA", to: [LIFT.x + CARRY_DIR.x * 0.02, LIFT.z + CARRY_DIR.z * 0.02], dur: 0.1 } },
+      { t: 81.3, move: { id: "unkA", to: [LIFT.x + CARRY_DIR.x * 0.08, LIFT.z + CARRY_DIR.z * 0.08], dur: 0.1 } }, // a step toward the void: turned to it
       { t: 83.0, move: { id: "unkA", to: [LIFT_TO.x, LIFT_TO.z], dur: 2.8 } }, { t: 83.0, move: { id: "carried", to: [...carried(LIFT_TO), 1.25], dur: 2.8 } },
       { t: 83.4, move: { id: "unkB", to: [1.9, -7.9], dur: 2.4 } },
       ...[83.3, 83.9, 84.5, 85.1, 85.7].map((t) => ({ t, sfx: "step" })),
@@ -512,7 +512,7 @@ export const REVEAL_CUTSCENES = {
       { t: 4.9, move: { id: "dagrun", to: [1.3, 5.0], dur: 0.4 } }, { t: 5.3, sfx: "block" }, { t: 5.35, sfx: "hitHeavy" }, { t: 5.35, flash: 0.06 },
       { t: 5.9, move: { id: "dagrun", to: [3.4, 1.6], dur: 0.5 } },
       { t: 6.7, move: { id: "rook", to: [0, 5.4], dur: 0.3 } }, { t: 7.1, sfx: "finisher" }, { t: 7.15, flash: 0.16 }, { t: 7.2, sfx: "slam" },
-      { t: 7.3, move: { id: "cal", to: [CAL50.x, CAL50.z + 1.4, 0], dur: 0.6 } },
+      { t: 7.3, move: { id: "cal", to: [CAL50.x, CAL50.z + 1.4, 0], dur: 0.6, back: true } }, // thrown back, still facing them
       { t: 8.4, pose: { id: "cal", name: "kneel" } },
       { t: 9.2, pose: { id: "cal", name: "hand" } }, { t: 10.2, sfx: "laugh" },
     ],

@@ -43,7 +43,7 @@ A golden door frame stands open beside him. He sits on its lower edge and swings
 <<sfx tuneMarch>>
 <<shot on Cal>>
 Cal: Your move.
-<<shot two Rook Cal>>
+<<shot two Cal Rook>>
 Whose story?
 -> Rook's.
     <<set $PERSPECTIVE to "rook">>
@@ -119,7 +119,7 @@ He's down on one knee, a hand on his ribs, and he's laughing. Softly. Hit, reall
 Rook: Was any of it real?
 <<shot on Cal>>
 Cal: That's the funny part.
-<<shot wide>>
+<<shot wide front>>
 He looks past Rook. At Juno. At Bas, and Tamsin, and Dagrun.
 <<shot on Cal>>
 Cal: I actually liked you.

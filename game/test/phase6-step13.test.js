@@ -14,6 +14,7 @@ import { CUTSCENES } from "../src/data/story/cutscenes.js";
 import { CAST } from "../src/data/story/cast.js";
 import { ZONES } from "../src/data/zones.js";
 import { LOOKS } from "../src/runtime/rig.js";
+import { ENEMIES } from "../src/data/enemies.js";
 
 const nodes = parseScript(EP50_SCRIPT, "e50");
 const src = (p) => readFileSync(new URL(`../src/${p}`, import.meta.url), "utf8");
@@ -128,4 +129,15 @@ test("The ending, word for word; a door; the Gate closed from the other side; th
   assert.equal(AFTER_EP50.FIELD_NOTES, 1);
   for (const n of Object.values(nodes)) for (const s of n.body ?? []) if (s.speaker) assert.ok(CAST[s.speaker], s.speaker);
   for (const t of Object.keys(nodes)) for (const k of [0, 1]) for (const l of lines(t, {}, k).out) if (l.speaker) assert.ok(CAST[l.speaker], `${t}: ${l.speaker}`);
+});
+
+test("His side holds together: every enemy has what a brain needs to move, and the Lanterns can circle him without NaN", () => {
+  for (const [kind, def] of Object.entries(ENEMIES))
+    for (const k of ["runSpeed", "circleSpeed", "turnRate", "radius", "height"]) assert.ok(Number.isFinite(def.stats[k]), `${kind}.${k}`);
+  for (const id of ["notSeriousCal", "bondsCal"]) {
+    const b = beat(id), w = new World({ seed: 5, bounds: ZONES.bridge.bounds, ...b.world }), s = new Siege(w, b.siege).start();
+    for (let i = 0; i < 600; i++) { w.step({}); s.step(); }
+    for (const f of w.fighters) assert.ok(Number.isFinite(f.pos.x) && Number.isFinite(f.pos.z), `${id}: ${f.kind}`);
+  }
+  assert.match(src("runtime/camera.js"), /every\(Number\.isFinite\)\) \{\n\s+this\.shotPos\.set/, "and if a NaN ever gets through, the camera recovers instead of staying black");
 });

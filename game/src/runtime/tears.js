@@ -97,7 +97,7 @@ export function makeVoid(scene, name, { r = 1.2 } = {}) {
   return node;
 }
 
-export function makeDoor(scene, name, { w = 1.4, h = 2.5, ground = false } = {}) {
+export function makeDoor(scene, name, { w = 1.4, h = 2.5, ground = false, pane: withPane = true } = {}) {
   const BB = B(), MB = BB.MeshBuilder;
   let m = DOOR_MATS.get(scene);
   if (!m) { m = { frame: glow(scene, "door-frame", "#ffd36a"), pane: glow(scene, "door-pane", "#fff3d0", 0.35, true) }; DOOR_MATS.set(scene, m); }
@@ -105,7 +105,7 @@ export function makeDoor(scene, name, { w = 1.4, h = 2.5, ground = false } = {})
   for (const [bw, bh, x, y] of [[t, h + t, -w / 2, 0], [t, h + t, w / 2, 0], [w + t, t, 0, h / 2], [w + t, t, 0, -h / 2]]) {
     const b = MB.CreateBox(`${name}-bar`, { width: bw, height: bh, depth: 0.08 }, scene); b.parent = node; b.position.set(x, y, 0); b.material = m.frame; b.isPickable = false;
   }
-  const pane = MB.CreatePlane(`${name}-pane`, { width: w, height: h, sideOrientation: BB.Mesh.DOUBLESIDE }, scene); pane.parent = node; pane.material = m.pane; pane.isPickable = false;
+  if (withPane) { const pane = MB.CreatePlane(`${name}-pane`, { width: w, height: h, sideOrientation: BB.Mesh.DOUBLESIDE }, scene); pane.parent = node; pane.material = m.pane; pane.isPickable = false; } // without: just the frame, and whatever's on the other side
   if (ground) { const inner = new BB.TransformNode(`${name}-flat`, scene); for (const c of node.getChildren()) c.parent = inner; inner.parent = node; inner.rotation.x = Math.PI / 2; }
   return node;
 }

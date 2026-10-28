@@ -1796,7 +1796,7 @@ function buildBridge(scene, mobile) {
   });
   let shardT = -1;
   // A golden door frame standing on the deck, its lower edge at sitting height (cue doorSeat, Ep 50: he sits on it).
-  const seat = makeDoor(scene, "br-doorSeat", { w: 1.6, h: 2.6 }); seat.parent = K.root; seat.position.set(L.seat.x, 0.55 + 1.3, L.seat.z + 0.12); seat.setEnabled(false);
+  const seat = makeDoor(scene, "br-doorSeat", { w: 1.6, h: 2.6, pane: false }); seat.parent = K.root; seat.position.set(L.seat.x, 0.55 + 1.3, L.seat.z + 0.12); seat.setEnabled(false);
   K.bake([...smoke, ...fires, ...shards]);
   // Smoke-dimmed afternoon light, warm from the fires; the red is in the sky, not on everything.
   const env = { clear: "#2a1412", fog: "#3a2a28", fogDensity: 0.009, hemi: [0.6, "#f2dcd0", "#2e2626"], sun: [0.55, "#ffd2b0", [-0.3, -1, 0.5]], warm: 0 };
