@@ -14,6 +14,7 @@ import { validateCutscene, sampleCamera, eventsBetween, sampleMove } from "../co
 import { wideShot, closeUp, segDist } from "../core/framing.js";
 import { B, toon2, glow, color3 } from "./look.js";
 import { makeTear, makeDoor, makeVoid } from "./tears.js";
+import { starPlane } from "./stars.js";
 import { GuideTrail } from "./trail.js";
 import { theatreMark, theatreNotes } from "../data/theatre.js";
 import { findPath, trailMarks, guideTarget } from "../sim/guide.js";
@@ -128,25 +129,7 @@ class Stage {
     const root = id === "player" ? this.playerRoot?.() : a.rig.root;
     a.starMesh?.dispose(false, true); a.starMesh = null;
     if (!root) return;
-    // n: how many (filled gold), 0 (a hollow star: nothing left), or "?" (one star and a question mark: unreadable, even to the eye that sees them).
-    const unread = n === "?", w = unread ? 2 : Math.max(1, n), tex = new BB.DynamicTexture(`stars-${id}`, { width: 96 * w, height: 96 }, this.scene, true), c = tex.getContext();
-    c.clearRect(0, 0, 96 * w, 96);
-    for (let k = 0; k < (unread ? 1 : w); k++) { // a five-pointed star, drawn (no font needed): filled gold, or only its outline
-      c.beginPath();
-      for (let i = 0; i < 10; i++) { const r = i % 2 ? 18 : 42, t = (i / 10) * Math.PI * 2 - Math.PI / 2; c[i ? "lineTo" : "moveTo"](48 + k * 96 + Math.cos(t) * r, 50 + Math.sin(t) * r); }
-      c.closePath();
-      if (n > 0 || unread) { c.fillStyle = "#ffd36a"; c.fill(); } else { c.strokeStyle = "#ffe8b0"; c.lineWidth = 5; c.stroke(); }
-    }
-    if (unread) { // the question mark, drawn in strokes (no font): a hook and a dot
-      c.strokeStyle = "#ffd36a"; c.lineWidth = 11; c.lineCap = "round"; c.beginPath();
-      c.arc(144, 34, 18, Math.PI * 1.1, Math.PI * 0.45, false); c.lineTo(144, 66); c.stroke();
-      c.beginPath(); c.arc(144, 84, 6, 0, Math.PI * 2); c.fillStyle = "#ffd36a"; c.fill();
-    }
-    tex.hasAlpha = true; tex.update();
-    const mat = new BB.StandardMaterial(`starsM-${id}`, this.scene);
-    mat.diffuseTexture = tex; mat.emissiveTexture = tex; mat.opacityTexture = tex; mat.disableLighting = true; mat.backFaceCulling = false;
-    const plane = BB.MeshBuilder.CreatePlane(`stars-${id}`, { width: 0.36 * w, height: 0.36 }, this.scene);
-    plane.material = mat; plane.billboardMode = BB.Mesh.BILLBOARDMODE_ALL; plane.isPickable = false;
+    const plane = starPlane(this.scene, id, n);
     plane.parent = root; plane.position.set(0, 2.65, 0);
     a.starMesh = plane;
   }
@@ -847,7 +830,7 @@ export class StoryPlayer {
       case "shake": if (!this.skipping) this.ctx.camera.shake(Number(args[0]) || 0.4); break;
       case "timer": this.choiceTimer = Number(args[0]) || 8; break; // the next choice has this long; then the last one is taken
       case "stars": this.stage.showStars(args[0] !== "off"); break; // what the King sees (Ep 49)
-      case "star": this.stage.setStars(actorOf(args[0]), Number(args[1]) || 0); break;
+      case "star": this.stage.setStars(actorOf(args[0]), args[1] === "?" ? "?" : Number(args[1]) || 0); break; // "?": unreadable (Arc 7)
       case "clash": await this._clash(Number(args[0]) || 6); break;
       case "fx": await this.fx(args); break;
       case "survey": if (!this.skipping) await this.ctx.openSurvey?.(args[0]); break; // the playtest kit's end-of-arc survey (core/playtest.js)

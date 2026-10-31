@@ -634,4 +634,146 @@ export const REVEAL_CUTSCENES = {
       { t: 4.0, caption: "His first door." },
     ],
   },
+
+  // ---- Arc 7 ----
+  // Ep 59: through the door, the same long tunnel he walked, on their own feet; the squad in twos, Rook in front.
+  ep59_cross: {
+    id: "ep59_cross",
+    stage: "astral",
+    duration: 10,
+    actors: [
+      { id: "rook", look: "player", x: 0, z: 0, yaw: 0 },
+      { id: "juno", look: "juno", x: -0.9, z: -1.6, yaw: 0 }, { id: "bas", look: "bas", x: 0.9, z: -1.7, yaw: 0 },
+      { id: "tamsin", look: "tamsin", x: -0.9, z: -3.3, yaw: 0 }, { id: "lio", look: "lio", x: 0.9, z: -3.3, yaw: 0 },
+      { id: "dagrun", look: "dagrun", x: -0.6, z: -5.1, yaw: 0 }, { id: "severin", look: "severin", x: 0.8, z: -5.0, yaw: 0 },
+    ],
+    camera: [
+      { t: 0, pos: [-4.5, 6, 7.5], look: [0, 1.0, -2.5], fov: 0.72 },            // high and ahead: all of them, and the long way on
+      { t: 10, pos: [-4.5, 6, 14.5], look: [0, 1.0, 4.5], fov: 0.72, ease: "linear" },
+    ],
+    events: [
+      ...[["rook", 0, 0], ["juno", -0.9, -1.6], ["bas", 0.9, -1.7], ["tamsin", -0.9, -3.3], ["lio", 0.9, -3.3], ["dagrun", -0.6, -5.1], ["severin", 0.8, -5.0]]
+        .map(([id, x, z]) => ({ t: 0, move: { id, to: [x, z + 7], dur: 10, ease: "linear" } })),
+      { t: 0.6, caption: "The other side." }, { t: 2.0, sfx: "drums" },
+      { t: 9.2, fade: "out", dur: 0.8 },
+    ],
+  },
+
+  // Ep 66, the Thousand-Door Verse: Rook writes a line across the sky in the under-text's ink, and he opens a door along
+  // every letter of it, and everything under the line is somewhere else.
+  ep66_verse: {
+    id: "ep66_verse",
+    stage: "throne",
+    duration: 9,
+    actors: [
+      { id: "rook", look: "player", x: -0.9, z: 0, yaw: 0 },
+      { id: "cal", look: "unmasked", x: 0.9, z: 0, yaw: 0 },
+      { id: "g0", look: "throneGuard", x: -2.8, z: 6.2, yaw: Math.PI }, { id: "g1", look: "throneGuard", x: 0, z: 6.8, yaw: Math.PI },
+      { id: "g2", look: "throneGuard", x: 2.8, z: 6.2, yaw: Math.PI },
+    ],
+    camera: [
+      { t: 0, pos: [0, 1.0, -6], look: [0, 4.6, 6], fov: 0.86 },                   // low behind them, up at the line
+      { t: 5.4, pos: [0, 1.0, -6.6], look: [0, 4.6, 6], fov: 0.84, ease: "linear" },
+      { t: 5.4, cut: true, pos: [4.6, 2.2, 1.0], look: [0, 1.4, 5.6], fov: 0.66 },   // and under it
+      { t: 9, pos: [4.4, 2.2, 1.4], look: [0, 1.4, 5.6], fov: 0.64, ease: "linear" },
+    ],
+    events: [
+      { t: 0.3, caption: "THE THOUSAND-DOOR VERSE" },
+      { t: 0.4, pose: { id: "rook", name: "raise" } }, { t: 0.4, sfx: "starRing" },
+      ...[-6, -4.3, -2.6, -0.9, 0.9, 2.6, 4.3, 6].map((x, i) => ({ t: 0.8 + i * 0.22, tear: { at: [x, 5.6 + Math.sin(i * 0.8) * 0.4, 6.4], kind: "pale", r: 0.55, life: 3.4 } })),
+      { t: 2.9, pose: { id: "cal", name: "point" } }, { t: 3.0, sfx: "door" },
+      ...[-6, -4.3, -2.6, -0.9, 0.9, 2.6, 4.3, 6].map((x, i) => ({ t: 3.1 + i * 0.16, tear: { at: [x, 5.6 + Math.sin(i * 0.8) * 0.4, 6.2], kind: "gold", r: 0.6, life: 2.4 } })),
+      { t: 4.6, flash: 0.14 }, { t: 4.6, sfx: "finisher" },
+      { t: 5.6, pose: { id: "g0", name: "down" } }, { t: 5.75, pose: { id: "g1", name: "down" } }, { t: 5.9, pose: { id: "g2", name: "down" } },
+      { t: 6.0, sfx: "slam" },
+    ],
+  },
+
+  // Ep 69: the final clash. The Godfall glaive against the last line of the Palimpsest.
+  ep69_clash: {
+    id: "ep69_clash",
+    stage: "throne",
+    duration: 7,
+    actors: [
+      { id: "rook", look: "player", x: 0, z: 5.2, yaw: 0 },
+      { id: "cal", look: "unmasked", x: 0, z: 10.8, yaw: Math.PI },
+    ],
+    camera: [
+      { t: 0, pos: [-4.6, 1.5, 8.0], look: [0, 1.6, 8.0], fov: 0.72 },
+      { t: 3.0, pos: [-4.46, 1.5, 8.0], look: [0, 1.6, 8.0], fov: 0.69, ease: "linear" },
+      { t: 3.0, cut: true, pos: [-1.92, 1.5, 4.34], look: [0, 1.3, 9.6], fov: 0.64 },   // past Rook: him, on one knee, laughing
+      { t: 7, pos: [-1.86, 1.5, 4.5], look: [0, 1.3, 9.6], fov: 0.61, ease: "linear" },
+    ],
+    events: [
+      { t: 0.3, caption: "The Godfall glaive, against the last line of the Palimpsest." },
+      { t: 0.9, move: { id: "rook", to: [0, 7.3], dur: 0.45 } }, { t: 0.9, move: { id: "cal", to: [0, 8.7], dur: 0.45 } },
+      { t: 1.3, tear: { at: [0, 1.6, 8.0], kind: "pale", r: 1.4, life: 1.2 } }, { t: 1.35, tear: { at: [0, 1.6, 8.0], kind: "gold", r: 1.0, life: 1.0 } },
+      { t: 1.4, flash: 0.22 }, { t: 1.4, sfx: "finisher" }, { t: 1.5, sfx: "slam" },
+      { t: 1.9, move: { id: "cal", to: [0, 9.6], dur: 0.5, back: true } },
+      { t: 3.2, pose: { id: "cal", name: "kneel" } }, { t: 4.2, pose: { id: "cal", name: "hand" } }, { t: 4.4, sfx: "laugh" },
+    ],
+  },
+  // Ep 70, "Fall.": time stops; a perfect black circle opens behind him; two figures in black step out of it.
+  ep70_fall: {
+    id: "ep70_fall",
+    stage: "throne",
+    duration: 8,
+    actors: [
+      { id: "cal", look: "unmasked", x: 0.2, z: 9.4, yaw: Math.PI, pose: "kneel" },
+      { id: "unkA", look: "unkA", x: -0.6, z: 12.4, yaw: Math.PI, hidden: true },
+      { id: "unkB", look: "unkB", x: 1.0, z: 12.4, yaw: Math.PI, hidden: true },
+    ],
+    camera: [
+      { t: 0, pos: [-2.76, 1.5, 7.08], look: [0.2, 1.3, 10.6], fov: 0.72 },
+      { t: 8, pos: [-2.67, 1.5, 7.19], look: [0.2, 1.3, 10.6], fov: 0.69, ease: "linear" },
+    ],
+    events: [
+      { t: 0.4, caption: "Time stops." }, { t: 1.0, sfx: "voidOpen" },
+      { t: 1.1, tear: { at: [0.2, 1.6, 11.8], kind: "void", r: 1.5, life: 6.6 } },
+      { t: 2.6, show: "unkA" }, { t: 2.7, move: { id: "unkA", to: [-0.6, 10.8], dur: 1.6 } }, { t: 2.8, sfx: "step" },
+      { t: 3.3, show: "unkB" }, { t: 3.4, move: { id: "unkB", to: [1.0, 10.8], dur: 1.6 } }, { t: 3.5, sfx: "step" },
+      { t: 5.0, sfx: "laugh" }, { t: 5.2, caption: "\"Another one? Lucky me.\"" },
+      { t: 7.3, fade: "out", dur: 0.7 },
+    ],
+  },
+  // Ep 70, "Stay.": Liraen. One star, plain and gold. The step under the lantern room.
+  ep70_stay: {
+    id: "ep70_stay",
+    stage: "lighthouse",
+    sky: { daylight: 0.22 },
+    duration: 8,
+    actors: [
+      { id: "cal", look: "cal", x: -4.0, z: 9.7, yaw: Math.PI, pose: "sit" },
+      { id: "dagrun", look: "dagrun", x: -5.4, z: 9.7, yaw: Math.PI, pose: "sit" },
+    ],
+    camera: [
+      { t: 0, pos: [-4.7, 1.5, 5.1], look: [-4.7, 1.6, 9.7], fov: 0.72 },
+      { t: 8, pos: [-4.7, 1.5, 5.24], look: [-4.7, 1.6, 9.7], fov: 0.69, ease: "linear" },
+    ],
+    events: [
+      { t: 0.5, caption: "Liraen. One star, plain and gold." },
+      { t: 4.2, caption: "\"A soldier again. Huh.\"" },
+      { t: 7.3, fade: "out", dur: 0.7 },
+    ],
+  },
+  // Ep 70, "You're a Lantern.": the lantern room shelf at night, and his lantern, relit.
+  ep70_lantern: {
+    id: "ep70_lantern",
+    stage: "lighthouse",
+    sky: { daylight: 0.06 },
+    duration: 9,
+    actors: [
+      { id: "cal", look: "cal", x: 1.6, z: 10.4, yaw: 0.3 },
+      { id: "dagrun", look: "dagrun", x: 3.6, z: 10.2, yaw: -0.3 },
+    ],
+    camera: [
+      { t: 0, pos: [2.6, 1.5, 5.7], look: [2.6, 1.6, 10.3], fov: 0.72 },
+      { t: 9, pos: [2.6, 1.5, 5.84], look: [2.6, 1.6, 10.3], fov: 0.69, ease: "linear" },
+    ],
+    events: [
+      { t: 0.6, caption: "The Lantern Lighthouse. A shelf of lanterns, one for every Lantern." },
+      { t: 4.4, caption: "His is lit." },
+      { t: 8.3, fade: "out", dur: 0.7 },
+    ],
+  },
 };

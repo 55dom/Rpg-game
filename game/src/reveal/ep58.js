@@ -195,7 +195,7 @@ export const EPISODE_58 = {
       rook: { x: -2.9, z: 9.7, yaw: Math.PI },
       cast: [{ id: "dagrun", look: "dagrun", x: -4.2, z: 9.7, yaw: Math.PI, pose: "sit" }],
       set: { EP58_DONE: 1, ARC6_DONE: 1 } },
-    { id: "preview", type: "preview",
+    { id: "preview", type: "preview", nextEpisode: "ep59",
       lines: [
         "Next time on UNWRITTEN: Arc 7, Unwritten.",
         "\"Doors don't have locks. They have keys.\"",

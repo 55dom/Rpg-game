@@ -122,6 +122,19 @@ export function buildThrone(scene) {
     if (name === "lidClose") lidTo = 0;
     pillar.cue(name);
   };
+  // Arc 7: the Rite of Waking's circle round the dais (Ep 67), and afterwards, the world's page tearing (Eps 67–70):
+  // jagged white cracks across the walls and the air, as if the hall were drawn on paper and somebody pulled.
+  const riteN = K.when("$RITE_BEGUN"), riteM = glow(scene, "tr-riteM", "#e8c060");
+  const riteRing = add(MB.CreateTorus("tr-rite", { diameter: L.dais.r * 2 + 3.2, thickness: 0.1, tessellation: 64 }, scene)); riteRing.parent = riteN;
+  riteRing.position.set(0, 0.04, L.dais.z); riteRing.scaling.y = 0.2; riteRing.material = riteM;
+  const tornN = K.when("$PAGE_TORN"), tornM = glow(scene, "tr-tornM", "#f4f2ff"), rng = mulberry(67);
+  for (let i = 0; i < 26; i++) {
+    const side = i % 3, len = 1.5 + rng() * 4;
+    const c = add(MB.CreatePlane("tr-crack", { width: 0.07 + rng() * 0.06, height: len, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); c.parent = tornN; c.material = tornM;
+    if (side === 2) c.position.set((rng() - 0.5) * 12, 6 + rng() * 5, -12 + rng() * 30); // in the air itself
+    else c.position.set((side ? 1 : -1) * (L.half[0] - 0.05), 2 + rng() * 9, -18 + rng() * 36);
+    c.rotation.set(rng() * 0.6, side === 2 ? rng() * 3 : Math.PI / 2, (rng() - 0.5) * 2.4);
+  }
   const env = { clear: "#0a0708", fog: "#120c0c", fogDensity: 0.012, hemi: [0.5, "#e0c8c0", "#1a1214"], sun: [0.35, "#ffb090", [0.1, -1, 0.3]], warm: 0 };
   const toonEnv = { lightDir: [0.1, 1, -0.3], fogColor: "#120c0c", fogDensity: 0.006, sky: [0.9, 0.8, 0.78], ground: [0.6, 0.52, 0.52], rim: [1.0, 0.62, 0.48] };
   const self = { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true, cue,

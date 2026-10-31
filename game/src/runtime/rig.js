@@ -21,6 +21,7 @@ import { LEGION_LOOKS } from "../reveal/legion.js";
 import { revealLooks } from "../reveal/looks.js";
 import { backlashLooks } from "../reveal/backlash.js";
 import { finaleLooks } from "../reveal/finale.js";
+import { arc7Looks } from "../reveal/arc7.js";
 import { EventType } from "../core/abilities.js";
 import { buildBody, skinBake } from "./body.js";
 import { animateHumanoid } from "./motion.js";
@@ -294,6 +295,7 @@ LOOKS.quartermaster = { ...LOOKS.guard, coat: "#4a5462", trim: "#9aa2ae", hairCo
 Object.assign(LOOKS, revealLooks(LOOKS)); // the reveal's own looks (src/reveal/looks.js), grown from the ones above
 Object.assign(LOOKS, backlashLooks(LOOKS)); // and Backlash's (src/reveal/backlash.js)
 Object.assign(LOOKS, finaleLooks(LOOKS)); // and Ep 50's (src/reveal/finale.js)
+Object.assign(LOOKS, arc7Looks(LOOKS)); // and Arc 7's (src/reveal/arc7.js)
 
 export class Rig {
   /** @param {*} scene @param {string} kind a LOOKS key @param {string} id */

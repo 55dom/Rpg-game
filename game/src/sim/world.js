@@ -346,7 +346,8 @@ export class World {
     // off-screen, keeps their own health and mana, and recovers a little while out.
     this.active = "player";
     this.members = { player: null };
-    for (const kind of o.party ?? []) if (kind === "severin") this.members.severin = { kind: "severinAlly", name: "Severin", stats: { ...SEVERIN_KIT_STATS, maxHealth: SEVERIN_KIT_STATS.maxHealth + (o.mods?.health ?? 0) * 0.8, maxMana: SEVERIN_KIT_STATS.maxMana + (o.mods?.mana ?? 0) },
+    for (const kind of o.party ?? []) if (typeof kind === "object") this.members[kind.id] = { ...kind, hp: null, mana: null }; // a partner from the story (Arc 7)
+    else if (kind === "severin") this.members.severin = { kind: "severinAlly", name: "Severin", stats: { ...SEVERIN_KIT_STATS, maxHealth: SEVERIN_KIT_STATS.maxHealth + (o.mods?.health ?? 0) * 0.8, maxMana: SEVERIN_KIT_STATS.maxMana + (o.mods?.mana ?? 0) },
       hitboxes: SEVERIN_KIT_HITBOXES, abilities: SEVERIN_KIT, loadout: SEVERIN_KIT_LOADOUT, spells: SEVERIN_KIT_SPELLS, hp: null, mana: null };
     this.swapReadyFrame = 0;
     this.teamHit = null;

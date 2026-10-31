@@ -71,6 +71,18 @@ import { EPISODE_55, EP55_SCRIPT } from "./reveal/ep55.js";
 import { EPISODE_56, EP56_SCRIPT } from "./reveal/ep56.js";
 import { EPISODE_57, EP57_SCRIPT } from "./reveal/ep57.js";
 import { EPISODE_58, EP58_SCRIPT } from "./reveal/ep58.js";
+import { EPISODE_59, EP59_SCRIPT } from "./reveal/ep59.js";
+import { EPISODE_60, EP60_SCRIPT } from "./reveal/ep60.js";
+import { EPISODE_61, EP61_SCRIPT } from "./reveal/ep61.js";
+import { EPISODE_62, EP62_SCRIPT } from "./reveal/ep62.js";
+import { EPISODE_63, EP63_SCRIPT } from "./reveal/ep63.js";
+import { EPISODE_64, EP64_SCRIPT } from "./reveal/ep64.js";
+import { EPISODE_65, EP65_SCRIPT } from "./reveal/ep65.js";
+import { EPISODE_66, EP66_SCRIPT } from "./reveal/ep66.js";
+import { EPISODE_67, EP67_SCRIPT } from "./reveal/ep67.js";
+import { EPISODE_68, EP68_SCRIPT } from "./reveal/ep68.js";
+import { EPISODE_69, EP69_SCRIPT } from "./reveal/ep69.js";
+import { EPISODE_70, EP70_SCRIPT } from "./reveal/ep70.js";
 import { theatreList } from "./data/theatre.js";
 import { PlaytestLog, SURVEYS } from "./core/playtest.js";
 import { keyItemsHeld } from "./data/keyItems.js";
@@ -85,6 +97,8 @@ import { MATERIALS, HQ, TEMPER } from "./data/crafting.js";
 import { FRAGMENTS, CLAUSE } from "./data/lore.js";
 import { rumorBoard } from "./data/rumors.js";
 import { fieldNotes } from "./reveal/notes.js";
+import { ratingOf } from "./reveal/arc7.js";
+import { starPlane } from "./runtime/stars.js";
 import { ITEMS, SHOPS, SLOTS, BOUNTIES, slotKind } from "./data/items.js";
 import { squadRank } from "./core/quests.js";
 import { renownTier, LAW_REGIONS } from "./data/law.js";
@@ -158,6 +172,8 @@ export function boot(doc = document) {
   const views = new Map();
   const trails = new Map();
   const viewFor = (f) => views.get(f);
+  const addMods = (m, extra) => { const out = { ...m }; for (const [k, v] of Object.entries(extra ?? {})) out[k] = (out[k] ?? 0) + v; return out; }; // a beat's own (Arc 7: Unwritten) on top of gear and bonds
+  let starSight = () => false; // Star Sight (GDD §25.3): from the Rite on, ratings over everyone in a fight; set once the story exists
 
   const addView = (f) => {
     if (views.has(f) || f.traits?.dummy) return; // training dummies are part of the set (they rock on their posts)
@@ -165,6 +181,8 @@ export function boot(doc = document) {
     if (LOOKS[f.kind]?.form === "stars") { views.set(f, new StarFigure(scene, f.id, LION_FIGURE)); return; } // the Eclipsed Lion: drawn in dark stars
     const rig = new Rig(scene, f.look ?? f.kind, f.id); // a look of its own if it has one (Bas in a sling)
     views.set(f, rig);
+    const rating = starSight() ? ratingOf(f.team === Team.Player && f === world.player ? "player" : f.kind) : null;
+    if (rating != null) starPlane(scene, `${f.id}-sight`, rating).parent = rig.root; // over the player: nothing, ever
     trails.set(f, new Trail(scene, `${f.id}-trail`, LOOKS[f.kind]?.trail ?? (f.team === Team.Player ? TRAIL_COLORS.default : TRAIL_COLORS.enemy)));
   };
   const removeView = (f) => {
@@ -851,7 +869,7 @@ export function boot(doc = document) {
     setMemory: (on, instant) => grade.set(on, instant),
     setSquadVisible: (on) => { for (const c of world.companions) views.get(c)?.setVisible(on); },
     getWorld: () => world,
-    makeWorld: (opts) => newWorld({ ...opts, mods: statMods(partyOf(opts.companions)), progress: story.progress, teamAttacks: story.bonds.teamAttacks(), pageXpBonus: story.crafting.pageXpBonus }),
+    makeWorld: (opts) => newWorld({ ...opts, mods: addMods(statMods(partyOf(opts.companions)), opts.mods), progress: story.progress, teamAttacks: story.bonds.teamAttacks(), pageXpBonus: story.crafting.pageXpBonus }),
     openUI: (kind) => openHQ(kind),
     onMeal: () => { hud.toast("WARM AND FULL", "clear"); hud.banner("+20 HEALTH · +5% DAMAGE UNTIL MIDNIGHT"); sfx.play("heal"); applyGear(); const p = world.player; p.combatant.health.fill(); },
     openShop: (id) => openShop(id),
@@ -906,7 +924,12 @@ export function boot(doc = document) {
     { episode: EPISODE_51, script: EP51_SCRIPT }, { episode: EPISODE_52, script: EP52_SCRIPT },
     { episode: EPISODE_53, script: EP53_SCRIPT }, { episode: EPISODE_54, script: EP54_SCRIPT },
     { episode: EPISODE_55, script: EP55_SCRIPT }, { episode: EPISODE_56, script: EP56_SCRIPT },
-    { episode: EPISODE_57, script: EP57_SCRIPT }, { episode: EPISODE_58, script: EP58_SCRIPT }], [WORLD_SCRIPT]);
+    { episode: EPISODE_57, script: EP57_SCRIPT }, { episode: EPISODE_58, script: EP58_SCRIPT },
+    { episode: EPISODE_59, script: EP59_SCRIPT }, { episode: EPISODE_60, script: EP60_SCRIPT },
+    { episode: EPISODE_61, script: EP61_SCRIPT }, { episode: EPISODE_62, script: EP62_SCRIPT },
+    { episode: EPISODE_63, script: EP63_SCRIPT }, { episode: EPISODE_64, script: EP64_SCRIPT }, { episode: EPISODE_65, script: EP65_SCRIPT },
+    { episode: EPISODE_66, script: EP66_SCRIPT }, { episode: EPISODE_67, script: EP67_SCRIPT },
+    { episode: EPISODE_68, script: EP68_SCRIPT }, { episode: EPISODE_69, script: EP69_SCRIPT }, { episode: EPISODE_70, script: EP70_SCRIPT }], [WORLD_SCRIPT]);
   annotationNow = () => !!story.flags.get("ANNOTATION"); // after Mirrorlake, Rook's spells write ink
   revisionNow = () => !!story.flags.get("REVISION");     // after the Paragon's spar, the page rewinds
   const playtest = new PlaytestLog(story.flags, { where: () => ({ episode: story.ep?.id ?? null, beat: story.director?.beat?.id ?? null }) });
@@ -941,6 +964,7 @@ export function boot(doc = document) {
     pronouns = b.dataset.p; sfx.play("ui");
     for (const o of createModal.querySelectorAll("[data-p]")) o.setAttribute("aria-pressed", String(o === b));
   });
+  starSight = () => !!story.flags.get("STAR_SIGHT") && story.flags.get("STAR_SIGHT") !== "0";
   const openCreate = () => { sfx.unlock(); createModal.hidden = false; state.modal = true; setTimeout(() => nameInput.focus(), 50); };
   const begin = () => {
     createModal.hidden = true; state.modal = false;

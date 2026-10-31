@@ -24,4 +24,6 @@ export const REVEAL_CAST = {
   // Cal's Path: he's the player, so the boy on screen is "Young" (the player's body); "Cal" is the voice over it, now.
   Young: { name: "Cal", color: "#f3e3b0", actor: "player" },
   Villager: { name: "Villager", color: "#c9c4b4", actor: "villager" },
+  // Arc 7: the Trial's fourth archer to be called King (King A fell for good in Backlash).
+  KingD: { name: "King D", color: "#c8d8a0", actor: "kingD" },
 };
