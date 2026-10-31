@@ -75,6 +75,12 @@ export const CAST = Object.freeze({
   Kit: { name: "Kit", color: "#e6d29a", actor: "kit" },
   // Arc 5: the Paragon of Liraen.
   Paragon: { name: "The Paragon", color: "#ffd98a", actor: "paragon" },
+  // Townsfolk in a scene, whoever's nearest: the shot finds them by their cast id.
+  Townsman: { name: "Townsman", color: "#c9c4b4", actor: "townsman" },
+  Townswoman: { name: "Townswoman", color: "#d8c4b4", actor: "townswoman" },
+  // Arc 6: the Crimson Bell (data/bell.js), the Crown's inquisition.
+  Ulric: { name: "Captain Graves", color: "#ff8a8a", actor: "ulric" },
+  BellWarden: { name: "Bell Warden", color: "#e8a0a0", actor: "bellWarden" },
   // Ep 41: Lio's old teacher from the silent school.
   Vey: { name: "Mother Vey", color: "#c9c4d4", actor: "vey" },
   // Ep 44: the keeper of the Grand Archive.

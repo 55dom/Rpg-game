@@ -220,6 +220,9 @@ export class Sfx {
       case "starRing": for (const f of [2093, 2637, 3136]) this._tone(t, 2.4, { f0: f, f1: f * 1.004, gain: 0.018 * p, attack: 0.4 }); break; // the "sound" of stars
       case "arrow": this._noise(t, 0.06, { f0: 3800, f1: 1200, q: 2, gain: 0.12 }); this._tone(t + 0.05, 0.14, { f0: 160, f1: 70, gain: 0.3 }); break;
       case "step": this._noise(t, 0.07, { type: "lowpass", f0: 900, f1: 300, gain: 0.14 * p, attack: 0.002 }); break; // dry, close, clear
+      // Arc 6: the Crimson Bell's great bell. A low strike, inharmonic partials that ring on, and a long hum under it.
+      case "bell": for (const [f, g, d] of [[98, 0.32, 5.5], [196, 0.18, 4.2], [233, 0.1, 3.4], [294, 0.08, 3.0], [392, 0.05, 2.2], [523, 0.03, 1.6]]) this._tone(t, d, { f0: f, f1: f * 0.997, gain: g * p, attack: 0.004 });
+        this._noise(t, 0.08, { type: "bandpass", f0: 1800, f1: 600, q: 1.2, gain: 0.1 * p, attack: 0.002 }); break;
       case "unkSpeechA": this._speech(t, { base: 104, n: 7, seed: 3, gain: 0.16 * p }); break;
       case "unkSpeechB": this._speech(t, { base: 196, n: 6, seed: 11, gain: 0.14 * p }); break;
       case "unkSpeechFaint": this._speech(t, { base: 96, n: 3, seed: 5, gain: 0.05 * p, breathy: true }); break;

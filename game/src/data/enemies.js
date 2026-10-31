@@ -17,6 +17,7 @@ import { HERO_ENEMIES, DRILL_PARTNER } from "../reveal/backlash.js";
 import { SaintController, DrillController } from "../reveal/backlashSim.js";
 import { FINALE_ENEMIES } from "../reveal/finale.js";
 import { CalSeatedController, CalBondsController } from "../reveal/finaleSim.js";
+import { BELL_ENEMIES } from "./bell.js";
 
 const sound = (frame, key = "swing") => ({ frame, type: E.PlaySound, key });
 const box = (frame, key, frames) => ({ frame, type: E.SpawnHitbox, key, value: frames });
@@ -138,6 +139,7 @@ export const ENEMIES = Object.freeze({
   calSeated: { ...FINALE_ENEMIES.calSeated, Controller: CalSeatedController },
   calBonds: { ...FINALE_ENEMIES.calBonds, Controller: CalBondsController },
   ...ECLIPSE_ENEMIES, // Mirrorlake (Ep 28): the Lion and the reflection
+  ...BELL_ENEMIES, // Arc 6: the Crimson Bell's wardens (Ep 52, the Silencing)
   acolyte: {
     stats: { ...ACOLYTE_STATS, name: "Choir Acolyte" }, hitboxes: ACOLYTE_HITBOXES, abilities: ACOLYTE_ABILITIES,
     poses: ACOLYTE_POSES, options: acolyteOptions, traits: {},

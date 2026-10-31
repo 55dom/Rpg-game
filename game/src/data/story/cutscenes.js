@@ -373,6 +373,46 @@ export const CUTSCENES = {
       { t: 12.4, hide: "knight" },
     ],
   },
+  // Ep 51 (Arc 6): the morning after the Siege. The lantern room is still lit; Dagrun on the step under it, awake.
+  ep51_dawn: {
+    id: "ep51_dawn",
+    stage: "lighthouse",
+    sky: { daylight: 0.42 },
+    duration: 9.5,
+    actors: [{ id: "dagrun", look: "dagrun", x: -4.0, z: 9.7, yaw: Math.PI }],
+    camera: [
+      { t: 0, pos: [10, 2.2, -8], look: [-8, 9, 9], fov: 0.75 },                    // the tower, its light still burning
+      { t: 4.6, pos: [8.6, 2.5, -6.6], look: [-8, 9.6, 9], fov: 0.72, ease: "linear" },
+      { t: 4.6, cut: true, pos: [-1.39, 2.0, 5.44], look: [-4, 1.9, 9.7], fov: 0.62 },  // Dagrun on the step, where he's been all night
+      { t: 9.5, pos: [-1.64, 1.95, 5.79], look: [-4, 1.9, 9.7], fov: 0.59, ease: "linear" },
+    ],
+    events: [
+      { t: 0, pose: { id: "dagrun", name: "sit" } },
+      { t: 0.4, caption: "The Lighthouse. The morning after the Siege." },
+      { t: 6.2, caption: "Nobody put the light out." },
+    ],
+  },
+  // Ep 52: the ninth bell. Under the great bell in the Bell Tower; it swings, and tolls; Captain Graves waits at the desk.
+  ep52_toll: {
+    id: "ep52_toll",
+    stage: "belltower",
+    duration: 9,
+    actors: [
+      { id: "ulric", look: "ulric", x: 0, z: 5.6, yaw: Math.PI },
+      { id: "warden", look: "bellWarden", x: -2.6, z: 5.9, yaw: Math.PI },
+      { id: "warden2", look: "bellWarden", x: 2.6, z: 5.9, yaw: Math.PI },
+    ],
+    camera: [
+      { t: 0, pos: [0.6, 1.3, -2.4], look: [0, 6.4, 1.2], fov: 0.8 },               // up into the bell as it swings
+      { t: 4.2, pos: [0.3, 1.5, -2.8], look: [0, 6.1, 1.0], fov: 0.78, ease: "linear" },
+      { t: 4.2, cut: true, pos: [0, 2.6, -7.8], look: [0, 1.9, 4.6], fov: 0.62 },   // from the door: the ring, the desk, the captain
+      { t: 9, pos: [0, 2.4, -6.6], look: [0, 1.8, 4.6], fov: 0.6, ease: "linear" },
+    ],
+    events: [
+      { t: 0.3, cue: "toll" }, { t: 0.3, sfx: "bell" }, { t: 2.9, sfx: "bell" }, { t: 5.5, sfx: "bell" },
+      { t: 0.8, caption: "The Bell Tower. The ninth bell." },
+    ],
+  },
 };
 
 Object.assign(CUTSCENES, REVEAL_CUTSCENES); // the reveal's own (src/reveal/cutscenes.js)

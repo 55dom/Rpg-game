@@ -300,7 +300,7 @@ export const EPISODE_50 = {
       required: ["notes"],
       cast: [{ id: "dagrun", look: "dagrun", x: -7, z: 5.6, yaw: 0.8, pose: "sit" }],
       pickups: [{ id: "notes", x: -4.0, z: 9.6, node: "Ep50_Notes", label: "His old room" }] },
-    { id: "preview", type: "preview",
+    { id: "preview", type: "preview", nextEpisode: "ep51",
       lines: [
         "Next time on UNWRITTEN: Arc 6, The Light Left On.",
         "Field notes. For Rook.",

@@ -719,6 +719,7 @@ export class StoryPlayer {
     for (;;) {
       const s = r.next();
       if (s.type === "end") break;
+      this._refreshSet(); // a <<set>> mid-scene shows on the set straight away (the Bell's notice going up on the board)
       if (s.type === "line") await this.showLine(s);
       else if (s.type === "options") {
         this.skipping = false;

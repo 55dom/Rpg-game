@@ -16,6 +16,7 @@ import { ILSE_STATS, ILSE_HITBOXES, ilseOptions, GALEN_STATS, GALEN_HITBOXES, ga
 import { WARDEN_STATS, WARDEN_HITBOXES, wardenOptions, ISLES_OBJECTS } from "../data/isles.js";
 import { StormWardenController } from "./warden.js";
 import { VARKA_STATS, VARKA_HITBOXES, varkaOptions, ASH_OBJECTS, ASH_OBJECT_HITBOXES, THUNDER, BRANNOC_SPAR_STATS, BRANNOC_HITBOXES, brannocSparOptions } from "../data/ashfall.js";
+import { SEAL, BELL_TUNING } from "../data/bell.js";
 import { VarkaController, SparBoss } from "./varka.js";
 import { WRAITHE_STATS, WRAITHE_HITBOXES, wraitheOptions } from "../data/wraithe.js";
 import { REFORM } from "../data/hollow.js";
@@ -250,6 +251,7 @@ export class Fighter {
         else if (e.key === "summon") this.world.summon(this, "hound", e.value);
         else if (e.key === "fan") this.world.fireFan(this, a, "Needle", 15, e.value, 0.26);
         else if (e.key === "thunderhead") { const t = this.target?.alive ? this.target : this.world.player; this.world.addStrike(this, t.pos.x, t.pos.z, { delay: e.value, r: 1.6, spec: THUNDER, ability: a, kind: "thunder" }); }
+        else if (e.key === "seal") { const t = this.target?.alive ? this.target : this.world.player; this.world.addStrike(this, t.pos.x, t.pos.z, { delay: e.value, r: BELL_TUNING.seal.r, spec: SEAL, ability: a, kind: "seal" }); } // a Binding Seal under you
         else if (e.key === "stars") this.boss?.placeStars?.();
         else if (this.boss?.onCustom?.(e.key, e.value, a)) { /* handled by the boss's controller */ }
         else if (e.key === "airDash") { this.vel.y = 0; this.hoverFrames = e.value; this.airDashes = 0; }

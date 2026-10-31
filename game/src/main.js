@@ -62,6 +62,8 @@ import { EPISODE_47, EP47_SCRIPT } from "./data/story/ep47.js";
 import { EPISODE_48, EP48_SCRIPT } from "./reveal/ep48.js";
 import { EPISODE_49, EP49_SCRIPT } from "./reveal/ep49.js";
 import { EPISODE_50, EP50_SCRIPT } from "./reveal/ep50.js";
+import { EPISODE_51, EP51_SCRIPT } from "./reveal/ep51.js";
+import { EPISODE_52, EP52_SCRIPT } from "./reveal/ep52.js";
 import { theatreList } from "./data/theatre.js";
 import { PlaytestLog, SURVEYS } from "./core/playtest.js";
 import { keyItemsHeld } from "./data/keyItems.js";
@@ -75,6 +77,7 @@ import { BONDS, RANK_POINTS, RANK_UNLOCKS, GIFTS } from "./data/bonds.js";
 import { MATERIALS, HQ, TEMPER } from "./data/crafting.js";
 import { FRAGMENTS, CLAUSE } from "./data/lore.js";
 import { rumorBoard } from "./data/rumors.js";
+import { fieldNotes } from "./reveal/notes.js";
 import { ITEMS, SHOPS, SLOTS, BOUNTIES, slotKind } from "./data/items.js";
 import { squadRank } from "./core/quests.js";
 import { renownTier, LAW_REGIONS } from "./data/law.js";
@@ -891,7 +894,8 @@ export function boot(doc = document) {
     { episode: EPISODE_43, script: EP43_SCRIPT }, { episode: EPISODE_44, script: EP44_SCRIPT },
     { episode: EPISODE_45, script: EP45_SCRIPT }, { episode: EPISODE_46, script: EP46_SCRIPT },
     { episode: EPISODE_47, script: EP47_SCRIPT }, { episode: EPISODE_48, script: EP48_SCRIPT },
-    { episode: EPISODE_49, script: EP49_SCRIPT }, { episode: EPISODE_50, script: EP50_SCRIPT }], [WORLD_SCRIPT]);
+    { episode: EPISODE_49, script: EP49_SCRIPT }, { episode: EPISODE_50, script: EP50_SCRIPT },
+    { episode: EPISODE_51, script: EP51_SCRIPT }, { episode: EPISODE_52, script: EP52_SCRIPT }], [WORLD_SCRIPT]);
   annotationNow = () => !!story.flags.get("ANNOTATION"); // after Mirrorlake, Rook's spells write ink
   revisionNow = () => !!story.flags.get("REVISION");     // after the Paragon's spar, the page rewinds
   const playtest = new PlaytestLog(story.flags, { where: () => ({ episode: story.ep?.id ?? null, beat: story.director?.beat?.id ?? null }) });
@@ -1084,6 +1088,14 @@ export function boot(doc = document) {
         (rb.rumors.length ? rb.rumors.map((r) => `<p><b>${r.theory}</b>${r.text} <i>· ${r.who}</i></p>`).join("") : `<p class="hint">Nobody has a theory yet. Ask around.</p>`);
     }
     const list = story.quests.entries();
+    // The notebooks left for Rook: a page a Lantern, with a margin line Lio may have read.
+    const fn = fieldNotes(story.flags), notesHead = journal.querySelector("[data-notes-head]"), notesList = journal.querySelector("[data-notes]");
+    notesHead.hidden = notesList.hidden = !fn.show;
+    if (fn.show) {
+      notesHead.textContent = fn.title;
+      notesList.innerHTML = `<p class="hint">${fn.stars} ${fn.hint}</p>` + fn.pages.map((p) =>
+        `<div class="page"><b>${p.who}</b>${p.stars ? `<span class="ink">${p.stars}</span>` : ""}<br>${p.note || p.sketch}${p.script}${p.read ? `<span class="margin">"${p.margin}"</span>` : ""}</div>`).join("");
+    }
     journal.querySelector("[data-quests]").innerHTML = list.length ? list.map((q) =>
       `<button class="${q.done ? "done" : ""}"><b>${q.done ? "DONE" : "ACTIVE"}</b><span>${q.title}<small>${fillText(q.objective, { ...story.player, flags: story.flags })} · from ${q.giver}, ${q.region}</small></span></button>`).join("")
       : `<p class="hint">No quests yet. Talk to people: someone always needs something.</p>`;
@@ -1114,6 +1126,7 @@ export function boot(doc = document) {
     const strikes = new Map(), lanes = [];
     const thunderMat = glow(scene, "strikeThunder", "#9ad8ff", 0.28, true), debrisMat = glow(scene, "strikeDebris", "#ff7a3a", 0.3, true), laneMat = glow(scene, "laneMat", "#ff3a2a", 0.22, true);
     const sunMat = glow(scene, "strikeSun", "#ffd36a", 0.3, true); // the Paragon's light
+    const sealMat = glow(scene, "strikeSeal", "#d8263a", 0.32, true); // the Crimson Bell's Binding Seal
     return {
       warn(s) {
         if (s.kind === "gold") { // a golden door opening in the floor under you (the Drop)
@@ -1125,6 +1138,10 @@ export function boot(doc = document) {
           const t = makeTear(scene, "riftWarn", { r: s.r, kind: black ? "black" : "pale", seed: Math.round(s.x * 31 + s.z * 17), ground: true });
           t.position.set(s.x, 0.05, s.z); t.scaling.setAll(0.2); strikes.set(s, t); sfx.play(black ? "tear" : "rift", 0.5); return;
         }
+        if (s.kind === "seal") { // a square of red paper laid on the floor under you, turned a little, closing
+          const p = BB.MeshBuilder.CreatePlane("sealWarn", { size: s.r * 1.7, sideOrientation: BB.Mesh.DOUBLESIDE }, scene); p.rotation.set(Math.PI / 2, (s.x * 7 + s.z * 3) % Math.PI, 0);
+          p.position.set(s.x, 0.05, s.z); p.material = sealMat; p.isPickable = false; p.scaling.setAll(0.2); strikes.set(s, p); sfx.play("glint", 0.5); return;
+        }
         const d = BB.MeshBuilder.CreateDisc("strikeWarn", { radius: s.r, tessellation: 28 }, scene); d.rotation.x = Math.PI / 2; d.position.set(s.x, 0.05, s.z);
         d.material = s.kind === "debris" ? debrisMat : s.kind === "sun" ? sunMat : thunderMat; d.isPickable = false; d.scaling.setAll(0.2); strikes.set(s, d);
       },
@@ -1134,6 +1151,7 @@ export function boot(doc = document) {
         if (s.kind === "rift") { vfx.flash({ x: s.x, y: 0.3, z: s.z }, 1.8, "#f0ecff", 0.12); sfx.play("rift", 0.8); return; } // it seals
         if (s.kind === "sever") { vfx.flash({ x: s.x, y: 0.3, z: s.z }, 1.8, "#9cb8ff", 0.12); sfx.play("tear", 0.8); return; }
         if (s.kind === "gold") { vfx.flash({ x: s.x, y: 0.3, z: s.z }, 1.8, "#ffd36a", 0.12); sfx.play("door", 0.8); return; }
+        if (s.kind === "seal") { vfx.ring(at, s.r * 2, "#ff4a5a", 0.25); vfx.flash({ x: s.x, y: 0.6, z: s.z }, 1.6, "#ff6a6a", 0.1); sfx.play("block", 0.6); return; }
         if (s.kind === "debris") { vfx.ring(at, s.r * 2.2, "#ff9a5a", 0.3); vfx.sparksAt({ x: s.x, y: 0.4, z: s.z }, 10, "gold", 8, 6); vfx.flash({ x: s.x, y: 0.8, z: s.z }, 2.2, "#ffb070", 0.12); sfx.play("slam", 0.55); }
         else { vfx.pillar(at, 6, 0.35); vfx.flash({ x: s.x, y: 1.4, z: s.z }, 2.6, "#cfeaff", 0.1); vfx.sparksAt({ x: s.x, y: 0.5, z: s.z }, 10, "white", 9, 5); sfx.play("ultActivate", 0.5); }
         camera.shake(0.18);

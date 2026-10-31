@@ -223,6 +223,12 @@ LOOKS.elsie = { poses: ACOLYTE_POSES, scale: 0.64, skirt: 1.05, coat: "#5a7a4a",
   head: "face", hair: "ponytail", accent: "#e0a050", weapon: "none", eyeColor: "#3a7a9a", trail: "#c9b48a" };
 // The Watch Sergeant at the Watch House desk: grey, square, unimpressed.
 LOOKS.sergeant = { ...LOOKS.guard, coat: "#24407e", hairColor: "#7a7a7a", beard: "#7a7a7a", hair: "crop", shoulders: 1.22, weapon: "none" };
+// The Crimson Bell (data/bell.js): Captain Ulric Graves, tall, grey and patient, in the Bell's long crimson coat with
+// a sash of paper seals, the seal-brush in his hand; his wardens in crimson, every one with a staff and a satchel of talismans.
+LOOKS.ulric = { poses: ACOLYTE_POSES, scale: 1.12, skirt: 1.3, coat: "#7a1420", trim: "#e8dcc4", hairColor: "#8a8a8a", beard: "#8a8a8a", skin: "#e2c4a6",
+  head: "face", hair: "crop", weapon: "rod", shoulders: 1.1, eyeColor: "#5a5a6a", trail: "#ff6a6a" };
+LOOKS.bellWarden = { poses: ACOLYTE_POSES, scale: 1.0, skirt: 1.2, coat: "#8a1c28", trim: "#e8dcc4", hairColor: "#3a2a22", skin: "#e8c8a8",
+  head: "face", hair: "crop", weapon: "staff", eyeColor: "#4a3a2a", trail: "#ff6a6a" };
 // Someone who fights back in the street, if the fighter has no look of its own (it always should: their own).
 LOOKS.brawler = LOOKS.laborer;
 // Arc 4 (data/isles.js): Aldric's Lances in Valcourt blue and gold, their Commander, the Severed Isles' sky raiders,

@@ -1,7 +1,7 @@
 // Story sets (Phase 3): each one is built on first use from primitives, carries its own sky, fog,
 // and lighting, and can be swapped in and out. "yard" is the original training yard (arena.js).
 
-import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT, ISLES_LAYOUT, OLDCITY_LAYOUT, HOLLOW_LAYOUT, ARCHIVE_LAYOUT, AURELIN_GATE, BRIDGE_LAYOUT } from "../data/zones.js";
+import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT, BELLTOWER_LAYOUT, ISLES_LAYOUT, OLDCITY_LAYOUT, HOLLOW_LAYOUT, ARCHIVE_LAYOUT, AURELIN_GATE, BRIDGE_LAYOUT } from "../data/zones.js";
 import { WARDEN_STARS } from "../data/isles.js";
 import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } from "./look.js";
 import { buildCrowd } from "./crowd.js";
@@ -55,7 +55,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, archive: buildArchive, bridge: buildBridge, camp: buildCamp, throne: buildThrone, caverns: buildCaverns, watchhouse: buildWatchhouse, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, hollow: buildHollow, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, archive: buildArchive, bridge: buildBridge, camp: buildCamp, throne: buildThrone, caverns: buildCaverns, watchhouse: buildWatchhouse, belltower: buildBelltower, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, hollow: buildHollow, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -477,6 +477,9 @@ function buildLighthouse(scene, mobile) {
   const house = add(MB.CreateBox("lh-house", { width: 7, height: 4, depth: 5 }, scene), 0.05); house.position.set(-4, 2, 13); house.material = toon(scene, "lh-houseMat", "#d9c7a6");
   const roof = add(MB.CreateCylinder("lh-roof", { height: 7.6, diameter: 5.6, tessellation: 3 }, scene), 0.05); roof.position.set(-4, 4.7, 13); roof.rotation.set(0, 0, Math.PI / 2); roof.scaling.set(1, 1, 0.75); roof.material = toon(scene, "lh-roofMat", "#5a6e8a");
   const door = add(MB.CreateBox("lh-door", { width: 1.3, height: 2.3, depth: 0.15 }, scene), 0.03); door.position.set(-4, 1.15, 10.45); door.material = toon(scene, "lh-doorMat", "#6b4a32");
+  // The Crimson Bell's courtesy seal (Ep 51): a strip of red paper pressed to the door; it tells them if anyone leaves.
+  const doorSeal = add(MB.CreatePlane("lh-doorSeal", { width: 0.22, height: 0.75, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); doorSeal.parent = K.when("$BELL_SEAL");
+  doorSeal.position.set(-4.35, 1.35, 10.36); doorSeal.rotation.z = 0.08; doorSeal.material = glow(scene, "lh-doorSealM", "#a01a2a"); K.noGlow(doorSeal); // a faint red, not a lamp
   const winMat = glow(scene, "lh-window", "#ffcf7a");
   for (const x of [-6.3, -1.7]) { const w = add(MB.CreatePlane("lh-win", { width: 1, height: 1 }, scene)); w.position.set(x, 2.4, 10.47); w.rotation.y = Math.PI; w.material = winMat; }
   const step = add(MB.CreateBox("lh-step", { width: 2, height: 0.22, depth: 0.8 }, scene), 0.03); step.position.set(-4, 0.11, 9.9); step.material = paving;
@@ -1159,7 +1162,7 @@ function buildRoom(scene, K, { prefix, half: [hx, hz], height = 4, wall, wainsco
     pane.parent = node; pane.position.set(alongX ? c : out + inset, y, alongX ? out + inset : c); pane.rotation.y = alongX ? 0 : Math.PI / 2; pane.material = K.windowMat(`${prefix}-winM`, "#9ab8d8", "#2a3050"); keep.push(pane);
   }
   return {
-    keep,
+    keep, walls, // things hung on a wall go on its node, so they hide with it
     /** Hide whichever walls stand between the camera and the room. */
     cutaway(cam, focus) {
       if (!cam) return;
@@ -1519,6 +1522,93 @@ function buildWatchhouse(scene, mobile) {
   const toonEnv = { lightDir: [-0.3, 1, -0.4], fogColor: "#121418", fogDensity: 0.002, sky: [0.98, 0.98, 1.0], ground: [0.74, 0.72, 0.72], rim: [0.85, 0.9, 1.0] };
   const self = { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true,
     update(dt, t) { room.cutaway(scene.activeCamera, self.mood?.player); warm.intensity = 0.48 + Math.sin(t * 6) * 0.03; } };
+  return self;
+}
+
+/**
+ * The Bell Tower (the Crimson Bell, Ep 52): one tall stone room under a great bronze bell on a black beam. Under it,
+ * the seal ring laid out on the floor; paper talismans pasted up every wall in rows; crimson banners with a white bell;
+ * the tribunal's long desk on the north side; benches by the door. Cue "toll" swings the bell (the sound is the
+ * story's); "seals" sets the talismans on the walls fluttering, "sealsOff" stills them.
+ */
+function buildBelltower(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, W = BELLTOWER_LAYOUT;
+  const P = palette(scene, "bt"), PR = props(scene, K, P);
+  const room = buildRoom(scene, K, { prefix: "bt", half: W.half, height: W.height, wall: "#8a8078", wainscot: "#5a1a20", floorA: "#6a625a", floorB: "#5c544d", door: W.door,
+    windows: [["e", -2, 6.2, 0.6, 1.8], ["e", 4, 6.2, 0.6, 1.8], ["w", -2, 6.2, 0.6, 1.8], ["w", 4, 6.2, 0.6, 1.8]] });
+  const wood = P("#3a2620"), crimson = P("#8a1c28"), paper = P("#efe6d0"), bronze = toon(scene, "bt-bronze", "#b8873a"), bronzeDark = toon(scene, "bt-bronzeDark", "#7a5424");
+  // The great bell, hung from a beam across the room; it swings on the pivot (never merged).
+  const beam = add(MB.CreateBox("bt-beam", { width: W.half[0] * 2, height: 0.5, depth: 0.6 }, scene), 0.03); beam.position.set(0, W.bell.y + 0.25, W.bell.z); beam.material = wood;
+  const pivot = new BB.TransformNode("bt-bellPivot", scene); pivot.parent = K.root; pivot.position.set(W.bell.x, W.bell.y, W.bell.z);
+  const swing = [];
+  const part = (m, y, mat) => { add(m, 0.04); m.parent = pivot; m.position.y = y; m.material = mat; swing.push(m); return m; };
+  part(MB.CreateCylinder("bt-yoke", { height: 0.5, diameter: 0.5, tessellation: 10 }, scene), -0.25, wood);
+  part(MB.CreateSphere("bt-bellCrown", { diameter: 1.7, segments: 12, slice: 0.5 }, scene), -1.1, bronze);
+  part(MB.CreateCylinder("bt-bell", { height: 2.0, diameterTop: 1.7, diameterBottom: 3.0, tessellation: 24 }, scene), -2.1, bronze);
+  part(MB.CreateTorus("bt-bellLip", { diameter: 3.0, thickness: 0.24, tessellation: 28 }, scene), -3.1, bronzeDark);
+  part(MB.CreateTorus("bt-bellBand", { diameter: 2.2, thickness: 0.1, tessellation: 24 }, scene), -1.6, bronzeDark);
+  const clapper = part(MB.CreateSphere("bt-clapper", { diameter: 0.45, segments: 8 }, scene), -3.0, bronzeDark);
+  const rope = add(MB.CreateCylinder("bt-rope", { height: 4.6, diameter: 0.06, tessellation: 5 }, scene)); rope.parent = pivot; rope.position.set(0.9, -4.8, 0); rope.material = P("#c9b07a"); swing.push(rope);
+  // The seal ring under it: a crimson circle and sixteen paper seals laid round it.
+  const R = W.ring, disc = add(MB.CreateDisc("bt-ringDisc", { radius: R.r, tessellation: 40 }, scene)); disc.rotation.x = Math.PI / 2; disc.position.set(R.x, 0.012, R.z); disc.material = P("#5a141c");
+  const inner = add(MB.CreateDisc("bt-ringInner", { radius: R.r - 0.25, tessellation: 40 }, scene)); inner.rotation.x = Math.PI / 2; inner.position.set(R.x, 0.016, R.z); inner.material = P("#6a625a");
+  for (let i = 0; i < 16; i++) {
+    const a = (i / 16) * Math.PI * 2, sq = add(MB.CreatePlane("bt-floorSeal", { size: 0.42, sideOrientation: BB.Mesh.DOUBLESIDE }, scene));
+    sq.rotation.set(Math.PI / 2, a, 0); sq.position.set(R.x + Math.sin(a) * (R.r + 0.35), 0.02, R.z + Math.cos(a) * (R.r + 0.35)); sq.material = paper;
+  }
+  // Talismans up the walls in rows, one merged sheet per wall, hung on the wall's node so it hides with the wall.
+  const rng = (() => { let t = 91; return () => ((t = (t * 16807) % 2147483647) / 2147483647); })();
+  const flutter = [];
+  for (const key of ["n", "e", "w"]) {
+    const alongX = key === "n", len = alongX ? W.half[0] * 2 : W.half[1] * 2, out = { n: W.half[1], e: W.half[0], w: -W.half[0] }[key], inset = out > 0 ? -0.15 : 0.15, strips = [];
+    for (let row = 0; row < 5; row++) for (let c = -len / 2 + 0.6; c < len / 2 - 0.5; c += 0.55) {
+      if (rng() < 0.18) continue;
+      const st = MB.CreatePlane("bt-talisman", { width: 0.22, height: 0.6, sideOrientation: BB.Mesh.DOUBLESIDE }, scene);
+      const y = 1.6 + row * 0.9 + rng() * 0.2;
+      st.position.set(alongX ? c : out + inset, y, alongX ? out + inset : c); st.rotation.y = alongX ? 0 : Math.PI / 2; st.rotation.z = (rng() - 0.5) * 0.12;
+      strips.push(st);
+    }
+    const sheet = BB.Mesh.MergeMeshes(strips, true, true); add(sheet); sheet.parent = room.walls[key]; sheet.material = paper; flutter.push(sheet);
+    // A crimson banner with a white bell on it, either side of the middle of the wall.
+    for (const c of [-len / 4, len / 4]) {
+      const ban = add(MB.CreatePlane("bt-banner", { width: 1.3, height: 3.0, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); ban.parent = room.walls[key];
+      ban.position.set(alongX ? c : out + inset * 1.4, 5.6, alongX ? out + inset * 1.4 : c); ban.rotation.y = alongX ? 0 : Math.PI / 2; ban.material = crimson;
+      const mark = add(MB.CreateDisc("bt-bannerBell", { radius: 0.34, tessellation: 3 }, scene)); mark.parent = room.walls[key];
+      mark.position.set(alongX ? c : out + inset * 1.6, 5.9, alongX ? out + inset * 1.6 : c); mark.rotation.set(0, alongX ? 0 : Math.PI / 2, Math.PI / 2); mark.material = paper;
+    }
+  }
+  // The tribunal: the long desk, three tall chairs behind it, a ledger and an inkwell; benches by the door for the heard.
+  const D = W.desk, desk = add(MB.CreateBox("bt-desk", { width: D.x1 - D.x0, height: 1.1, depth: D.z1 - D.z0 }, scene), 0.03); desk.position.set((D.x0 + D.x1) / 2, 0.55, (D.z0 + D.z1) / 2); desk.material = wood;
+  const front = add(MB.CreatePlane("bt-deskCloth", { width: D.x1 - D.x0 - 0.4, height: 0.8, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); front.position.set(desk.position.x, 0.6, D.z0 - 0.02); front.material = crimson;
+  for (const x of [-2.2, 0, 2.2]) {
+    const back = add(MB.CreateBox("bt-chairBack", { width: 0.8, height: 2.2, depth: 0.12 }, scene), 0.02); back.position.set(x, 1.1, D.z1 + 0.6); back.material = wood;
+    const seat = add(MB.CreateBox("bt-chairSeat", { width: 0.8, height: 0.1, depth: 0.6 }, scene), 0.02); seat.position.set(x, 0.5, D.z1 + 0.3); seat.material = wood;
+  }
+  const ledger = add(MB.CreateBox("bt-ledger", { width: 0.7, height: 0.06, depth: 0.45 }, scene), 0.01); ledger.position.set(0.4, 1.13, desk.position.z); ledger.material = paper;
+  const ink = add(MB.CreateCylinder("bt-ink", { height: 0.12, diameter: 0.1, tessellation: 8 }, scene)); ink.position.set(-0.3, 1.16, desk.position.z); ink.material = P("#1a1a22");
+  for (const b of W.benches) for (const dx of [-0.8, 0.8]) PR.bench((b.x0 + b.x1) / 2 + dx, (b.z0 + b.z1) / 2, { ry: 0 });
+  // Candles on tall stands in the corners: warm, with a little red in it.
+  for (const [x, z] of [[-6.6, 7.4], [6.6, 7.4], [-6.6, -7.2], [6.6, -7.2]]) {
+    const stand = add(MB.CreateCylinder("bt-stand", { height: 1.6, diameter: 0.12, tessellation: 6 }, scene), 0.01); stand.position.set(x, 0.8, z); stand.material = bronzeDark;
+    const flame = add(MB.CreateSphere("bt-candle", { diameter: 0.18, segments: 6 }, scene)); flame.position.set(x, 1.7, z); flame.material = glow(scene, "bt-flame", "#ffc070");
+  }
+  const warm = new BB.PointLight("bt-warm", new BB.Vector3(0, 4.5, 2), scene); warm.diffuse = color3("#ffb890").clone(); warm.intensity = 0.55; warm.range = 18; K.lights.push(warm);
+  K.bake([...room.keep]);
+  let toll = 0, tollT = 0, flap = 0;
+  const env = { clear: "#140e10", fog: "#1a1214", fogDensity: 0.004, hemi: [0.58, "#f0dcd0", "#3a2a2a"], sun: [0.4, "#ffd8c0", [0.3, -1, 0.4]], warm: 0 };
+  const toonEnv = { lightDir: [-0.3, 1, -0.4], fogColor: "#1a1214", fogDensity: 0.002, sky: [1.0, 0.94, 0.92], ground: [0.78, 0.7, 0.68], rim: [1.0, 0.8, 0.76] };
+  const self = { env, toon: toonEnv, show: K.show, conditions: K.conditions, indoor: true,
+    cue(name) {
+      if (name === "toll") { toll = 1; tollT = 0; }
+      if (name === "seals") flap = 1;
+      if (name === "sealsOff") flap = 0;
+    },
+    update(dt, t) {
+      room.cutaway(scene.activeCamera, self.mood?.player);
+      if (toll > 0) { tollT += dt; toll = Math.max(0, toll - dt * 0.22); pivot.rotation.x = Math.sin(tollT * 2.4) * 0.22 * toll; clapper.position.z = Math.sin(tollT * 2.4 - 0.6) * 0.5 * toll; }
+      for (let i = 0; i < flutter.length; i++) flutter[i].position.y = flap ? Math.sin(t * 18 + i) * 0.03 : 0;
+      warm.intensity = 0.52 + Math.sin(t * 5) * 0.03;
+    } };
   return self;
 }
 
@@ -2007,7 +2097,16 @@ function noticeBoard(scene, K, P, at) {
     const n = add(MB.CreateBox("au-notePaper", { width: w, height: h, depth: 0.01 }, scene)); n.parent = node; n.position.set(x, y, -0.07); n.rotation.z = r; n.material = m; // on the board's front (-z)
   }
   // The bounty: drawn once onto a texture (a masked figure, the name, the reward).
-  const wanted = K.when("$SABLE_NAMED");
+  const wanted = K.when("$SABLE_NAMED and not $BELL_NOTICE"); // until the Crimson Bell papers over it (Ep 51)
+  // The Crimson Bell's notice (Ep 51): a crimson sheet with the white bell stamped on it, sealed in red wax.
+  const bellNotice = K.when("$BELL_NOTICE");
+  const front = (dx, y, dz = -0.09) => [at.x + Math.cos(at.yaw ?? 0) * dx + Math.sin(at.yaw ?? 0) * dz, y, at.z - Math.sin(at.yaw ?? 0) * dx + Math.cos(at.yaw ?? 0) * dz];
+  const sheet = MB.CreatePlane("au-bellNotice", { width: 0.8, height: 1.0, sideOrientation: BB.Mesh.DOUBLESIDE }, scene); sheet.parent = bellNotice; sheet.isPickable = false; sheet.material = P("#8a1c28");
+  sheet.position.set(...front(0, 1.74)); sheet.rotation.y = at.yaw ?? 0;
+  const stamp = MB.CreateDisc("au-bellStamp", { radius: 0.2, tessellation: 3 }, scene); stamp.parent = bellNotice; stamp.isPickable = false; stamp.material = P("#efe6d0");
+  stamp.position.set(...front(0, 1.86, -0.1)); stamp.rotation.set(0, at.yaw ?? 0, Math.PI / 2);
+  const wax = MB.CreateCylinder("au-bellWax", { height: 0.02, diameter: 0.14, tessellation: 10 }, scene); wax.parent = bellNotice; wax.isPickable = false; wax.material = P("#c0283a");
+  wax.position.set(...front(0, 1.4, -0.1)); wax.rotation.x = Math.PI / 2;
   const tex = new BB.DynamicTexture("au-bountyTex", { width: 256, height: 352 }, scene, true);
   const c = tex.getContext(), W = 256, H = 352, T = MASKED_BOUNTY;
   c.fillStyle = "#ece2c8"; c.fillRect(0, 0, W, H);

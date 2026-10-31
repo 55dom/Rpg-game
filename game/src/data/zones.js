@@ -176,6 +176,16 @@ export const WATCH_LAYOUT = {
   cellZ: 1.6, cells: [{ x0: -5.75, x1: -0.6, gap: [-2.6, -1.6] }, { x0: 0.6, x1: 5.75, gap: null }],
   cot: { x0: -5.6, z0: 3.6, x1: -4.0, z1: 4.6 }, board: { x: 5.75, z: -2 }, bench: { x0: 3.4, z0: -4.6, x1: 5.0, z1: -3.9 }, rack: { x0: -5.75, z0: -1.6, x1: -5.3, z1: -0.4 },
 };
+// The Bell Tower (the Crimson Bell's hall, Ep 52): one tall stone room under a great bronze bell. Under the bell, the
+// seal ring on the floor (where the Silencing is done); the tribunal's long desk on the north side, with the captain in
+// front of it; benches by the door for whoever's being heard. Paper talismans pasted up every wall.
+export const BELLTOWER_LAYOUT = {
+  half: [8, 9], height: 9, door: { x: 0, z: -9 },
+  bell: { x: 0, z: 1, y: 8.4 },  // where it hangs from (the beam): its lip is about 3 m below
+  ring: { x: 0, z: 1, r: 3.0 },
+  desk: { x0: -3.6, z0: 6.6, x1: 3.6, z1: 7.4 }, judge: { x: 0, z: 5.6 },
+  benches: [{ x0: -4.8, z0: -5.6, x1: -1.6, z1: -5.0 }, { x0: 1.6, z0: -5.6, x1: 4.8, z1: -5.0 }],
+};
 // Luke and Elsie's house in the Fens village: two cots, a stove, a table, the eel chest under the window.
 export const FENHOME_LAYOUT = {
   half: [4.5, 4], door: { x: 0, z: -4 }, lukeCot: { x0: -4.3, z0: 1.6, x1: -2.6, z1: 3.8 }, elsieCot: { x0: 2.9, z0: 2.4, x1: 4.3, z1: 3.8 },
@@ -203,7 +213,7 @@ export const THORNWICK_LAYOUT = {
 export const UNDERCROFT_BANDS = [[-34, -22, 6], [-22, -14, 2], [-14, 2, 10], [2, 10, 2], [10, 26, 12], [26, 32, 2], [32, 46, 14]];
 const UC_HALF = 14;
 
-const A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT, IH = IRONHOLD_LAYOUT, WH = WATCH_LAYOUT, FH = FENHOME_LAYOUT, SI = ISLES_LAYOUT, AR = ARCHIVE_LAYOUT, BR = BRIDGE_LAYOUT;
+const A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT, IH = IRONHOLD_LAYOUT, WH = WATCH_LAYOUT, FH = FENHOME_LAYOUT, BT = BELLTOWER_LAYOUT, SI = ISLES_LAYOUT, AR = ARCHIVE_LAYOUT, BR = BRIDGE_LAYOUT;
 const rect = (r) => box(r.x0, r.z0, r.x1, r.z1);
 // The City Watch's patrols (data/law.js): one more walks the streets for every step $WATCH_STRENGTH takes.
 const patrol = (n, a, b) => ({ id: `patrol${n}`, name: "City Watch", look: "guard", x: a[0], z: a[1], yaw: 0, node: "W_Patrol", when: `$WATCH_STRENGTH >= ${n}`,
@@ -653,6 +663,15 @@ export const ZONES = {
     exits: [{ id: "door", rect: [-0.9, -WH.half[1], 0.9, -WH.half[1] + 0.75], to: "aurelin", spawn: "watchhouse", label: "Out to the south gate" }],
     arrivals: { aurelin: { x: 0, z: -3.4, yaw: 0 }, cell: { x: -2.9, z: 3.0, yaw: Math.PI } },
     intro: { when: "$JAILED", node: "L_Jailed" },
+  },
+  // The Bell Tower (Ep 52): story only, for now; the door lets you out into the city.
+  belltower: {
+    id: "belltower", name: "The Bell Tower", region: "The Crimson Bell, Aurelin", stage: "belltower", interior: true,
+    bounds: { rect: [-BT.half[0] + 0.25, -BT.half[1] + 0.25, BT.half[0] - 0.25, BT.half[1] - 0.25], solids: [rect(BT.desk), ...BT.benches.map((b) => low(rect(b)))] },
+    spawn: { x: 0, z: -7, yaw: 0 },
+    cast: [], pickups: [],
+    exits: [{ id: "door", rect: [-0.9, -BT.half[1], 0.9, -BT.half[1] + 0.75], to: "aurelin", spawn: "gate", label: "Out into the city" }],
+    arrivals: { aurelin: { x: 0, z: -7, yaw: 0 } },
   },
   // Luke and Elsie's house (data/story/law.js), once the Fens village is safe.
   fenhome: {
