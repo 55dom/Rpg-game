@@ -155,5 +155,5 @@ test("The finding, the first margin, and Dagrun at last: 'I still leave the ligh
   assert.equal(light.f.get("DAGRUN_SPOKE"), 1);
   assert.equal(run(n52, "Ep52_Light", {}, 2).f.get("DAGRUN_LIGHT"), "quiet");
   assert.equal(AFTER_EP52.DAGRUN_SPOKE, 1);
-  assert.equal(EPISODE_52.beats.find((b) => b.type === "preview").nextEpisode, undefined, "Arc 6 goes on in Step 2");
+  assert.equal(EPISODE_52.beats.find((b) => b.type === "preview").nextEpisode, "ep53", "Arc 6 goes on in Step 2");
 });

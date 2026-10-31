@@ -17,4 +17,8 @@ export const REVEAL_CAST = {
   King: { name: "The Demon Lord King", color: "#e8c060", actor: "king" },
   Ghorran: { name: "Ghorran, the Left Wing", color: "#c8402a", actor: "ghorran" },
   Vaelith: { name: "Vaelith, the Right Wing", color: "#a04ac8", actor: "vaelith" },
+  // Arc 6 (Ep 53): the soldiers the Gate left behind, under the Lowmarket. Ash Line Four stood seven places down from
+  // Eleven, the year he stepped out of the line; the two with him have only their places in it.
+  Four: { name: "Ash Line Four", color: "#c8502a", actor: "four" },
+  Stranded: { name: "Soldier", color: "#b84a3a", actor: "stranded" },
 };

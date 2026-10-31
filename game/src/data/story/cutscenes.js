@@ -413,6 +413,29 @@ export const CUTSCENES = {
       { t: 0.8, caption: "The Bell Tower. The ninth bell." },
     ],
   },
+  // Ep 54: the Crown's court, sitting in the Grand Archive's reading hall where the coup failed. The Bell presides; the
+  // High Chancellor stands in the aisle between the reading tables.
+  ep54_court: {
+    id: "ep54_court",
+    stage: "archive",
+    duration: 9,
+    actors: [
+      { id: "ulric", look: "ulric", x: 0, z: 5.6, yaw: Math.PI },
+      { id: "warden", look: "bellWarden", x: -2.2, z: 5.4, yaw: Math.PI },
+      { id: "warden2", look: "bellWarden", x: 2.2, z: 5.4, yaw: Math.PI },
+      { id: "aldric", look: "aldric", x: 0, z: 0.6, yaw: 0 },
+    ],
+    camera: [
+      { t: 0, pos: [4, 1.9, -4.4], look: [0, 1.6, 2.5], fov: 0.64 },            // down the aisle, past the reading tables
+      { t: 4.4, pos: [3.8, 1.9, -4.0], look: [0, 1.6, 2.5], fov: 0.62, ease: "linear" },
+      { t: 4.4, cut: true, pos: [0, 1.9, 4.4], look: [0, 1.6, 0.6], fov: 0.64 },  // the Chancellor, in chains
+      { t: 9, pos: [0, 1.9, 4.2], look: [0, 1.6, 0.6], fov: 0.61, ease: "linear" },
+    ],
+    events: [
+      { t: 0.6, caption: "The Grand Archive. The Crown's court sits where the coup failed." },
+      { t: 5.0, caption: "The Crown against Aldric Valcourt." },
+    ],
+  },
 };
 
 Object.assign(CUTSCENES, REVEAL_CUTSCENES); // the reveal's own (src/reveal/cutscenes.js)

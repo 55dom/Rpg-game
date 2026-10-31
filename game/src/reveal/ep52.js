@@ -244,7 +244,7 @@ export const EPISODE_52 = {
       rook: { x: -2.9, z: 9.7, yaw: Math.PI },
       cast: [{ id: "dagrun", look: "dagrun", x: -4.2, z: 9.7, yaw: Math.PI, pose: "sit" }],
       set: { EP52_DONE: 1 } },
-    { id: "preview", type: "preview",
+    { id: "preview", type: "preview", nextEpisode: "ep53",
       lines: [
         "Next time on UNWRITTEN: Arc 6, The Light Left On.",
         "In the Lowmarket, a soldier from the other side of the Gate, who never went home. He has questions.",

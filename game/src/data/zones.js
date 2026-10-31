@@ -195,6 +195,18 @@ export const FENHOME_LAYOUT = {
 // ---- Thornwick, the home village ------------------------------------------------------------
 // The green and its old oak in the middle; the orphanage to the north; the mill to the south-east
 // with the mill road (and its bandits); the road to the Lighthouse leaves east, the fen path north-west.
+// Larkspur fifteen years after the fire (Arc 6, Ep 57 on): grass over the ash, the houses down to their chimney stacks
+// and a course or two of wall, the road through the middle, the well, the stone the Crown put up with the names on it,
+// and in what's left of one house a door frame standing on its own, gold, with nothing either side of it.
+export const RUINS_LAYOUT = {
+  radius: 26,
+  houses: [[-5.5, 4, 0.3], [5.2, 6, -0.4], [-6.5, 12, 0.1], [-3.5, 20, -0.2], [4, 22, 0.2], [0, 28, 0]], // [x, z, rot] (the fire's houses, Ep 1)
+  door: { x: 6, z: 14, yaw: -2.3, w: 2.0, h: 3.0 }, // the house where the child was: only the frame left standing, facing the road
+  cradle: { x: 7.3, z: 15.6 },
+  well: { x: 2.4, z: 9.4 },
+  stone: { x: -2.4, z: -1.6 },
+};
+
 export const THORNWICK_LAYOUT = {
   oak: { x: 0, z: 0, r: 1.6 },
   orphanage: { x0: -8, z0: 16, x1: 8, z1: 25 },
@@ -213,7 +225,7 @@ export const THORNWICK_LAYOUT = {
 export const UNDERCROFT_BANDS = [[-34, -22, 6], [-22, -14, 2], [-14, 2, 10], [2, 10, 2], [10, 26, 12], [26, 32, 2], [32, 46, 14]];
 const UC_HALF = 14;
 
-const A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT, IH = IRONHOLD_LAYOUT, WH = WATCH_LAYOUT, FH = FENHOME_LAYOUT, BT = BELLTOWER_LAYOUT, SI = ISLES_LAYOUT, AR = ARCHIVE_LAYOUT, BR = BRIDGE_LAYOUT;
+const RU = RUINS_LAYOUT, A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT, IH = IRONHOLD_LAYOUT, WH = WATCH_LAYOUT, FH = FENHOME_LAYOUT, BT = BELLTOWER_LAYOUT, SI = ISLES_LAYOUT, AR = ARCHIVE_LAYOUT, BR = BRIDGE_LAYOUT;
 const rect = (r) => box(r.x0, r.z0, r.x1, r.z1);
 // The City Watch's patrols (data/law.js): one more walks the streets for every step $WATCH_STRENGTH takes.
 const patrol = (n, a, b) => ({ id: `patrol${n}`, name: "City Watch", look: "guard", x: a[0], z: a[1], yaw: 0, node: "W_Patrol", when: `$WATCH_STRENGTH >= ${n}`,
@@ -674,6 +686,19 @@ export const ZONES = {
     arrivals: { aurelin: { x: 0, z: -7, yaw: 0 } },
   },
   // Luke and Elsie's house (data/story/law.js), once the Fens village is safe.
+  // Larkspur, fifteen years after the fire (Eps 57–59): story only.
+  ruins: {
+    id: "ruins", name: "Larkspur", region: "The Thornwick Road", stage: "ruins",
+    bounds: { radius: RU.radius, solids: [
+      ...RU.houses.map(([x, z]) => low(box(x - 2.1, z - 1.8, x + 2.1, z + 1.8))), // a course or two of wall: stops feet, not a camera
+      ...RU.houses.map(([x, z, r]) => circle(x + Math.cos(r) * 1.6, z - Math.sin(r) * 1.6, 0.55)), // the chimney stacks
+      circle(RU.door.x + Math.cos(RU.door.yaw) * RU.door.w / 2, RU.door.z - Math.sin(RU.door.yaw) * RU.door.w / 2, 0.2),
+      circle(RU.door.x - Math.cos(RU.door.yaw) * RU.door.w / 2, RU.door.z + Math.sin(RU.door.yaw) * RU.door.w / 2, 0.2),
+      low(circle(RU.well.x, RU.well.z, 0.8)), low(circle(RU.stone.x, RU.stone.z, 0.6)), low(circle(RU.cradle.x, RU.cradle.z, 0.5)),
+    ] },
+    spawn: { x: 0, z: -8, yaw: 0 },
+    cast: [], pickups: [], encounters: [], exits: [], arrivals: {},
+  },
   fenhome: {
     id: "fenhome", name: "Luke and Elsie's House", region: "The Fens Village", stage: "fenhome", interior: true,
     bounds: { rect: [-FH.half[0] + 0.25, -FH.half[1] + 0.25, FH.half[0] - 0.25, FH.half[1] - 0.25], solids: [

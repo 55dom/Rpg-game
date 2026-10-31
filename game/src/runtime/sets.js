@@ -1,7 +1,7 @@
 // Story sets (Phase 3): each one is built on first use from primitives, carries its own sky, fog,
 // and lighting, and can be swapped in and out. "yard" is the original training yard (arena.js).
 
-import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT, BELLTOWER_LAYOUT, ISLES_LAYOUT, OLDCITY_LAYOUT, HOLLOW_LAYOUT, ARCHIVE_LAYOUT, AURELIN_GATE, BRIDGE_LAYOUT } from "../data/zones.js";
+import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT, BELLTOWER_LAYOUT, ISLES_LAYOUT, OLDCITY_LAYOUT, HOLLOW_LAYOUT, ARCHIVE_LAYOUT, AURELIN_GATE, BRIDGE_LAYOUT, RUINS_LAYOUT } from "../data/zones.js";
 import { WARDEN_STARS } from "../data/isles.js";
 import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } from "./look.js";
 import { buildCrowd } from "./crowd.js";
@@ -55,7 +55,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, archive: buildArchive, bridge: buildBridge, camp: buildCamp, throne: buildThrone, caverns: buildCaverns, watchhouse: buildWatchhouse, belltower: buildBelltower, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, hollow: buildHollow, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, archive: buildArchive, bridge: buildBridge, camp: buildCamp, throne: buildThrone, caverns: buildCaverns, watchhouse: buildWatchhouse, belltower: buildBelltower, ruins: buildRuins, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, hollow: buildHollow, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -309,11 +309,19 @@ function buildTowerHall(scene, mobile) {
   motes.gravity = new BB.Vector3(0, 0.05, 0); motes.direction1 = new BB.Vector3(-0.1, 0.1, -0.1); motes.direction2 = new BB.Vector3(0.1, 0.25, 0.1);
   motes.minEmitPower = 0.1; motes.maxEmitPower = 0.3; motes.blendMode = BB.ParticleSystem.BLENDMODE_ADD;
   K.systems.push(motes);
+  // The sealed floor (Ep 56): once Brother Moss opens it, a ring of the under-text's pale script round the dais.
+  const scribe = K.when("$SCRIBE_FLOOR"), scribeMat = glow(scene, "th-scribe", "#e8e2ff");
+  const scribeRing = add(MB.CreateTorus("th-scribeRing", { diameter: 7.6, thickness: 0.07, tessellation: 64 }, scene)); scribeRing.parent = scribe;
+  scribeRing.position.set(0, 0.03, 9); scribeRing.scaling.y = 0.15; scribeRing.material = scribeMat;
+  for (let i = 0; i < 24; i++) {
+    const a = (i / 24) * Math.PI * 2, g = add(MB.CreatePlane("th-scribeGlyph", { width: 0.34, height: 0.22 }, scene)); g.parent = scribe;
+    g.position.set(Math.sin(a) * 4.15, 0.025, 9 + Math.cos(a) * 4.15); g.rotation.set(Math.PI / 2, a, 0); g.material = scribeMat;
+  }
   let dark = 0, darkTarget = 0;
   const env = { clear: "#14111f", fog: "#1d1830", fogDensity: 0.014, hemi: [0.55, "#c8bcff", "#2a1f3a"], sun: [0.6, "#ffe2b0", [-0.2, -1, 0.3]], warm: 0.3 };
   const toonEnv = { lightDir: [0.25, 1, -0.4], fogColor: "#1d1830", fogDensity: 0.012, sky: [1.04, 1.0, 1.1], ground: [0.82, 0.78, 0.96] };
   return {
-    env, toon: toonEnv,
+    env, toon: toonEnv, conditions: K.conditions,
     show(on) { K.show(on); if (on) dark = darkTarget = 0; }, // every visit starts in daylight
     cue(name) { if (name === "dark") darkTarget = 1; if (name === "light") darkTarget = 0; },
     update(dt, t) {
@@ -378,6 +386,74 @@ function buildLarkspur(scene, mobile) {
     env, toon: toonEnv, show: K.show,
     update(dt, t) { for (const f of fires) f.light.intensity = 0.8 + Math.sin(t * 13 + f.phase) * 0.15 + Math.sin(t * 7.3 + f.phase) * 0.1; },
   };
+}
+
+// ---- Larkspur, fifteen years after: grass over the ash, chimney stacks, and one door ------------
+function buildRuins(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, RU = RUINS_LAYOUT;
+  const grass = toon(scene, "ru-grass", "#5d7a46"), ash = toon(scene, "ru-ash", "#3d3a34"), path = toon(scene, "ru-path", "#8a7a5e");
+  const stone = toon(scene, "ru-stone", "#7a7266"), sooty = toon(scene, "ru-soot", "#3a332e"), charred = toon(scene, "ru-char", "#241c18");
+  const ground = add(MB.CreateCylinder("ru-ground", { diameter: RU.radius * 2 + 30, height: 0.6, tessellation: 48 }, scene)); ground.position.y = -0.3; ground.material = grass;
+  const road = add(MB.CreateBox("ru-road", { width: 2.6, height: 0.02, depth: 46 }, scene)); road.position.set(0, 0.01, 8); road.material = path;
+  const rng = mulberry(57);
+  RU.houses.forEach(([x, z, rot], i) => {
+    // The footprint, a darker patch where the floor was; a course or two of wall on two or three sides; the chimney.
+    const f = add(MB.CreateBox("ru-floor", { width: 4.0, height: 0.02, depth: 3.4 }, scene)); f.position.set(x, 0.015, z); f.rotation.y = rot; f.material = ash;
+    const sides = [[0, 1.7, 4.0], [0, -1.7, 4.0], [2.0, 0, 3.4], [-2.0, 0, 3.4]];
+    sides.forEach(([lx, lz, len], k) => {
+      if ((i + k) % 4 === 3) return; // one side gone altogether
+      const h = 0.4 + rng() * 0.9, along = lz !== 0;
+      const w = add(MB.CreateBox("ru-wall", { width: along ? len * (0.5 + rng() * 0.5) : 0.3, height: h, depth: along ? 0.3 : len * (0.5 + rng() * 0.5) }, scene), 0.03);
+      const c = Math.cos(rot), sn = Math.sin(rot);
+      w.position.set(x + lx * c + lz * sn, h / 2, z - lx * sn + lz * c); w.rotation.y = rot; w.material = k % 2 ? stone : sooty;
+    });
+    const cx = x + Math.cos(rot) * 1.6, cz = z - Math.sin(rot) * 1.6, ch = 2.6 + rng() * 1.4;
+    const chim = add(MB.CreateBox("ru-chimney", { width: 0.9, height: ch, depth: 0.9 }, scene), 0.04); chim.position.set(cx, ch / 2, cz); chim.rotation.y = rot; chim.material = sooty;
+    const beam = add(MB.CreateBox("ru-beam", { width: 0.22, height: 0.22, depth: 2.6 }, scene), 0.02);
+    beam.position.set(x - Math.cos(rot) * 0.6, 0.18, z + 0.4); beam.rotation.set(0, rot + 0.6, 0.08); beam.material = charred;
+  });
+  // The house where the child was: no walls at all now. The cradle's runner under a fallen beam, and the door.
+  const D = RU.door;
+  const dFloor = add(MB.CreateBox("ru-dfloor", { width: 4.0, height: 0.02, depth: 3.4 }, scene)); dFloor.position.set(D.x, 0.016, D.z); dFloor.rotation.y = D.yaw; dFloor.material = ash;
+  const runner = add(MB.CreateTorus("ru-runner", { diameter: 0.9, thickness: 0.06, tessellation: 20, arc: 0.5 }, scene), 0.02);
+  runner.position.set(RU.cradle.x, 0.05, RU.cradle.z); runner.rotation.set(Math.PI / 2, 0.4, 0); runner.material = charred;
+  const fallen = add(MB.CreateBox("ru-fallen", { width: 0.26, height: 0.26, depth: 2.4 }, scene), 0.02);
+  fallen.position.set(RU.cradle.x - 0.2, 0.3, RU.cradle.z); fallen.rotation.set(0.2, 0.9, 0); fallen.material = charred;
+  const door = new BB.TransformNode("ru-door", scene); door.parent = K.root; door.position.set(D.x, D.h / 2, D.z); door.rotation.y = D.yaw;
+  const frame = makeDoor(scene, "ru-doorFrame", { w: D.w, h: D.h, pane: false }); frame.parent = door;
+  // Sealed: a pane as dark as a shut eye, with one thin line of gold down the middle where the two halves meet.
+  const sealedN = K.when("not $LARKSPUR_OPEN");
+  const sealed = add(MB.CreatePlane("ru-sealed", { width: D.w - 0.04, height: D.h - 0.04, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); sealed.parent = sealedN;
+  sealed.material = toon(scene, "ru-sealedM", "#16121a");
+  const seam = add(MB.CreatePlane("ru-seam", { width: 0.03, height: D.h - 0.3, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); seam.parent = sealedN;
+  seam.material = glow(scene, "ru-seamM", "#d8a848"); K.noGlow(seam);
+  sealedN.parent = door; sealedN.position.z = 0.01;
+  // The keyhole, once the key's been held up to it (Ep 57); the door open (Ep 59).
+  const holeN = K.when("$KEY_HOLE and not $LARKSPUR_OPEN");
+  const hole = add(MB.CreateDisc("ru-hole", { radius: 0.07, tessellation: 16, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); hole.parent = holeN; hole.position.set(0, -0.15, 0.02);
+  hole.material = glow(scene, "ru-holeM", "#ffe6a0"); holeN.parent = door;
+  const openN = K.when("$LARKSPUR_OPEN");
+  const pane = add(MB.CreatePlane("ru-open", { width: D.w - 0.04, height: D.h - 0.04, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); pane.parent = openN;
+  pane.material = glow(scene, "ru-openM", "#2a0c0c"); openN.parent = door; openN.position.z = 0.01;
+  // The well, and the stone the Crown put up with the names on it.
+  const well = add(MB.CreateCylinder("ru-well", { diameter: 1.5, height: 0.8, tessellation: 18 }, scene), 0.03); well.position.set(RU.well.x, 0.4, RU.well.z); well.material = stone;
+  const wellIn = add(MB.CreateCylinder("ru-wellIn", { diameter: 1.2, height: 0.02, tessellation: 18 }, scene)); wellIn.position.set(RU.well.x, 0.78, RU.well.z); wellIn.material = charred;
+  const st = add(MB.CreateBox("ru-stone", { width: 1.1, height: 1.5, depth: 0.35 }, scene), 0.03); st.position.set(RU.stone.x, 0.75, RU.stone.z); st.rotation.y = 0.3; st.material = stone;
+  const lines = add(MB.CreatePlane("ru-names", { width: 0.8, height: 1.0 }, scene)); lines.position.set(RU.stone.x - Math.sin(0.3) * 0.18, 0.8, RU.stone.z - Math.cos(0.3) * 0.18); lines.rotation.y = 0.3; lines.material = toon(scene, "ru-namesM", "#5a544a");
+  // Wildflowers, a few young birches where the gardens were.
+  const petals = ["#e8d06a", "#e88a9a", "#f4f0e8", "#a8b8f0"].map((c, i) => toon(scene, `ru-petal${i}`, c));
+  for (let i = 0; i < (mobile ? 40 : 90); i++) {
+    const a = rng() * Math.PI * 2, r = 3 + rng() * (RU.radius - 3);
+    const fl = add(MB.CreateSphere("ru-flower", { diameter: 0.12, segments: 3 }, scene)); fl.position.set(Math.sin(a) * r, 0.1, Math.cos(a) * r + 8); fl.material = petals[i % 4];
+  }
+  const bark = toon(scene, "ru-bark", "#e8e4dc"), leaf = toon(scene, "ru-leaf", "#7aa04e");
+  for (const [x, z] of [[-11, 6], [11, 18], [-9, 25], [10, 1], [-13, 16]]) {
+    const t = add(MB.CreateCylinder("ru-birch", { diameterTop: 0.14, diameterBottom: 0.22, height: 4.2, tessellation: 7 }, scene), 0.03); t.position.set(x, 2.1, z); t.material = bark;
+    const c = add(MB.CreateSphere("ru-crown", { diameter: 2.6, segments: 5 }, scene), 0.03); c.position.set(x, 4.4, z); c.scaling.y = 1.25; c.material = leaf;
+  }
+  const env = { clear: "#a8c4dc", fog: "#c8d4dc", fogDensity: 0.012, hemi: [0.75, "#e8f0ff", "#5a6a4a"], sun: [0.85, "#fff2d8", [-0.3, -1, 0.4]], warm: 0.2 };
+  const toonEnv = { lightDir: [0.3, 1, -0.4], fogColor: "#c8d4dc", fogDensity: 0.01, sky: [1.08, 1.06, 1.04], ground: [0.86, 0.9, 0.8] };
+  return { env, toon: toonEnv, show: K.show, conditions: K.conditions, outdoor: true, update() {} };
 }
 
 // ---- The Knight Exam grounds: an arena under open sky, full stands, the captains' box ---------

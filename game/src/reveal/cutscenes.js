@@ -517,4 +517,63 @@ export const REVEAL_CUTSCENES = {
       { t: 9.2, pose: { id: "cal", name: "hand" } }, { t: 10.2, sfx: "laugh" },
     ],
   },
+
+  // ---- Arc 6 ----
+  // Ep 53: under the Lowmarket, nine days after the Siege. Three soldiers of the Line, in formation, still facing the
+  // door they came through, which closed behind them. Nobody has told them anything since.
+  ep53_line: {
+    id: "ep53_line",
+    stage: "oldcity",
+    duration: 9,
+    actors: [
+      { id: "four", look: "lineSoldier", x: 0, z: 10.6, yaw: 0 },
+      { id: "s1", look: "lineSoldier", x: -1.7, z: 10.2, yaw: 0 },
+      { id: "s2", look: "lineSoldier", x: 1.7, z: 10.2, yaw: 0 },
+    ],
+    camera: [
+      { t: 0, pos: [0, 1.9, 6.2], look: [0, 1.6, 10.4], fov: 0.72 },            // their backs, and the door past them
+      { t: 4.6, pos: [0, 1.9, 6.6], look: [0, 1.6, 10.4], fov: 0.7, ease: "linear" },
+      { t: 4.6, cut: true, pos: [0, 1.9, 14.2], look: [0, 1.6, 10.4], fov: 0.64 }, // from the door: the faceplates
+      { t: 9, pos: [0, 1.9, 14.0], look: [0, 1.6, 10.4], fov: 0.61, ease: "linear" },
+    ],
+    events: [
+      { t: 0.6, caption: "Under the Lowmarket. Nine days after the Siege." },
+      { t: 5.0, caption: "They are still facing the door." },
+    ],
+  },
+
+  // Ep 55: under the Lowmarket, somebody is knocking on the door to the Hollow. From the inside.
+  ep55_knock: {
+    id: "ep55_knock",
+    stage: "oldcity",
+    duration: 8,
+    actors: [],
+    camera: [
+      { t: 0, pos: [0, 1.6, 8.4], look: [0, 2.4, 15.2], fov: 0.66 },
+      { t: 8, pos: [0, 1.7, 10.6], look: [0, 2.6, 15.2], fov: 0.6, ease: "linear" },
+    ],
+    events: [
+      { t: 0.6, caption: "Under the Lowmarket. The door to the Hollow." },
+      { t: 2.6, sfx: "block" }, { t: 3.3, sfx: "block" }, { t: 4.0, sfx: "block" },
+      { t: 4.8, caption: "Somebody is knocking. From the inside." },
+    ],
+  },
+  // Ep 56: the Tower of Choosing out of season. One old man with a broom, under the murals.
+  ep56_sweep: {
+    id: "ep56_sweep",
+    stage: "towerHall",
+    duration: 9,
+    actors: [{ id: "moss", look: "moss", x: -3.0, z: -1.0, yaw: 1.2 }],
+    camera: [
+      { t: 0, pos: [6.5, 4.5, -11], look: [-1, 1.4, 1], fov: 0.66 },
+      { t: 4.6, pos: [5.8, 4.0, -10], look: [-1, 1.4, 1], fov: 0.64, ease: "linear" },
+      { t: 4.6, cut: true, pos: [1.6, 1.9, 0.9], look: [-1.0, 1.6, -0.6], fov: 0.72 },
+      { t: 9, pos: [1.52, 1.9, 0.85], look: [-1.0, 1.6, -0.6], fov: 0.69, ease: "linear" },
+    ],
+    events: [
+      { t: 0.2, move: { id: "moss", to: [-1.0, -0.6], dur: 4.2, ease: "linear" } },
+      { t: 0.6, caption: "The Tower of Choosing. Out of season." },
+      { t: 5.0, caption: "Brother Moss has swept these steps for longer than anyone can remember." },
+    ],
+  },
 };
