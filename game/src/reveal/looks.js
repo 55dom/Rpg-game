@@ -13,5 +13,9 @@ export function revealLooks(LOOKS) {
     unmasked: { ...knight, head: "face", hair: "loose", hairColor: cal.hairColor, skin: cal.skin, jaw: cal.jaw, eyeColor: cal.eyeColor,
       scar: "#b47a6a", eyeRing: "#e8dca0", wristCord: "#5e1715", listenTilt: cal.listenTilt, riftwalk: true, trail: "#9cb8ff" },
     ashSoldier: { ...LOOKS.lineSoldier },
+    // Cal's Path (Backlash Ch 6–8): the human body he woke in, thin and young, in whatever he could find; then the Lantern.
+    youngCal: { ...cal, scale: 0.92, coat: "#6a5a48", trim: "#4a3e30", collar: false, weapon: "sword", trail: "#ffd98a" },
+    youngCalMask: { ...knight }, // Ch 8: the mask he shaped, its slits a soldier's faceplate
+    infant: { ...LOOKS.kid, scale: 0.38, coat: "#f4ece0", trim: "#e8dcc8", hairColor: "#2a2420", weapon: "none" }, // swaddled
   };
 }

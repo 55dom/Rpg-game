@@ -62,6 +62,7 @@ import { EPISODE_47, EP47_SCRIPT } from "./data/story/ep47.js";
 import { EPISODE_48, EP48_SCRIPT } from "./reveal/ep48.js";
 import { EPISODE_49, EP49_SCRIPT } from "./reveal/ep49.js";
 import { EPISODE_50, EP50_SCRIPT } from "./reveal/ep50.js";
+import { EPISODE_CALPATH, CALPATH_SCRIPT } from "./reveal/calpath.js";
 import { EPISODE_51, EP51_SCRIPT } from "./reveal/ep51.js";
 import { EPISODE_52, EP52_SCRIPT } from "./reveal/ep52.js";
 import { EPISODE_53, EP53_SCRIPT } from "./reveal/ep53.js";
@@ -901,6 +902,7 @@ export function boot(doc = document) {
     { episode: EPISODE_45, script: EP45_SCRIPT }, { episode: EPISODE_46, script: EP46_SCRIPT },
     { episode: EPISODE_47, script: EP47_SCRIPT }, { episode: EPISODE_48, script: EP48_SCRIPT },
     { episode: EPISODE_49, script: EP49_SCRIPT }, { episode: EPISODE_50, script: EP50_SCRIPT },
+    { episode: EPISODE_CALPATH, script: CALPATH_SCRIPT },
     { episode: EPISODE_51, script: EP51_SCRIPT }, { episode: EPISODE_52, script: EP52_SCRIPT },
     { episode: EPISODE_53, script: EP53_SCRIPT }, { episode: EPISODE_54, script: EP54_SCRIPT },
     { episode: EPISODE_55, script: EP55_SCRIPT }, { episode: EPISODE_56, script: EP56_SCRIPT },
@@ -1413,7 +1415,7 @@ export function boot(doc = document) {
     slotsModal.querySelector("[data-slots-sub]").textContent = saving ? "CHOOSE A SLOT" : "LOAD A SAVE";
     const reached = saves.reached;
     epList.innerHTML = story.episodes.map(({ episode: e }) =>
-      `<button data-ep="${e.id}" ${(e.unlockAt ?? e.number) > reached ? "disabled" : ""}><b>EP ${e.number}</b><span>${(e.unlockAt ?? e.number) > reached ? "Locked" : e.title}<small>${e.arc ?? ""}</small></span></button>`).join("");
+      `<button data-ep="${e.id}" ${(e.unlockAt ?? e.number) > reached ? "disabled" : ""}><b>${e.label ?? `EP ${e.number}`}</b><span>${(e.unlockAt ?? e.number) > reached ? "Locked" : e.title}<small>${e.arc ?? ""}</small></span></button>`).join("");
     for (const b of epList.querySelectorAll("[data-ep]")) b.addEventListener("click", () => {
       const last = saves.latest()?.save;
       closeSlots();

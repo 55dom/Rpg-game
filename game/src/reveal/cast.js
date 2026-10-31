@@ -21,4 +21,7 @@ export const REVEAL_CAST = {
   // Eleven, the year he stepped out of the line; the two with him have only their places in it.
   Four: { name: "Ash Line Four", color: "#c8502a", actor: "four" },
   Stranded: { name: "Soldier", color: "#b84a3a", actor: "stranded" },
+  // Cal's Path: he's the player, so the boy on screen is "Young" (the player's body); "Cal" is the voice over it, now.
+  Young: { name: "Cal", color: "#f3e3b0", actor: "player" },
+  Villager: { name: "Villager", color: "#c9c4b4", actor: "villager" },
 };

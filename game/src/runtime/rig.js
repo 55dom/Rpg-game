@@ -351,16 +351,17 @@ export class Rig {
         hl2.material = this.eyeHi; hl2.metadata = { noGlow: true };
       }
       if (L.voidMask) { // a smooth white mask over the whole face, never removed: closed crescent eyes and a painted mouth that never moves
-        const mk = add(MB.CreateSphere("voidMask", { diameter: 0.44, segments: 14 }, scene), this.head, 0, -0.005, 0.035, 0);
-        mk.scaling.set(0.98, 1.08, 0.82); mk.material = M("voidMask", "#f4f2ee");
+        const mk = add(MB.CreateSphere("voidMask", { diameter: 0.47, segments: 16 }, scene), this.head, 0, -0.005, 0.05, 0);
+        mk.scaling.set(1.0, 1.06, 0.9); mk.material = M("voidMask", "#f4f2ee"); // sits proud of the face: nothing of it shows
         const ink = M("voidInk", "#141218"), turn = L.voidMask === "frown" ? Math.PI : 0; // the same mask, turned upside down
-        const paint = new BB.TransformNode(`${id}-voidPaint`, scene); paint.parent = this.head; paint.position.set(0, -0.005, 0.212); paint.rotation.z = turn;
-        for (const sx of [-1, 1]) {
-          const eye = add(MB.CreateTorus("voidEye", { diameter: 0.075, thickness: 0.011, tessellation: 16, arc: 0.5 }, scene), paint, sx * 0.08, 0.035, 0, 0);
-          eye.rotation.set(Math.PI / 2, 0, Math.PI); eye.material = ink; // closed crescents, curving down
+        const paint = new BB.TransformNode(`${id}-voidPaint`, scene); paint.parent = this.head; paint.position.set(0, -0.005, 0.262); paint.rotation.z = turn;
+        const arc = (r, a0, a1, sy = 0.8) => Array.from({ length: 11 }, (_, i) => { const t = a0 + (i / 10) * (a1 - a0); return new BB.Vector3(Math.cos(t) * r, Math.sin(t) * r * sy, 0); });
+        for (const sx of [-1, 1]) { // closed crescent eyes, curving up (a torus can't be cut to an arc, so these are tubes along one)
+          const eye = add(MB.CreateTube("voidEye", { path: arc(0.036, 0.15, Math.PI - 0.15), radius: 0.008, tessellation: 6, cap: BB.Mesh.CAP_ALL }, scene), paint, sx * 0.08, 0.02, 0, 0);
+          eye.material = ink;
         }
-        const mouth = add(MB.CreateTorus("voidMouth", { diameter: 0.12, thickness: 0.011, tessellation: 18, arc: 0.5 }, scene), paint, 0, -0.07, 0, 0);
-        mouth.rotation.set(Math.PI / 2, 0, Math.PI); mouth.material = ink; // a smile (or, turned over, a frown)
+        const mouth = add(MB.CreateTube("voidMouth", { path: arc(0.06, Math.PI + 0.35, Math.PI * 2 - 0.35, 0.7), radius: 0.008, tessellation: 6, cap: BB.Mesh.CAP_ALL }, scene), paint, 0, -0.045, 0, 0);
+        mouth.material = ink; // a smile (or, turned over, a frown)
       }
       if (L.horns) { // horns from the brow, swept back
         for (const sx of [-1, 1]) {

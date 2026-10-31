@@ -686,6 +686,13 @@ export const ZONES = {
     arrivals: { aurelin: { x: 0, z: -7, yaw: 0 } },
   },
   // Luke and Elsie's house (data/story/law.js), once the Fens village is safe.
+  // Larkspur, the night it burned (Cal's Path, Ch 6): story only. The houses are the fire's (runtime/sets.js buildLarkspur).
+  larkspurFire: {
+    id: "larkspurFire", name: "Larkspur", region: "Fifteen years ago", stage: "larkspur",
+    bounds: { radius: 24, solids: [[-5.5, 4], [5.2, 6], [-6.5, 12], [6, 14], [-3.5, 20], [4, 22], [0, 28]].map(([x, z]) => box(x - 2.2, z - 1.9, x + 2.2, z + 1.9)) },
+    spawn: { x: 0, z: -2, yaw: 0 },
+    cast: [], pickups: [], encounters: [], exits: [], arrivals: {},
+  },
   // Larkspur, fifteen years after the fire (Eps 57–59): story only.
   ruins: {
     id: "ruins", name: "Larkspur", region: "The Thornwick Road", stage: "ruins",

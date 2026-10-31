@@ -71,6 +71,8 @@ export const CAL_STATS = Object.freeze({ ...ROOK_STATS, name: "Cal", maxHealth: 
 export const CAL_WEAR = Object.freeze({ kind: "calPlayer", title: "WHOSE STORY", stats: CAL_STATS, hitboxes: { ...ROOK_HITBOXES, ...UNMASKED_HITBOXES }, abilities: CAL_KIT, loadout: {} });
 /** Phase 4 from his side: he sits on his door and isn't trying. He can step aside; nothing he swings lands. */
 export const CAL_SEATED_WEAR = Object.freeze({ ...CAL_WEAR, attackScale: 0.01 });
+/** Cal's Path (Backlash Ch 6–8): the same kit in a body that's light, fast and fragile, with no armour at all. */
+export const YOUNG_CAL_WEAR = Object.freeze({ ...CAL_WEAR, kind: "youngCal", title: "CAL'S PATH", stats: { ...CAL_STATS, maxHealth: 300, runSpeed: 7.4 } });
 
 /** How they look (runtime/rig.js LOOKS). */
 export function finaleLooks(LOOKS) {

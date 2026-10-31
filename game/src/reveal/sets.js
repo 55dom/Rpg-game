@@ -178,3 +178,54 @@ export function buildCaverns(scene) {
     update() { room.cutaway(scene.activeCamera, self.mood?.player); } };
   return self;
 }
+
+// ---- Cal's Path (Phase 7 Step 5): the Astral Path (CIN-05C, CIN-10) ----
+/**
+ * A long tunnel of dark aura through an astral realm, running north (+z). A path of dark glass underfoot; the tunnel's
+ * rings turning slowly; the wreckage of other worlds drifting past outside it (a cracked planet, a burned city in pieces,
+ * a sea frozen mid-wave); and far ahead, small as a map, a dark continent with no fires on it, and a tall doorway.
+ * Nobody looks at any of it.
+ */
+export const ASTRAL = Object.freeze({ z0: -12, z1: 120, r: 9, door: { z: 96, w: 3.2, h: 7 } });
+export function buildAstral(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, A = ASTRAL;
+  const glass = toon(scene, "as-glass", "#16101e"), auraM = glow(scene, "as-aura", "#3a1450"), ringM = glow(scene, "as-ring", "#5a2a7a");
+  const path = add(MB.CreateBox("as-path", { width: 3.2, height: 0.2, depth: A.z1 - A.z0 }, scene)); path.position.set(0, -0.1, (A.z0 + A.z1) / 2); path.material = glass;
+  const edge = glow(scene, "as-edge", "#7a4aa8");
+  for (const sx of [-1, 1]) { const e = add(MB.CreateBox("as-edge", { width: 0.05, height: 0.02, depth: A.z1 - A.z0 }, scene)); e.position.set(sx * 1.6, 0.01, (A.z0 + A.z1) / 2); e.material = edge; }
+  const tube = add(MB.CreateCylinder("as-tube", { diameter: A.r * 2, height: A.z1 - A.z0, tessellation: 24, cap: BB.Mesh.NO_CAP, sideOrientation: BB.Mesh.BACKSIDE }, scene));
+  tube.rotation.x = Math.PI / 2; tube.position.set(0, 2, (A.z0 + A.z1) / 2); tube.material = auraM; auraM.alpha = 0.55; K.noGlow(tube);
+  const rings = [];
+  for (let z = A.z0 + 4; z < A.z1; z += mobile ? 12 : 7) {
+    const r = add(MB.CreateTorus("as-ringT", { diameter: A.r * 2 - 0.6, thickness: 0.12, tessellation: 40 }, scene)); r.rotation.x = Math.PI / 2; r.position.set(0, 2, z); r.material = ringM;
+    rings.push(r);
+  }
+  // The wreckage of other worlds, outside the tunnel.
+  const rock = toon(scene, "as-rock", "#2a2232"), burnt = toon(scene, "as-burnt", "#1a1012"), ice = toon(scene, "as-ice", "#6a7a9a"), crackM = glow(scene, "as-crack", "#c86a3a");
+  const planet = add(MB.CreateSphere("as-planet", { diameter: 9, segments: 16 }, scene), 0.05); planet.position.set(-15, 7, 34); planet.material = rock;
+  const crack = add(MB.CreatePlane("as-crack", { width: 0.25, height: 9.4, sideOrientation: BB.Mesh.DOUBLESIDE }, scene)); crack.position.set(-10.8, 7, 33.2); crack.rotation.set(0, 0.5, 0.4); crack.material = crackM;
+  const city = new BB.TransformNode("as-city", scene); city.parent = K.root; city.position.set(14, 3, 56);
+  const rng = mulberry(5);
+  for (let i = 0; i < 14; i++) { const b = add(MB.CreateBox("as-block", { width: 0.6 + rng() * 1.2, height: 1 + rng() * 3, depth: 0.6 + rng() * 1.2 }, scene), 0.03); b.parent = city; b.position.set((rng() - 0.5) * 6, (rng() - 0.5) * 5, (rng() - 0.5) * 6); b.rotation.set(rng(), rng() * 3, rng()); b.material = burnt; }
+  const wave = add(MB.CreateTorus("as-wave", { diameter: 10, thickness: 2.2, tessellation: 24, arc: 0.4 }, scene), 0.04); wave.position.set(-13, -1, 74); wave.rotation.set(0, 0.6, Math.PI / 2); wave.material = ice;
+  // At the end: the doorway, and through it, small as a map, the continent with its black castle. No fires.
+  const D = A.door, doorM = toon(scene, "as-door", "#0a0608");
+  for (const sx of [-1, 1]) { const p = add(MB.CreateBox("as-doorPost", { width: 0.5, height: D.h, depth: 0.5 }, scene), 0.04); p.position.set(sx * (D.w / 2 + 0.25), D.h / 2, D.z); p.material = doorM; }
+  const lintel = add(MB.CreateBox("as-lintel", { width: D.w + 1, height: 0.5, depth: 0.5 }, scene), 0.04); lintel.position.set(0, D.h, D.z); lintel.material = doorM;
+  const land = add(MB.CreateDisc("as-land", { radius: 6, tessellation: 24 }, scene)); land.position.set(0, 3, A.z1 - 4); land.material = toon(scene, "as-landM", "#2a1a1a");
+  const castle = add(MB.CreateBox("as-castle", { width: 0.6, height: 1.2, depth: 0.2 }, scene)); castle.position.set(0.4, 3.4, A.z1 - 4.1); castle.material = doorM;
+  const motes = new BB.ParticleSystem("as-motes", mobile ? 80 : 200, scene);
+  motes.particleTexture = new BB.Texture("data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><circle cx="8" cy="8" r="7" fill="white"/></svg>'), scene);
+  motes.emitter = new BB.Vector3(0, 2, 40); motes.minEmitBox = new BB.Vector3(-7, -4, -40); motes.maxEmitBox = new BB.Vector3(7, 6, 60);
+  motes.color1 = new BB.Color4(0.6, 0.4, 0.9, 0.6); motes.color2 = new BB.Color4(0.3, 0.2, 0.5, 0.4); motes.colorDead = new BB.Color4(0, 0, 0, 0);
+  motes.minSize = 0.04; motes.maxSize = 0.12; motes.minLifeTime = 3; motes.maxLifeTime = 6; motes.emitRate = mobile ? 20 : 45;
+  motes.direction1 = new BB.Vector3(-0.1, -0.05, -1.5); motes.direction2 = new BB.Vector3(0.1, 0.05, -0.6); motes.gravity = new BB.Vector3(0, 0, 0);
+  motes.blendMode = BB.ParticleSystem.BLENDMODE_ADD; K.systems.push(motes);
+  const env = { clear: "#040208", fog: "#0a0612", fogDensity: 0.01, hemi: [0.45, "#b8a0e0", "#0a0610"], sun: [0.3, "#a08ad8", [0, -1, 0.5]], warm: 0 };
+  const toonEnv = { lightDir: [0, 1, -0.5], fogColor: "#0a0612", fogDensity: 0.006, sky: [0.8, 0.74, 0.92], ground: [0.5, 0.44, 0.6], rim: [0.8, 0.6, 1.0] };
+  return { env, toon: toonEnv, show: K.show, conditions: K.conditions,
+    update(dt, t) {
+      rings.forEach((r, i) => { r.rotation.z = t * 0.08 * (i % 2 ? 1 : -1); });
+      planet.rotation.y = t * 0.02; city.rotation.y = t * 0.015; city.position.y = 3 + Math.sin(t * 0.3) * 0.4;
+    } };
+}

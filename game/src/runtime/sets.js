@@ -9,7 +9,7 @@ import { buildCritters } from "./critters.js";
 import { palette, props } from "./props.js";
 import { makeTear, makeDoor } from "./tears.js";
 import { MASKED_BOUNTY } from "../data/masked.js";
-import { buildCamp, buildThrone, buildCaverns } from "../reveal/sets.js";
+import { buildCamp, buildThrone, buildCaverns, buildAstral } from "../reveal/sets.js";
 
 const mulberry = (seed) => () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 
@@ -55,7 +55,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, archive: buildArchive, bridge: buildBridge, camp: buildCamp, throne: buildThrone, caverns: buildCaverns, watchhouse: buildWatchhouse, belltower: buildBelltower, ruins: buildRuins, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, hollow: buildHollow, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, archive: buildArchive, bridge: buildBridge, camp: buildCamp, throne: buildThrone, caverns: buildCaverns, astral: buildAstral, watchhouse: buildWatchhouse, belltower: buildBelltower, ruins: buildRuins, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, hollow: buildHollow, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);

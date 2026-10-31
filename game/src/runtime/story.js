@@ -128,13 +128,19 @@ class Stage {
     const root = id === "player" ? this.playerRoot?.() : a.rig.root;
     a.starMesh?.dispose(false, true); a.starMesh = null;
     if (!root) return;
-    const w = Math.max(1, n), tex = new BB.DynamicTexture(`stars-${id}`, { width: 96 * w, height: 96 }, this.scene, true), c = tex.getContext();
+    // n: how many (filled gold), 0 (a hollow star: nothing left), or "?" (one star and a question mark: unreadable, even to the eye that sees them).
+    const unread = n === "?", w = unread ? 2 : Math.max(1, n), tex = new BB.DynamicTexture(`stars-${id}`, { width: 96 * w, height: 96 }, this.scene, true), c = tex.getContext();
     c.clearRect(0, 0, 96 * w, 96);
-    for (let k = 0; k < w; k++) { // a five-pointed star, drawn (no font needed): filled gold, or only its outline
+    for (let k = 0; k < (unread ? 1 : w); k++) { // a five-pointed star, drawn (no font needed): filled gold, or only its outline
       c.beginPath();
       for (let i = 0; i < 10; i++) { const r = i % 2 ? 18 : 42, t = (i / 10) * Math.PI * 2 - Math.PI / 2; c[i ? "lineTo" : "moveTo"](48 + k * 96 + Math.cos(t) * r, 50 + Math.sin(t) * r); }
       c.closePath();
-      if (n > 0) { c.fillStyle = "#ffd36a"; c.fill(); } else { c.strokeStyle = "#ffe8b0"; c.lineWidth = 5; c.stroke(); }
+      if (n > 0 || unread) { c.fillStyle = "#ffd36a"; c.fill(); } else { c.strokeStyle = "#ffe8b0"; c.lineWidth = 5; c.stroke(); }
+    }
+    if (unread) { // the question mark, drawn in strokes (no font): a hook and a dot
+      c.strokeStyle = "#ffd36a"; c.lineWidth = 11; c.lineCap = "round"; c.beginPath();
+      c.arc(144, 34, 18, Math.PI * 1.1, Math.PI * 0.45, false); c.lineTo(144, 66); c.stroke();
+      c.beginPath(); c.arc(144, 84, 6, 0, Math.PI * 2); c.fillStyle = "#ffd36a"; c.fill();
     }
     tex.hasAlpha = true; tex.update();
     const mat = new BB.StandardMaterial(`starsM-${id}`, this.scene);
@@ -658,6 +664,7 @@ export class StoryPlayer {
   async runBeat(beat) {
     this.ctx.setMemory?.(!!(beat.memory ?? this.ep?.memory), true); // inside a memory (Ep 49): ash grey, the red kept (runtime/grade.js)
     if (beat.fresh) this.ctx.makeWorld({ ...this.ep?.world }); // back in your own body after wearing someone else's (Ep 50)
+    else if (beat.world?.kit && beat.type !== BeatType.Fight && this.ctx.getWorld?.()?.wearing !== beat.world.kit) this.ctx.makeWorld({ ...this.ep?.world, ...beat.world }); // a scene in another body (Cal's Path: the Lantern's coat)
     switch (beat.type) {
       case BeatType.ColdOpen: return this.coldOpen(beat);
       case BeatType.Cutscene: { this._enterScene(true); await this.playCutscene(beat.cutscene); return {}; }
@@ -1533,6 +1540,7 @@ export class StoryPlayer {
       if (e.fade) this._fade(e.fade === "out", e.dur ?? 1); // dur: a cut to black (0), or a slow fade
       if (e.flash) this._flash(e.flash);                   // an impact frame: white, for a fraction of a second
       if ("memory" in e) this.ctx.setMemory?.(!!e.memory, false); // into a memory (Ep 49): the colour drains out over a second and a half
+      if ("stars" in e) this.stage.showStars(!!e.stars); // through an eye that sees them (Cal's Path: the Astral Path)
     }
     c.prev = c.t;
     const cam = sampleCamera(cs.camera, c.t);
@@ -1607,6 +1615,7 @@ export class StoryPlayer {
         if (world.boss && !world.fighters.includes(world.boss)) world.boss = null;
         this.ctx.onEvents(world.drainEvents());
       }
+      for (const f of world.fighters) f.tags?.clear(); // a seal that bound you doesn't follow you into the next scene (the sim stops between beats)
       this._hint("");
       if (won) { // fighting side by side brings the squad closer
         const comp = this.ep?.world?.companions, party = comp === true || comp === undefined ? ["bas", "juno"] : Array.isArray(comp) ? comp : [];

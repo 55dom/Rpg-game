@@ -576,4 +576,62 @@ export const REVEAL_CUTSCENES = {
       { t: 5.0, caption: "Brother Moss has swept these steps for longer than anyone can remember." },
     ],
   },
+
+  // ---- Cal's Path (Phase 7 Step 5) ----
+  // CIN-05B-2 and CIN-05C, the Astral Path: the two of them, unhurried, down a long tunnel of dark aura toward a continent
+  // with no fires on it; the one with his hand free carries the soldier over his shoulder; she hums the march, and the
+  // soldier, eyes half-closed and still grinning, whistles it back, badly. For one cut, through his eyes, five stars over
+  // each of them. They say nothing anyone can read. (unkA and unkB: no names, here or anywhere.)
+  cp_astral: {
+    id: "cp_astral",
+    stage: "astral",
+    duration: 19,
+    actors: [
+      { id: "unkA", look: "unkAWinged", x: 0, z: 0, yaw: 0, stars: 5 },
+      { id: "carried", look: "ashSoldierGrin", x: 0, z: 0.95, y: 1.25, yaw: 0, down: true },
+      { id: "unkB", look: "unkBWinged", x: 1.5, z: -0.4, yaw: 0, stars: 5 },
+    ],
+    camera: [
+      { t: 0, pos: [-2.6, 2.2, 13], look: [0.4, 1.6, 2], fov: 0.62 },                // they come toward us down the tunnel
+      { t: 7, pos: [-2.4, 2.1, 14], look: [0.4, 1.6, 7.7], fov: 0.6, ease: "linear" },
+      { t: 7, cut: true, pos: [4.2, 1.8, 10.4], look: [1.0, 1.6, 7.6], fov: 0.6 },   // beside her, as she looks back at him
+      { t: 12, pos: [4.2, 1.8, 15.6], look: [1.0, 1.6, 13.2], fov: 0.58, ease: "linear" },
+      { t: 12, cut: true, pos: [0.7, 1.4, 10.0], look: [0.7, 2.9, 14.6], fov: 0.7 },  // through his eyes: up at the two of them
+      { t: 14, pos: [0.7, 1.4, 12.2], look: [0.7, 2.9, 16.8], fov: 0.7, ease: "linear" },
+      { t: 14, cut: true, pos: [0, 3.2, 5.4], look: [0, 2.4, 96], fov: 0.6 },        // the long way ahead, and the doorway
+      { t: 19, pos: [0, 3.2, 10.4], look: [0, 2.4, 96], fov: 0.58, ease: "linear" },
+    ],
+    events: [
+      { t: 0, move: { id: "unkA", to: [0, 20.9], dur: 19, ease: "linear" } },
+      { t: 0, move: { id: "carried", to: [0, 21.85, 1.25], dur: 19, ease: "linear" } },
+      { t: 0, move: { id: "unkB", to: [1.5, 20.5], dur: 19, ease: "linear" } },
+      { t: 0.6, caption: "The Astral Path." },
+      { t: 2.6, sfx: "hum" }, { t: 5.4, sfx: "whistle" },
+      { t: 8.2, face: ["unkB", "carried"] }, { t: 8.6, sfx: "unkSpeechB" }, { t: 9.8, sfx: "unkSpeechA" }, { t: 11.0, face: ["unkB", "unkA"] },
+      { t: 12.3, stars: true }, { t: 13.9, stars: false },
+      { t: 15.2, caption: "No fires." },
+      { t: 18.2, fade: "out", dur: 0.8 },
+    ],
+  },
+  // Ch 6: the house falls, and without thinking he wants to be elsewhere, and a door opens under him. His first.
+  cp_door: {
+    id: "cp_door",
+    stage: "larkspur",
+    duration: 8,
+    actors: [{ id: "young", look: "youngCal", x: 4.2, z: 10.6, yaw: 0.6 }],
+    camera: [
+      { t: 0, pos: [2.27, 1.5, 8.3], look: [4.2, 1.6, 10.6], fov: 0.64 },
+      { t: 3.4, pos: [2.33, 1.5, 8.37], look: [4.2, 1.6, 10.6], fov: 0.61, ease: "linear" },
+      { t: 3.4, cut: true, pos: [0.4, 1.4, -11], look: [0, 1.5, -4], fov: 0.6 },        // the reverse of Episode 1's cold open
+      { t: 8, pos: [0.4, 1.4, -10], look: [0, 1.5, -5], fov: 0.58, ease: "linear" },
+    ],
+    events: [
+      { t: 1.6, sfx: "slam" }, { t: 1.7, flash: 0.08 },
+      { t: 1.9, tear: { at: [4.2, 0.02, 10.6], kind: "gold", r: 0.9, life: 1.4, ground: true } }, { t: 2.0, sfx: "door" },
+      { t: 2.6, hide: "young" },
+      { t: 3.4, show: "young" }, { t: 3.4, move: { id: "young", to: [0, -2.0], dur: 0.01 } },
+      { t: 3.5, move: { id: "young", to: [0, -5.6], dur: 4.4, ease: "linear" } }, { t: 3.5, face: ["young", "young"] },
+      { t: 4.0, caption: "His first door." },
+    ],
+  },
 };
