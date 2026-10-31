@@ -339,7 +339,7 @@ export class Rig {
       if (L.hair === "crop") shell.scaling.set(1.02, 0.92, 1);
       face.material = skin;
       const eyeMat = toon(scene, `${id}-eye`, L.eyeColor ?? "#1a1c26");
-      for (const x of L.head === "blank" ? [] : [-0.085, 0.085]) {
+      for (const x of L.head === "blank" || L.voidMask ? [] : [-0.085, 0.085]) {
         const eye = add(MB.CreateSphere("eye", { diameter: 0.09, segments: 6 }, scene), this.head, x, 0.03, 0.218, 0);
         eye.scaling.set(0.8, 1.4, 0.85); // must clear the face's ink-outline shell (+0.03) to show
         eye.material = eyeMat;
@@ -350,7 +350,25 @@ export class Rig {
         const hl2 = add(MB.CreateSphere("eyeHi2", { diameter: 0.016, segments: 4 }, scene), this.head, x - 0.014, 0.01, 0.255, 0);
         hl2.material = this.eyeHi; hl2.metadata = { noGlow: true };
       }
-      if (L.head === "face") { // the rest of the face from the sheets: brows, a small nose, a mouth, ears
+      if (L.voidMask) { // a smooth white mask over the whole face, never removed: closed crescent eyes and a painted mouth that never moves
+        const mk = add(MB.CreateSphere("voidMask", { diameter: 0.44, segments: 14 }, scene), this.head, 0, -0.005, 0.035, 0);
+        mk.scaling.set(0.98, 1.08, 0.82); mk.material = M("voidMask", "#f4f2ee");
+        const ink = M("voidInk", "#141218"), turn = L.voidMask === "frown" ? Math.PI : 0; // the same mask, turned upside down
+        const paint = new BB.TransformNode(`${id}-voidPaint`, scene); paint.parent = this.head; paint.position.set(0, -0.005, 0.212); paint.rotation.z = turn;
+        for (const sx of [-1, 1]) {
+          const eye = add(MB.CreateTorus("voidEye", { diameter: 0.075, thickness: 0.011, tessellation: 16, arc: 0.5 }, scene), paint, sx * 0.08, 0.035, 0, 0);
+          eye.rotation.set(Math.PI / 2, 0, Math.PI); eye.material = ink; // closed crescents, curving down
+        }
+        const mouth = add(MB.CreateTorus("voidMouth", { diameter: 0.12, thickness: 0.011, tessellation: 18, arc: 0.5 }, scene), paint, 0, -0.07, 0, 0);
+        mouth.rotation.set(Math.PI / 2, 0, Math.PI); mouth.material = ink; // a smile (or, turned over, a frown)
+      }
+      if (L.horns) { // horns from the brow, swept back
+        for (const sx of [-1, 1]) {
+          const h = add(MB.CreateCylinder("horn", { diameterTop: 0, diameterBottom: 0.07, height: 0.3, tessellation: 8 }, scene), this.head, sx * 0.12, 0.2, 0.04, 0.012);
+          h.rotation.set(-0.7, 0, sx * -0.35); h.material = M("horn", L.horns);
+        }
+      }
+      if (L.head === "face" && !L.voidMask) { // the rest of the face from the sheets: brows, a small nose, a mouth, ears
         const brow = M("brow", L.hairColor === "#ecebe6" || L.hairColor === "#e4e4e8" || L.hairColor === "#e2e2e8" ? "#9a9aa4" : L.hairColor);
         for (const sx of [-1, 1]) {
           const b = add(MB.CreateBox("brow", { width: 0.085, height: 0.016, depth: 0.02 }, scene), this.head, sx * 0.088, 0.112, 0.2, 0);
@@ -432,6 +450,13 @@ export class Rig {
         const tie = add(MB.CreateSphere("hairTie", { diameter: 0.08, segments: 6 }, scene), this.head, 0, 0.1, -0.24, 0.015); tie.material = accent;
         const tail = add(MB.CreateCapsule("ponyTail", { height: 0.4, radius: 0.07, tessellation: 8 }, scene), this.head, 0, -0.06, -0.3, 0.02);
         tail.rotation.x = 0.35; tail.material = dark; this.hairTail = tail;
+        const bang = add(softBox("bangs", { width: 0.34, height: 0.09, depth: 0.1 }, scene), this.head, 0, 0.16, 0.15, 0); bang.rotation.x = 0.5; bang.material = dark;
+      } else if (L.hair === "twintail") { // two tails, high at the sides
+        for (const sx of [-1, 1]) {
+          const tie = add(MB.CreateSphere("hairTie", { diameter: 0.08, segments: 6 }, scene), this.head, sx * 0.2, 0.1, -0.1, 0.015); tie.material = accent;
+          const tail = add(MB.CreateCapsule("twinTail", { height: 0.42, radius: 0.065, tessellation: 8 }, scene), this.head, sx * 0.27, -0.1, -0.12, 0.02);
+          tail.rotation.z = sx * 0.3; tail.material = dark; if (sx > 0) this.hairTail = tail;
+        }
         const bang = add(softBox("bangs", { width: 0.34, height: 0.09, depth: 0.1 }, scene), this.head, 0, 0.16, 0.15, 0); bang.rotation.x = 0.5; bang.material = dark;
       } else if (L.hair === "sidetail") {
         const tie = add(MB.CreateSphere("hairTie", { diameter: 0.09, segments: 6 }, scene), this.head, 0.2, 0.08, -0.12, 0.015);

@@ -200,7 +200,7 @@ export const FENHOME_LAYOUT = {
 // and in what's left of one house a door frame standing on its own, gold, with nothing either side of it.
 export const RUINS_LAYOUT = {
   radius: 26,
-  houses: [[-5.5, 4, 0.3], [5.2, 6, -0.4], [-6.5, 12, 0.1], [-3.5, 20, -0.2], [4, 22, 0.2], [0, 28, 0]], // [x, z, rot] (the fire's houses, Ep 1)
+  houses: [[-5.5, 4, 0.3], [5.2, 6, 2.7], [-6.5, 12, 0.1], [-3.5, 20, -0.2], [4, 22, 0.2], [0, 28, 0]], // [x, z, rot] (the fire's houses, Ep 1)
   door: { x: 6, z: 14, yaw: -2.3, w: 2.0, h: 3.0 }, // the house where the child was: only the frame left standing, facing the road
   cradle: { x: 7.3, z: 15.6 },
   well: { x: 2.4, z: 9.4 },

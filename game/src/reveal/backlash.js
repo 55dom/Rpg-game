@@ -190,5 +190,14 @@ export function backlashLooks(LOOKS) {
     // The two who arrive through the circle: identical black suits, gloves, and featureless black masks.
     unkA: { poses: LOOKS.acolyte.poses, scale: 1.04, skirt: 0.6, coat: "#0a0a0c", trim: "#0a0a0c", hairColor: "#0a0a0c", skin: "#0a0a0c", head: "blank", weapon: "none", trail: "#202024" },
     unkB: { poses: LOOKS.acolyte.poses, scale: 0.98, skirt: 0.6, coat: "#0a0a0c", trim: "#0a0a0c", hairColor: "#0a0a0c", skin: "#0a0a0c", head: "blank", weapon: "none", trail: "#202024" },
+    // Their true form (Cal's Path, CIN-05C, the Astral Path; CIN-10): the same mask for both, smooth and white, hers smiling and
+    // his turned upside down to a frown; his hair dark blue and long, tied low; hers pink, in two tails, with a frilled headdress;
+    // and once the disguise is let go (Winged), horns from the brow and the Commanders' wings. Still nameless: these are the only things anywhere in the build that say what they look like.
+    unkATrue: { poses: LOOKS.acolyte.poses, scale: 1.06, skirt: 0.3, coat: "#0c0c10", trim: "#f4f4f4", hairColor: "#1c2a5e", skin: "#e8dcd0",
+      head: "face", hair: "ponytail", voidMask: "frown", accent: "#2a3a7a", weapon: "none", trail: "#4a5aa8" },
+    unkBTrue: { poses: LOOKS.acolyte.poses, scale: 0.98, skirt: 1.1, coat: "#0c0c10", trim: "#f4f4f4", hairColor: "#e888b0", skin: "#efe0d6",
+      head: "face", hair: "twintail", voidMask: "smile", headband: "#f4f2ee", accent: "#f0a8c8", weapon: "none", trail: "#e888b0" },
+    get unkAWinged() { return { ...this.unkATrue, horns: "#141018" }; },
+    get unkBWinged() { return { ...this.unkBTrue, horns: "#141018" }; },
   };
 }

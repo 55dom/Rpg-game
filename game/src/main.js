@@ -68,6 +68,8 @@ import { EPISODE_53, EP53_SCRIPT } from "./reveal/ep53.js";
 import { EPISODE_54, EP54_SCRIPT } from "./reveal/ep54.js";
 import { EPISODE_55, EP55_SCRIPT } from "./reveal/ep55.js";
 import { EPISODE_56, EP56_SCRIPT } from "./reveal/ep56.js";
+import { EPISODE_57, EP57_SCRIPT } from "./reveal/ep57.js";
+import { EPISODE_58, EP58_SCRIPT } from "./reveal/ep58.js";
 import { theatreList } from "./data/theatre.js";
 import { PlaytestLog, SURVEYS } from "./core/playtest.js";
 import { keyItemsHeld } from "./data/keyItems.js";
@@ -901,7 +903,8 @@ export function boot(doc = document) {
     { episode: EPISODE_49, script: EP49_SCRIPT }, { episode: EPISODE_50, script: EP50_SCRIPT },
     { episode: EPISODE_51, script: EP51_SCRIPT }, { episode: EPISODE_52, script: EP52_SCRIPT },
     { episode: EPISODE_53, script: EP53_SCRIPT }, { episode: EPISODE_54, script: EP54_SCRIPT },
-    { episode: EPISODE_55, script: EP55_SCRIPT }, { episode: EPISODE_56, script: EP56_SCRIPT }], [WORLD_SCRIPT]);
+    { episode: EPISODE_55, script: EP55_SCRIPT }, { episode: EPISODE_56, script: EP56_SCRIPT },
+    { episode: EPISODE_57, script: EP57_SCRIPT }, { episode: EPISODE_58, script: EP58_SCRIPT }], [WORLD_SCRIPT]);
   annotationNow = () => !!story.flags.get("ANNOTATION"); // after Mirrorlake, Rook's spells write ink
   revisionNow = () => !!story.flags.get("REVISION");     // after the Paragon's spar, the page rewinds
   const playtest = new PlaytestLog(story.flags, { where: () => ({ episode: story.ep?.id ?? null, beat: story.director?.beat?.id ?? null }) });

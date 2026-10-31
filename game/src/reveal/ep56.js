@@ -208,7 +208,7 @@ export const EPISODE_56 = {
         { id: "lio", look: "lio", x: -5.5, z: 9.7, yaw: Math.PI, pose: "sit" },
       ],
       set: { EP56_DONE: 1 } },
-    { id: "preview", type: "preview",
+    { id: "preview", type: "preview", nextEpisode: "ep57",
       lines: [
         "Next time on UNWRITTEN:",
         "Larkspur, fifteen years after the fire. Grass over the ash, and a door standing where a house used to be.",

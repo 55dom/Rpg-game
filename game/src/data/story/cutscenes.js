@@ -436,6 +436,23 @@ export const CUTSCENES = {
       { t: 5.0, caption: "The Crown against Aldric Valcourt." },
     ],
   },
+  // Ep 57: Larkspur, fifteen years after the fire. Down the road, grass over the ash, to a door standing on its own.
+  ep57_ruins: {
+    id: "ep57_ruins",
+    stage: "ruins",
+    duration: 10,
+    actors: [],
+    camera: [
+      { t: 0, pos: [0.4, 1.1, -9], look: [0, 1.6, 10], fov: 0.7 },                 // the road in
+      { t: 5, pos: [0.4, 1.2, -4], look: [0, 1.6, 12], fov: 0.68, ease: "linear" },
+      { t: 5, cut: true, pos: [2.4, 1.5, 10.8], look: [6, 1.5, 14], fov: 0.62 },     // the door, standing on its own
+      { t: 10, pos: [2.8, 1.5, 11.3], look: [6, 1.5, 14], fov: 0.58, ease: "linear" },
+    ],
+    events: [
+      { t: 0.6, caption: "Larkspur. Fifteen years after the fire." },
+      { t: 5.4, caption: "One door is still standing." },
+    ],
+  },
 };
 
 Object.assign(CUTSCENES, REVEAL_CUTSCENES); // the reveal's own (src/reveal/cutscenes.js)

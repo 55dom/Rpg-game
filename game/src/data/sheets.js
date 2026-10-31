@@ -227,6 +227,17 @@ export const SHEETS = Object.freeze({
   gullmaw: { build: "squat", gait: "heavy", idle: "still", outfit: { top: "#2f5a4a", hem: null, sleeves: "long", legs: "#2f5a4a", boots: "bare", bootColor: "#2a4a3c",
     amphibian: true, belly: "#d9c98a", warts: "#d8862a", frill: "#c8506a", web: "#4a8a6a", claw: "#e8dcc0", wings: "#4a2e44" } },
   clockwork: { build: "slim", gait: "machine", idle: "still", outfit: { top: "#a8822e", hem: null, sleeves: "long", legs: "#a8822e", boots: "bare", bootColor: "#6a5222", machine: true } },
+  // unkA and unkB as they truly are (Cal's Path, CIN-05C; GDD §28.1): black suits over white shirts, gloves; hers with a
+  // frilled apron and collar. The wings (the Commanders' shape) only in their true form.
+  unkATrue: { build: "slim", gait: "graceful", idle: "still",
+    outfit: { top: "#0c0c10", hem: "thigh", sleeves: "long", legs: "#0c0c10", boots: "shoes", bootColor: "#050506", collar: true, gloves: "#0c0c10", buttons: "#f4f4f4", grime: 0 } },
+  unkBTrue: { build: "lithe", gait: "graceful", idle: "still",
+    outfit: { top: "#0c0c10", hem: "knee", sleeves: "long", legs: "#0c0c10", boots: "shoes", bootColor: "#050506", collar: true, apron: "#f4f2ee", gloves: "#0c0c10", grime: 0 } },
+  // ...and with the disguise let go (CIN-05C): the Commanders' wings from slits in the backs of their jackets.
+  unkAWinged: { build: "slim", gait: "graceful", idle: "still",
+    outfit: { top: "#0c0c10", hem: "thigh", sleeves: "long", legs: "#0c0c10", boots: "shoes", bootColor: "#050506", collar: true, gloves: "#0c0c10", buttons: "#f4f4f4", wings: "#120c16", claw: "#0c0c10", grime: 0 } },
+  unkBWinged: { build: "lithe", gait: "graceful", idle: "still",
+    outfit: { top: "#0c0c10", hem: "knee", sleeves: "long", legs: "#0c0c10", boots: "shoes", bootColor: "#050506", collar: true, apron: "#f4f2ee", gloves: "#0c0c10", wings: "#120c16", claw: "#0c0c10", grime: 0 } },
 });
 
 /** The sheet for a look, with sensible defaults for anything new. */
