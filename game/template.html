@@ -35,6 +35,8 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
 .leaping .speedlines { opacity: 1; animation: speedspin 0.45s linear infinite; }
 @keyframes speedspin { from { transform: rotate(0deg) scale(1); } 50% { transform: rotate(3deg) scale(1.03); } to { transform: rotate(6deg) scale(1); } }
 .hopblur .stage { filter: blur(1.2px) saturate(1.15); }
+.memory .stage { filter: sepia(0.7) saturate(1.4) brightness(1.08) contrast(1.05); transition: filter 0.6s; } /* inside the Bloom's petals: a fire, long ago */
+.memory [data-overlay]::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 45%, rgba(255,150,60,0.28) 100%); }
 .hurt { position: absolute; inset: 0; pointer-events: none; opacity: 0; will-change: opacity;
   background: radial-gradient(ellipse at center, transparent 55%, rgba(226, 90, 82, 0.45) 100%); }
 .hurt.show { animation: hurt 420ms ease-out; }
@@ -154,6 +156,8 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .spell kbd { font: 600 9px/1 var(--font-mono); color: var(--ink); background: var(--gale); border-radius: 3px; padding: 2px 3px; }
 .spell small { color: var(--muted); font-size: 9px; }
 .spell.low { opacity: 0.4; }
+.spell.erased { opacity: 0.3; filter: grayscale(1); background: #f4f2ff22; } /* a page the Hollow Bloom has blanked (Ep 18) */
+.spell.erased b { text-decoration: line-through; }
 .target-card { margin: 0 auto; width: min(340px, 46vw); text-align: center; }
 .target-card .name { justify-content: center; gap: 10px; }
 .bar.enemy i { background: linear-gradient(90deg, #a83a34, var(--danger)); }

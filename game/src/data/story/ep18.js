@@ -105,11 +105,18 @@ export const EPISODE_18 = {
         marks: [
           { frame: 700, say: ["Cal", "It's getting bigger. I don't like bigger."] },
           { frame: 1500, say: ["Juno", "It's not stopping! Why isn't it stopping?"] },
+          { frame: 1960, say: ["Rook", "...I've been here. I've never been here."] }, // inside its petals (P3): a fire, long ago
+          { frame: 2460, say: ["Juno", "Hey! You went somewhere. Stay with us!"] },
           { frame: 2600, say: ["Lio", "It's nearly open!"] },
           { frame: 3600, say: ["Cal", "All right. My turn."] },
         ],
       },
       tutorial: [{ at: 0.5, low: true, text: "BOSS 7 · THE HOLLOW BLOOM. Its pulse erases whatever stands in it: when the core flashes, get out. Hold it back as long as you can." }],
+      eventHints: { // its phases (GDD §16 B7), on the clock
+        holeOpen: "It's erasing the ground. Don't stand on the blank: it takes a bite out of you too.",
+        pageErased: "It's erasing your pages! That spell's blank for a few seconds: use another.",
+      },
+      lowHints: true,
       lines: [["Dagrun", "Hold it! Hold it back!"]],
       retryBy: "Dagrun", retry: "Up. Together. Again.",
       set: { BLOOM_FOUGHT: 1 } },

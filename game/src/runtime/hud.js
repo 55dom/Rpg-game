@@ -169,7 +169,7 @@ export class Hud {
       this.set(`sph${i}`, el, "hidden", !ab); // a locked page has no chip
       if (!ab) return;
       const name = page.branch ? def.branches.find((b) => b.key === page.branch).name : ab.id === def.base.id ? sp.short : SPELL_LABELS[ab.id] ?? ab.id; // another ability on the button (Inscribe)
-      const cls = `spell${p.mana.current >= ab.manaCost ? "" : " low"}${page.ready ? " ready" : ""}${page.branch ? " evolved" : ""}`;
+      const cls = `spell${p.mana.current >= ab.manaCost ? "" : " low"}${page.ready ? " ready" : ""}${page.branch ? " evolved" : ""}${world.pageLocks?.[sp.slot] > 0 ? " erased" : ""}`; // (blanked by the Hollow Bloom)
       this.set(`sp${i}`, el, "class", cls);
       this.set(`spk${i}`, el.firstChild, "text", this.label(device, sp.slot));
       this.set(`spn${i}`, el.children[1], "text", name);

@@ -15,6 +15,8 @@ import { ILSE_STATS, ILSE_HITBOXES, ilseOptions, GALEN_STATS, GALEN_HITBOXES, ga
   OBJECTS as OBJECTS2, OBJECT_HITBOXES as OBJECT_HITBOXES2, GALEN_TUNING } from "../data/bosses2.js";
 import { WARDEN_STATS, WARDEN_HITBOXES, wardenOptions, ISLES_OBJECTS } from "../data/isles.js";
 import { StormWardenController } from "./warden.js";
+import { BloomController } from "./bloom.js";
+import { BLOOM_TUNING } from "../data/bloom.js";
 import { VARKA_STATS, VARKA_HITBOXES, varkaOptions, ASH_OBJECTS, ASH_OBJECT_HITBOXES, THUNDER, BRANNOC_SPAR_STATS, BRANNOC_HITBOXES, brannocSparOptions } from "../data/ashfall.js";
 import { SEAL, BELL_TUNING } from "../data/bell.js";
 import { VarkaController, SparBoss } from "./varka.js";
@@ -359,6 +361,8 @@ export class World {
     this.silences = []; this.silenceAll = false; this.dodgeHush = 0; this.waves = []; this.strikes = [];
     this.gauge = null; this.headline = null; // a staged fight's meter, and the foe it's about (sim/siege.js)
     this.islands = null; // after a floor collapses: the debris still holding, [{ x, z, r }] (Galen's P3)
+    this.holes = []; // the Hollow Bloom's erasures (B7 P2): holes in the world, [{ x, z, r, frames }]
+    this.pageLocks = {}; // and its blank pages (P4): spell slot → frames until it's written back
     this.companions = [];
     this.projectiles = [];
     this.injured = new Set(o.injured ?? []); // squadmates fighting hurt (Bas's arm after Ep 26)
@@ -835,7 +839,7 @@ export class World {
         }
       }
       for (const e of this.fighters) {
-        if (e.team === z.team || !e.alive || e.submerged) continue;
+        if (e.team === z.team || !e.alive || e.submerged || e.boss?.intangible) continue;
         if (!boxHitsCapsule(WALL, z.pos, z.yaw, e.pos, e.stats.radius, e.stats.height)) continue;
         // Shove out along the wall's facing.
         const heavy = e.traits.heavy && !e.combatant.postureBroken;
@@ -863,7 +867,15 @@ export class World {
     this.emit({ type: "ward", fighter: singer, targets: warded });
   }
 
+  /** The Bloom's done (or the fight is): the ground comes back, and the pages. */
+  clearErasures() {
+    if (!this.holes.length && !Object.keys(this.pageLocks).length) return;
+    this.holes = []; this.pageLocks = {};
+    this.emit({ type: "erasuresClear" });
+  }
+
   resetPlayer() {
+    this.clearErasures();
     const p = this.player;
     p.combatant.reset(); p.mana?.fill(); p.runner.interrupt(); p.buffer.clear();
     const O = this.origin;
@@ -911,6 +923,10 @@ export class World {
     const p = this.player;
     if (!p.alive) return;
     const spell = intent >= Intent.Spell1 && intent <= Intent.Spell4;
+    if (spell && this.pageLocks[`Spell${intent - Intent.Spell1 + 1}`] > 0) { // a page the Bloom has blanked (B7 P4)
+      if (this.frame - (this._blankMsg ?? -99) > 30) { this._blankMsg = this.frame; this.emit({ type: "pageBlank", slot: `Spell${intent - Intent.Spell1 + 1}` }); }
+      return;
+    }
     if ((spell && this.silencedAt(p.pos)) || (intent === Intent.Dodge && this.dodgeHush > 0)) { // silenced: nothing happens
       if (this.frame - (this._silencedMsg ?? -99) > 30) { this._silencedMsg = this.frame; this.emit({ type: "silenced", what: spell ? "spell" : "dodge" }); }
       return;
@@ -1015,6 +1031,33 @@ export class World {
       f.pos.y = f.prev.y = 4; f.vel.x = f.vel.y = f.vel.z = 0; f.knock.x = f.knock.z = 0; f.grounded = false;
       f.runner.interrupt(); f.combatant.invulnerableFrames = Math.max(f.combatant.invulnerableFrames, 50);
       this.emit({ type: "pitFall", fighter: f, from, to: { x: f.pos.x, y: 0, z: f.pos.z } });
+    }
+  }
+
+  /**
+   * The Hollow Bloom's holes (B7 P2): blank ground. Stand on it and it takes a bite out of you too (never the last of your
+   * health) and you come to on its edge; a few frames' grace lets a run carry you across. Everyone else steps round them.
+   */
+  _holes() {
+    const H = BLOOM_TUNING.holes;
+    for (const h of this.holes) h.frames--;
+    const gone = this.holes.filter((h) => h.frames <= 0);
+    if (gone.length) { this.holes = this.holes.filter((h) => h.frames > 0); for (const h of gone) this.emit({ type: "holeClose", hole: h }); }
+    for (const f of this.fighters) {
+      if (!f.alive || f.traits.object || f.traits.immobile || f.submerged || f.boss instanceof BloomController) continue;
+      const h = this.holes.find((q) => Math.hypot(f.pos.x - q.x, f.pos.z - q.z) < q.r);
+      if (!h) { f.inHole = 0; continue; }
+      const dx = f.pos.x - h.x, dz = f.pos.z - h.z, d = Math.hypot(dx, dz);
+      const ux = d > 0.01 ? dx / d : -Math.sin(f.yaw), uz = d > 0.01 ? dz / d : -Math.cos(f.yaw); // (dead centre: back the way it faced from)
+      const edge = (k) => { f.pos.x = f.prev.x = h.x + ux * k; f.pos.z = f.prev.z = h.z + uz * k; };
+      if (f !== this.player) { edge(h.r + f.stats.radius * 0.5); continue; }
+      if (!f.grounded || f.pos.y > 0.05 || f.combatant.invulnerableFrames > 0) continue;
+      if ((f.inHole = (f.inHole ?? 0) + 1) < H.grace) continue;
+      f.inHole = 0;
+      const hp = f.combatant.health.current, at = { x: f.pos.x, y: 1, z: f.pos.z };
+      if (hp > 1) f.combatant.takeDamage(Math.min(Math.round(f.combatant.health.max * H.bite), hp - 1));
+      edge(h.r + 0.6); f.runner.interrupt(); f.combatant.invulnerableFrames = Math.max(f.combatant.invulnerableFrames, 40);
+      this.emit({ type: "erased", fighter: f, at, to: { x: f.pos.x, y: 0, z: f.pos.z } });
     }
   }
 
@@ -1143,7 +1186,7 @@ export class World {
           if (def.traits.mirror) { hb.hitSet.add(def); this.emit({ type: "mirrorHit", attacker: att, defender: def, at: { x: def.pos.x, y: 1.2, z: def.pos.z } }); continue; } // a reflection: nothing touches it
           if (def.boss?.untouchable) {
             if (hb.ability.tags.includes("gust") && boxHitsCapsule(hb.def, att.pos, att.yaw, def.pos, def.stats.radius + 0.6, 2.5) && def.boss.uproot(att)) hb.hitSet.add(def);
-            if (def.submerged) continue;
+            if (def.submerged || def.boss.intangible) continue; // (inside the Hollow Bloom's memory, there's nothing there to hit)
           }
           const grace = def.combatant.invulnerableFrames > 0 ? Tuning.nearMissGrace : 0;
           if (!boxHitsCapsule(hb.def, att.pos, att.yaw, def.pos, def.stats.radius + grace, def.stats.height)) continue;
@@ -1193,7 +1236,7 @@ export class World {
         if (t) { p.dead = true; this.emit({ type: "softHit", target: t, attacker: p.owner, ability: p.ability }); continue; }
       }
       for (const def of this.fighters) {
-        if (def.team === p.team || !def.alive || p.hitSet.has(def) || def.submerged) continue;
+        if (def.team === p.team || !def.alive || p.hitSet.has(def) || def.submerged || def.boss?.intangible) continue;
         const grace = def.combatant.invulnerableFrames > 0 ? Tuning.nearMissGrace * 0.5 : 0;
         const r = p.def.size[0] / 2 + def.stats.radius + grace;
         const dx = def.pos.x - p.pos.x, dz = def.pos.z - p.pos.z;
@@ -1479,6 +1522,8 @@ export class World {
       }
     }
     if (this.islands) this._islands();
+    if (this.holes.length) this._holes();
+    for (const s in this.pageLocks) if (--this.pageLocks[s] <= 0) { delete this.pageLocks[s]; this.emit({ type: "pageRestored", slot: s }); }
     this._sacrifices();
     if (this.comboTimer > 0 && --this.comboTimer === 0) this.comboCount = 0;
     if (this.teamHit && this.frame >= this.teamHit.frame) { // the joint strike lands

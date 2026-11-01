@@ -631,6 +631,22 @@ export function boot(doc = document) {
           else { hud.toast("HASK ENRAGES", "danger"); hud.banner(`PHASE ${ev.phase}`); }
           sfx.play("bossIntro"); camera.shake(0.6);
           break;
+        case "bloomPhase":
+          if (ev.phase === 2) hud.toast("IT ERASES THE GROUND", "danger");
+          else if (ev.phase === 4) hud.toast("IT'S ERASING YOUR PAGES", "danger");
+          sfx.play("bossIntro", 0.7); camera.shake(0.4); break;
+        case "eraseWarn": vfx.warning(ev.at, ev.frames / 60); vfx.ring({ x: ev.at.x, y: 0.08, z: ev.at.z }, ev.r * 2, "#f4f2ff", ev.frames / 60, true); sfx.play("glint", 0.6); break;
+        case "holeOpen": holeFx.open(ev.hole); vfx.flash({ x: ev.hole.x, y: 0.6, z: ev.hole.z }, ev.hole.r * 2, "#ffffff", 0.14); sfx.play("vacuum", 0.8); break;
+        case "holeClose": holeFx.close(ev.hole); break;
+        case "erased":
+          vfx.flash(ev.at, 2.4, "#ffffff", 0.2); vfx.sparksAt(ev.at, 14, "white", 8, 4); camera.shake(0.35); sfx.play("tear", 0.7);
+          if (ev.fighter === world.player) hud.toast("ERASED", "danger"); break;
+        case "memoryBegin": memoryFx.begin(ev.at); vfx.flash({ x: ev.at.x, y: 1.2, z: ev.at.z }, 9, "#fff2cf", 0.5); hud.toast("INSIDE THE PETALS", "afterimage"); break;
+        case "memoryEnd": memoryFx.fade(); vfx.flash(chest(world.player), 6, "#ffffff", 0.3); break;
+        case "pageErased": hud.toast(`PAGE ERASED · ${(SPELLS.find((x) => x.slot === ev.slot)?.short ?? ev.slot).toUpperCase()}`, "danger"); vfx.sparksAt(chest(world.player), 10, "white", 6, 3); sfx.play("tear", 0.6); break;
+        case "pageRestored": hud.pushLog(`${SPELLS.find((x) => x.slot === ev.slot)?.short ?? ev.slot}: written back`); break;
+        case "pageBlank": hud.toast("THAT PAGE IS BLANK", "danger"); sfx.play("ui", 0.5); break;
+        case "erasuresClear": holeFx.clear(); memoryFx.end(); break;
         case "twinPhase":
           hud.toast(ev.phase === 2 ? "ONE SONG, TWO THROATS" : "SMOKE AND MIRRORS", "danger"); // (Ep 15's hints say the rest)
           sfx.play("bossIntro"); camera.shake(0.5); break;
@@ -1446,9 +1462,63 @@ export function boot(doc = document) {
       clear() { for (const p of puffs) p.m.dispose(); puffs = []; },
     };
   })();
+  // The Hollow Bloom's holes (Ep 18, P2): blank white ground with a torn grey edge, like a page with a hole in it.
+  const holeFx = (() => {
+    const live = new Map(), blank = toon(scene, "holeBlank", "#fbfaff"), edge = toon(scene, "holeEdge", "#2e2a38"); // flat white, a dark torn edge (the Hollowmarch is near-white already)
+    return {
+      open(h) {
+        const n = new BB.TransformNode("bloomHole", scene); n.position.set(h.x, 0, h.z);
+        const d = BB.MeshBuilder.CreateDisc("holeBlank", { radius: h.r, tessellation: 9 }, scene); d.rotation.x = Math.PI / 2; d.position.y = 0.05; d.material = blank; d.parent = n;
+        const r = BB.MeshBuilder.CreateTorus("holeEdge", { diameter: h.r * 2, thickness: 0.24, tessellation: 9 }, scene); r.position.y = 0.06; r.material = edge; r.parent = n;
+        const r2 = BB.MeshBuilder.CreateTorus("holeEdge2", { diameter: h.r * 1.55, thickness: 0.05, tessellation: 9 }, scene); r2.position.y = 0.07; r2.rotation.y = 0.35; r2.material = edge; r2.parent = n;
+        for (const m of [d, r, r2]) { m.isPickable = false; m.metadata = { noGlow: true }; }
+        n.scaling.setAll(0.2); live.set(h, { n, grow: 0 });
+      },
+      close(h) { const e = live.get(h); if (e) { e.closing = 1; } },
+      update(dt) {
+        for (const [h, e] of live) {
+          if (e.closing) { e.closing -= dt * 3; e.n.scaling.setAll(Math.max(0.01, e.closing)); if (e.closing <= 0) { e.n.dispose(); live.delete(h); } continue; }
+          e.grow = Math.min(1, e.grow + dt * 5); e.n.scaling.setAll(0.2 + 0.8 * e.grow); e.n.rotation.y += dt * 0.15;
+        }
+      },
+      clear() { for (const e of live.values()) e.n.dispose(); live.clear(); },
+    };
+  })();
+  // Inside the Bloom's petals (P3): a village burning, long ago, standing round you for a few seconds.
+  const memoryFx = (() => {
+    let nodes = [], t = 0, on = false;
+    const wall = toon(scene, "memWall", "#3a2a22"), roof = toon(scene, "memRoof", "#1e1612"), fire = glow(scene, "memFire", "#ff9a3a", 0.9);
+    return {
+      begin(at) {
+        this.end(); on = true; root.classList.add("memory");
+        for (let i = 0; i < 7; i++) {
+          const a = (i / 7) * Math.PI * 2 + 0.3, d = 13 + (i % 3) * 2.5, n = new BB.TransformNode("memHouse", scene);
+          n.position.set(at.x + Math.sin(a) * d, 0, at.z + Math.cos(a) * d); n.rotation.y = a + Math.PI;
+          const h = BB.MeshBuilder.CreateBox("memHouseW", { width: 4, height: 3, depth: 3.2 }, scene); h.position.y = 1.5; h.material = wall; h.parent = n;
+          const r = BB.MeshBuilder.CreateCylinder("memHouseR", { height: 4.4, diameter: 3.6, tessellation: 3 }, scene); r.position.y = 3.6; r.rotation.z = Math.PI / 2; r.scaling.set(1, 1, 0.8); r.material = roof; r.parent = n;
+          const f = BB.MeshBuilder.CreateSphere("memFlame", { diameter: 1.6, segments: 6 }, scene); f.position.set(0, 4.6, 0); f.scaling.y = 1.6; f.material = fire; f.parent = n;
+          for (const m of [h, r, f]) m.isPickable = false;
+          n.scaling.setAll(0.01); nodes.push({ n, f, ph: i });
+        }
+        sfx.play("cry", 0.8);
+      },
+      update(dt) {
+        if (!nodes.length) return;
+        t += dt;
+        for (const e of nodes) {
+          const k = on ? Math.min(1, e.n.scaling.x + dt * 1.6) : Math.max(0, e.n.scaling.x - dt * 2.5);
+          e.n.scaling.setAll(Math.max(0.01, k)); e.f.scaling.set(1 + Math.sin(t * 9 + e.ph) * 0.15, 1.6 + Math.sin(t * 7 + e.ph) * 0.3, 1);
+          if (on && Math.random() < dt * 3) vfx.sparksAt({ x: e.n.position.x, y: 4.5, z: e.n.position.z }, 3, Math.random() < 0.5 ? "gold" : "red", 3, 6);
+        }
+        if (!on && nodes.every((e) => e.n.scaling.x <= 0.011)) this.end();
+      },
+      fade() { on = false; root.classList.remove("memory"); },
+      end() { for (const e of nodes) e.n.dispose(); nodes = []; on = false; root.classList.remove("memory"); },
+    };
+  })();
   const shatter = (f, at) => { vfx.sparksAt(at, 18, "white", 9, 5); vfx.sparksAt(at, 8, "violet", 7, 4); vfx.flash(at, 1.8, "#e8eeff", 0.1); sfx.play("block", 0.8); removeView(f); if (hud.focus === f) hud.focus = null; };
   const hopGhostMat = glow(scene, "hopGhost", "#8affc8", 0.3, true);
-  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); lilyFx.clear(); reedFx.clear(); smokeFx.clear(); groundFx.clear(); tearFx.clear(); mouthTears = []; lineWall?.dispose(); lineWall = null; darkFx.clear();
+  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); lilyFx.clear(); reedFx.clear(); smokeFx.clear(); holeFx.clear(); memoryFx.end(); groundFx.clear(); tearFx.clear(); mouthTears = []; lineWall?.dispose(); lineWall = null; darkFx.clear();
     for (const m of inkMarks.values()) m.dispose(); inkMarks.clear(); root.classList.remove("leaping", "hopblur", "surge-locked"); };
 
   // Squad HQ: the board (rooms to build) and the workbench (tempering gear). One screen, two modes.
@@ -1778,7 +1848,7 @@ export function boot(doc = document) {
       if (state.ghostTimer <= 0) { const rig = viewFor(world.player); if (rig) vfx.afterimage(rig); state.ghostTimer = 0.09; }
     }
 
-    waterJet.update(); lilyFx.update(dt); reedFx.update(dt); smokeFx.update(dt); groundFx.update(dt); tearFx.update(dt);
+    waterJet.update(); lilyFx.update(dt); reedFx.update(dt); smokeFx.update(dt); holeFx.update(dt); memoryFx.update(dt); groundFx.update(dt); tearFx.update(dt);
     if (world.boss?.boss?.leap) { // motion blur on the hops: a trail of fading ghosts of Gullmaw
       state.hopGhost = (state.hopGhost ?? 0) - dt;
       if (state.hopGhost <= 0) { const rig = viewFor(world.boss); if (rig?.snapshot) vfx.afterimage(rig, hopGhostMat, 0.22); state.hopGhost = 0.035; }

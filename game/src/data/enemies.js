@@ -20,6 +20,7 @@ import { CalSeatedController, CalBondsController } from "../reveal/finaleSim.js"
 import { BELL_ENEMIES } from "./bell.js";
 import { ARC7_ENEMIES } from "../reveal/arc7.js";
 import { TwinController } from "../sim/twins.js";
+import { BloomController } from "../sim/bloom.js";
 
 const sound = (frame, key = "swing") => ({ frame, type: E.PlaySound, key });
 const box = (frame, key, frames) => ({ frame, type: E.SpawnHitbox, key, value: frames });
@@ -213,7 +214,7 @@ export const ENEMIES = Object.freeze({
     },
     poses: { rest: [0, 0, 0] },
     options: () => { const A = ENEMIES.hollowBloom.abilities; return [new AttackOption(A.Petals, 3, 18, 3, 60), new AttackOption(A.Pulse, 0, 4.2, 2, 300), new AttackOption(A.Lash, 0, 3.2, 2, 70)]; },
-    traits: { heavy: true },
+    traits: { heavy: true }, Controller: BloomController, // its phases run on the clock it's held back against (sim/bloom.js)
   },
   bulwark: {
     stats: { name: "Choir Bulwark", maxHealth: 150, maxPosture: 120, runSpeed: 3.2, circleSpeed: 1.6, turnRate: 0.09, radius: 0.55, height: 2.0 },

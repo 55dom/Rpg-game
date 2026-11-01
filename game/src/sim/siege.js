@@ -140,6 +140,7 @@ export class Siege {
   end() {
     this.done = true;
     this.w.gauge = null; this.w.headline = null;
+    this.w.clearErasures?.(); // (the Hollow Bloom's holes and blank pages go with it)
     for (const f of this.w.enemies) this.w.emit({ type: "despawn", fighter: f });
     this.w.fighters = this.w.fighters.filter((f) => f.team === this.w.player.team);
   }
