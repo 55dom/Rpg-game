@@ -24,6 +24,7 @@ export class FollowCamera {
     this.trauma = 0;
     this.punch = 0;
     this.reduceMotion = false;
+    this.shakeScale = 1; // the camera-shake setting (GDD §19.8): 0 = still
     this.t = 0;
   }
 
@@ -64,8 +65,8 @@ export class FollowCamera {
     return { pos: this.tmp, lx: p.x + f.x * ahead + Math.cos(yaw) * side, ly: p.y + (s.lookHeight ?? 1.5), lz: p.z + f.z * ahead - Math.sin(yaw) * side };
   }
 
-  shake(amount) { this.trauma = Math.min(1, this.trauma + amount * (this.reduceMotion ? 0.4 : 1)); }
-  kick(amount) { this.punch = Math.max(this.punch, amount); }
+  shake(amount) { this.trauma = Math.min(1, this.trauma + amount * (this.reduceMotion ? 0.4 : 1) * this.shakeScale); }
+  kick(amount) { this.punch = Math.max(this.punch, amount * (0.3 + 0.7 * this.shakeScale)); } // (with shake off, a small push-in is all that's left)
 
   /** Forward and right on the ground plane, for camera-relative movement. */
   get basis() {

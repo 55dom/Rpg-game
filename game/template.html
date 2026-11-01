@@ -35,6 +35,12 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
 .leaping .speedlines { opacity: 1; animation: speedspin 0.45s linear infinite; }
 @keyframes speedspin { from { transform: rotate(0deg) scale(1); } 50% { transform: rotate(3deg) scale(1.03); } to { transform: rotate(6deg) scale(1); } }
 .hopblur .stage { filter: blur(1.2px) saturate(1.15); }
+.no-speedlines .speedlines { display: none !important; } /* speed lines off */
+.a11y { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 2px; }
+.a11y button { font: 600 11px/1 var(--font-mono); letter-spacing: 0.06em; background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; cursor: pointer; }
+.a11y button[aria-pressed="true"] { color: var(--text); border-color: var(--lantern); }
+.a11y button[data-a11y="ult"] { color: var(--text); }
+.a11y-note { margin: 4px 0 0; font-size: 11px; color: var(--muted); }
 .memory .stage { filter: sepia(0.7) saturate(1.4) brightness(1.08) contrast(1.05); transition: filter 0.6s; } /* inside the Bloom's petals: a fire, long ago */
 .memory [data-overlay]::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 45%, rgba(255,150,60,0.28) 100%); }
 .hurt { position: absolute; inset: 0; pointer-events: none; opacity: 0; will-change: opacity;
@@ -253,7 +259,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .start .sub { font: 400 clamp(14px, 3.4vw, 18px)/1.4 var(--font-display); color: var(--lantern); letter-spacing: 0.2em; margin: 10px 0 26px; }
 .start p { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 6px 0; }
 .start .go, .modal .go, .preview .go { display: inline-block; margin-top: 22px; font: 600 13px/1 var(--font-mono); letter-spacing: 0.3em; color: var(--ink); background: var(--lantern); padding: 12px 18px; border-radius: 999px; animation: pulse 0.9s ease-in-out infinite alternate; }
-.help { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(10, 11, 16, 0.82); padding: 16px; z-index: 5; }
+.help { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(10, 11, 16, 0.82); padding: 16px; z-index: 6; } /* (over the title too: settings come before the first frame of play) */
 .help[hidden] { display: none; }
 .help-card { max-width: 760px; width: 100%; max-height: calc(100% - 16px); overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; }
 .help h2 { font: 400 22px/1 var(--font-display); letter-spacing: 0.14em; margin: 0 0 14px; }
@@ -612,6 +618,19 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
   <div class="perf" data-perf hidden></div>
   <div class="help" data-help hidden>
     <div class="help-card">
+      <h2>SETTINGS</h2>
+      <h3>ACCESSIBILITY</h3>
+      <div class="a11y" data-a11y-block>
+        <button data-a11y="flashes" aria-pressed="true" title="Impact frames: off softens them to a dim flash (photosensitivity)">IMPACT FLASHES</button>
+        <button data-a11y="shake" aria-pressed="true" title="Camera shake and push-ins">CAMERA SHAKE</button>
+        <button data-a11y="blur" aria-pressed="true" title="Motion blur on fast moves">MOTION BLUR</button>
+        <button data-a11y="speedLines" aria-pressed="true" title="Anime speed lines on big leaps">SPEED LINES</button>
+        <button data-a11y="ult" aria-pressed="false" title="Ultimates: the full cinematic, a short one, or none">ULTIMATES: FULL</button>
+        <button data-a11y="sound" aria-pressed="true" title="Sound">SOUND</button>
+        <button data-a11y="frameData" aria-pressed="true" title="The frame data panel">FRAME DATA</button>
+        <button data-a11y="assist" aria-pressed="false" title="Wider parry and perfect-dodge windows; hold Slash to keep comboing">ASSIST</button>
+      </div>
+      <p class="a11y-note">Remembered on this device.</p>
       <h2>CONTROLS</h2>
       <table>
         <tr><td>Action</td><td>Keyboard / mouse</td><td>Gamepad</td></tr>
@@ -660,7 +679,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
         <li><b>Assist (AST):</b> wider parry and perfect-dodge windows, and holding Slash keeps the combo going on touch. On by default on touch screens.</li>
       </ul>
       <button class="close alt" data-perf-toggle>SHOW PERFORMANCE METER</button>
-      <button class="close" data-help-close>BACK TO THE YARD</button>
+      <button class="close" data-help-close>CLOSE</button>
     </div>
   </div>
 
@@ -824,7 +843,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
     <div class="start-card">
       <h1>UNWRITTEN</h1>
       <div class="sub">KNIGHTS OF THE LAST LANTERN</div>
-      <p><b>Story · Episodes 1–4:</b> the Tower of Choosing, the Knight Exam, the Lighthouse, and your first mission in the Greywater Fens. Your progress saves itself.</p>
+      <p><b>Story · Episodes 1–70:</b> from the Tower of Choosing to the end, as seventy anime episodes. Your progress saves itself, and every episode you've reached stays open to play again.</p>
       <p><b>The World:</b> walk the Lighthouse grounds and the capital, Aurelin. Talk to people and travel by map.</p>
       <p><b>Episode 4 combat run:</b> lead Bas and Juno through the Greywater Fens to Hask the Bogwarden (about 12 minutes).</p>
       <p>Keyboard and mouse, gamepad, or touch. Press <b>H</b> or <b>?</b> for controls.</p>
@@ -835,6 +854,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
         <button class="go alt" data-start-world>THE WORLD</button>
         <button class="go alt" data-start-run>EPISODE 4 RUN</button>
         <button class="go alt" data-start-yard>TRAINING YARD</button>
+        <button class="go alt" data-start-settings>SETTINGS & ACCESSIBILITY</button>
       </div>
       <p class="hint" data-start-hint>Enter, or any attack button, starts the story.</p>
     </div>

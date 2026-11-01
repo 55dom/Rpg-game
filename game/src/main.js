@@ -119,6 +119,8 @@ import { renownTier, LAW_REGIONS } from "./data/law.js";
 import { fillText } from "./core/script.js";
 
 const TRAIL_COLORS = { default: "#ffd98a", GaleCutter: PALETTE.gale, VacuumPull: PALETTE.gale, TempestEdge: "#a8f5dc", Counter: "#dff6ff", LanternBreak: "#ffcc55", enemy: "#ff5a4a" };
+const ULT_MODES = ["full", "short", "off"]; // how much of an Ultimate's cinematic plays (GDD §19.8)
+const ULT_SHORT_SKIPS = new Set(["ult-activate", "ult-charge", "ult-closeup"]); // short: straight to the release
 const SPELLS = [
   { slot: "Spell1", short: "Gale" }, { slot: "Spell2", short: "Pull" },
   { slot: "Spell3", short: "Tempest" }, { slot: "Spell4", short: "Wall" },
@@ -214,7 +216,14 @@ export function boot(doc = document) {
   const pin = BB.MeshBuilder.CreatePolyhedron("pin", { type: 1, size: 0.12 }, scene);
   pin.material = reticle.material; pin.isPickable = false;
 
-  const settings = { frameData: !mobile, flashes: !reduced, sound: true, assist: coarse };
+  // Settings, remembered between visits (GDD §19.8's accessibility toggles among them). A blocked or empty store is fine.
+  const SETTINGS_KEY = "unwritten-settings";
+  const settings = { frameData: !mobile, flashes: !reduced, sound: true, assist: coarse, shake: !reduced, blur: !reduced, speedLines: !reduced, ult: reduced ? "short" : "full" };
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "null") ?? {};
+    for (const [k, v] of Object.entries(saved)) if (k in settings && typeof v === typeof settings[k] && (k !== "ult" || ULT_MODES.includes(v))) settings[k] = v;
+  } catch { /* nothing saved, or no storage: the defaults stand */ }
+  const saveSettings = () => { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch { /* not remembered this time */ } };
   const state = { frozen: false, started: false, paused: false, help: false, cinematic: 0, cinematicScale: 1, ghostTimer: 0, pending: [], time: 0 };
   const later = (seconds, fn) => state.pending.push({ t: seconds, fn });
 
@@ -277,7 +286,7 @@ export function boot(doc = document) {
               for (const [h, s, life] of [[0.1, 9, 0.7], [1, 6, 0.6], [2, 4, 0.5]]) vfx.ring({ x: f.pos.x, y: f.pos.y + h, z: f.pos.z }, s, PALETTE.gale, life, true);
               vfx.sparksAt({ x: f.pos.x, y: f.pos.y + 1, z: f.pos.z }, 14, "mint", 5, 3);
             }
-            if (e.key === "ultName") showUltCard();
+            if (e.key === "ultName" && settings.ult === "full") showUltCard();
             if (e.key === "ultBurst") {
               vfx.ring({ x: f.pos.x, y: 0.06, z: f.pos.z }, 20, PALETTE.gale, 0.6);
               vfx.ring({ x: f.pos.x, y: 1.2, z: f.pos.z }, 14, "#ffffff", 0.45);
@@ -288,7 +297,7 @@ export function boot(doc = document) {
           } else if (e.type === EventType.CameraCue) {
             if (e.key === "punch") { camera.kick(0.35); camera.shake(0.2); }
             if (e.key === "finisher") { camera.kick(1); camera.shake(0.45); }
-            if (e.key.startsWith("ult-") && isPlayer(f)) {
+            if (e.key.startsWith("ult-") && isPlayer(f) && settings.ult !== "off" && !(settings.ult === "short" && ULT_SHORT_SKIPS.has(e.key))) {
               const shot = camera.cue(e.key);
               root.classList.toggle("ult-desat", !!shot?.desaturate);
               if (e.key === "ult-impact") { impact(4, true); camera.shake(0.8); }
@@ -548,7 +557,7 @@ export function boot(doc = document) {
         case "lilyPads": hud.toast("LILY PAD LEAP", "danger"); hud.banner("IT'S GOING TO HOP · STAY OFF THE LIT PADS"); lilyFx.mark(ev.center, ev.pads); sfx.play("heal", 0.6); break;
         case "padHop": lilyFx.target(ev.to); root.classList.add("leaping"); sfx.play("dodge", 0.9); state.hopGhost = 0; break;
         case "padSmash": lilyFx.smash(ev.at, ev.last); sfx.play("slam", ev.last ? 1 : 0.75); camera.shake(ev.last ? 0.45 : 0.25); impact(ev.last ? 3 : 2, ev.last);
-          if (settings.flashes) { root.classList.add("hopblur"); setTimeout(() => root.classList.remove("hopblur"), 70); } break;
+          if (settings.blur) { root.classList.add("hopblur"); setTimeout(() => root.classList.remove("hopblur"), 70); } break;
         case "leapEnd": root.classList.remove("leaping"); setTimeout(() => { if (!world.boss?.boss?.leap) lilyFx.clear(); }, 450); break;
         case "swallowed": hud.toast("SWALLOWED!", "danger"); hud.banner(ev.target ? `${ev.target.stats.name.toUpperCase()} IS STUCK IN A SLIME BUBBLE · BURST IT` : "MORE EGG SACS"); sfx.play("mud"); break;
         case "freed": hud.toast(`${ev.fighter.stats.name.toUpperCase()} IS FREE`, "clear"); break;
@@ -790,8 +799,17 @@ export function boot(doc = document) {
   // Menu buttons.
   const menu = (name, fn) => root.querySelector(`[data-menu="${name}"]`)?.addEventListener("click", (e) => { e.currentTarget.blur(); sfx.play("ui"); fn(); });
   const fdPanel = root.querySelector("[data-fd]");
-  const applySettings = () => {
+  const applySettings = (save = true) => {
     fdPanel.hidden = !settings.frameData;
+    camera.shakeScale = settings.shake ? 1 : 0;
+    root.classList.toggle("no-blur", !settings.blur);
+    root.classList.toggle("no-speedlines", !settings.speedLines);
+    for (const b of root.querySelectorAll("[data-a11y]")) {
+      const k = b.dataset.a11y;
+      if (k === "ult") { b.textContent = { full: "ULTIMATES: FULL", short: "ULTIMATES: SHORT", off: "ULTIMATES: SKIP" }[settings.ult]; b.setAttribute("aria-pressed", String(settings.ult !== "full")); }
+      else b.setAttribute("aria-pressed", String(!!settings[k]));
+    }
+    if (save) saveSettings();
     root.querySelector('[data-menu="frameData"]')?.setAttribute("aria-pressed", String(settings.frameData));
     root.querySelector('[data-menu="flashes"]')?.setAttribute("aria-pressed", String(settings.flashes));
     root.querySelector('[data-menu="sound"]')?.setAttribute("aria-pressed", String(settings.sound));
@@ -889,7 +907,15 @@ export function boot(doc = document) {
   menu("assist", () => { settings.assist = !settings.assist; applySettings(); hud.toast(settings.assist ? "ASSIST ON" : "ASSIST OFF"); });
   menu("reset", () => { if (state.mode === "story") backToTitle(); else if (state.mode === "run") replay("run"); else restart(); }); // story: back to the title (progress is autosaved)
   root.querySelector("[data-help-close]")?.addEventListener("click", () => toggleHelp(false));
-  applySettings();
+  // The accessibility block in the controls card (GDD §19.8): every toggle in one place, phones included.
+  for (const b of root.querySelectorAll("[data-a11y]")) b.addEventListener("click", (e) => {
+    e.currentTarget.blur(); sfx.play("ui");
+    const k = b.dataset.a11y;
+    if (k === "ult") settings.ult = ULT_MODES[(ULT_MODES.indexOf(settings.ult) + 1) % ULT_MODES.length];
+    else settings[k] = !settings[k];
+    applySettings();
+  });
+  applySettings(false);
 
   /** A fresh world for a new run or sandbox session (views rebuilt, settings kept). */
   let resetBossFx = null; // set once the boss visuals exist (below)
@@ -946,6 +972,7 @@ export function boot(doc = document) {
   }, true);
   startScreen.querySelector("[data-start-run]")?.addEventListener("click", (e) => { e.stopPropagation(); start("run"); });
   startScreen.querySelector("[data-start-yard]")?.addEventListener("click", (e) => { e.stopPropagation(); start("yard"); });
+  startScreen.querySelector("[data-start-settings]")?.addEventListener("click", (e) => { e.stopPropagation(); sfx.play("ui"); toggleHelp(true); }); // before the first frame of play (flashes, shake…)
 
   // ---- Story mode (Phase 3) ----
   const saves = SaveStore.browser();
@@ -1851,7 +1878,7 @@ export function boot(doc = document) {
     waterJet.update(); lilyFx.update(dt); reedFx.update(dt); smokeFx.update(dt); holeFx.update(dt); memoryFx.update(dt); groundFx.update(dt); tearFx.update(dt);
     if (world.boss?.boss?.leap) { // motion blur on the hops: a trail of fading ghosts of Gullmaw
       state.hopGhost = (state.hopGhost ?? 0) - dt;
-      if (state.hopGhost <= 0) { const rig = viewFor(world.boss); if (rig?.snapshot) vfx.afterimage(rig, hopGhostMat, 0.22); state.hopGhost = 0.035; }
+      if (state.hopGhost <= 0) { const rig = viewFor(world.boss); if (rig?.snapshot && settings.blur) vfx.afterimage(rig, hopGhostMat, 0.22); state.hopGhost = 0.035; } // (a motion-blur trail: the setting turns it off)
     }
     for (const [f, rig] of views) {
       const t = f.timeScale < 1 ? clamp01(f.timeAcc + alpha * f.timeScale) : alpha;
