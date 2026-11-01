@@ -53,6 +53,7 @@ import { ROOK_STATS, ROOK_ABILITIES, ROOK_HITBOXES, buildRookGraph, defaultLoado
 import { PAGES, PAGE_HITBOXES } from "../data/pages.js";
 import { difficultyOf } from "../data/difficulty.js";
 import { MARGIN_TUNING } from "../data/secretPages.js";
+import { HOLLOW_BITE, FORBIDDEN_HITBOXES, NULL_BITE, CORRUPTION } from "../data/forbidden.js";
 import { pageLevel } from "../core/progress.js";
 import { SEVERIN_KIT, SEVERIN_KIT_STATS, SEVERIN_KIT_HITBOXES, SEVERIN_KIT_LOADOUT, SEVERIN_KIT_SPELLS } from "../data/severinKit.js";
 import { hitSpec } from "../core/combat.js";
@@ -272,6 +273,7 @@ export class Fighter {
         else if (e.key === "timeStop") this.world.stopFrames = Math.max(this.world.stopFrames, e.value);
         else if (e.key === "slam") { this.vel.y = -e.value; this.slamming = true; }
         else if (e.key === "parry") this.combatant.startParry(this.world.parryWindow(this, e.value));
+        else if (e.key === "forbidden") this.world.emit({ type: "forbiddenCast", fighter: this, ability: a }); // (the story raises Corruption, §8.3)
         else if (e.key === "shield") { const p = this.world.player; if (p.alive) { p.tags.add("SHIELDED", e.value); this.world.emit({ type: "shield", fighter: this, target: p }); } }
         else if (e.key === "heal") this.world.heal(this, e.value);
         else if (e.key === "sacrifice") this.world.sacrifice(this, e.value);
@@ -324,6 +326,8 @@ export class World {
     this.mods = { attack: 0, defense: 0, health: 0, mana: 0, manaRegen: 0, posture: 0, surge: 0, speed: 0, ...(o.mods ?? {}) };
     this.revision = !!o.revision; // the Palimpsest's Revision stage (after Ep 40): the page rewinds when Rook would fall
     if (this.revision) this.mods = { ...this.mods, manaRegen: this.mods.manaRegen + REVISION.manaRegen }; // ink comes back faster
+    this.corruption = o.corruption ?? 0; // GDD §8.3 (data/forbidden.js): read for the whispers and Blank Verse
+    if ((o.margin ?? []).includes("blankVerse") && this.corruption <= 0) this.mods = { ...this.mods, attack: this.mods.attack + MARGIN_TUNING.blankAttack, manaRegen: this.mods.manaRegen + MARGIN_TUNING.blankMana }; // Blank Verse: a clean page
     this.rewind = [];                 // where Rook was, and how, every few frames for the last three seconds
     const m = this.mods;
     this.playerStats = Object.freeze({ ...ROOK_STATS, maxHealth: ROOK_STATS.maxHealth + m.health, maxMana: ROOK_STATS.maxMana + m.mana,
@@ -351,10 +355,12 @@ export class World {
       const br = ab && PAGES[slot] && this.pages[slot]?.branch && ab.id === PAGES[slot].base.id ? PAGES[slot].branches.find((b) => b.key === this.pages[slot].branch) : null;
       this.loadout[slot] = br ? br.ability : ab; // an evolved page stays evolved
     }
+    // A forbidden page pinned to the grimoire (§8.3) takes Wind Wall's button, unless this fight has put something else there.
+    if (o.forbidden && this.loadout.Spell4 && [PAGES.Spell4.base, ...PAGES.Spell4.branches.map((b) => b.ability)].some((a) => a.id === this.loadout.Spell4.id)) this.loadout.Spell4 = HOLLOW_BITE;
     this._fitLoadout();
     this.zones = [];
     this.player = this.add(new Fighter(this, {
-      id: "rook", kind: "player", team: Team.Player, stats: this.playerStats, hitboxes: { ...ROOK_HITBOXES, ...PAGE_HITBOXES, ...INSCRIPTION_HITBOXES },
+      id: "rook", kind: "player", team: Team.Player, stats: this.playerStats, hitboxes: { ...ROOK_HITBOXES, ...PAGE_HITBOXES, ...INSCRIPTION_HITBOXES, ...FORBIDDEN_HITBOXES },
       graph: buildRookGraph(() => this.player.context(), ROOK_ABILITIES, this.loadout, { ultimate: this.ultimate }), x: 0, z: -4,
     }));
     if (o.kit) this._wear(o.kit); // somebody else's body (Ep 49: a soldier, in a memory)
@@ -590,7 +596,7 @@ export class World {
    */
   _perfectCast(f, old, next) {
     if (f !== this.player || !next || !(next.manaCost > 0) || !f.runner.hasHit || !this.progress) return;
-    const slot = Object.keys(this.loadout).find((k) => this.loadout[k]?.id === next.id && PAGES[k]);
+    const slot = Object.keys(this.loadout).find((k) => this.loadout[k]?.id === next.id && PAGES[k] && !next.tags?.includes("forbidden"));
     if (!slot || pageLevel(slot, this.pages[slot]?.xp ?? 0) < 5) return;
     const fr = f.runner.frame;
     if (!old.cancels.some((c) => fr >= c.from && fr < c.from + Tuning.perfectCastFrames && fr <= c.to)) return;
@@ -838,7 +844,7 @@ export class World {
     if (!this.progress) return;
     for (const slot of Object.keys(PAGES)) {
       const ab = this.loadout[slot];
-      if (!ab) continue;
+      if (!ab || ab.tags?.includes("forbidden")) continue; // (a forbidden page isn't Wind Wall's: no page bonuses)
       const b = this.progress.pageBonus(slot), base = ab.baseManaCost ?? ab.manaCost;
       this.loadout[slot] = { ...ab, baseManaCost: base, manaCost: Math.round(base * b.mana) };
       this.pageDmg[ab.id] = b.dmg;
@@ -867,6 +873,17 @@ export class World {
     return true;
   }
 
+  /** Pin (or put away) the forbidden page (GDD §8.3): it takes Wind Wall's button; put away, Wind Wall comes back as it was. */
+  setForbidden(on) {
+    const ww = [PAGES.Spell4.base, ...PAGES.Spell4.branches.map((b) => b.ability)], cur = this.loadout.Spell4;
+    if (!cur) return false;
+    if (on && ww.some((a) => a.id === cur.id)) this.loadout = { ...this.loadout, Spell4: HOLLOW_BITE };
+    else if (!on && cur.id === HOLLOW_BITE.id) { const br = this.pages.Spell4?.branch && PAGES.Spell4.branches.find((b) => b.key === this.pages.Spell4.branch); this.loadout = { ...this.loadout, Spell4: br ? br.ability : PAGES.Spell4.base }; }
+    else return false;
+    this.applyLoadout();
+    return true;
+  }
+
   /** Re-branch an evolved page (at the Lighthouse, GDD §8.1): the other branch goes on its button. */
   rebranchPage(slot, key) {
     const page = this.pages[slot], def = PAGES[slot], branch = def?.branches.find((b) => b.key === key);
@@ -881,7 +898,7 @@ export class World {
   _pageXp(ability) {
     if (!this.pageGrowth || this.active !== "player") return;
     for (const [slot, ab] of Object.entries(this.loadout)) {
-      if (ab?.id !== ability.id || !PAGES[slot]) continue;
+      if (ab?.id !== ability.id || !PAGES[slot] || ab.tags?.includes("forbidden")) continue;
       const page = this.pages[slot], before = pageLevel(slot, page.xp);
       if (before >= 5) return;
       page.xp += this.pageXpMult;
@@ -1444,6 +1461,7 @@ export class World {
     }
     const pd = att === this.player && hb.ability ? this.pageDmg[hb.ability.id] : 0;
     if (pd && pd !== 1) spec = { ...spec, damage: spec.damage * pd };
+    if (att === this.player && this.corruption >= 75 && hb.ability?.tags?.includes("forbidden")) spec = { ...spec, damage: spec.damage * CORRUPTION.whisperFactor }; // the Hollow whispers (§8.3, 75)
     if (att === this.player && att.perfectCast && att.perfectCast === hb.ability?.id) spec = { ...spec, damage: spec.damage * Tuning.perfectCastFactor, posture: spec.posture * Tuning.perfectCastFactor }; // a Perfect Cast
     if (att === this.player && this.annotation && spec.damage > 0 && def.tags.has("INSCRIBED")) spec = { ...spec, damage: spec.damage * INSCRIPTION.bonus }; // ink marks it
     if (att === this.player && (this.mods.attack || this.mods.posture)) spec = { ...spec, damage: spec.damage * (1 + this.mods.attack), posture: spec.posture * (1 + this.mods.posture) };
@@ -1498,6 +1516,7 @@ export class World {
           const share = att === this.player ? 1 : Tuning.companionSurgeShare;
           if (!hb.ability.surgeCost) this._surge(this.player.stats.surgeGain.dealt * r.healthDamage * share);
           if (att === this.player && hb.ability.manaCost > 0) this._pageXp(hb.ability);
+          if (att === this.player && hb.ability.tags?.includes("forbidden")) for (const t of NULL_BITE) def.tags.remove(t); // Null Bite: what guarded it is gone
         }
         if (spec !== hb.spec) this.emit({ type: "shieldBlock", defender: def, at });
         if (def === this.player && !r.killed) this._surge(def.stats.surgeGain.taken * r.healthDamage); // (the blow that drops you doesn't pay for its own Revision)

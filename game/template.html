@@ -41,6 +41,13 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
 .a11y button[aria-pressed="true"] { color: var(--text); border-color: var(--lantern); }
 .a11y button[data-a11y="ult"] { color: var(--text); }
 .a11y-note { margin: 4px 0 0; font-size: 11px; color: var(--muted); }
+/* Corruption 75 (GDD §8.3): the Hollow whispers in your fights. The edges of the picture fray and darken; a word, now and then. */
+.whispers canvas { filter: saturate(0.55) contrast(1.12); }
+.whispers::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 4; box-shadow: inset 0 0 160px 40px rgba(8, 6, 14, 0.85); animation: fray 2.6s steps(6) infinite; }
+@keyframes fray { 0%, 100% { opacity: 0.85; } 50% { opacity: 1; } 70% { opacity: 0.7; } }
+.whisper { position: fixed; left: 50%; top: 38%; transform: translateX(-50%); z-index: 5; pointer-events: none; font: italic 400 15px/1.2 var(--font-mono); letter-spacing: 0.4em; color: rgba(220, 210, 240, 0.0); text-shadow: 1px 0 rgba(255, 60, 90, 0.5), -1px 0 rgba(80, 160, 255, 0.5); transition: color 0.8s; }
+.whisper.on { color: rgba(220, 210, 240, 0.55); }
+@media (prefers-reduced-motion: reduce) { .whispers::after { animation: none; } }
 /* The credits after Ep 70: a slow roll over the dark, over the title. */
 .credits { position: absolute; inset: 0; z-index: 7; overflow-y: auto; overflow-x: hidden; background: radial-gradient(ellipse at 50% 40%, #12141d, #050608); text-align: center; }
 .credits[hidden] { display: none; }
@@ -597,6 +604,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
     <div class="bar hp enemy boss-hp"><i data-boss-hp></i></div>
     <div class="bar posture"><i data-boss-posture></i></div>
   </div>
+  <div class="whisper" data-whisper aria-hidden="true"></div>
   <div class="ultcard" data-ultcard><b>SKYRENDER</b><span>WIND GRIMOIRE · LEGENDARY PAGE</span></div>
 
   <section class="fd" data-fd aria-label="Frame data">
@@ -788,6 +796,8 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <div class="slot-list" data-grim-pages></div>
       <h3 data-grim-secret-head>SECRET PAGES · TWO IN THE MARGIN</h3>
       <div class="slot-list" data-grim-secrets></div>
+      <h3 data-grim-forbid-head hidden>FORBIDDEN · CORRUPTION</h3>
+      <div class="slot-list" data-grim-forbidden hidden></div>
       <h3 data-grim-pts>THE GRIMOIRE TREE</h3>
       <div class="tree" data-grim-tree></div>
       <p class="hint">Level-ups give skill points. A page's last skill needs that page at level III.</p>

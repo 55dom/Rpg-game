@@ -27,4 +27,4 @@ export const INSCRIBE = defineAbility({ id: "Inscribe", startup: 10, active: 6, 
     { frame: 10, type: E.SpawnHitbox, key: "Quill", value: 6 }] });
 
 /** What the HUD calls an ability that isn't one of Rook's four pages. */
-export const SPELL_LABELS = Object.freeze({ Inscribe: "Inscribe" });
+export const SPELL_LABELS = Object.freeze({ Inscribe: "Inscribe", HollowBite: "Hollow Bite" });

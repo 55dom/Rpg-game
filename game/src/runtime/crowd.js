@@ -79,7 +79,7 @@ export function buildCrowd(scene, K, { count, paths, rng, mobile = false, chatte
     const femme = kind === "dress" || (kind !== "laborer" && rng() < 0.35);
     const hairStyle = femme ? (rng() < 0.6 ? "long" : "bob") : "short";
     const p = {
-      path: chat ? null : paths[i % paths.length], chat, t: rng() * 100, speed: (child ? 1.3 : elder ? 0.5 : 0.7) + rng() * 0.5,
+      child, path: chat ? null : paths[i % paths.length], chat, t: rng() * 100, speed: (child ? 1.3 : elder ? 0.5 : 0.7) + rng() * 0.5,
       side: (rng() - 0.5) * 2.2, H, W, stoop: elder ? 0.16 : 0, bounce: child ? 1.6 : 1, phase: rng(), gesture: rng() * 10,
       torso: inst(S.torso, top), hem: inst(longHem ? S.hemLong : S.hemShort, top), longHem, belt: inst(S.belt, col(kind === "robe" ? "#c9a24a" : pick(BELTS))),
       sash: kind === "robe" || (kind === "villager" && rng() < 0.2) ? inst(S.sash, col("#e6c040")) : null,
@@ -99,11 +99,11 @@ export function buildCrowd(scene, K, { count, paths, rng, mobile = false, chatte
   const parts = (p) => [p.torso, p.hem, p.belt, p.sash, ...p.upper, ...p.fore, ...p.hands, ...p.thighs, ...p.calves, ...p.boots, p.head, ...p.eyes, p.cap, p.fringe, p.long, p.beard].filter(Boolean);
   return {
     people,
-    /** @param {{ density?: number, hurry?: number }} mood 0–1 share of the crowd out and about; walking speed factor */
+    /** @param {{ density?: number, hurry?: number, noChildren?: boolean }} mood 0–1 share of the crowd out and about; walking speed factor; the children kept in */
     update(dt, mood = {}) {
       const density = mood.density ?? 1, hurry = mood.hurry ?? 1;
       for (const [i, p] of people.entries()) {
-        const on = i / people.length < density;
+        const on = i / people.length < density && !(mood.noChildren && p.child); // (Corruption 25 in Thornwick: the children stay in, GDD §8.3)
         if (on !== p.on) { p.on = on; for (const m of parts(p)) m.setEnabled(on); }
         if (!on) continue;
         let moving = 0;

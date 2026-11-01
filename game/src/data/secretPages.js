@@ -6,7 +6,7 @@
 //   how    the hidden condition, said plainly once it's found
 //   effect read by the World (sim/world.js `margin`)
 //
-// Blank Verse (reach Corruption 50, then cleanse to 0) waits for Corruption (Phase 11 Step 4).
+// Blank Verse (reach Corruption 50, then cleanse to 0) is found by core/corruption.js.
 
 export const MARGIN_SLOTS = 2;
 
@@ -35,6 +35,12 @@ export const SECRET_PAGES = Object.freeze({
     how: "Beat Hask without its mud ever touching you.",
     desc: "Mud and bile slide off you: WEIGHTED never sticks.",
   }),
+  blankVerse: Object.freeze({
+    name: "Blank Verse", flag: "SECRET_BLANK",
+    hint: "A page can go dark and come back clean. It remembers having been both.",
+    how: "Let Corruption reach 50, then cleansed it all the way back to nothing.",
+    desc: "While your Corruption is 0: 10% more damage, and mana comes back 2 a second faster.",
+  }),
   starChart: Object.freeze({
     name: "Star Chart", flag: "SECRET_STARS",
     hint: "Someone has been drawing the sky on stones, a piece at a time. Twelve pieces.",
@@ -48,6 +54,7 @@ export const MARGIN_TUNING = Object.freeze({
   lanternBelow: 0.25, lanternHeal: 0.2,   // Lantern's Answer
   jurorParry: 2, jurorBind: 120,           // Juror's Thread
   markFactor: 2, detonateBonus: 0.25,      // Star Chart
+  blankAttack: 0.1, blankMana: 2,          // Blank Verse
 });
 
 /** How far along each hidden condition is (the story's flags), and what finds it. */

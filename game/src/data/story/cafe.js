@@ -77,6 +77,9 @@ Odette: It was a three-tier lemon cake for the Countess's birthday. Collection a
 
 title: W_Pip
 ---
+<<if $CORRUPTION >= 25>>
+    Pip: Oh! Hello! You, um. Your shadow's doing a thing. Never mind! Cake?
+<<endif>>
 <<if $CAKE_FOUND>>
     Pip: Welcome back! Please don't ask where the cake went.
     <<stop>>

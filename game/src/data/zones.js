@@ -388,6 +388,9 @@ export const ZONES = {
     // Luke's soft spot (data/story/law.js): thugs leaning on the Lowmarket kids, and Luke beside you.
     encounters: [
       { id: "shakedown", rect: [12, -10, 31, 3], at: { x: 24, z: -3, r: 4 }, wave: ["bandit", "bandit", "bandit"], squad: ["luke"], when: "$Q_LUKE == 4", flag: "LUKE_SOFT", label: "SHAKEDOWN IN THE LOWMARKET" },
+      // Corruption 50 (GDD §8.3): the Crimson Bell has heard. Two wardens stop you in the plaza (once), and the squad's standing drops.
+      { id: "bellInquiry", rect: [-5, 9, 5, 15], at: { x: 0, z: 12, r: 4 }, wave: ["bellWarden", "bellWarden"], when: "$CORRUPTION >= 50", flag: "BELL_INQUIRY", once: true,
+        add: { REP_SQUAD: -4 }, say: ["Bell Warden", "Your grimoire's been seen doing what grimoires shouldn't. The Bell would like a word. Hold still."], label: "THE CRIMSON BELL · AN INQUIRY" },
     ],
     arrivals: { gate: { x: 0, z: -31, yaw: 0 }, undercroft: { x: A.grate.x, z: A.grate.z + 4, yaw: 0 },
       cafe: { x: A.cafe.door.x, z: A.cafe.door.z - 1.9, yaw: Math.PI }, home: { x: 24, z: 18, yaw: -Math.PI / 2 }, tower: { x: 0, z: 21.5, yaw: Math.PI }, hall: { x: 0, z: 23.4, yaw: Math.PI },
@@ -425,7 +428,8 @@ export const ZONES = {
       { id: "waterman", look: "townsman", x: -3.6, z: -4.2, yaw: -1.6,
         routine: { home: [-15.2, -3], steps: [{ do: "work", at: [-3.7, -3.9], face: -1.9, anim: "work", dur: [6, 9] }, { do: "walk", to: [-13, 2] }, { do: "idle", at: [-13, 2], face: 0, dur: [5, 8] }] } },
     ],
-    pickups: [{ id: "ledger", x: -3, z: 14.6, show: "1", flag: "LEDGER_READ", node: "W_Ledger", label: "Read the orphan ledger" }, frag(3, 0, -2.7), mural(8, 6, -6), mural(9, -8, 8)],
+    pickups: [{ id: "ledger", x: -3, z: 14.6, show: "1", flag: "LEDGER_READ", node: "W_Ledger", label: "Read the orphan ledger" }, frag(3, 0, -2.7), mural(8, 6, -6), mural(9, -8, 8),
+      { id: "shrine", x: 10, z: 4, show: "1", node: "W_Shrine", label: "The Verdant Oath shrine" }], // one of the slow ways back from Corruption (§8.3)
     encounters: [
       { id: "bandits", rect: [8, -29, 29, -19], at: { x: 18, z: -24, r: 4 }, wave: ["bandit", "bandit", "bandit"], when: "$Q_BANDITS == 1", flag: "BANDITS_CLEARED", label: "BANDITS ON THE MILL ROAD" },
     ],
@@ -452,7 +456,8 @@ export const ZONES = {
       { id: "fenpost", name: "City Watch", look: "guard", x: 1.4, z: 9.6, yaw: Math.PI, node: "W_Patrol", when: "$LUKE_HOME_OPEN",
         routine: { role: "guard", steps: [{ do: "idle", at: [1.4, 9.6], face: Math.PI, dur: [8, 12] }, { do: "walk", to: [-2.6, 13.6] }, { do: "idle", at: [-2.6, 13.6], face: 2.6, dur: [6, 9] }, { do: "walk", to: [1.4, 9.6] }] } },
     ],
-    pickups: [{ id: "hymn", x: -1.4, z: 15.2, show: "1", flag: "HYMN_READ", node: "W_Hymn", label: "Read the hymn nailed to the well" }, frag(4, -10.4, 9.5), mural(10, 6, 4), mural(11, -4, -10)],
+    pickups: [{ id: "hymn", x: -1.4, z: 15.2, show: "1", flag: "HYMN_READ", node: "W_Hymn", label: "Read the hymn nailed to the well" }, frag(4, -10.4, 9.5), mural(10, 6, 4), mural(11, -4, -10),
+      { id: "choirCache", x: 8, z: -14, show: "$ILSE_DEFEATED and not $FORBIDDEN_FOUND", node: "W_ChoirCache", faint: true, label: "A loose flagstone" }], // a Pale Choir cache: Hollow Bite, a forbidden page (§8.2)
     // Field fights: they come back each visit. Run far enough and they give up the chase.
     encounters: [
       { id: "hounds", rect: [-10, -20, 10, -11], at: { x: 0, z: -14, r: 5 }, wave: ["hound", "hound", "hound"], label: "FEN HOUNDS" },
@@ -644,7 +649,10 @@ export const ZONES = {
     id: "hollow", name: "The Hollow", region: "Through the door", stage: "hollow", dungeon: true,
     bounds: { radius: HW.radius, solids: [...HW.voids.map(([x, z, r]) => low(circle(x, z, r))), ...HW.doors.map(([x, z]) => circle(x, z, 0.8)), low(circle(HW.pillar.x, HW.pillar.z, 1.4))] }, // the pillar is light: you see through it
     spawn: { x: 0, z: -22, yaw: 0 },
-    cast: [], pickups: [], encounters: [], exits: [], arrivals: {},
+    cast: [], pickups: [],
+    // Erased (GDD §8.3, Corruption 100): you wake here and fight your way out. Fall, and you wake again at the edge.
+    encounters: [{ id: "erased", rect: [-9, -9, 9, 9], at: { x: 0, z: 0, r: 5 }, wave: ["shell", "shell", "wisp", "wisp"], boss: true, when: "$CORRUPTION >= 100", win: "restore", label: "ERASED" }],
+    exits: [], arrivals: {},
   },
   // The Lowmarket Bridge in the Siege (Eps 47–48): story only. The fight keeps to the deck north of where the Lanterns hold.
   bridge: {

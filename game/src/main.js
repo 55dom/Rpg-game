@@ -108,6 +108,7 @@ import { ZONES } from "./data/zones.js";
 import { Inventory } from "./core/inventory.js";
 import { Progress, addMods, pageLevel, pageLevelProgress, REBRANCH_MARKS } from "./core/progress.js";
 import { SECRET_PAGES, SECRET_NEEDS } from "./data/secretPages.js";
+import { CORRUPTION } from "./data/forbidden.js";
 import { SKILLS, TREE_COLUMNS, XP_BY_KIND, PAGE_ROMAN, MAX_LEVEL } from "./data/skills.js";
 import { BONDS, RANK_POINTS, RANK_UNLOCKS, GIFTS } from "./data/bonds.js";
 import { MATERIALS, HQ, TEMPER } from "./data/crafting.js";
@@ -818,6 +819,7 @@ export function boot(doc = document) {
           const c = chest(ev.fighter); vfx.flash(c, 2.6, "#ffe9a8", 0.2); vfx.ring({ x: c.x, y: c.y, z: c.z }, 2.4, PALETTE.lantern, 0.3, true);
           hud.toast("PERFECT CAST", "afterimage"); sfx.play("glint"); break;
         }
+        case "forbiddenCast": { const c = chest(ev.fighter); vfx.flash(c, 2.8, "#2a1e3a", 0.25); vfx.sparksAt(c, 14, "violet", 9, 2); camera.kick(0.3); break; } // a forbidden page bites (the story counts it, §8.3)
         case "freeCast": vfx.sparksAt(chest(ev.fighter), 8, "ink", 5, 2); if (settings.frameData) hud.pushLog(`Second Reading: ${ev.ability.id} free`); break;
         case "lanternAnswer": vfx.flash(ev.at, 3.4, "#ffd27a", 0.4); vfx.ring({ x: ev.at.x, y: 0.1, z: ev.at.z }, 3.6, PALETTE.lantern, 0.6); hud.toast("LANTERN'S ANSWER", "clear"); sfx.play("heal"); break;
         case "windWall": {
@@ -977,13 +979,15 @@ export function boot(doc = document) {
   let injuredNow = () => []; // squadmates fighting hurt, from the story's flags (set once the story exists)
   let annotationNow = () => false; // the Palimpsest's Annotation stage (after Ep 28)
   let marginNow = () => []; // the secret pages pinned in the margin (GDD §8.1, §8.4), from the story's flags
+  let forbiddenNow = () => false, corruptionNow = () => 0; // the forbidden page pinned, and Corruption (GDD §8.3)
   let revisionNow = () => false;   // and its Revision stage (after Ep 40)
   const newWorld = (opts = {}) => {
     for (const f of [...views.keys()]) removeView(f);
     walls.clear(); setBog(false, true); constellation.clear(true);
-    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, difficulty: settings.difficulty, companions: true, injured: injuredNow(), annotation: annotationNow(), revision: revisionNow(), margin: marginNow(), ...opts });
+    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, difficulty: settings.difficulty, companions: true, injured: injuredNow(), annotation: annotationNow(), revision: revisionNow(), margin: marginNow(), forbidden: forbiddenNow(), corruption: corruptionNow(), ...opts });
     const ink = world.loadout.Spell1?.id === "Inscribe"; // the margin: Inscribe takes Gale's button
     const galeBtn = root.querySelector('[data-intent="Spell1"]'); if (galeBtn) galeBtn.textContent = ink ? "INK" : "GALE";
+    const wallBtn = root.querySelector('[data-intent="Spell4"]'); if (wallBtn) wallBtn.textContent = world.loadout.Spell4?.id === "HollowBite" ? "BITE" : "WALL"; // the forbidden page takes Wind Wall's button (§8.3)
     world.pageDefs = PAGES;
     root.classList.toggle("has-tag", !!world.members.severin); root.classList.remove("tag-severin", "hushed");
     resetBossFx?.();
@@ -1041,6 +1045,7 @@ export function boot(doc = document) {
     makeWorld: (opts) => newWorld({ ...opts, mods: addMods(statMods(partyOf(opts.companions)), opts.mods), progress: story.progress, teamAttacks: story.bonds.teamAttacks(), pageXpBonus: story.crafting.pageXpBonus }),
     openUI: (kind) => openHQ(kind),
     onSecret: () => { world.margin = new Set(story.secrets.margin); refreshGrimDot(); }, // a secret page found (and pinned, if there was room)
+    onCorruption: () => { if (!grim.hidden) renderGrimoire(); },
     onMeal: () => { hud.toast("WARM AND FULL", "clear"); hud.banner("+20 HEALTH · +5% DAMAGE UNTIL MIDNIGHT"); sfx.play("heal"); applyGear(); const p = world.player; p.combatant.health.fill(); },
     openShop: (id) => openShop(id),
     onQuest: (e) => {
@@ -1110,6 +1115,8 @@ export function boot(doc = document) {
   const playtest = new PlaytestLog(story.flags, { where: () => ({ episode: story.ep?.id ?? null, beat: story.director?.beat?.id ?? null }) });
   injuredNow = () => (story.flags.get("BAS_ARM_BROKEN") ? ["bas"] : []); // Bas fights one-armed after the vault
   marginNow = () => story.secrets.margin;
+  forbiddenNow = () => !!story.flags.get("FORBIDDEN_FOUND") && !!story.flags.get("FORBIDDEN_ON");
+  corruptionNow = () => story.corruption.value;
   const playerName = root.querySelector(".player-card .name");
   const showName = (n) => { if (playerName?.firstChild) playerName.firstChild.textContent = `${n.toUpperCase()} `; };
   const backToTitle = () => {
@@ -1745,6 +1752,22 @@ export function boot(doc = document) {
       const on = sec.pinned(id);
       return `<div class="row${on ? " ready" : ""}"><b>${on ? "✦" : "·"}</b><span>${pg.name}<small>${pg.desc}</small><small><em>${pg.how}</em></small></span><span class="act"><button class="go${on ? " alt" : ""}" data-pin="${id}">${on ? "UNPIN" : "PIN"}</button></span></div>`;
     }).join("");
+    // The forbidden page and Corruption (GDD §8.3): shown once there's either.
+    const cor = story.corruption.value, found = !!story.flags.get("FORBIDDEN_FOUND"), on = found && !!story.flags.get("FORBIDDEN_ON");
+    const fHead = grim.querySelector("[data-grim-forbid-head]"), fList = grim.querySelector("[data-grim-forbidden]");
+    fHead.hidden = fList.hidden = !found && cor <= 0;
+    fHead.textContent = `FORBIDDEN · CORRUPTION ${cor} / ${CORRUPTION.max}`;
+    fList.innerHTML = `<div class="row${on ? " ready" : ""}"><b>${cor}</b><span>Corruption<small>${cor >= 75 ? "The Hollow whispers when you fight." : cor >= 50 ? "The Crimson Bell knows your name." : cor >= 25 ? "People notice. Thornwick's children stay in when you're about." : "A clean page, or nearly."} It comes down slowly: a Verdant Oath shrine (Thornwick, once a day), Brother Moss's tea. At 100, the page goes blank.</small></span><span class="xpbar"><u style="width:${cor}%"></u></span></div>` +
+      (found ? `<div class="row${on ? " ready" : ""}"><b>${on ? "✦" : "·"}</b><span>Hollow Bite <em>forbidden</em><small>Huge damage; deletes what's guarding a foe. Takes Wind Wall's button. Pinning it costs ${CORRUPTION.equip} Corruption, and every cast ${CORRUPTION.cast} more.</small></span><span class="act"><button class="go${on ? " alt" : ""}" data-forbid>${on ? "PUT IT AWAY" : "PIN IT"}</button></span></div>` : "");
+    grim.querySelector("[data-forbid]")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const now = !story.flags.get("FORBIDDEN_ON");
+      story.flags.set("FORBIDDEN_ON", now ? 1 : 0);
+      if (now) story.corrupt(CORRUPTION.equip);
+      world.setForbidden(now); onEvents(world.drainEvents());
+      const wb = root.querySelector('[data-intent="Spell4"]'); if (wb) wb.textContent = world.loadout.Spell4?.id === "HollowBite" ? "BITE" : "WALL";
+      sfx.play(now ? "rift" : "ui"); story.saveNow(); renderGrimoire();
+    });
     for (const btn of grim.querySelectorAll("[data-pin]")) btn.addEventListener("click", (e) => {
       e.stopPropagation();
       story.secrets.toggle(btn.dataset.pin); world.margin = new Set(story.secrets.margin);
@@ -1947,12 +1970,27 @@ export function boot(doc = document) {
   hud.quality = quality;
 
   let last = performance.now();
+  // Corruption 75 (GDD §8.3): the Hollow whispers in your fights. The picture frays at the edges; now and then, a word.
+  const whisperEl = root.querySelector("[data-whisper]");
+  const WHISPERS = ["write nothing", "let it go blank", "you were never written", "rest", "unmake it", "nobody would remember"];
+  let whisperT = 6, whisperI = 0;
+  const whispers = (dt) => {
+    const on = state.mode === "story" && (world.corruption ?? 0) >= 75 && world.liveEnemies.length > 0;
+    root.classList.toggle("whispers", on);
+    if (!on) { whisperEl?.classList.remove("on"); return; }
+    if ((whisperT -= dt) <= 0) {
+      whisperT = 9 + Math.random() * 5;
+      if (whisperEl) { whisperEl.textContent = WHISPERS[whisperI++ % WHISPERS.length]; whisperEl.classList.add("on"); later(2.2, () => whisperEl.classList.remove("on")); }
+    }
+  };
+
   engine.runRenderLoop(() => {
     const now = performance.now();
     const dt = Math.min(0.1, (now - last) / 1000);
     last = now;
     state.time += dt;
     grade.update(dt);
+    whispers(dt);
 
     controls.poll(dt);
     let running = state.started && !state.paused && !state.help && !state.frozen && !state.modal && !story.blocking;

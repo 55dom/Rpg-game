@@ -162,7 +162,7 @@ test("The world holds them: twelve murals in seven places (somewhere you can sta
   assert.match(tpl, /data-grim-secrets/);
   const main = src("main.js"), story = src("runtime/story.js");
   for (const ev of ["perfectCast", "freeCast", "lanternAnswer"]) assert.match(main, new RegExp(`case "${ev}"`));
-  assert.match(main, /margin: marginNow\(\), \.\.\.opts/);
+  assert.match(main, /margin: marginNow\(\), /);
   assert.match(story, /if \(id === "hall"\) this\._found\(this\.secrets\.hallVisit\(this\.day, !!this\.clock\?\.night\)\)/);
   assert.match(story, /case "mural": this\._found\(this\.secrets\.mural\(\)\)/);
 });

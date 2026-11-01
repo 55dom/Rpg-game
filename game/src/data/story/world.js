@@ -5,7 +5,7 @@ import { IRON_SCRIPT } from "./iron.js";
 import { CAFE_SCRIPT } from "./cafe.js";
 import { BOND_SCRIPT } from "../bonds.js";
 import { CRAFT_SCRIPT } from "../crafting.js";
-import { LORE_SCRIPT, MURAL_SCRIPT } from "../lore.js";
+import { LORE_SCRIPT, MURAL_SCRIPT, FORBIDDEN_SCRIPT } from "../lore.js";
 import { NOTEBOOK_READ } from "./ep23.js";
 import { LAW_SCRIPT, LUKE_SCRIPT } from "./law.js";
 import { ISLES_SCRIPT } from "./ep30.js";
@@ -101,6 +101,9 @@ Keeper: When a knight dies, the wick turns to ash. That's how we know.
 
 title: W_Vendor
 ---
+<<if $CORRUPTION >= 25>>
+    Vendor: You've got a look about you today, knight. Ink under the nails. Buy something quick, eh?
+<<endif>>
 Vendor: Lowmarket's finest! Blades, cloaks, charms for every knight!
 <<if $Q_RUMORS == 1 and not $ASKED_VENDOR>>
     -> Ask about the vanished village.
@@ -141,6 +144,9 @@ Guard: South gate. The road out runs to the old Lighthouse. Nothing past that bu
 
 title: W_Gossip
 ---
+<<if $CORRUPTION >= 25>>
+    Gossip: (quietly) People are saying your book's gone dark round the edges. I'm only saying what people say.
+<<endif>>
 <<if $Q_RUMORS == 2>>
     Gossip: Well? What did they say?
     You tell her about the carts, the singing, and the faces nobody can remember.
@@ -170,6 +176,10 @@ Gossip: My cousin says the Choir sings and places forget they were ever there.
 
 title: W_Kid
 ---
+<<if $CORRUPTION >= 25>>
+    The kid sees you coming, ducks behind the fountain, and won't come out. You hear a whisper: 'Mum says not that one.'
+    <<stop>>
+<<endif>>
 <<if $Q_TOY == 2>>
     Kid: My lantern! You found it! You're the best knight. Second best. After me.
     <<set $TOY_RETURNED to 1>>
@@ -280,6 +290,9 @@ You find your line. You know it by heart.
 
 title: W_Farmer
 ---
+<<if $CORRUPTION >= 25>>
+    Farmer: Dog won't stop growling at you. Never done that to anyone before. Never.
+<<endif>>
 <<if $Q_BANDITS == 2>>
     Farmer: They ran? All of them? Ha! I'll tell the miller. He'll cry. He cries at everything.
     <<set $BANDITS_TOLD to 1>>
@@ -370,4 +383,4 @@ ${NOTEBOOK_READ}
 `;
 
 /** Every free-roam talk node: the towns, the Gilded Spoon café (data/story/cafe.js), and bonds (data/bonds.js). */
-export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT + CRAFT_SCRIPT + LORE_SCRIPT + MURAL_SCRIPT + HALL_SCRIPT + IRON_SCRIPT + NOTEBOOK_SCRIPT + LAW_SCRIPT + LUKE_SCRIPT + ISLES_SCRIPT + OLDCITY_SCRIPT;
+export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT + CRAFT_SCRIPT + LORE_SCRIPT + MURAL_SCRIPT + FORBIDDEN_SCRIPT + HALL_SCRIPT + IRON_SCRIPT + NOTEBOOK_SCRIPT + LAW_SCRIPT + LUKE_SCRIPT + ISLES_SCRIPT + OLDCITY_SCRIPT;

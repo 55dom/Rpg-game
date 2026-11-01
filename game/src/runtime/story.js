@@ -34,6 +34,8 @@ import { Ambient } from "./ambient.js";
 import { WorldClock } from "../sim/weather.js";
 import { RainFX } from "./weather.js";
 import { Secrets } from "../core/secrets.js";
+import { Corruption } from "../core/corruption.js";
+import { CORRUPTION, CORRUPTION_STAGES } from "../data/forbidden.js";
 import { SECRET_PAGES } from "../data/secretPages.js";
 import { LawWatch } from "./law.js";
 import { makeSentries, stepSentries, SENTRY } from "../sim/sentry.js";
@@ -393,6 +395,7 @@ export class StoryPlayer {
     this.progress = new Progress();
     this.bonds = new Bonds(this.flags); // bond state lives in the flags
     this.secrets = new Secrets(this.flags); // the secret pages (GDD §8.4), found and pinned, also in the flags
+    this.corruption = new Corruption(this.flags, this.secrets); // GDD §8.3: kept in the flags too
     this.quests = new QuestLog(QUESTS, this.flags, {
       onReward: (q, r) => { if (r.marks) this.inventory.earn(r.marks); this.gainXp(r.xp ?? QUEST_XP); for (const [id, n] of Object.entries(r.bond ?? {})) this.bondGain(id, n); },
       onEvent: (e) => this.ctx.onQuest?.(e),
@@ -878,8 +881,17 @@ export class StoryPlayer {
         const r = this.secrets.mossTea(this.day);
         this.flags.set("MOSS_TEA_OK", r);
         if (r === 2) this._found("secondReading");
+        if (r > 0 && this.corruption.value > 0) this.cleanse(CORRUPTION.tea); // (his tea is one of the slow ways back, §8.3)
         break;
       }
+      case "cleanse": { // a Verdant Oath shrine, once a day: $CLEANSE_OK 1 (it took), 0 (nothing to take), -1 (already today)
+        if (this.corruption.value <= 0) { this.flags.set("CLEANSE_OK", 0); break; }
+        if (Number(this.flags.get("CLEANSE_DAY")) === this.day) { this.flags.set("CLEANSE_OK", -1); break; }
+        this.flags.set("CLEANSE_DAY", this.day); this.flags.set("CLEANSE_OK", 1);
+        this.cleanse(CORRUPTION.shrine);
+        break;
+      }
+      case "forbidden": if (args[0] === "take") { this.flags.set("FORBIDDEN_FOUND", 1); this.ctx.hud.toast("FORBIDDEN PAGE · HOLLOW BITE", "danger"); } break;
       default: break;   // unknown commands are ignored (forward-compatible scripts)
     }
   }
@@ -1092,7 +1104,8 @@ export class StoryPlayer {
     this.rain.update(indoor ? 0 : c.wet, this.ctx.scene.activeCamera?.position);
     const p = this.ctx.getWorld().player.pos, fight = !!this.exploring?.combat;
     const set = sets?.built?.get(sets.current);
-    if (set) set.mood = { density: c.density * (fight ? 0.1 : 1), hurry: 1 + c.wet * 0.7, wind: c.wet + c.cloud * 0.3, player: { x: p.x, z: p.z } };
+    if (set) set.mood = { density: c.density * (fight ? 0.1 : 1), hurry: 1 + c.wet * 0.7, wind: c.wet + c.cloud * 0.3, player: { x: p.x, z: p.z },
+      noChildren: this.zone?.id === "thornwick" && this.corruption.value >= 25 }; // (Corruption 25: Thornwick's children stay in)
     if ((this.atmoT = (this.atmoT ?? 0) - dt) <= 0) {
       this.atmoT = 0.5;
       sets?.atmosphere?.({ daylight: c.daylight, cloud: c.cloud, wet: c.wet });
@@ -1124,6 +1137,7 @@ export class StoryPlayer {
       for (const e of x.beat.exits ?? []) if (inRect(pp, e.rect) && this._exitOpen(e)) { x.busy = true; x.resolve({ exit: e }); return; }
       return;
     }
+    if (this.corruption.value >= CORRUPTION.max && this._erase()) return; // Erased (§8.3, 100)
     if ((x.encounters.length || x.combat) && this._encounterTick(x, pp)) { // fighting (an encounter, or a sentry who saw you): no talking, no leaving
       if (!this.ui.talk.hidden) this.ui.talk.hidden = true;
       x.near = null;
@@ -1389,6 +1403,9 @@ export class StoryPlayer {
       this.ctx.sfx.play("slam");
     }
     world.player.relaxed = false;
+    if (e.once && e.flag) this.flags.set(e.flag, 1); // (it happens once, however it goes: the Crimson Bell's questions)
+    for (const [k, v] of Object.entries(e.add ?? {})) this.flags.add(k, v);
+    if (e.say) this.say(e.say[0], e.say[1]);
     // Boss fights: the squad comes with you (and leaves again after).
     this.squadIn = [];
     for (const k of e.squad ?? []) if (!world.companions.some((c) => c.kind === k)) { world.addCompanion(k); this.squadIn.push(k); }
@@ -1420,6 +1437,11 @@ export class StoryPlayer {
         if (this.zone) this.flags.set(`${e.flag}_VISIT`, Number(this.flags.get(`VISITS_${this.zone.id.toUpperCase()}`)) || 1);
       }
       if (e.mark) this.flags.set(e.mark, 1); // beaten at least once (the fight itself comes back)
+      if (e.win === "restore") { // out of the Hollow (Erased, §8.3): back to 60, and home
+        this.corruption.restore(); world.corruption = this.corruption.value; this.ctx.onCorruption?.(this.corruption.value);
+        this.ctx.hud.banner?.("WRITTEN BACK IN · CORRUPTION 60");
+        this.sleep(1.4).then(() => this.travel(this.flags.get("ERASED_FROM") || "lighthouse"));
+      }
       const pp = world.player.pos; // a fight over the same ground waits until you've walked out and back in
       for (const o of x.encounters) if (inRect(pp, o.rect)) o.armed = false;
       const p = world.player.combatant.health;
@@ -1656,9 +1678,36 @@ export class StoryPlayer {
     this.saveNow?.();
   }
 
+  /** Corruption rises (GDD §8.3): each stage crossed is said once; the fight reads the new value at once. */
+  corrupt(n) {
+    const crossed = this.corruption.add(n);
+    this.ctx.getWorld().corruption = this.corruption.value;
+    for (const st of crossed) {
+      if (st === 100) { this.ctx.hud.toast("ERASED", "danger"); continue; } // (the Hollow takes you once you're out of the fight)
+      this.ctx.hud.toast(`CORRUPTION ${st}`, "danger"); this.ctx.hud.banner?.(CORRUPTION_STAGES[st]); this.ctx.sfx.play("rift");
+    }
+    this.ctx.onCorruption?.(this.corruption.value);
+    return crossed;
+  }
+  /** And slowly comes down. Cleansed to nothing after it reached 50: Blank Verse. */
+  cleanse(n) {
+    this._found(this.corruption.cleanse(n));
+    this.ctx.getWorld().corruption = this.corruption.value;
+    this.ctx.onCorruption?.(this.corruption.value);
+  }
+  /** Erased (Corruption 100): you wake in the Hollow, and fight your way out of it. */
+  _erase() {
+    if (!this.roaming || this.zone?.id === "hollow" || this.exploring?.busy || this.exploring?.combat) return false;
+    this.flags.set("ERASED_FROM", this.zone?.id ?? "lighthouse");
+    this.ctx.hud.banner?.("ERASED · THE PAGE GOES BLANK");
+    this.travel("hollow");
+    return true;
+  }
+
   /** World events main.js forwards while a story fight runs. */
   onWorldEvent(ev) {
     const x = this.exploring;
+    if (ev.type === "forbiddenCast") this.corrupt(CORRUPTION.cast); // every cast of a forbidden page leaves a mark (§8.3)
     if (ev.type === "parry" && ev.defender === this.ctx.getWorld().player) this._found(this.secrets.parry(this.ctx.getWorld().companions.some((c) => c.kind === "juno" && c.alive))); // (Juror's Thread)
     if (ev.type === "haskDown") this._found(this.secrets.haskDown(ev.clean)); // (Weight of Nothing)
     if (ev.type === "softHit") { this.law.onSoftHit(ev); return; } // a blade or a spell landed on a townsperson

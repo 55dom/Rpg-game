@@ -69,3 +69,31 @@ Somebody has been drawing the sky on stones like this, a piece at a time.
 <<mural>>
 ===
 `).join("");
+
+// Forbidden pages and Corruption (GDD §8.2, §8.3): the Choir's cache in the Fens, and the Verdant Oath's shrine in Thornwick.
+export const FORBIDDEN_SCRIPT = `
+title: W_ChoirCache
+---
+Under a loose flagstone by the drowned path: a Pale Choir cache. Hymn sheets gone to pulp, a snapped tuning fork, and one page, dry as bone, that is warm to the touch.
+It is a forbidden page. You can feel it wanting to be read.
+-> Take the page.
+    <<forbidden take>>
+    You fold it into your grimoire. For a moment the one page you have goes very quiet.
+    HOLLOW BITE. Pin it in the Grimoire if you mean to use it. It will cost you, and it will keep the count.
+-> Leave it under the stone.
+    You put the flagstone back. The warmth stays in your fingers a long while.
+===
+
+title: W_Shrine
+---
+A wayside shrine of the Verdant Oath: a little green-roofed box on a post, a bowl of clean water, a sprig of something that smells of spring.
+<<cleanse shrine>>
+<<if $CLEANSE_OK == 1>>
+    You wash your hands in the bowl. The water clouds grey, then runs clear again. Something in the page loosens, a little.
+<<elseif $CLEANSE_OK == -1>>
+    The water's still grey from earlier. The Oath's card says once a day is enough. It isn't a quick thing, and it isn't meant to be.
+<<else>>
+    You wash your hands anyway. Cold, clean water. Nothing in the page needs loosening.
+<<endif>>
+===
+`;
