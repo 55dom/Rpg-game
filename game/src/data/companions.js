@@ -151,7 +151,7 @@ const TAMSIN_ABILITIES = Object.freeze({
 export const TAMSIN_COMPANION = Object.freeze({
   stats: TAMSIN_STATS, hitboxes: TAMSIN_HITBOXES, assist: TAMSIN_ABILITIES.ShatterNote, assistInPlace: true, slot: [-1.2, -2.4],
   options: () => [new AttackOption(TAMSIN_ABILITIES.Note, 3, 12, 3, 60), new AttackOption(TAMSIN_ABILITIES.Shove, 0, 1.8, 2, 60)],
-  supports: () => [],
+  supports: () => [{ ability: TAMSIN_ABILITIES.ShatterNote, kind: "shield", cooldownFrames: 720 }], // she rings it herself when something's coming for you (and on 3)
 });
 
 export const COMPANIONS = Object.freeze({

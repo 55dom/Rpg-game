@@ -34,6 +34,7 @@ test("Tamsin fights at the Twins (Resonance, GDD §6): notes from a little way b
   assert.ok(tam.assistAbility.tags.includes("resonance"));
   assert.ok(COMPANIONS.tamsin.options().some((o) => o.ability.id === "Note" && o.minRange >= 3), "she sings from a little way back");
   assert.equal(w.companions.filter((c) => !c.guest).indexOf(tam), 2, "the third: key 3");
+  assert.ok(COMPANIONS.tamsin.supports().some((x) => x.ability.id === "ShatterNote"), "and she rings it herself (on a phone or a pad, there's no key 3)");
 });
 
 test("Resonance shatters mirrors: her note breaks every reflection near it at once", () => {
