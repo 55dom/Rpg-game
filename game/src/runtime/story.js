@@ -33,6 +33,8 @@ import { inRect, YARD } from "../sim/bounds.js";
 import { Ambient } from "./ambient.js";
 import { WorldClock } from "../sim/weather.js";
 import { RainFX } from "./weather.js";
+import { Secrets } from "../core/secrets.js";
+import { SECRET_PAGES } from "../data/secretPages.js";
 import { LawWatch } from "./law.js";
 import { makeSentries, stepSentries, SENTRY } from "../sim/sentry.js";
 
@@ -390,6 +392,7 @@ export class StoryPlayer {
     this.inventory = new Inventory();
     this.progress = new Progress();
     this.bonds = new Bonds(this.flags); // bond state lives in the flags
+    this.secrets = new Secrets(this.flags); // the secret pages (GDD §8.4), found and pinned, also in the flags
     this.quests = new QuestLog(QUESTS, this.flags, {
       onReward: (q, r) => { if (r.marks) this.inventory.earn(r.marks); this.gainXp(r.xp ?? QUEST_XP); for (const [id, n] of Object.entries(r.bond ?? {})) this.bondGain(id, n); },
       onEvent: (e) => this.ctx.onQuest?.(e),
@@ -870,6 +873,13 @@ export class StoryPlayer {
         this.ctx.hud.toast(args[0] ? args.join(" ").toUpperCase() : "WARM AND FULL", "clear"); this.ctx.sfx.play("heal"); break;
       }
       case "cutscene": await this.playCutscene(args[0]); break;
+      case "mural": this._found(this.secrets.mural()); break; // a constellation mural (Star Chart, GDD §8.4)
+      case "mosstea": { // tea for Brother Moss: $MOSS_TEA_OK 2 (the seventh: Second Reading), 1 given, 0 none, -1 already today
+        const r = this.secrets.mossTea(this.day);
+        this.flags.set("MOSS_TEA_OK", r);
+        if (r === 2) this._found("secondReading");
+        break;
+      }
       default: break;   // unknown commands are ignored (forward-compatible scripts)
     }
   }
@@ -1456,6 +1466,7 @@ export class StoryPlayer {
     while (this.active) {
       const zone = ZONES[id];
       this.zone = zone; this.arrival = arr;
+      if (id === "hall") this._found(this.secrets.hallVisit(this.day, !!this.clock?.night)); // (Lantern's Answer: the Hall at night, after the Bloom)
       const world = this.ctx.getWorld();
       world.bounds = zone.bounds;
       this.ctx.camera.bounds = cameraBounds(zone);
@@ -1634,9 +1645,22 @@ export class StoryPlayer {
     if (s.done && !f.done) { f.done = true; this.sleep(0.3).then(() => f.resolve(true)); }
   }
 
+  /** A secret page just found (GDD §8.4): said once, loudly, and kept. */
+  _found(id) {
+    if (!id) return;
+    const pg = SECRET_PAGES[id];
+    this.ctx.hud.toast(`SECRET PAGE · ${pg.name.toUpperCase()}`, "finisher");
+    this.ctx.hud.banner?.(`${pg.how} ${this.secrets.pinned(id) ? "Pinned in your margin." : "Pin it in the Grimoire."}`);
+    this.ctx.sfx.play("ultActivate");
+    this.ctx.onSecret?.(id);
+    this.saveNow?.();
+  }
+
   /** World events main.js forwards while a story fight runs. */
   onWorldEvent(ev) {
     const x = this.exploring;
+    if (ev.type === "parry" && ev.defender === this.ctx.getWorld().player) this._found(this.secrets.parry(this.ctx.getWorld().companions.some((c) => c.kind === "juno" && c.alive))); // (Juror's Thread)
+    if (ev.type === "haskDown") this._found(this.secrets.haskDown(ev.clean)); // (Weight of Nothing)
     if (ev.type === "softHit") { this.law.onSoftHit(ev); return; } // a blade or a spell landed on a townsperson
     if (x?.combat?.law) { if (ev.type === "playerDown") this.law.fell(); return; } // the Watch, or a street fight
     if (x?.combat && !this.fight) {

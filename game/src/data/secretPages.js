@@ -37,7 +37,7 @@ export const SECRET_PAGES = Object.freeze({
   }),
   starChart: Object.freeze({
     name: "Star Chart", flag: "SECRET_STARS",
-    hint: "Someone painted the sky on the walls, a piece at a time. Twelve pieces.",
+    hint: "Someone has been drawing the sky on stones, a piece at a time. Twelve pieces.",
     how: "Found all twelve constellation murals.",
     desc: "Your marks last twice as long, and a Detonate hits a quarter harder.",
   }),

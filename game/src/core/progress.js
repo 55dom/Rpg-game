@@ -80,6 +80,14 @@ export class Progress {
     return true;
   }
 
+  /** Re-branch an evolved page (GDD §8.1: at the Lighthouse, for a cost the caller takes). */
+  rebranch(slot, key) {
+    const p = this.pages[slot];
+    if (!p?.branch || p.branch === key || !PAGES[slot].branches.some((b) => b.key === key)) return false;
+    p.branch = key;
+    return true;
+  }
+
   /** Stat mods from level growth and Margin skills (same keys as equipment mods). */
   get mods() {
     const up = this.level - 1;
@@ -98,6 +106,9 @@ export class Progress {
 }
 
 /** Add two sets of stat mods (equipment + progression). */
+/** What re-branching an evolved page costs at the Lighthouse (GDD §8.1: "for a cost, so experimenting is safe"). */
+export const REBRANCH_MARKS = 40;
+
 export function addMods(a, b) {
   const m = { ...a };
   for (const [k, v] of Object.entries(b)) m[k] = (m[k] ?? 0) + v;

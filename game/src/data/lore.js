@@ -1,6 +1,8 @@
 // Hidden lore (GDD §8.5 page fragments): scraps of the Palimpsest's under-text hidden in the world.
 // Each restores a line; five restore an Inscription clause, which is lore and power together.
 
+import { MURALS } from "./secretPages.js";
+
 export const FRAGMENTS = Object.freeze([
   { n: 1, where: "Behind the lighthouse", text: "...and the light was left on, so the one outside would know the way back..." },
   { n: 2, where: "By the chapel candles, Aurelin", text: "...every name the Choir sings away is written once more, underneath..." },
@@ -26,6 +28,23 @@ A scrap of very old paper, folded small. The ink moves when you aren't looking s
 `).join("") + `
 title: W_MossTower
 ---
+<<if $GIFT_TEA > 0>>
+    -> Give him the smoked tea.
+        <<mosstea>>
+        <<if $MOSS_TEA_OK == 2>>
+            Moss: Seven cups. Seven. Nobody's brought me tea seven times in three hundred... in a long while.
+            Moss: Some books are better read twice. Hold still a moment. Your grimoire. There.
+            Moss: A page I'd forgotten I was keeping. It was always yours. Don't ask me how I know that.
+            <<stop>>
+        <<elseif $MOSS_TEA_OK == 1>>
+            Moss: Smoked, and strong enough to stand a spoon in. You remembered. Sit, if you like. The tea's the visit.
+            <<stop>>
+        <<else>>
+            Moss: One cup a day, child. Any more and I'd be up sweeping at midnight.
+            <<stop>>
+        <<endif>>
+    -> Not today.
+<<endif>>
 <<if $GALEN_DEFEATED>>
     Moss: Sir Galen's lantern went out a long time ago. Tonight, it went out properly. Thank you for that.
     Moss: Some books are better read twice. Some knights are better left to sleep.
@@ -40,3 +59,13 @@ Moss: The hall is quiet now. Too quiet, since the Choir came to the ceremony.
 Moss: If you're looking for trouble, the hymn on the Fens well would be my guess. It was nailed up by someone who meant it.
 ===
 `;
+
+// The constellation murals (GDD §8.4 Star Chart, §13): twelve pieces of somebody's night sky.
+export const MURAL_SCRIPT = MURALS.map((m) => `
+title: W_Mural${m.n}
+---
+Chalked small on a flat stone, the gilt worn thin, half hidden: ${m.name}. ${m.line}
+Somebody has been drawing the sky on stones like this, a piece at a time.
+<<mural>>
+===
+`).join("");

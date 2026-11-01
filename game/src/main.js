@@ -106,7 +106,8 @@ import { WORLD_SCRIPT } from "./data/story/world.js";
 import { compileExpr, truthy } from "./core/flags.js";
 import { ZONES } from "./data/zones.js";
 import { Inventory } from "./core/inventory.js";
-import { Progress, addMods, pageLevel, pageLevelProgress } from "./core/progress.js";
+import { Progress, addMods, pageLevel, pageLevelProgress, REBRANCH_MARKS } from "./core/progress.js";
+import { SECRET_PAGES, SECRET_NEEDS } from "./data/secretPages.js";
 import { SKILLS, TREE_COLUMNS, XP_BY_KIND, PAGE_ROMAN, MAX_LEVEL } from "./data/skills.js";
 import { BONDS, RANK_POINTS, RANK_UNLOCKS, GIFTS } from "./data/bonds.js";
 import { MATERIALS, HQ, TEMPER } from "./data/crafting.js";
@@ -812,7 +813,13 @@ export function boot(doc = document) {
           if (ev.level === 5) hud.banner(`${ev.page.name.toUpperCase()} MASTERED · A QUARTER LESS MANA`);
           refreshGrimDot();
           break;
-        case "pageEvolved": hud.toast(ev.branch.name.toUpperCase(), "finisher"); sfx.play("ultActivate"); break;
+        case "pageEvolved": hud.toast(ev.rebranch ? `RE-BRANCHED · ${ev.branch.name.toUpperCase()}` : ev.branch.name.toUpperCase(), "finisher"); sfx.play("ultActivate"); break;
+        case "perfectCast": { // a page at V, cast out of a landed blow as the window opens (GDD §8.1)
+          const c = chest(ev.fighter); vfx.flash(c, 2.6, "#ffe9a8", 0.2); vfx.ring({ x: c.x, y: c.y, z: c.z }, 2.4, PALETTE.lantern, 0.3, true);
+          hud.toast("PERFECT CAST", "afterimage"); sfx.play("glint"); break;
+        }
+        case "freeCast": vfx.sparksAt(chest(ev.fighter), 8, "ink", 5, 2); if (settings.frameData) hud.pushLog(`Second Reading: ${ev.ability.id} free`); break;
+        case "lanternAnswer": vfx.flash(ev.at, 3.4, "#ffd27a", 0.4); vfx.ring({ x: ev.at.x, y: 0.1, z: ev.at.z }, 3.6, PALETTE.lantern, 0.6); hud.toast("LANTERN'S ANSWER", "clear"); sfx.play("heal"); break;
         case "windWall": {
           const z = ev.zone;
           vfx.ring({ x: z.pos.x, y: 0.06, z: z.pos.z }, 4, PALETTE.gale, 0.4);
@@ -969,11 +976,12 @@ export function boot(doc = document) {
   let resetBossFx = null; // set once the boss visuals exist (below)
   let injuredNow = () => []; // squadmates fighting hurt, from the story's flags (set once the story exists)
   let annotationNow = () => false; // the Palimpsest's Annotation stage (after Ep 28)
+  let marginNow = () => []; // the secret pages pinned in the margin (GDD §8.1, §8.4), from the story's flags
   let revisionNow = () => false;   // and its Revision stage (after Ep 40)
   const newWorld = (opts = {}) => {
     for (const f of [...views.keys()]) removeView(f);
     walls.clear(); setBog(false, true); constellation.clear(true);
-    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, difficulty: settings.difficulty, companions: true, injured: injuredNow(), annotation: annotationNow(), revision: revisionNow(), ...opts });
+    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, difficulty: settings.difficulty, companions: true, injured: injuredNow(), annotation: annotationNow(), revision: revisionNow(), margin: marginNow(), ...opts });
     const ink = world.loadout.Spell1?.id === "Inscribe"; // the margin: Inscribe takes Gale's button
     const galeBtn = root.querySelector('[data-intent="Spell1"]'); if (galeBtn) galeBtn.textContent = ink ? "INK" : "GALE";
     world.pageDefs = PAGES;
@@ -1032,6 +1040,7 @@ export function boot(doc = document) {
     getWorld: () => world,
     makeWorld: (opts) => newWorld({ ...opts, mods: addMods(statMods(partyOf(opts.companions)), opts.mods), progress: story.progress, teamAttacks: story.bonds.teamAttacks(), pageXpBonus: story.crafting.pageXpBonus }),
     openUI: (kind) => openHQ(kind),
+    onSecret: () => { world.margin = new Set(story.secrets.margin); refreshGrimDot(); }, // a secret page found (and pinned, if there was room)
     onMeal: () => { hud.toast("WARM AND FULL", "clear"); hud.banner("+20 HEALTH · +5% DAMAGE UNTIL MIDNIGHT"); sfx.play("heal"); applyGear(); const p = world.player; p.combatant.health.fill(); },
     openShop: (id) => openShop(id),
     onQuest: (e) => {
@@ -1100,6 +1109,7 @@ export function boot(doc = document) {
   revisionNow = () => !!story.flags.get("REVISION");     // after the Paragon's spar, the page rewinds
   const playtest = new PlaytestLog(story.flags, { where: () => ({ episode: story.ep?.id ?? null, beat: story.director?.beat?.id ?? null }) });
   injuredNow = () => (story.flags.get("BAS_ARM_BROKEN") ? ["bas"] : []); // Bas fights one-armed after the vault
+  marginNow = () => story.secrets.margin;
   const playerName = root.querySelector(".player-card .name");
   const showName = (n) => { if (playerName?.firstChild) playerName.firstChild.textContent = `${n.toUpperCase()} `; };
   const backToTitle = () => {
@@ -1721,9 +1731,33 @@ export function boot(doc = document) {
     grim.querySelector("[data-grim-pages]").innerHTML = Object.entries(PAGES).map(([slot, def]) => {
       const pg = pr.pages[slot], lv = pageLevel(slot, pg.xp), br = pg.branch && def.branches.find((b) => b.key === pg.branch);
       const b = pr.pageBonus(slot), locked = !world.loadout[slot];
-      const choose = pg.ready ? def.branches.map((x) => `<button class="go" data-evolve="${slot}:${x.key}" title="${x.desc}">${x.name.toUpperCase()}</button>`).join(" ") : "";
-      return `<div class="row${pg.ready ? " ready" : ""}"><b>${PAGE_ROMAN[lv - 1]}</b><span>${br ? br.name : def.name}${locked ? " <em>not in this grimoire yet</em>" : ""}<small>${pg.ready ? "Ready to evolve: choose a branch" : br ? `Evolved from ${def.name}` : lv < 3 ? "Evolves at III" : ""}${b.dmg > 1 ? ` · +${Math.round((b.dmg - 1) * 100)}% damage` : ""}${b.mana < 1 ? ` · −${Math.round((1 - b.mana) * 100)}% mana` : ""}</small>${choose ? `<span class="evo">${choose}</span>` : ""}</span><span class="xpbar"><u style="width:${Math.round(pageLevelProgress(slot, pg.xp) * 100)}%"></u></span></div>`;
+      const atHQ = story.roaming && story.zone?.id === "lighthouse"; // re-branching is done at the Lighthouse (GDD §8.1)
+      const choose = pg.ready ? def.branches.map((x) => `<button class="go" data-evolve="${slot}:${x.key}" title="${x.desc}">${x.name.toUpperCase()}</button>`).join(" ")
+        : br && atHQ ? def.branches.filter((x) => x.key !== br.key).map((x) => `<button class="go alt" data-rebranch="${slot}:${x.key}" title="${x.desc}" ${story.inventory.marks < REBRANCH_MARKS ? "disabled" : ""}>RE-BRANCH: ${x.name.toUpperCase()} · ${REBRANCH_MARKS} MARKS</button>`).join(" ") : "";
+      const notes = [br && !atHQ ? `re-branch at the Lighthouse (${REBRANCH_MARKS} Marks)` : "", lv >= 5 ? "PERFECT CAST: out of a blow that lands, right as it opens" : ""].filter(Boolean).join(" · ");
+      return `<div class="row${pg.ready ? " ready" : ""}"><b>${PAGE_ROMAN[lv - 1]}</b><span>${br ? br.name : def.name}${locked ? " <em>not in this grimoire yet</em>" : ""}<small>${pg.ready ? "Ready to evolve: choose a branch" : br ? `Evolved from ${def.name}` : lv < 3 ? "Evolves at III" : ""}${b.dmg > 1 ? ` · +${Math.round((b.dmg - 1) * 100)}% damage` : ""}${b.mana < 1 ? ` · −${Math.round((1 - b.mana) * 100)}% mana` : ""}${notes ? `<br>${notes}` : ""}</small>${choose ? `<span class="evo">${choose}</span>` : ""}</span><span class="xpbar"><u style="width:${Math.round(pageLevelProgress(slot, pg.xp) * 100)}%"></u></span></div>`;
     }).join("");
+    // The secret pages (GDD §8.4): found ones pinned two at a time in the margin; the rest a hint and a question mark.
+    const sec = story.secrets, murals = Number(story.flags.get("MURALS")) || 0;
+    grim.querySelector("[data-grim-secret-head]").textContent = `SECRET PAGES · ${sec.all.length} OF ${Object.keys(SECRET_PAGES).length} FOUND · TWO IN THE MARGIN`;
+    grim.querySelector("[data-grim-secrets]").innerHTML = Object.entries(SECRET_PAGES).map(([id, pg]) => {
+      if (!sec.found(id)) return `<div class="row"><b>?</b><span>A page you haven't found<small>${pg.hint}${id === "starChart" && murals ? ` (${murals} of ${SECRET_NEEDS.murals} found)` : ""}</small></span></div>`;
+      const on = sec.pinned(id);
+      return `<div class="row${on ? " ready" : ""}"><b>${on ? "✦" : "·"}</b><span>${pg.name}<small>${pg.desc}</small><small><em>${pg.how}</em></small></span><span class="act"><button class="go${on ? " alt" : ""}" data-pin="${id}">${on ? "UNPIN" : "PIN"}</button></span></div>`;
+    }).join("");
+    for (const btn of grim.querySelectorAll("[data-pin]")) btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      story.secrets.toggle(btn.dataset.pin); world.margin = new Set(story.secrets.margin);
+      sfx.play("ui"); story.saveNow(); renderGrimoire();
+    });
+    for (const btn of grim.querySelectorAll("[data-rebranch]")) btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const [slot, key] = btn.dataset.rebranch.split(":");
+      if (story.inventory.marks < REBRANCH_MARKS || !story.progress.rebranch(slot, key)) return;
+      story.inventory.marks -= REBRANCH_MARKS;
+      if (world.progress === story.progress) world.rebranchPage(slot, key); // (already set on the shared page: this swaps the button)
+      onEvents(world.drainEvents()); sfx.play("ultActivate"); story.saveNow(); renderGrimoire();
+    });
     grim.querySelector("[data-grim-pts]").textContent = `THE GRIMOIRE TREE · ${pr.points} SKILL POINT${pr.points === 1 ? "" : "S"}`;
     grim.querySelector("[data-grim-tree]").innerHTML = TREE_COLUMNS.map(({ col, name }) => `<div class="col"><b>${name}</b>${
       Object.values(SKILLS).filter((n) => n.col === col).map((n) => {

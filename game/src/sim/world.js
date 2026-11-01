@@ -52,6 +52,7 @@ import { REACTIONS } from "../data/reactions.js";
 import { ROOK_STATS, ROOK_ABILITIES, ROOK_HITBOXES, buildRookGraph, defaultLoadout } from "../data/rook.js";
 import { PAGES, PAGE_HITBOXES } from "../data/pages.js";
 import { difficultyOf } from "../data/difficulty.js";
+import { MARGIN_TUNING } from "../data/secretPages.js";
 import { pageLevel } from "../core/progress.js";
 import { SEVERIN_KIT, SEVERIN_KIT_STATS, SEVERIN_KIT_HITBOXES, SEVERIN_KIT_LOADOUT, SEVERIN_KIT_SPELLS } from "../data/severinKit.js";
 import { hitSpec } from "../core/combat.js";
@@ -62,7 +63,7 @@ export const Tuning = Object.freeze({
   arenaRadius: 17,
   knockbackSpeed: 4, knockbackDecay: 0.82,
   afterimageScale: 0.35, afterimageFrames: 36,
-  meleeManaGain: 3, assistFrames: 3,
+  meleeManaGain: 3, assistFrames: 3, perfectCastFrames: 6, perfectCastFactor: 1.3,
   softLockRange: 6.5, finisherRange: 3.8,
   corpseFrames: 100,
   nearMissGrace: 1.2, // while i-frames are up, a near miss counts as dodged (it can never deal damage)
@@ -148,7 +149,7 @@ export class Fighter {
       started: (a) => this._started(a),
       event: (a, e) => this._event(a, e),
       finished: (a) => this._ended(a, "finished"),
-      cancelled: (a) => this._ended(a, "cancelled"),
+      cancelled: (a, next) => { this.world._perfectCast(this, a, next); this._ended(a, "cancelled"); },
       interrupted: (a) => this._ended(a, "interrupted"),
     });
     this.controller = new AbilityController(this.runner, this.buffer, this.mana, o.graph);
@@ -210,6 +211,7 @@ export class Fighter {
     this.hitboxes.length = 0;
     this.dash.frames = 0;
     this.slamming = false;
+    if (this === this.world.player) this.world._secondReading(this, a);
     if (this === this.world.player) {
       if (MOBILITY.has(a.id)) {
         const i = this.moveInput;
@@ -285,6 +287,7 @@ export class Fighter {
 
   _ended(a, how) {
     this.hitboxes.length = 0;
+    if (this.perfectCast === a.id) this.perfectCast = null; // (one cast's worth)
     if (how !== "finished") this.dash.frames = 0;
     if (a.id === "Dodge") this.afterDashFrames = 12;
     this.world.emit({ type: "ended", fighter: this, ability: a, how });
@@ -356,6 +359,9 @@ export class World {
     }));
     if (o.kit) this._wear(o.kit); // somebody else's body (Ep 49: a soldier, in a memory)
     this.difficulty = o.difficulty ?? "knight"; // GDD §9.7 (data/difficulty.js)
+    // Secret pages pinned in the margin (GDD §8.1, §8.4; data/secretPages.js): passives this fight reads.
+    this.margin = new Set(o.margin ?? []);
+    this.lanternUsed = false; this.castOnce = new Set(); this.mudHit = false; this.haskDone = false;
     this.assist = !!o.assist;
     this.teamAttacks = new Set(o.teamAttacks ?? []); // companions with a Team Attack unlocked (bond rank 5)
     // Tag-swap party (GDD §10): Rook plus whoever can tag in. Only one is on the field; the other waits
@@ -575,7 +581,34 @@ export class World {
   /** A parry's window for whoever's starting it: the player's widens or tightens with the difficulty (and the assist). */
   parryWindow(f, frames) {
     if (f !== this.player) return frames;
-    return Math.max(2, frames + this.diff.parry + (this._assist ? Tuning.assistFrames : 0));
+    return Math.max(2, frames + this.diff.parry + (this._assist ? Tuning.assistFrames : 0) + (this.margin.has("jurorsThread") ? MARGIN_TUNING.jurorParry : 0));
+  }
+
+  /**
+   * Perfect Cast (GDD §8.1: a page at Level V): a spell cast out of a blow that landed, right as its cancel window opens
+   * (the first few frames), lands harder: one cast's worth.
+   */
+  _perfectCast(f, old, next) {
+    if (f !== this.player || !next || !(next.manaCost > 0) || !f.runner.hasHit || !this.progress) return;
+    const slot = Object.keys(this.loadout).find((k) => this.loadout[k]?.id === next.id && PAGES[k]);
+    if (!slot || pageLevel(slot, this.pages[slot]?.xp ?? 0) < 5) return;
+    const fr = f.runner.frame;
+    if (!old.cancels.some((c) => fr >= c.from && fr < c.from + Tuning.perfectCastFrames && fr <= c.to)) return;
+    f.perfectCast = next.id;
+    this.emit({ type: "perfectCast", fighter: f, ability: next, slot });
+  }
+  /** Second Reading (a secret page): each page's first cast in a fight gives its mana straight back. */
+  _secondReading(f, a) {
+    if (!this.margin.has("secondReading") || !(a.manaCost > 0) || this.castOnce.has(a.id) || !f.mana) return;
+    this.castOnce.add(a.id); f.mana.add(a.manaCost);
+    this.emit({ type: "freeCast", fighter: f, ability: a });
+  }
+  /** Lantern's Answer (a secret page): once a fight, below a quarter of your health, a warm light gives a fifth back. */
+  _lanternsAnswer() {
+    const p = this.player, h = p.combatant.health;
+    if (this.lanternUsed || !this.margin.has("lanternsAnswer") || !p.alive || h.normalized >= MARGIN_TUNING.lanternBelow) return;
+    this.lanternUsed = true; h.add(h.max * MARGIN_TUNING.lanternHeal);
+    this.emit({ type: "lanternAnswer", fighter: p, at: { x: p.pos.x, y: p.pos.y + 1.2, z: p.pos.z } });
   }
 
   add(f) { this.fighters.push(f); return f; }
@@ -834,6 +867,16 @@ export class World {
     return true;
   }
 
+  /** Re-branch an evolved page (at the Lighthouse, GDD §8.1): the other branch goes on its button. */
+  rebranchPage(slot, key) {
+    const page = this.pages[slot], def = PAGES[slot], branch = def?.branches.find((b) => b.key === key);
+    if (!page?.branch || !branch) return false;
+    page.branch = key; page.ready = false;
+    if (this.loadout[slot]) { this.loadout = { ...this.loadout, [slot]: branch.ability }; this.applyLoadout(); }
+    this.emit({ type: "pageEvolved", slot, branch, rebranch: true });
+    return true;
+  }
+
   /** A spell hit grants its page experience: levels I–V, and at III it's ready to evolve. */
   _pageXp(ability) {
     if (!this.pageGrowth || this.active !== "player") return;
@@ -958,6 +1001,7 @@ export class World {
     const O = this.origin;
     p.pos = v3(O.x, 0, O.z - 4); p.prev = v3(O.x, 0, O.z - 4); p.vel = v3(); p.knock = v3(); p.grounded = true; p.yaw = 0;
     p.counterFrames = 0; p.hitstop = 0; this.lockTarget = null; this.slowFrames = 0; this.stopFrames = 0;
+    this.lanternUsed = false; this.castOnce.clear(); this.mudHit = false; this.haskDone = false; p.perfectCast = null; // (a retry is a fresh fight for the margin's pages)
     p.surge?.set(0); p.tags.clear(); p.offIsland = 0; p.floor = 0;
     if (this.islands) { this.islands = null; this.emit({ type: "floorRestore" }); } // a retry starts on a whole floor
     if (this.deck) { this.deck = null; this.emit({ type: "deckGone" }); } // and on the ground
@@ -1053,6 +1097,8 @@ export class World {
     }
     this.frame++;
     const frame = this.frame;
+    this._lanternsAnswer();
+    if (!this.haskDone && this.boss?.kind === "hask" && !this.boss.alive) { this.haskDone = true; this.emit({ type: "haskDown", clean: !this.mudHit }); } // (Weight of Nothing)
     if (this.slowFrames > 0) this.slowFrames--;
     if (this.stopFrames > 0) this.stopFrames--;
     if (this.surgeLock > 0) this.surgeLock--;
@@ -1398,6 +1444,7 @@ export class World {
     }
     const pd = att === this.player && hb.ability ? this.pageDmg[hb.ability.id] : 0;
     if (pd && pd !== 1) spec = { ...spec, damage: spec.damage * pd };
+    if (att === this.player && att.perfectCast && att.perfectCast === hb.ability?.id) spec = { ...spec, damage: spec.damage * Tuning.perfectCastFactor, posture: spec.posture * Tuning.perfectCastFactor }; // a Perfect Cast
     if (att === this.player && this.annotation && spec.damage > 0 && def.tags.has("INSCRIBED")) spec = { ...spec, damage: spec.damage * INSCRIPTION.bonus }; // ink marks it
     if (att === this.player && (this.mods.attack || this.mods.posture)) spec = { ...spec, damage: spec.damage * (1 + this.mods.attack), posture: spec.posture * (1 + this.mods.posture) };
     if (att === this.player && this.wearing?.attackScale) spec = { ...spec, damage: spec.damage * this.wearing.attackScale, posture: spec.posture * this.wearing.attackScale }; // a body with less in it (0★)
@@ -1490,6 +1537,7 @@ export class World {
           att.knock.x -= away.x * 1.2 * Tuning.knockbackSpeed; att.knock.z -= away.z * 1.2 * Tuning.knockbackSpeed;
         }
         if (def === this.player) { def.counterFrames = def.stats.counterWindowFrames; this._surge(def.stats.surgeGain.parry); }
+        if (def === this.player && this.margin.has("jurorsThread") && !hb.projectile && att.alive && !att.traits.object) this.applyTag(att, "BOUND", MARGIN_TUNING.jurorBind, def); // Juror's Thread
         this.emit({ type: "parry", ...base });
         if (r.attackerPostureBroken) this.emit({ type: "postureBreak", ...base, defender: att });
         break;
@@ -1540,8 +1588,13 @@ export class World {
     incoming.add("hit");
     if (incoming.has("SCORCHED") || incoming.has("CHARGED")) incoming.add("spark"); // it burns or it charges: Flashpoint's spark
     for (const row of matchReactions(REACTIONS, def.tags, incoming, (r) => !r.foes || def.team === Team.Enemy)) this._fireReaction(row, att, def, at, hb.ability, spec);
-    if (def.alive) for (const [tag, frames] of spec.applyTags) def.tags.add(tag, frames);
+    if (def === this.player && att.kind === "hask" && spec.applyTags.some(([t]) => t === "WEIGHTED")) this.mudHit = true; // (Weight of Nothing: the mud touched you)
+    const long = att === this.player && this.margin.has("starChart") ? MARGIN_TUNING.markFactor : 1; // Star Chart: your marks last longer
+    if (def.alive) for (const [tag, frames] of spec.applyTags) def.tags.add(tag, tag === "MARKED" ? frames * long : frames);
+    this._unweigh(def);
   }
+  /** Weight of Nothing (a secret page): WEIGHTED never sticks to you. */
+  _unweigh(t) { if (t === this.player && this.margin.has("weightOfNothing")) t.tags.remove("WEIGHTED"); }
 
   /**
    * A tag put on by the world rather than a blow (burning reeds, a fallen arc-lamp's charge, mud on a hound's
@@ -1556,6 +1609,7 @@ export class World {
     const at = { x: t.pos.x, y: t.pos.y + 1.2, z: t.pos.z };
     for (const row of fired) this._fireReaction(row, by ?? t, t, at, null, null, seen);
     if (t.alive) t.tags.add(tag, frames);
+    this._unweigh(t);
     return fired;
   }
 
@@ -1583,9 +1637,10 @@ export class World {
     }
     for (const t of targets) {
       const c = t.combatant, weak = t.boss?.weakTo?.[row.id]; // a boss's weakness (Gullmaw and Storm, §16 B5)
+      const star = row.id === "Detonate" && att === this.player && this.margin.has("starChart") ? (fx.damage ?? 0) * MARGIN_TUNING.detonateBonus : 0; // Star Chart
       seen?.add(t);
       const pf = t.boss?.postureFactor ?? 1;
-      if (fx.damage || weak?.damage) c.takeDamage((fx.damage ?? 0) + (weak?.damage ?? 0));
+      if (fx.damage || weak?.damage || star) c.takeDamage((fx.damage ?? 0) + (weak?.damage ?? 0) + star);
       let broke = false;
       if (fx.breakPosture && pf > 0) broke = c.takePostureDamage(c.posture.current + 1);
       else if ((fx.posture || weak?.posture) && pf > 0) broke = c.takePostureDamage(((fx.posture ?? 0) + (weak?.posture ?? 0)) * pf);

@@ -20,6 +20,7 @@ export const GIFTS = Object.freeze({
   songbook: { name: "Songbook", price: 12, from: "market", desc: "Ballads from the coast, half of them rude." },
   inkpot: { name: "Pot of Blue Ink", price: 12, from: "market", desc: "The expensive kind. It smells of iron." },
   driedfish: { name: "Dried Fish", price: 5, from: "cook", desc: "Salted, fried, then dried again. Somehow." },
+  tea: { name: "Smoked Tea", price: 4, from: "cafe", desc: "A twist of black leaves that smell of a bonfire. Brother Moss swears by it." }, // (for Moss: Second Reading, GDD §8.4)
 });
 export const GIFT_SHOPS = Object.freeze({ cafe: "Something to take away?", market: "Gifts for your squad?", cook: "Some fish for the road?" });
 

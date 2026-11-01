@@ -290,6 +290,8 @@ const undercroftSolids = [
 ];
 /** A page fragment (GDD §8.5): a scrap of the Palimpsest's under-text, hidden somewhere in the world. Five restore a clause. */
 const frag = (n, x, z) => ({ id: `frag${n}`, x, z, show: `not $FRAG_${n}`, flag: `FRAG_${n}`, node: `W_Frag${n}`, faint: true, label: "Pick up the scrap of paper" });
+/** A constellation mural (GDD §8.4 Star Chart): a piece of a painted night sky. Twelve in the world. */
+const mural = (n, x, z) => ({ id: `mural${n}`, x, z, show: `not $MURAL_${n}`, flag: `MURAL_${n}`, node: `W_Mural${n}`, faint: true, label: "Look at the painted stars" });
 // A passage gate: bars across a passage at z (closed while a room's fight is on).
 const gate = (z) => [-2, z - 0.3, 2, z + 0.3];
 
@@ -321,7 +323,7 @@ export const ZONES = {
       { id: "squadBoard", x: 1.0, z: 10.9, show: "1", ui: "hq", marker: false, label: "Read the squad board (HQ rooms)" },
       { id: "workbench", x: -9.5, z: 1.7, show: "1", ui: "temper", marker: false, label: "Use the workbench (temper gear)" },
       { id: "meal", x: 5, z: 2.9, show: "$HQ_KITCHEN", node: "W_Meal", marker: false, label: "Sit down for Dagrun's stew" },
-      frag(1, -12.6, 10),
+      frag(1, -12.6, 10), mural(1, 8, -10), mural(2, 12, 3),
     ],
     exits: [
       { id: "road", rect: [-17, -17, 17, -15.5], to: "aurelin", spawn: "gate", label: "The road to Aurelin" },
@@ -373,7 +375,7 @@ export const ZONES = {
     ],
     // Somewhere dry to stand when it rains: the Hall portico, the market canopies, house doorways.
     shelters: [[0, 25.2], [3.8, 25.2], [18, -6.8], [24, -6.8], [30, -6.8], [-12.3, 4], [-12.3, -8]],
-    pickups: [{ id: "toyLantern", x: -2.6, z: -28.6, show: "$Q_TOY == 1 and not $TOY_FOUND", flag: "TOY_FOUND", label: "Pick up the toy lantern" }, frag(2, 12.1, 14.2)],
+    pickups: [{ id: "toyLantern", x: -2.6, z: -28.6, show: "$Q_TOY == 1 and not $TOY_FOUND", flag: "TOY_FOUND", label: "Pick up the toy lantern" }, frag(2, 12.1, 14.2), mural(3, -6, 18), mural(4, 12.4, 10), mural(5, -11.9, -6)],
     exits: [
       { id: "gate", rect: [-4, -36, 4, -34.4], to: "lighthouse", spawn: "aurelin", label: "The road home to the Lighthouse" },
       { id: "grate", rect: [A.grate.x - 1.3, A.grate.z - 1.3, A.grate.x + 1.3, A.grate.z + 1.3], to: "undercroft", spawn: "aurelin", label: "The grate down to the Undercroft" },
@@ -423,7 +425,7 @@ export const ZONES = {
       { id: "waterman", look: "townsman", x: -3.6, z: -4.2, yaw: -1.6,
         routine: { home: [-15.2, -3], steps: [{ do: "work", at: [-3.7, -3.9], face: -1.9, anim: "work", dur: [6, 9] }, { do: "walk", to: [-13, 2] }, { do: "idle", at: [-13, 2], face: 0, dur: [5, 8] }] } },
     ],
-    pickups: [{ id: "ledger", x: -3, z: 14.6, show: "1", flag: "LEDGER_READ", node: "W_Ledger", label: "Read the orphan ledger" }, frag(3, 0, -2.7)],
+    pickups: [{ id: "ledger", x: -3, z: 14.6, show: "1", flag: "LEDGER_READ", node: "W_Ledger", label: "Read the orphan ledger" }, frag(3, 0, -2.7), mural(8, 6, -6), mural(9, -8, 8)],
     encounters: [
       { id: "bandits", rect: [8, -29, 29, -19], at: { x: 18, z: -24, r: 4 }, wave: ["bandit", "bandit", "bandit"], when: "$Q_BANDITS == 1", flag: "BANDITS_CLEARED", label: "BANDITS ON THE MILL ROAD" },
     ],
@@ -450,7 +452,7 @@ export const ZONES = {
       { id: "fenpost", name: "City Watch", look: "guard", x: 1.4, z: 9.6, yaw: Math.PI, node: "W_Patrol", when: "$LUKE_HOME_OPEN",
         routine: { role: "guard", steps: [{ do: "idle", at: [1.4, 9.6], face: Math.PI, dur: [8, 12] }, { do: "walk", to: [-2.6, 13.6] }, { do: "idle", at: [-2.6, 13.6], face: 2.6, dur: [6, 9] }, { do: "walk", to: [1.4, 9.6] }] } },
     ],
-    pickups: [{ id: "hymn", x: -1.4, z: 15.2, show: "1", flag: "HYMN_READ", node: "W_Hymn", label: "Read the hymn nailed to the well" }, frag(4, -10.4, 9.5)],
+    pickups: [{ id: "hymn", x: -1.4, z: 15.2, show: "1", flag: "HYMN_READ", node: "W_Hymn", label: "Read the hymn nailed to the well" }, frag(4, -10.4, 9.5), mural(10, 6, 4), mural(11, -4, -10)],
     // Field fights: they come back each visit. Run far enough and they give up the chase.
     encounters: [
       { id: "hounds", rect: [-10, -20, 10, -11], at: { x: 0, z: -14, r: 5 }, wave: ["hound", "hound", "hound"], label: "FEN HOUNDS" },
@@ -474,7 +476,7 @@ export const ZONES = {
     pickups: [
       { id: "fishbones", x: 3.4, z: -25, show: "not $UC_BONES", flag: "UC_BONES", node: "W_Bones", label: "Look at the pile of fish bones" },
       { id: "chest", x: 0, z: 43, show: "$UNDERCROFT_CLEARED and not $UC_CHEST", flag: "UC_CHEST", marks: 60, label: "Open the old strongbox" },
-      frag(5, -4.8, -31),
+      frag(5, -4.8, -31), mural(12, 3, 0),
     ],
     // Dungeon rooms: the passages bar shut until the room is clear, and a cleared room stays clear.
     encounters: [
@@ -495,7 +497,7 @@ export const ZONES = {
     spawn: { x: 0, z: -11, yaw: 0 },
     cast: [{ id: "moss", look: "moss", x: -4.5, z: -7, yaw: 0.6, node: "W_MossTower",
       routine: { role: "elder", steps: [{ do: "idle", at: [-4.5, -7], face: 0.6, dur: [10, 14] }, { do: "wander", around: [-3, -5], r: 1.5, dur: [6, 9] }] } }],
-    pickups: [frag(6, 0, 4.7)],
+    pickups: [frag(6, 0, 4.7), mural(7, 8, -6)],
     encounters: [
       { id: "galen", rect: [-14, -4, 14, 14], at: { x: 0, z: 1, r: 5 }, wave: ["galen"], boss: true, squad: ["bas", "juno"], when: "$ILSE_DEFEATED", flag: "GALEN_DEFEATED", label: "RUST REMEMBERS" },
     ],
@@ -599,6 +601,7 @@ export const ZONES = {
       { id: "myLantern", x: HL.lanternX(6), z: HL.half[1] - 1.7, marker: false, node: "W_Hall_MyLantern", label: "Your lantern" },
       { id: "brannocLantern", x: -HL.half[0] + 1.9, z: HL.brannoc.z, marker: false, node: "W_Hall_Brannoc", label: "The Iron Wardens' shelf" },
       { id: "fallenShelf", x: HL.half[0] - 1.9, z: -5, marker: false, node: "W_Hall_Fallen", label: "The Crimson Bell's shelf" },
+      mural(6, -4.4, -6.4),
     ],
     exits: [{ id: "door", rect: [-0.9, -HL.half[1], 0.9, -HL.half[1] + 0.75], to: "aurelin", spawn: "hall", label: "Out to the plaza" }],
     arrivals: { aurelin: { x: 0, z: -8.6, yaw: 0 } },
