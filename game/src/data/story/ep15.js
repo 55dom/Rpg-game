@@ -78,6 +78,11 @@ export const EPISODE_15 = {
       world: { bounds: ZONES.fens.bounds, origin: { x: 10, z: -4 } },
       tutorial: [{ at: 0.5, text: "BOSS 6 · THE CANTOR TWINS. Mirror's glass turns away whatever hits it head-on: get round her. Smoke's hymn wards her sister: Gale breaks it." }],
       lines: [["Cal", "Two faces, one song. Break the song."], ["Juno", "Smoke first! She's keeping the other one whole!"]],
+      eventHints: { // the duo (GDD §16 B6): the swap, the smoke and mirrors, the absorbing
+        twinSwap: "They've swapped! Whoever holds the glass now turns you away head-on: get round her.",
+        smokeUp: "Smoke and mirrors. The real two are hurt (watch the bars); a reflection breaks at a touch. Gale ({Spell1}) blows the smoke away.",
+        twinAbsorb: "One's down, and the other's taken her song: the glass and the ward both. Gale the ward, then get round the glass.",
+      },
       retry: "Again. Break the song.",
       set: { TWINS_DEFEATED: 1 } },
     { id: "mirror", type: "scene", node: "Ep15_Mirror", ...FENS, ...NIGHT,

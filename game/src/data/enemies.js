@@ -19,6 +19,7 @@ import { FINALE_ENEMIES } from "../reveal/finale.js";
 import { CalSeatedController, CalBondsController } from "../reveal/finaleSim.js";
 import { BELL_ENEMIES } from "./bell.js";
 import { ARC7_ENEMIES } from "../reveal/arc7.js";
+import { TwinController } from "../sim/twins.js";
 
 const sound = (frame, key = "swing") => ({ frame, type: E.PlaySound, key });
 const box = (frame, key, frames) => ({ frame, type: E.SpawnHitbox, key, value: frames });
@@ -115,6 +116,32 @@ const BRAWLER_ABILITIES = Object.freeze({
     events: [{ frame: 14, type: E.Move, value: 0.8 }, sound(14), box(16, "Fist", 4)] }),
 });
 
+// Boss 6, the Cantor Twins (Ep 15): Mirror, who turns your spells back off a shield of glass, and Smoke, who sings
+// the other one whole again. Their hymns ward each other: break the ward (Gale), then take one down while it's open.
+// The duo (the swap, the smoke and mirrors, the absorbing) is sim/twins.js; its numbers, data/twins.js.
+const TWIN_MIRROR = {
+  stats: { name: "The Cantor Twins · Mirror", maxHealth: 760, maxPosture: 180, runSpeed: 3.8, circleSpeed: 2.2, turnRate: 0.16, radius: 0.48, height: 2.0 },
+  hitboxes: { Bolt: { center: [0, 0, 0], size: [0.8, 0.8, 0.8], range: 16, hit: hitSpec({ damage: 14, posture: 16, hitstop: 4, hitstun: 18, knockback: 2 }) },
+    Palm: { center: [0, 1, 1.0], size: [1.8, 1.8, 1.8] } },
+  abilities: CANTOR_ABILITIES, poses: { rest: [0.6, 0.3, 0], SoundBolt: { from: [-0.6, 0.2, 0], to: [0.1, 0, 0] }, Hymn: { from: [-1.6, 0, 0], to: [-1.4, 0, 0], lean: -0.2 },
+    Shove: { from: [0.3, 0.5, 0], to: [0.1, -0.2, 0], lean: 0.3 } },
+  options: () => [new AttackOption(CANTOR_ABILITIES.SoundBolt, 3, 13, 3, 60), new AttackOption(CANTOR_ABILITIES.Shove, 0, 2.0, 3, 50), new AttackOption(CANTOR_ABILITIES.Hymn, 0, 16, 1, 720)],
+  traits: { frontalGuard: true },
+};
+const TWIN_SMOKE = {
+  stats: { name: "The Cantor Twins · Smoke", maxHealth: 680, maxPosture: 150, runSpeed: 4.6, circleSpeed: 3.0, turnRate: 0.18, radius: 0.46, height: 2.0 },
+  hitboxes: { Bolt: { center: [0, 0, 0], size: [0.7, 0.7, 0.7], range: 16, hit: hitSpec({ damage: 12, posture: 14, hitstop: 3, hitstun: 16, knockback: 1.5 }) },
+    Palm: { center: [0, 1, 1.0], size: [1.6, 1.6, 1.6] } },
+  abilities: CANTOR_ABILITIES, poses: { rest: [0.6, 0.3, 0], SoundBolt: { from: [-0.6, 0.2, 0], to: [0.1, 0, 0] }, Hymn: { from: [-1.6, 0, 0], to: [-1.4, 0, 0], lean: -0.2 },
+    Shove: { from: [0.3, 0.5, 0], to: [0.1, -0.2, 0], lean: 0.3 } },
+  options: () => [new AttackOption(CANTOR_ABILITIES.SoundBolt, 3.5, 14, 3, 50), new AttackOption(CANTOR_ABILITIES.Hymn, 0, 16, 2, 480), new AttackOption(CANTOR_ABILITIES.Shove, 0, 1.8, 2, 60)],
+  traits: { ranged: true },
+};
+// P3's reflections: each looks (and is named) like one of the twins, whole, and breaks at a touch. Their bolts sting less.
+const echoOf = (t) => ({ ...t, stats: { ...t.stats, maxHealth: 1, maxPosture: 1 },
+  hitboxes: { ...t.hitboxes, Bolt: { ...t.hitboxes.Bolt, hit: hitSpec({ damage: 6, posture: 6, hitstop: 2, hitstun: 10, knockback: 1 }) } },
+  options: () => [new AttackOption(CANTOR_ABILITIES.SoundBolt, 3, 14, 3, 140)], traits: { ranged: true, echo: true } });
+
 export const ENEMIES = Object.freeze({
   guard: {
     stats: { name: "City Watch", maxHealth: 150, maxPosture: 70, runSpeed: 4.6, circleSpeed: 2.4, turnRate: 0.14, radius: 0.45, height: 2.0 },
@@ -166,26 +193,8 @@ export const ENEMIES = Object.freeze({
       new AttackOption(CANTOR_ABILITIES.Shove, 0, 1.8, 2, 60)],
     traits: { ranged: true },
   },
-  // Boss 6, the Cantor Twins (Ep 15): Mirror, who turns your spells back off a shield of glass, and Smoke, who sings
-  // the other one whole again. Their hymns ward each other: break the ward (Gale), then take one down while it's open.
-  twinMirror: {
-    stats: { name: "The Cantor Twins · Mirror", maxHealth: 760, maxPosture: 180, runSpeed: 3.8, circleSpeed: 2.2, turnRate: 0.16, radius: 0.48, height: 2.0 },
-    hitboxes: { Bolt: { center: [0, 0, 0], size: [0.8, 0.8, 0.8], range: 16, hit: hitSpec({ damage: 14, posture: 16, hitstop: 4, hitstun: 18, knockback: 2 }) },
-      Palm: { center: [0, 1, 1.0], size: [1.8, 1.8, 1.8] } },
-    abilities: CANTOR_ABILITIES, poses: { rest: [0.6, 0.3, 0], SoundBolt: { from: [-0.6, 0.2, 0], to: [0.1, 0, 0] }, Hymn: { from: [-1.6, 0, 0], to: [-1.4, 0, 0], lean: -0.2 },
-      Shove: { from: [0.3, 0.5, 0], to: [0.1, -0.2, 0], lean: 0.3 } },
-    options: () => [new AttackOption(CANTOR_ABILITIES.SoundBolt, 3, 13, 3, 60), new AttackOption(CANTOR_ABILITIES.Shove, 0, 2.0, 3, 50), new AttackOption(CANTOR_ABILITIES.Hymn, 0, 16, 1, 720)],
-    traits: { frontalGuard: true },
-  },
-  twinSmoke: {
-    stats: { name: "The Cantor Twins · Smoke", maxHealth: 680, maxPosture: 150, runSpeed: 4.6, circleSpeed: 3.0, turnRate: 0.18, radius: 0.46, height: 2.0 },
-    hitboxes: { Bolt: { center: [0, 0, 0], size: [0.7, 0.7, 0.7], range: 16, hit: hitSpec({ damage: 12, posture: 14, hitstop: 3, hitstun: 16, knockback: 1.5 }) },
-      Palm: { center: [0, 1, 1.0], size: [1.6, 1.6, 1.6] } },
-    abilities: CANTOR_ABILITIES, poses: { rest: [0.6, 0.3, 0], SoundBolt: { from: [-0.6, 0.2, 0], to: [0.1, 0, 0] }, Hymn: { from: [-1.6, 0, 0], to: [-1.4, 0, 0], lean: -0.2 },
-      Shove: { from: [0.3, 0.5, 0], to: [0.1, -0.2, 0], lean: 0.3 } },
-    options: () => [new AttackOption(CANTOR_ABILITIES.SoundBolt, 3.5, 14, 3, 50), new AttackOption(CANTOR_ABILITIES.Hymn, 0, 16, 2, 480), new AttackOption(CANTOR_ABILITIES.Shove, 0, 1.8, 2, 60)],
-    traits: { ranged: true },
-  },
+  twinMirror: { ...TWIN_MIRROR, Controller: TwinController }, twinSmoke: { ...TWIN_SMOKE, Controller: TwinController }, // Boss 6 (the duo: sim/twins.js)
+  twinEchoMirror: { ...echoOf(TWIN_MIRROR), Controller: TwinController }, twinEchoSmoke: { ...echoOf(TWIN_SMOKE), Controller: TwinController },
   // Boss 7, the Hollow Bloom (Ep 18): Hesper's ritual flower at the heart of the Hollowmarch. It creeps; it throws blank
   // petals that cut; and it pulses, a ring of white that erases whatever's standing in it (the glint is your warning).
   hollowBloom: {

@@ -12,7 +12,7 @@ import { parseScript } from "../src/core/script.js";
 
 test("every regular foe drops a material; the counts live in flags (so they save)", () => {
   for (const kind of Object.keys(ENEMIES)) {
-    if (kind === "dummy" || ENEMIES[kind].traits.watch || ENEMIES[kind].traits.brawler) { assert.ok(!DROPS[kind], `${kind}: the Watch and the townsfolk aren't loot`); continue; }
+    if (kind === "dummy" || ENEMIES[kind].traits.watch || ENEMIES[kind].traits.brawler || ENEMIES[kind].traits.echo) { assert.ok(!DROPS[kind], `${kind}: the Watch, the townsfolk and the Twins' reflections aren't loot`); continue; }
     assert.ok(DROPS[kind] && MATERIALS[DROPS[kind][0]], `${kind} drops something`);
   }
   const f = new FlagStore(), c = new Crafting(f, new Inventory());

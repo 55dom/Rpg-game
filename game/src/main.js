@@ -631,6 +631,21 @@ export function boot(doc = document) {
           else { hud.toast("HASK ENRAGES", "danger"); hud.banner(`PHASE ${ev.phase}`); }
           sfx.play("bossIntro"); camera.shake(0.6);
           break;
+        case "twinPhase":
+          hud.toast(ev.phase === 2 ? "ONE SONG, TWO THROATS" : "SMOKE AND MIRRORS", "danger"); // (Ep 15's hints say the rest)
+          sfx.play("bossIntro"); camera.shake(0.5); break;
+        case "twinSwapWarn": for (const f of ev.fighters) vfx.flash(head(f), 1.2, "#e8eeff", 0.12); sfx.play("glint"); break;
+        case "twinSwap":
+          for (const at of ev.at) { vfx.flash(at, 2.2, "#d8e4ff", 0.16); vfx.ring({ x: at.x, y: 0.06, z: at.z }, 3, "#b98cff", 0.4); }
+          vfx.thread(ev.at[0], ev.at[1], 0.35); hud.toast("THEY SWAP", "afterimage"); sfx.play("heal", 0.7); break;
+        case "smokeUp": smokeFx.up(ev.center, ev.r); for (const e of ev.echoes) vfx.flash({ x: e.pos.x, y: 1.2, z: e.pos.z }, 1.6, "#e8eeff", 0.18); sfx.play("vacuum"); break;
+        case "mirrorShift": vfx.flash(ev.from, 1.3, "#e8eeff", 0.1); vfx.flash(ev.to, 1.3, "#e8eeff", 0.1); sfx.play("glint", 0.5); break;
+        case "echoShatter": shatter(ev.fighter, ev.at); break;
+        case "smokeDispersed": vfx.ring({ x: ev.at.x, y: 0.1, z: ev.at.z }, 12, PALETTE.gale, 0.5); hud.toast("SMOKE BLOWN AWAY", "afterimage"); camera.shake(0.3); break;
+        case "smokeClear": smokeFx.clear(); if (ev.shattered) hud.toast("EVERY MIRROR BROKEN", "break"); break;
+        case "twinAbsorb":
+          vfx.flash(ev.at, 4, "#c9a4ff", 0.3); vfx.ring({ x: ev.at.x, y: 0.06, z: ev.at.z }, 7, "#b98cff", 0.5); vfx.sparksAt(ev.at, 24, "violet", 10, 6);
+          hud.toast("SHE TAKES HER SISTER'S SONG", "danger"); sfx.play("surgeFull"); impact(3, true); camera.shake(0.6); break;
         case "reedBeds": reedFx.lay(ev.beds); break;
         case "wading": vfx.ring({ x: ev.bed.x, y: 0.08, z: ev.bed.z }, ev.bed.r * 2.2, "#8a7a4a", 0.6, true); hud.pushLog("Hask makes for the reeds"); break;
         case "reedsBurn": reedFx.burn(ev.bed); sfx.play("detonate", 0.8); camera.shake(0.25); hud.toast("THE REEDS BURN", "finisher"); break;
@@ -640,7 +655,7 @@ export function boot(doc = document) {
         case "fortRise":
           for (const l of ev.logs) { vfx.ring({ x: l.x, y: 0.06, z: l.z }, 2.6, "#8a7a4a", 0.45); vfx.sparksAt({ x: l.x, y: 0.4, z: l.z }, 10, "gold", 7, 5); }
           sfx.play("mud"); sfx.play("slam", 0.7); camera.shake(0.5);
-          hud.toast("THE BARRICADE", "danger"); hud.banner("LOGS UP ROUND IT · BREAK A PILE OR SLIP THROUGH A GAP");
+          hud.toast("THE BARRICADE", "danger"); // (Ep 4's hint says the rest)
           break;
         case "fortVolley": sfx.play("mud", 0.6); break;
         case "fortBroken": vfx.ring({ x: ev.at.x, y: 0.06, z: ev.at.z }, 7, "#c8b49a", 0.4); hud.toast("BARRICADE BROKEN", "break"); sfx.play("postureBreak", 0.7); break;
@@ -669,6 +684,7 @@ export function boot(doc = document) {
           break;
         }
         case "kill":
+          if (ev.defender.traits?.echo) { shatter(ev.defender, { x: ev.defender.pos.x, y: 1.2, z: ev.defender.pos.z }); break; } // a reflection: glass
           if (state.mode === "story" && ev.defender.team === Team.Enemy && XP_BY_KIND[ev.defender.kind]) {
             const n = Math.round(XP_BY_KIND[ev.defender.kind] * (1 + story.crafting.xpBonus));
             vfx.number({ x: ev.defender.pos.x, y: ev.defender.pos.y + 2.9, z: ev.defender.pos.z }, `+${n} XP`, "text");
@@ -1406,8 +1422,33 @@ export function boot(doc = document) {
       clear() { for (const r of beds) r.node.dispose(); beds = []; },
     };
   })();
+  // The Cantor Twins' smoke (Ep 15, P3): slow grey banks drifting over the floor round where they stand.
+  const smokeFx = (() => {
+    let puffs = [], t = 0;
+    const mat = new BB.StandardMaterial("twinSmoke", scene); // dull and grey: smoke, not light
+    mat.diffuseColor = BB.Color3.FromHexString("#5a5a68"); mat.emissiveColor = BB.Color3.FromHexString("#2a2a34"); mat.specularColor = BB.Color3.Black(); mat.alpha = 0.3;
+    return {
+      up(c, r) {
+        this.clear();
+        for (let i = 0; i < 22; i++) {
+          const a = i * 2.399, d = r * Math.sqrt((i + 0.5) / 22), m = BB.MeshBuilder.CreateSphere("smokePuff", { diameter: 2.6 + (i % 4) * 0.5, segments: 6 }, scene);
+          m.material = mat; m.isPickable = false; m.metadata = { noGlow: true }; m.scaling.y = 0.45;
+          const p = { m, x: c.x + Math.sin(a) * d, z: c.z + Math.cos(a) * d, ph: i * 0.7, life: 0 };
+          m.position.set(p.x, 0.7 + (i % 3) * 0.35, p.z); puffs.push(p);
+        }
+      },
+      update(dt) {
+        if (!puffs.length) return;
+        t += dt;
+        for (const p of puffs) { p.life = Math.min(1, p.life + dt * 1.5); p.m.position.x = p.x + Math.sin(t * 0.4 + p.ph) * 0.8; p.m.position.z = p.z + Math.cos(t * 0.33 + p.ph) * 0.8; p.m.scaling.x = p.m.scaling.z = p.life * (1 + Math.sin(t + p.ph) * 0.08); }
+        mat.alpha = 0.3 + Math.sin(t * 0.8) * 0.04;
+      },
+      clear() { for (const p of puffs) p.m.dispose(); puffs = []; },
+    };
+  })();
+  const shatter = (f, at) => { vfx.sparksAt(at, 18, "white", 9, 5); vfx.sparksAt(at, 8, "violet", 7, 4); vfx.flash(at, 1.8, "#e8eeff", 0.1); sfx.play("block", 0.8); removeView(f); if (hud.focus === f) hud.focus = null; };
   const hopGhostMat = glow(scene, "hopGhost", "#8affc8", 0.3, true);
-  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); lilyFx.clear(); reedFx.clear(); groundFx.clear(); tearFx.clear(); mouthTears = []; lineWall?.dispose(); lineWall = null; darkFx.clear();
+  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); lilyFx.clear(); reedFx.clear(); smokeFx.clear(); groundFx.clear(); tearFx.clear(); mouthTears = []; lineWall?.dispose(); lineWall = null; darkFx.clear();
     for (const m of inkMarks.values()) m.dispose(); inkMarks.clear(); root.classList.remove("leaping", "hopblur", "surge-locked"); };
 
   // Squad HQ: the board (rooms to build) and the workbench (tempering gear). One screen, two modes.
@@ -1737,7 +1778,7 @@ export function boot(doc = document) {
       if (state.ghostTimer <= 0) { const rig = viewFor(world.player); if (rig) vfx.afterimage(rig); state.ghostTimer = 0.09; }
     }
 
-    waterJet.update(); lilyFx.update(dt); reedFx.update(dt); groundFx.update(dt); tearFx.update(dt);
+    waterJet.update(); lilyFx.update(dt); reedFx.update(dt); smokeFx.update(dt); groundFx.update(dt); tearFx.update(dt);
     if (world.boss?.boss?.leap) { // motion blur on the hops: a trail of fading ghosts of Gullmaw
       state.hopGhost = (state.hopGhost ?? 0) - dt;
       if (state.hopGhost <= 0) { const rig = viewFor(world.boss); if (rig?.snapshot) vfx.afterimage(rig, hopGhostMat, 0.22); state.hopGhost = 0.035; }
