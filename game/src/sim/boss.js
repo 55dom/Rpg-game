@@ -22,33 +22,56 @@ export class HaskController {
     this.summoned = false;
     this.mound = { x: f.pos.x, z: f.pos.z };
     this.eruptAt = null;
+    this.beds = null;     // its submerge points (reed beds), laid out on its first tick
+    this.fort = null;     // P2's log piles
+    this.fortDown = false;
+    this.volley = 0;
+    this.wadeTo = null; this.wadeTimer = 0;
+    this.noReeds = false;
   }
 
   get rules() { return HASK_PHASES[this.phase - 1]; }
   get brainActive() { return this.state === "surface"; }
-  get untouchable() { return this.state !== "surface" && this.state !== "erupting"; }
+  get untouchable() { return this.state !== "surface" && this.state !== "erupting" && this.state !== "wading"; }
+  /** P2's barricade holds while enough of its log piles stand. */
+  get fortHolds() { return !!this.fort && !this.fortDown && !this.rules.drained && this.fort.logs.filter((l) => l.alive).length >= HASK_TUNING.fort.holds; }
 
   /** Called once per logic frame Hask ticks, after brains and before abilities. */
   tick() {
     const w = this.world, f = this.f;
-    if (!f.alive) return;
+    if (!f.alive) { this._clear(); return; }
+    if (!this.beds) this._layBeds();
+    this._reeds();
     // Phase changes by health.
     const hp = f.combatant.health.normalized;
     const next = HASK_PHASES.find((p) => hp > p.above)?.phase ?? 3;
     if (next > this.phase) this._enterPhase(next);
+    if (this.fort && !this.fortDown && !this.fortHolds) this._fortBroken();
 
     switch (this.state) {
       case "surface":
         if (this.rules.summon && !this.summoned && !f.runner.isRunning && f.combatant.canAct && f.grounded) {
-          this.summoned = true; // P2 opener: a roar that calls the pack out of the bog
+          this.summoned = true; // P2 opener: a roar that calls the pack out of the bog (and the logs up round it)
           f.controller.startDirect(HASK_ABILITIES.Roar, w.frame);
           break;
         }
-        if (this.rules.diveEvery && !f.runner.isRunning && f.combatant.canAct && f.grounded && --this.timer <= 0) {
-          f.controller.startDirect(HASK_ABILITIES.Dive, w.frame);
-          this.state = "diving";
-        }
+        if (this.fortHolds) { this._holdFort(); break; } // behind its logs it doesn't dive: it lobs mud through the gaps
+        if (this.rules.diveEvery && !f.runner.isRunning && f.combatant.canAct && f.grounded && --this.timer <= 0) this._makeForReeds();
         break;
+      case "wading": { // making for a reed bed: it can only go under in one
+        const bed = this.wadeTo;
+        if (!bed || bed.burnt) { f.moveInput.x = f.moveInput.z = 0; this.wadeTo = null; this._surface(); this.timer = 30; break; }
+        const d = flat(f.pos, bed);
+        if (d > bed.r - 0.7 && --this.wadeTimer > 0) {
+          f.moveInput.x = (bed.x - f.pos.x) / d; f.moveInput.z = (bed.z - f.pos.z) / d;
+          f.yaw = Math.atan2(bed.x - f.pos.x, bed.z - f.pos.z);
+          break;
+        }
+        f.moveInput.x = f.moveInput.z = 0;
+        if (this.wadeTimer <= 0) { this.wadeTo = null; this._surface(); break; } // couldn't get there: try again later
+        if (!f.runner.isRunning && f.combatant.canAct && f.grounded) this._dive(bed);
+        break;
+      }
       case "diving":
         if (!f.runner.isRunning && !f.submerged) this._surface(); // interrupted (uprooted) before going under
         break;
@@ -117,11 +140,96 @@ export class HaskController {
     this.state = "surface";
     this.timer = this.rules.diveEvery || Infinity;
     this.eruptAt = null;
+    this.diveBed = null;
   }
 
-  _mudWaves(t) {
+  // ---- Reed beds (its submerge points) and the fen lanterns beside them ----
+  _layBeds() {
+    const w = this.world, R = HASK_TUNING.reeds;
+    this.beds = R.angles.map((a, i) => {
+      const x = R.center.x + Math.sin(a) * R.dist, z = R.center.z + Math.cos(a) * R.dist;
+      const e = R.r + 0.3; // the lantern stands on the bed's edge, to one side (never in the line between you and it)
+      const lantern = w.spawnObject("fenLantern", x + Math.cos(a) * e, z - Math.sin(a) * e, this.f);
+      return { i, x, z, r: R.r, lantern, burning: 0, burnt: false };
+    });
+    w.emit({ type: "reedBeds", fighter: this.f, beds: this.beds.map((b) => ({ i: b.i, x: b.x, z: b.z, r: b.r, lantern: { x: b.lantern.pos.x, z: b.lantern.pos.z } })) });
+  }
+  /** A lantern down: its reeds catch. While they burn, anyone standing in them is scorched; Hask wading in is flushed out. */
+  _reeds() {
+    const w = this.world, f = this.f, R = HASK_TUNING.reeds;
+    for (const b of this.beds) {
+      if (!b.burnt && !b.lantern.alive) {
+        b.burnt = true; b.burning = R.burnFrames;
+        w.emit({ type: "reedsBurn", fighter: f, bed: { i: b.i, x: b.x, z: b.z, r: b.r }, frames: R.burnFrames });
+        if (this.diveBed === b && this.state === "diving") { this.uproot(w.player); w.emit({ type: "flushed", fighter: f, at: { x: f.pos.x, y: 1.5, z: f.pos.z } }); }
+      }
+      if (b.burning > 0) {
+        if (w.frame % 10 === 0) for (const t of w.fighters) {
+          if (!t.alive || t.traits.object || t.submerged || t.pos.y > 1 || flat(t.pos, b) > b.r) continue;
+          t.tags.add("SCORCHED", R.scorch);
+        }
+        if (--b.burning === 0) w.emit({ type: "reedsOut", fighter: f, bed: { i: b.i, x: b.x, z: b.z, r: b.r } });
+      }
+    }
+  }
+  _makeForReeds() {
     const w = this.world, f = this.f;
-    const n = this.rules.waves || 1;
+    const open = this.beds.filter((b) => !b.burnt).sort((a, b) => flat(f.pos, a) - flat(f.pos, b));
+    if (!open.length) { // every bed burnt: it can't go under any more, so it fans mud from where it stands
+      if (!this.noReeds) { this.noReeds = true; w.emit({ type: "noReeds", fighter: f }); }
+      const t = f.target?.alive ? f.target : w.player;
+      this._mudWaves(t); this.timer = this.rules.diveEvery;
+      return;
+    }
+    const bed = open[0];
+    if (flat(f.pos, bed) <= bed.r - 0.7) { this._dive(bed); return; }
+    this.state = "wading"; this.wadeTo = bed; this.wadeTimer = HASK_TUNING.reeds.wadeFrames;
+    w.emit({ type: "wading", fighter: f, bed: { i: bed.i, x: bed.x, z: bed.z, r: bed.r } });
+  }
+  _dive(bed) {
+    const f = this.f;
+    f.controller.startDirect(HASK_ABILITIES.Dive, this.world.frame);
+    this.state = "diving"; this.diveBed = bed; this.wadeTo = null;
+  }
+
+  // ---- P2: the barricade ----
+  /** The Roar's summon: the logs come up out of the bog round it, in a broken ring. */
+  onSummon() {
+    if (this.fort || this.rules.drained) return;
+    const w = this.world, f = this.f, F = HASK_TUNING.fort, c = { x: f.pos.x, z: f.pos.z }, logs = [];
+    for (let i = 0; i < F.logs; i++) {
+      let a = (i / F.logs) * Math.PI * 2 + Math.PI / 4, x = 0, z = 0;
+      for (let k = 0; k < 4; k++, a += 0.35) { // never on top of a fen lantern
+        x = c.x + Math.sin(a) * F.r; z = c.z + Math.cos(a) * F.r;
+        if (!this.beds?.some((b) => b.lantern.alive && Math.hypot(b.lantern.pos.x - x, b.lantern.pos.z - z) < 1.6)) break;
+      }
+      logs.push(w.spawnObject("swampLog", x, z, f));
+    }
+    this.fort = { center: c, logs }; this.volley = 60;
+    w.emit({ type: "fortRise", fighter: f, center: { ...c, y: 0 }, logs: logs.map((l) => ({ x: l.pos.x, z: l.pos.z })) });
+  }
+  _holdFort() {
+    const w = this.world, f = this.f, F = HASK_TUNING.fort, c = this.fort.center, d = flat(f.pos, c), leash = F.r - 1.2;
+    if (d > leash) { f.pos.x = c.x + ((f.pos.x - c.x) / d) * leash; f.pos.z = c.z + ((f.pos.z - c.z) / d) * leash; } // it holds its ground
+    if (!f.runner.isRunning && f.combatant.canAct && f.grounded && --this.volley <= 0) {
+      this.volley = F.volleyEvery;
+      const t = f.target?.alive ? f.target : w.player;
+      this._mudWaves(t, F.waves);
+      w.emit({ type: "fortVolley", fighter: f });
+    }
+  }
+  _fortBroken() {
+    this.fortDown = true; this.timer = Math.min(this.timer, 90); // out it comes, making for the reeds
+    this.world.emit({ type: "fortBroken", fighter: this.f, at: { ...this.fort.center, y: 0 } });
+  }
+  /** It's down (or the fight's over): its lanterns and logs go with it, so the field can clear. */
+  _clear() {
+    for (const o of [...(this.beds ?? []).map((b) => b.lantern), ...(this.fort?.logs ?? [])]) if (o.alive) { o.combatant.health.set(0); }
+  }
+
+  _mudWaves(t, count) {
+    const w = this.world, f = this.f;
+    const n = count ?? (this.rules.waves || 1);
     const base = Math.atan2(t.pos.x - f.pos.x, t.pos.z - f.pos.z);
     for (let i = 0; i < n; i++) {
       const a = base + (i - (n - 1) / 2) * 0.45;
@@ -137,7 +245,13 @@ export class HaskController {
     f.brain.aggroRange = 40;
     if (this.rules.drained) {
       if (f.submerged) { f.submerged = false; f.pos.x = this.mound.x; f.pos.z = this.mound.z; }
+      if (this.state === "wading") { f.moveInput.x = f.moveInput.z = 0; this.wadeTo = null; this.state = "surface"; }
       f.tags.add("EXPOSED", 1e9);
+      if (this.fort && !this.fortDown) { // the bog drains out from under the logs: they settle where they lie, no use to it now
+        this.fortDown = true;
+        for (const l of this.fort.logs) if (l.alive) { l.combatant.health.set(0); }
+        w.emit({ type: "fortSink", fighter: f });
+      }
     }
     if (this.state === "surface") this.timer = this.rules.diveEvery || Infinity;
     w.emit({ type: "bossPhase", fighter: f, phase: p, drained: !!this.rules.drained });

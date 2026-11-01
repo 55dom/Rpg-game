@@ -165,6 +165,8 @@ export const EPISODE_4_STORY = {
       eventHints: {
         submerge: "It dove. Watch the mound: hit it with a wind spell ({Spell1}) to uproot it.",
         eruptWarning: "Red circle: get out before it erupts!",
+        wading: "It's making for the reeds: it can only dive in a reed bed. Knock that bed's lantern down ({Light}) and the reeds burn.",
+        fortRise: "Logs! Your wind just hits the wood. Break a pile ({Heavy}), or slip through a gap and take it up close.",
       },
       retry: "Again. Wind tears it out of the mud." },
     { id: "after", type: "scene", node: "Ep4_After", ...FENS, if: "$MIRREN_SAVED",

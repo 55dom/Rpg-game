@@ -1,6 +1,9 @@
 // Boss 2: Hask the Bogwarden (GDD §16 B2, Episode 4, Greywater Fens).
 // P1 learn: it submerges and its mud waves make you WEIGHTED. Wind on its mound uproots it.
-// P2 strategy shift (65%): enraged, calls Fen Hounds out of the bog, fans its mud waves.
+// P2 strategy shift (65%): enraged, calls Fen Hounds out of the bog, drags swamp logs up into a barricade round itself and
+//   fans its mud waves out through the gaps (your wind just thuds into the logs). Break a pile, or slip through a gap.
+// Its weak point: it can only go under in a reed bed. A fen lantern stands by each; knock one down and the reeds burn, and
+//   that bed is no use to it again (catch it wading in, and the fire flushes it out).
 // P3 arena change (35%): the bog drains. It can't submerge any more, its soft underside is EXPOSED, and it charges.
 
 import { hitSpec } from "../core/combat.js";
@@ -84,4 +87,16 @@ export const HASK_PHASES = Object.freeze([
 export const HASK_TUNING = Object.freeze({
   submergedFrames: 200, minUnderFrames: 90, burrowSpeed: 4.2, waveEvery: 55, warnFrames: 40,
   uprootStagger: 150, uprootPosture: 70, uprootLaunch: 9, exposedFactor: 1.5,
+  // Its submerge points: three reed beds round the bog (one where it starts), each with a fen lantern on its inner edge.
+  reeds: Object.freeze({ center: Object.freeze({ x: 0, z: 0 }), dist: 6.5, angles: Object.freeze([0, (2 * Math.PI) / 3, (4 * Math.PI) / 3]), r: 2.2,
+    burnFrames: 480, scorch: 90, wadeFrames: 260 }),
+  // P2's barricade: log piles in a broken ring round it. While enough stand it holds its ground and lobs mud through the gaps.
+  fort: Object.freeze({ logs: 4, r: 3.4, holds: 2, volleyEvery: 150, waves: 3 }),
+});
+
+// What it puts on the field: the fen lanterns (props: the squad leaves them to you) and P2's swamp logs.
+export const HASK_OBJECTS = Object.freeze({
+  fenLantern: { stats: { name: "Fen Lantern", maxHealth: 24, maxPosture: 999, runSpeed: 0, circleSpeed: 0, turnRate: 0, radius: 0.35, height: 2.4 }, shape: "fenLantern",
+    traits: { prop: true } },
+  swampLog: { stats: { name: "Swamp Logs", maxHealth: 130, maxPosture: 999, runSpeed: 0, circleSpeed: 0, turnRate: 0, radius: 0.95, height: 1.2 }, shape: "logs" },
 });

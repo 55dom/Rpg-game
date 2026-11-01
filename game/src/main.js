@@ -631,6 +631,20 @@ export function boot(doc = document) {
           else { hud.toast("HASK ENRAGES", "danger"); hud.banner(`PHASE ${ev.phase}`); }
           sfx.play("bossIntro"); camera.shake(0.6);
           break;
+        case "reedBeds": reedFx.lay(ev.beds); break;
+        case "wading": vfx.ring({ x: ev.bed.x, y: 0.08, z: ev.bed.z }, ev.bed.r * 2.2, "#8a7a4a", 0.6, true); hud.pushLog("Hask makes for the reeds"); break;
+        case "reedsBurn": reedFx.burn(ev.bed); sfx.play("detonate", 0.8); camera.shake(0.25); hud.toast("THE REEDS BURN", "finisher"); break;
+        case "reedsOut": reedFx.out(ev.bed); break;
+        case "flushed": hud.toast("FLUSHED OUT", "afterimage"); hud.banner("THE FIRE DROVE IT OUT OF THE BOG"); break;
+        case "noReeds": hud.toast("NOWHERE TO DIVE", "clear"); hud.banner("EVERY REED BED BURNT · IT CAN'T GO UNDER"); break;
+        case "fortRise":
+          for (const l of ev.logs) { vfx.ring({ x: l.x, y: 0.06, z: l.z }, 2.6, "#8a7a4a", 0.45); vfx.sparksAt({ x: l.x, y: 0.4, z: l.z }, 10, "gold", 7, 5); }
+          sfx.play("mud"); sfx.play("slam", 0.7); camera.shake(0.5);
+          hud.toast("THE BARRICADE", "danger"); hud.banner("LOGS UP ROUND IT · BREAK A PILE OR SLIP THROUGH A GAP");
+          break;
+        case "fortVolley": sfx.play("mud", 0.6); break;
+        case "fortBroken": vfx.ring({ x: ev.at.x, y: 0.06, z: ev.at.z }, 7, "#c8b49a", 0.4); hud.toast("BARRICADE BROKEN", "break"); sfx.play("postureBreak", 0.7); break;
+        case "fortSink": hud.pushLog("The logs settle in the drained bed"); break;
         case "summon": for (const e of ev.summoned) vfx.ring({ x: e.pos.x, y: 0.06, z: e.pos.z }, 3, "#8a7a4a", 0.4); hud.pushLog(`Hask calls ${ev.summoned.length} hounds`); break;
         case "deflect": vfx.flash(ev.at, 1.8, "#e9d8ff", 0.12); vfx.sparksAt(ev.at, 10, "white", 9, 2); vfx.number(ev.at, "DEFLECT", "text"); sfx.play("block"); break;
         case "ward": {
@@ -1348,8 +1362,52 @@ export function boot(doc = document) {
       clear() { for (const p of pads) p.node.dispose(); for (const l of lines) l.dispose(); pads = []; lines = []; },
     };
   })();
+  // Hask's reed beds (its submerge points): reeds and cattails round a patch of black water. Burnt, they're charred stalks.
+  const reedFx = (() => {
+    let beds = [], t = 0;
+    const MB = () => BB.MeshBuilder;
+    const reedMat = toon(scene, "reedStalk", "#6a7a3a"), tailMat = toon(scene, "reedTail", "#5a3a22"), waterMat = toon(scene, "reedWater", "#1e2a22"),
+      charMat = toon(scene, "reedChar", "#1a1612"), fireMat = glow(scene, "reedFire", "#ff8a2a", 0.9, true);
+    const bed = (b) => {
+      const node = new BB.TransformNode("reedBed", scene); node.position.set(b.x, 0, b.z);
+      const water = MB().CreateDisc("reedWater", { radius: b.r * 0.95, tessellation: 20 }, scene); water.rotation.x = Math.PI / 2; water.position.y = 0.03; water.parent = node; water.material = waterMat;
+      const stalks = [];
+      for (let i = 0; i < 26; i++) { // golden-angle scatter: even, never in a grid
+        const a = i * 2.399, d = b.r * Math.sqrt((i + 0.5) / 26) * 0.92, h = 1.1 + ((i * 37) % 7) * 0.12;
+        const st = MB().CreateCylinder("reed", { height: h, diameterTop: 0.02, diameterBottom: 0.05, tessellation: 4 }, scene);
+        st.position.set(Math.sin(a) * d, h / 2, Math.cos(a) * d); st.rotation.set(Math.sin(i) * 0.12, 0, Math.cos(i * 1.7) * 0.12); st.parent = node; st.material = reedMat;
+        if (i % 3 === 0) { const tail = MB().CreateCylinder("cattail", { height: 0.22, diameter: 0.07, tessellation: 5 }, scene); tail.parent = st; tail.position.y = h / 2 - 0.12; tail.material = tailMat; }
+        stalks.push(st);
+      }
+      const fire = MB().CreateDisc("reedFire", { radius: b.r, tessellation: 22 }, scene); fire.rotation.x = Math.PI / 2; fire.position.y = 0.06; fire.parent = node; fire.material = fireMat; fire.setEnabled(false);
+      for (const m of [water, fire, ...stalks]) m.isPickable = false;
+      return { node, stalks, fire, at: b, burning: false, burnt: false };
+    };
+    return {
+      lay(list) { this.clear(); beds = list.map(bed); },
+      burn(b) {
+        const r = beds.find((q) => q.at.i === b.i); if (!r) return;
+        r.burning = true; r.fire.setEnabled(true);
+        for (const st of r.stalks) { st.material = charMat; for (const c of st.getChildren()) c.material = charMat; }
+        vfx.flash({ x: b.x, y: 0.8, z: b.z }, b.r * 2.2, "#ffb04a", 0.25); vfx.ring({ x: b.x, y: 0.08, z: b.z }, b.r * 2.4, "#ff8a2a", 0.4);
+      },
+      out(b) { const r = beds.find((q) => q.at.i === b.i); if (r) { r.burning = false; r.burnt = true; r.fire.setEnabled(false); } },
+      update(dt) {
+        if (!beds.length) return;
+        t += dt;
+        for (const r of beds) {
+          if (!r.burning) continue;
+          for (const st of r.stalks) if (st.scaling.y > 0.45) st.scaling.y -= dt * 0.08; // burning down
+          r.fire.scaling.setAll(0.85 + Math.abs(Math.sin(t * 9 + r.at.x)) * 0.15);
+          fireMat.alpha = 0.35 + Math.abs(Math.sin(t * 13)) * 0.25;
+          if (Math.random() < dt * 14) { const a = Math.random() * 6.28, d = Math.random() * r.at.r; vfx.sparksAt({ x: r.at.x + Math.sin(a) * d, y: 0.4, z: r.at.z + Math.cos(a) * d }, 2, Math.random() < 0.5 ? "gold" : "red", 3, 7); }
+        }
+      },
+      clear() { for (const r of beds) r.node.dispose(); beds = []; },
+    };
+  })();
   const hopGhostMat = glow(scene, "hopGhost", "#8affc8", 0.3, true);
-  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); lilyFx.clear(); groundFx.clear(); tearFx.clear(); mouthTears = []; lineWall?.dispose(); lineWall = null; darkFx.clear();
+  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); lilyFx.clear(); reedFx.clear(); groundFx.clear(); tearFx.clear(); mouthTears = []; lineWall?.dispose(); lineWall = null; darkFx.clear();
     for (const m of inkMarks.values()) m.dispose(); inkMarks.clear(); root.classList.remove("leaping", "hopblur", "surge-locked"); };
 
   // Squad HQ: the board (rooms to build) and the workbench (tempering gear). One screen, two modes.
@@ -1679,7 +1737,7 @@ export function boot(doc = document) {
       if (state.ghostTimer <= 0) { const rig = viewFor(world.player); if (rig) vfx.afterimage(rig); state.ghostTimer = 0.09; }
     }
 
-    waterJet.update(); lilyFx.update(dt); groundFx.update(dt); tearFx.update(dt);
+    waterJet.update(); lilyFx.update(dt); reedFx.update(dt); groundFx.update(dt); tearFx.update(dt);
     if (world.boss?.boss?.leap) { // motion blur on the hops: a trail of fading ghosts of Gullmaw
       state.hopGhost = (state.hopGhost ?? 0) - dt;
       if (state.hopGhost <= 0) { const rig = viewFor(world.boss); if (rig?.snapshot) vfx.afterimage(rig, hopGhostMat, 0.22); state.hopGhost = 0.035; }

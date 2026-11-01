@@ -96,6 +96,26 @@ export class ObjectView {
         this.glowPart.rotation.x = Math.PI / 2;
         break;
       }
+      case "fenLantern": { // Hask's bog (Ep 4): a crooked post at the edge of a reed bed, an oil lantern hung off its arm
+        const post = part(MB.CreateCylinder("post", { height: 2.3, diameterTop: 0.1, diameterBottom: 0.16, tessellation: 7 }, scene), "#4a3624", 0, 1.15, 0, 0.015);
+        post.rotation.z = 0.06;
+        part(MB.CreateBox("arm", { width: 0.75, height: 0.08, depth: 0.08 }, scene), "#4a3624", 0.3, 2.2, 0, 0.012);
+        this.swing = new BB.TransformNode(`${id}-swing`, scene); this.swing.parent = this.root; this.swing.position.set(0.6, 2.18, 0);
+        const cage = part(MB.CreateBox("cage", { width: 0.26, height: 0.34, depth: 0.26 }, scene), "#2a2a2e", 0, -0.3, 0, 0.012); cage.parent = this.swing;
+        part(MB.CreateBox("cap", { width: 0.32, height: 0.06, depth: 0.32 }, scene), "#2a2a2e", 0, -0.11, 0, 0.01).parent = this.swing;
+        this.glowPart = part(MB.CreateSphere("flame", { diameter: 0.2, segments: 8 }, scene), "#ffb04a", 0, -0.3, 0, 0, true); this.glowPart.parent = this.swing;
+        break;
+      }
+      case "logs": { // P2's barricade: black swamp logs dragged up out of the bog, stacked two and one, weed hanging off them
+        const wood = "#3a2e22", moss = "#4a6a32";
+        for (const [x, y, z, l] of [[0, 0.3, -0.22, 2.1], [0.05, 0.3, 0.26, 1.9], [-0.1, 0.78, 0.02, 2.0]]) {
+          const log = part(MB.CreateCylinder("log", { height: l, diameter: 0.5, tessellation: 9 }, scene), wood, x, y, z, 0.02);
+          log.rotation.z = Math.PI / 2;
+          part(MB.CreateSphere("weed", { diameter: 0.5, segments: 6 }, scene), moss, x + l * 0.22, y + 0.18, z, 0.01).scaling.set(1.2, 0.35, 0.9);
+        }
+        part(MB.CreateSphere("mud", { diameter: 2.2, segments: 8 }, scene), "#3a3424", 0, 0.02, 0, 0).scaling.set(1, 0.08, 0.7);
+        break;
+      }
       default: part(MB.CreateBox("thing", { size: 1 }), "#888888", 0, 0.5, 0);
     }
   }

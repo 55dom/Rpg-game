@@ -121,6 +121,7 @@ export const LOOKS = {
   // Things bosses put on the field: drawn by ObjectView (runtime/objects.js).
   bell: { form: "object", shape: "bell", trail: "#c9b4ff" }, seal: { form: "object", shape: "seal", trail: "#ff7a2a" },
   eggsac: { form: "object", shape: "eggsac", trail: "#b8d86a" }, bubble: { form: "object", shape: "bubble", trail: "#8ae0d0" },
+  fenLantern: { form: "object", shape: "fenLantern", trail: "#ffb04a" }, swampLog: { form: "object", shape: "logs", trail: "#8a7a4a" }, // Hask's bog (Ep 4)
   bandit: { poses: ENEMIES.bandit.poses, scale: 1.02, skirt: 1.0, coat: "#4a3022", trim: "#8a2a2a", hairColor: "#3a2618", skin: "#d8a888",
     head: "face", hair: "spiky", hood: "#2e221c", mask: "#6a1e1e", angry: true, weapon: "blade", eyeColor: "#2a1a10", stoop: 0.06, trail: "#ff8a6a" },
   hask: { poses: HASK_POSES, scale: 2.0, skirt: 1.7, coat: "#2f3a26", trim: "#5c4a2e", hairColor: "#222a1a", skin: "#2f3a26",

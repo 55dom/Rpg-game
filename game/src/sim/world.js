@@ -9,7 +9,7 @@ import { AbilityRunner, AbilityController, EventType, MoveContext, StartResult, 
 import { AttackTokenPool, EnemyBrain, MoveIntent, CompanionBrain, AllyMove, STANCES } from "../core/ai.js";
 import { COMPANIONS } from "../data/companions.js";
 import { ENEMIES, WAVES } from "../data/enemies.js";
-import { HASK_STATS, HASK_HITBOXES, HASK_TUNING, haskOptions } from "../data/hask.js";
+import { HASK_STATS, HASK_HITBOXES, HASK_TUNING, HASK_OBJECTS, haskOptions } from "../data/hask.js";
 import { HaskController, SeverinController, SparController, IlseController, GalenController, GullmawController } from "./boss.js";
 import { ILSE_STATS, ILSE_HITBOXES, ilseOptions, GALEN_STATS, GALEN_HITBOXES, galenOptions, GULLMAW_STATS, GULLMAW_HITBOXES, gullmawOptions,
   OBJECTS as OBJECTS2, OBJECT_HITBOXES as OBJECT_HITBOXES2, GALEN_TUNING } from "../data/bosses2.js";
@@ -37,7 +37,7 @@ import { TrialKnightController } from "../reveal/backlashSim.js";
 import { ECLIPSED_STATS, ECLIPSED_FINAL_STATS, ECLIPSED_HITBOXES, eclipsedOptions, eclipsedFinalOptions } from "../data/eclipse.js";
 import { EclipseController, EclipseFinalController } from "./eclipse.js";
 import { INSCRIPTION, INSCRIPTION_HITBOXES } from "../data/inscription.js";
-const OBJECTS = { ...OBJECTS2, ...ASH_OBJECTS, ...ISLES_OBJECTS }, OBJECT_HITBOXES = { ...OBJECT_HITBOXES2, ...ASH_OBJECT_HITBOXES };
+const OBJECTS = { ...OBJECTS2, ...ASH_OBJECTS, ...ISLES_OBJECTS, ...HASK_OBJECTS }, OBJECT_HITBOXES = { ...OBJECT_HITBOXES2, ...ASH_OBJECT_HITBOXES };
 import { CAL_STATS, CAL_HITBOXES, calOptions } from "../data/cal.js";
 import { SEVERIN_STATS, SEVERIN_HITBOXES, severinOptions } from "../data/severin.js";
 import { RunDirector } from "./run.js";
@@ -252,7 +252,7 @@ export class Fighter {
         if (e.key === "jump") { this.vel.y = e.value * (this.tags.has("WEIGHTED") ? Tuning.weightedJump : 1); this.grounded = false; }
         else if (e.key === "airJump") { this.vel.y = e.value * (this.tags.has("WEIGHTED") ? Tuning.weightedJump : 1); this.airJumps = 0; }
         else if (e.key === "submerge") this.boss?.submerge();
-        else if (e.key === "summon") this.world.summon(this, "hound", e.value);
+        else if (e.key === "summon") { this.world.summon(this, "hound", e.value); this.boss?.onSummon?.(); }
         else if (e.key === "fan") this.world.fireFan(this, a, "Needle", 15, e.value, 0.26);
         else if (e.key === "thunderhead") { const t = this.target?.alive ? this.target : this.world.player; this.world.addStrike(this, t.pos.x, t.pos.z, { delay: e.value, r: 1.6, spec: THUNDER, ability: a, kind: "thunder" }); }
         else if (e.key === "seal") { const t = this.target?.alive ? this.target : this.world.player; this.world.addStrike(this, t.pos.x, t.pos.z, { delay: e.value, r: BELL_TUNING.seal.r, spec: SEAL, ability: a, kind: "seal" }); } // a Binding Seal under you
@@ -587,7 +587,7 @@ export class World {
     const brain = O.options ? new EnemyBrain(`${kind}-${this.frame}`, new AttackTokenPool(2), O.options(), this.rng) : null;
     if (brain) brain.aggroRange = 30;
     const f = new Fighter(this, { id: `${kind}-${++this._objIds || (this._objIds = 1)}`, kind, team: Team.Enemy, stats: { ...O.stats, object: true },
-      hitboxes: OBJECT_HITBOXES, traits: { object: true, immobile: true }, brain, x, z });
+      hitboxes: OBJECT_HITBOXES, traits: { object: true, immobile: true, ...(O.traits ?? {}) }, brain, x, z });
     f.anchor = { x, z }; f.owner = owner;
     f.yaw = angleTo(f.pos, this.player.pos);
     this.emit({ type: "spawn", fighter: f });
@@ -922,7 +922,7 @@ export class World {
     const p = this.player;
     let best = null, bestD = range;
     for (const e of this.liveEnemies) {
-      if (e === except) continue;
+      if (e === except || e.traits.prop) continue; // (a prop is yours to aim at, never where your aim drifts)
       const d = flatDistance(p.pos, e.pos);
       if (d < bestD) { best = e; bestD = d; }
     }
@@ -1037,7 +1037,7 @@ export class World {
     if (stance === "Press" && this.lockTarget?.alive && !this.lockTarget.traits.dummy) return this.lockTarget;
     let best = null, bestScore = Infinity;
     for (const e of this.fighters) {
-      if (e.team !== Team.Enemy || !e.alive || e.traits.dummy) continue; // the squad leaves the training dummies to you
+      if (e.team !== Team.Enemy || !e.alive || e.traits.dummy || e.traits.prop) continue; // the squad leaves the training dummies (and the fen lanterns) to you
       const fromLeader = flatDistance(p.pos, e.pos);
       let score = stance === "Press" ? flatDistance(c.pos, e.pos) : fromLeader;
       if (stance === "Guard" && e.target === p && e.runner.isRunning) score -= 6; // intercept attacks on Rook
@@ -1050,7 +1050,7 @@ export class World {
     for (const e of this.fighters) {
       if (!e.brain || !live(e)) continue;
       if (e.companion) { this._companionBrain(e, frame); continue; }
-      if (e.boss && !e.boss.brainActive) { if (e.boss.state !== "toPolaris") { e.moveInput.x = 0; e.moveInput.z = 0; } continue; } // the controller has it
+      if (e.boss && !e.boss.brainActive) { if (e.boss.state !== "toPolaris" && e.boss.state !== "wading") { e.moveInput.x = 0; e.moveInput.z = 0; } continue; } // the controller has it
       const p = this._enemyTarget(e);
       e.target = p;
       const d = p ? flatDistance(e.pos, p.pos) : Infinity;
