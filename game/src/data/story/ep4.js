@@ -167,6 +167,8 @@ export const EPISODE_4_STORY = {
         eruptWarning: "Red circle: get out before it erupts!",
         wading: "It's making for the reeds: it can only dive in a reed bed. Knock that bed's lantern down ({Light}) and the reeds burn.",
         fortRise: "Logs! Your wind just hits the wood. Break a pile ({Heavy}), or slip through a gap and take it up close.",
+        reedsBurn: "The reeds burn. A gust ({Spell1}) through anything on fire carries the fire on down the wind: FIRESTORM.",
+        summon: "Its mud weighs down its own hounds too. Juno's thread on a WEIGHTED hound: CRUSH. Knock one into the air: it comes down like a stone.",
       },
       retry: "Again. Wind tears it out of the mud.",
       set: { HASK_DEFEATED: 1 }, add: { RENOWN_FENS: 6 } }, // the Fens' villagers hear (§16 B2)

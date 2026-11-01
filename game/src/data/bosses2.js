@@ -162,8 +162,14 @@ export const GULLMAW_TUNING = Object.freeze({
   pad: hitSpec({ damage: 18, posture: 22, hitstop: 6, hitstun: 22, knockback: 6, unblockable: true }),
   padFinal: hitSpec({ damage: 26, posture: 32, hitstop: 9, hitstun: 30, knockback: 8, unblockable: true }),
   sacRadius: 7, jetLength: 12, jetSpeed: 0.011, jetWidth: 0.5, jetHeight: 0.75, jetWarn: 90,
-  jet: hitSpec({ damage: 14, posture: 16, hitstop: 4, hitstun: 20, knockback: 3, unblockable: true }),
-  splash: hitSpec({ damage: 10, posture: 12, hitstop: 3, hitstun: 16, knockback: 3, unblockable: true, applyTags: [["WEIGHTED", 180]] }),
+  jet: hitSpec({ damage: 14, posture: 16, hitstop: 4, hitstun: 20, knockback: 3, unblockable: true, applyTags: [["WET", 420]] }), // soaked
+  splash: hitSpec({ damage: 10, posture: 12, hitstop: 3, hitstun: 16, knockback: 3, unblockable: true, applyTags: [["WEIGHTED", 180], ["WET", 420]] }),
+  // Weak: Storm (WET + CHARGED, §16 B5). Nobody in Ep 12's party carries Storm, but the cistern does: the Crown's old
+  // arc-lamps stand round its edge, humming. Knock one down and it falls sparking into the water, and everything wet
+  // within `spark` of it is CHARGED: Conduction (§7.2), which chains to every WET thing in reach, whichever side. Gullmaw
+  // is always wet, and Storm is what it's weak to (`weak`). Its jet and splash soak you too: be dry when a lamp goes.
+  lamps: Object.freeze({ dist: 9.5, angles: Object.freeze([0.4, 2.5, 4.6]), spark: 5, charge: 240 }),
+  weak: Object.freeze({ Conduction: Object.freeze({ damage: 30, posture: 70, stagger: 150 }) }),
 });
 
 // ---- The things bosses put on the field: immobile, breakable ----------------------------------------
@@ -180,4 +186,7 @@ export const OBJECTS = Object.freeze({
   eggsac: { stats: { name: "Bile Egg Sac", maxHealth: 120, maxPosture: 999, runSpeed: 0, circleSpeed: 0, turnRate: 0.2, radius: 0.6, height: 1.3 }, shape: "eggsac",
     options: () => [new AttackOption(EGGSAC_ABILITIES.Spit, 0, 18, 1, 100)] },
   bubble: { stats: { name: "Slime Bubble", maxHealth: 180, maxPosture: 999, runSpeed: 0, circleSpeed: 0, turnRate: 0, radius: 0.8, height: 2.2 }, shape: "bubble" },
+  // The cistern's arc-lamps (Ep 12): the squad leaves them to you and your aim never drifts onto one (`prop`), like Hask's lanterns.
+  arcLamp: { stats: { name: "Arc Lamp", maxHealth: 24, maxPosture: 999, runSpeed: 0, circleSpeed: 0, turnRate: 0, radius: 0.35, height: 3.0 }, shape: "arcLamp",
+    traits: { prop: true } },
 });

@@ -121,6 +121,12 @@ import { renownTier, LAW_REGIONS } from "./data/law.js";
 import { fillText } from "./core/script.js";
 
 const TRAIL_COLORS = { default: "#ffd98a", GaleCutter: PALETTE.gale, VacuumPull: PALETTE.gale, TempestEdge: "#a8f5dc", Counter: "#dff6ff", LanternBreak: "#ffcc55", enemy: "#ff5a4a" };
+/** Each reaction's look (GDD §7.2): the flash colour and the sparks. */
+const REACTION_LOOK = Object.freeze({
+  Conduction: ["#9ad8ff", "white"], Railgun: ["#9ad8ff", "white"], FlashFreeze: ["#cfeaff", "white"], Shatter: ["#cfeaff", "white"],
+  Firestorm: ["#ff8a3a", "red"], Wildfire: ["#ff6a2a", "red"], Flashpoint: ["#ffb04a", "red"], ShatterChorus: ["#e6f0ff", "violet"],
+  Meteor: ["#c8a060", "gold"], Crush: ["#c8a060", "gold"], CrushB: ["#c8a060", "gold"], Corrode: ["#8aa04a", "mint"], RudeAwakening: ["#ffd27a", "gold"],
+});
 const ULT_MODES = ["full", "short", "off"]; // how much of an Ultimate's cinematic plays (GDD §19.8)
 const ULT_SHORT_SKIPS = new Set(["ult-activate", "ult-charge", "ult-closeup"]); // short: straight to the release
 const SPELLS = [
@@ -348,14 +354,16 @@ export function boot(doc = document) {
           break;
         case "reaction": {
           const { reaction: rx, defender: d, targets } = ev;
+          const [hex, spark] = REACTION_LOOK[rx.id] ?? ["#ffd27a", "gold"]; // (each §7.2 reaction its own colour: Conduction blue, fire orange…)
           for (const t of targets) {
             const c = chest(t);
-            vfx.flash(c, 3.2, "#ffd27a", 0.22);
-            vfx.sparksAt(c, 16, "gold", 14, 3);
-            vfx.number(c, rx.effect.damage ?? 0, "big");
-            viewFor(t)?.hitFlash(0.12, "#ffd27a");
+            vfx.flash(c, 3.2, hex, 0.22);
+            vfx.sparksAt(c, 16, spark, 14, 3);
+            if (rx.effect.damage) vfx.number(c, rx.effect.damage, "big");
+            viewFor(t)?.hitFlash(0.12, hex);
+            if (t !== d && (rx.effect.chain || rx.effect.spread)) vfx.thread(chest(d), c, 0.4); // the lightning (or the fire) jumping across
           }
-          vfx.ring({ x: d.pos.x, y: d.pos.y + 0.1, z: d.pos.z }, (rx.effect.radius || 1.5) * 2.4, PALETTE.lantern, 0.45);
+          vfx.ring({ x: d.pos.x, y: d.pos.y + 0.1, z: d.pos.z }, (rx.effect.radius || 1.5) * 2.4, hex, 0.45);
           sfx.play("detonate"); camera.shake(0.45); camera.kick(0.4); impact(2);
           hud.toast(rx.name.toUpperCase(), "finisher");
           if (settings.frameData) hud.pushLog(`Reaction ${rx.name} on ${targets.length}`);
@@ -575,6 +583,12 @@ export function boot(doc = document) {
           vfx.sparksAt(ev.at, 40, "gold", 14, 10); impact(6, true); sfx.play("ultActivate"); camera.shake(1.2);
           groundFx.clear(); break;
         }
+        case "arcLamps": hud.pushLog("Arc-lamps hum round the cistern"); break;
+        case "lampFall": // an arc-lamp down in the water (Ep 12): the spark, and whatever's wet conducts it
+          vfx.ring({ x: ev.at.x, y: 0.12, z: ev.at.z }, ev.r * 2, "#9ad8ff", 0.6); vfx.flash({ x: ev.at.x, y: 0.6, z: ev.at.z }, 4.5, "#bfe8ff", 0.3);
+          vfx.sparksAt({ x: ev.at.x, y: 0.5, z: ev.at.z }, 30, "white", 12, 4); sfx.play("detonate"); sfx.play("glint"); camera.shake(0.4); impact(2);
+          if (!ev.conducted) hud.toast("THE LAMP FALLS", "afterimage"); break; // (when it conducts, the reaction's own name says so)
+        case "weakness": hud.banner(ev.reaction.id === "Conduction" ? "WEAK TO STORM · IT REELS" : "A WEAKNESS"); vfx.sparksAt(ev.at, 24, "white", 10, 4); break;
         case "lilyPads": hud.toast("LILY PAD LEAP", "danger"); hud.banner("IT'S GOING TO HOP · STAY OFF THE LIT PADS"); lilyFx.mark(ev.center, ev.pads); sfx.play("heal", 0.6); break;
         case "padHop": lilyFx.target(ev.to); root.classList.add("leaping"); sfx.play("dodge", 0.9); state.hopGhost = 0; break;
         case "padSmash": lilyFx.smash(ev.at, ev.last); sfx.play("slam", ev.last ? 1 : 0.75); camera.shake(ev.last ? 0.45 : 0.25); impact(ev.last ? 3 : 2, ev.last);

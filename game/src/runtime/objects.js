@@ -114,6 +114,17 @@ export class ObjectView {
         this.glowPart = part(MB.CreateSphere("flame", { diameter: 0.2, segments: 8 }, scene), "#ffb04a", 0, -0.3, 0, 0, true); this.glowPart.parent = this.swing;
         break;
       }
+      case "arcLamp": { // Gullmaw's cistern (Ep 12): an old Crown arc-lamp on an iron post, a coil of blue light in a cage, humming
+        const iron = "#3a3e46";
+        part(MB.CreateCylinder("base", { height: 0.3, diameterTop: 0.36, diameterBottom: 0.5, tessellation: 8 }, scene), iron, 0, 0.15, 0, 0.015);
+        part(MB.CreateCylinder("post", { height: 2.6, diameterTop: 0.1, diameterBottom: 0.14, tessellation: 8 }, scene), iron, 0, 1.45, 0, 0.015);
+        part(MB.CreateBox("arm", { width: 0.6, height: 0.07, depth: 0.07 }, scene), iron, 0.24, 2.72, 0, 0.012);
+        this.swing = new BB.TransformNode(`${id}-swing`, scene); this.swing.parent = this.root; this.swing.position.set(0.5, 2.7, 0);
+        const cage = part(MB.CreateCylinder("cage", { height: 0.42, diameter: 0.28, tessellation: 6 }, scene), "#2a2c30", 0, -0.3, 0, 0.012); cage.parent = this.swing;
+        cage.visibility = 0.55;
+        this.glowPart = part(MB.CreateTorus("arc", { diameter: 0.18, thickness: 0.05, tessellation: 12 }, scene), "#9ad8ff", 0, -0.3, 0, 0, true); this.glowPart.parent = this.swing;
+        break;
+      }
       case "logs": { // P2's barricade: black swamp logs dragged up out of the bog, stacked two and one, weed hanging off them
         const wood = "#3a2e22", moss = "#4a6a32";
         for (const [x, y, z, l] of [[0, 0.3, -0.22, 2.1], [0.05, 0.3, 0.26, 1.9], [-0.1, 0.78, 0.02, 2.0]]) {

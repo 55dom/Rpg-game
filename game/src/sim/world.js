@@ -796,6 +796,7 @@ export class World {
       life: Math.round(((def.range ?? 14) / speed) * 60), hitSet: new Set(), id: ++this._projectileIds || (this._projectileIds = 1) };
     this.projectiles.push(p);
     this.emit({ type: "projectile", projectile: p });
+    return p;
   }
 
   /** Page bonuses (mastery and Grimoire Tree): each spell's mana cost, and a damage factor by ability id. */
@@ -1368,13 +1369,15 @@ export class World {
         if (t) { p.dead = true; this.emit({ type: "softHit", target: t, attacker: p.owner, ability: p.ability }); continue; }
       }
       for (const def of this.fighters) {
-        if (def.team === p.team || !def.alive || p.hitSet.has(def) || def.submerged || def.boss?.intangible) continue;
+        const mate = def.team === p.team; // `allies`: it marks its own side too (Hask's mud on its hounds' legs), no harm done
+        if ((mate && (!p.allies || def === p.owner || def.traits.object)) || !def.alive || p.hitSet.has(def) || def.submerged || def.boss?.intangible) continue;
         const grace = def.combatant.invulnerableFrames > 0 ? Tuning.nearMissGrace * 0.5 : 0;
         const r = p.def.size[0] / 2 + def.stats.radius + grace;
         const dx = def.pos.x - p.pos.x, dz = def.pos.z - p.pos.z;
         const below = def.pos.y - p.pos.y, above = p.pos.y - (def.pos.y + def.stats.height);
         const dy = below > 0 ? below : above > 0 ? above : 0;
         if (dx * dx + dz * dz + dy * dy > r * r) continue;
+        if (mate) { p.hitSet.add(def); for (const [tag, fr] of p.spec.applyTags) this.applyTag(def, tag, fr, p.owner); continue; }
         if ((def.floor || 0) > p.floor) { p.dead = true; this.emit({ type: "railTurn", projectile: p, defender: def, at: { ...p.pos } }); break; } // up at Varka's deck: the iron rail turns it
         p.hitSet.add(def);
         const outcome = this._resolve(p.owner, def, { def: p.def, spec: p.spec, ability: p.ability, hitSet: p.hitSet, origin: p.pos, projectile: true });
@@ -1401,6 +1404,7 @@ export class World {
     if (def === this.player && this.mods.defense) spec = { ...spec, damage: spec.damage * (1 - this.mods.defense) };
     if (def.team === Team.Player && this.diff.damageTaken !== 1) spec = { ...spec, damage: spec.damage * this.diff.damageTaken }; // the difficulty
     if (def.tags.has("RUSTED")) spec = { ...spec, damage: spec.damage * GALEN_TUNING.rustFactor }; // Galen's rot eats your guard
+    if (def.corroded) spec = { ...spec, damage: spec.damage * (1 + def.corroded) }; // Corrode (§7.2): armour gone soft for the fight
     if (att.tags?.has("STAR_SURGE")) spec = { ...spec, damage: spec.damage * Tuning.surgeAttack, posture: spec.posture * Tuning.surgeAttack }; // a star, for a while
     if (def.tags.has("STAR_SURGE")) spec = { ...spec, damage: spec.damage * Tuning.surgeGuard };
     if (def.boss && ((def.boss.damageFactor ?? 1) !== 1 || (def.boss.postureFactor ?? 1) !== 1)) spec = { ...spec, damage: spec.damage * (def.boss.damageFactor ?? 1), posture: spec.posture * (def.boss.postureFactor ?? 1) }; // shields and oaths
@@ -1515,40 +1519,97 @@ export class World {
     if (!was && s.isFull) this.emit({ type: "surgeFull" });
   }
 
+  /**
+   * The target's own state, as conditions a reaction can need (GDD §7.2): "airborne"; "glass" (a reflection, a twin
+   * holding the glass and not cracked, anything FROZEN); "armor" (a tower shield, a heavy body).
+   */
+  _states(def) {
+    const s = [];
+    if (!def.grounded) s.push("airborne");
+    if (def.kind?.startsWith("twinEcho") || ((def.magic === "glass" || def.magic === "both") && !(def.glassBroken > 0)) || def.tags.has("FROZEN")) s.push("glass");
+    if (def.traits.frontalGuard || def.traits.heavy) s.push("armor");
+    return s;
+  }
+
   /** Fire any reactions this hit triggers on `def`, then apply the hit's own tags. */
   _react(att, def, hb, at) {
     const spec = hb.spec;
     const incoming = new Set(hb.ability.tags);
     for (const [tag] of spec.applyTags) incoming.add(tag);
-    if (!def.grounded) incoming.add("airborne");
-    for (const row of matchReactions(REACTIONS, def.tags, incoming)) {
-      if (row.consume) def.tags.remove(row.when);
-      const fx = row.effect;
-      const targets = [def];
-      if (fx.radius > 0) {
-        for (const o of this.fighters) {
-          if (o !== def && o.team === def.team && o.alive && flatDistance(o.pos, def.pos) <= fx.radius) targets.push(o);
-        }
-      }
-      for (const t of targets) {
-        const c = t.combatant;
-        if (fx.damage) c.takeDamage(fx.damage);
-        const broke = fx.posture ? c.takePostureDamage(fx.posture) : false;
-        if (fx.stagger) { c.stagger(fx.stagger); t.runner.interrupt(); }
-        if (fx.launch && !(t.traits.heavy && !c.postureBroken)) { t.vel.y = fx.launch; t.grounded = false; }
-        if (fx.hitstop) t.hitstop = Math.max(t.hitstop, fx.hitstop);
-        if (broke) this.emit({ type: "postureBreak", attacker: att, defender: t, ability: hb.ability, spec, at: { x: t.pos.x, y: t.pos.y + 1.2, z: t.pos.z } });
-        if (c.isDead) {
-          this.emit({ type: "kill", attacker: att, defender: t, ability: hb.ability, spec, at });
-          if (t.companion) this.emit({ type: "allyDown", fighter: t });
-          if (this.lockTarget === t) this.lockTarget = this.nearestEnemy(20, t);
-        }
-      }
-      if (fx.hitstop) att.hitstop = Math.max(att.hitstop, fx.hitstop);
-      if (att.team === Team.Player) this._surge(this.player.stats.surgeGain.reaction);
-      this.emit({ type: "reaction", reaction: row, attacker: att, defender: def, targets, at });
-    }
+    for (const c of this._states(def)) incoming.add(c);
+    incoming.add("hit");
+    if (incoming.has("SCORCHED") || incoming.has("CHARGED")) incoming.add("spark"); // it burns or it charges: Flashpoint's spark
+    for (const row of matchReactions(REACTIONS, def.tags, incoming, (r) => !r.foes || def.team === Team.Enemy)) this._fireReaction(row, att, def, at, hb.ability, spec);
     if (def.alive) for (const [tag, frames] of spec.applyTags) def.tags.add(tag, frames);
+  }
+
+  /**
+   * A tag put on by the world rather than a blow (burning reeds, a fallen arc-lamp's charge, mud on a hound's
+   * legs): it can set off a reaction too, the same table. `seen`: fighters this source already reached (one
+   * shock each, however many WET things it finds). Returns the reactions fired.
+   */
+  applyTag(t, tag, frames, by = null, seen = null) {
+    if (!t.alive || t.traits.object) return [];
+    const incoming = new Set([tag, ...this._states(t)]);
+    if (tag === "SCORCHED" || tag === "CHARGED") incoming.add("spark");
+    const fired = seen?.has(t) ? [] : matchReactions(REACTIONS, t.tags, incoming, (r) => !r.foes || t.team === Team.Enemy);
+    const at = { x: t.pos.x, y: t.pos.y + 1.2, z: t.pos.z };
+    for (const row of fired) this._fireReaction(row, by ?? t, t, at, null, null, seen);
+    if (t.alive) t.tags.add(tag, frames);
+    return fired;
+  }
+
+  /** One reaction, on `def` (and whoever it reaches). */
+  _fireReaction(row, att, def, at, ability, spec, seen = null) {
+    if (row.consume) def.tags.remove(row.when);
+    const fx = row.effect;
+    const targets = [def];
+    const live = (o) => o !== def && o.alive && !o.traits.object && !seen?.has(o);
+    if (fx.chain) { // Conduction: every fighter carrying the tag within reach, whichever side it's on
+      for (const o of this.fighters) if (live(o) && o.tags.has(fx.chain) && flatDistance(o.pos, def.pos) <= fx.radius) targets.push(o);
+    } else if (fx.radius > 0) {
+      for (const o of this.fighters) if (live(o) && o.team === def.team && flatDistance(o.pos, def.pos) <= fx.radius) targets.push(o);
+    }
+    // Along the blow's line (Firestorm's wind, Railgun's magnet line): from the attacker through the target.
+    const dl = att && att !== def ? Math.hypot(def.pos.x - att.pos.x, def.pos.z - att.pos.z) : 0;
+    const dir = dl > 0.01 ? { x: (def.pos.x - att.pos.x) / dl, z: (def.pos.z - att.pos.z) / dl } : def.forward;
+    if (fx.spread) {
+      for (const o of this.fighters) {
+        if (!live(o) || o.team !== def.team || targets.includes(o)) continue;
+        const rx = o.pos.x - def.pos.x, rz = o.pos.z - def.pos.z, along = rx * dir.x + rz * dir.z;
+        if (along < 0 || along > fx.spread.length || Math.abs(rx * dir.z - rz * dir.x) > fx.spread.width + o.stats.radius) continue;
+        targets.push(o);
+      }
+    }
+    for (const t of targets) {
+      const c = t.combatant, weak = t.boss?.weakTo?.[row.id]; // a boss's weakness (Gullmaw and Storm, §16 B5)
+      seen?.add(t);
+      const pf = t.boss?.postureFactor ?? 1;
+      if (fx.damage || weak?.damage) c.takeDamage((fx.damage ?? 0) + (weak?.damage ?? 0));
+      let broke = false;
+      if (fx.breakPosture && pf > 0) broke = c.takePostureDamage(c.posture.current + 1);
+      else if ((fx.posture || weak?.posture) && pf > 0) broke = c.takePostureDamage(((fx.posture ?? 0) + (weak?.posture ?? 0)) * pf);
+      const st = Math.max(fx.stagger ?? 0, weak?.stagger ?? 0);
+      if (st) { c.stagger(st); t.runner.interrupt(); }
+      if (fx.launch && !(t.traits.heavy && !c.postureBroken)) { t.vel.y = fx.launch; t.grounded = false; }
+      if (fx.slam && !t.grounded) t.vel.y = -fx.slam; // down like a stone
+      if (fx.burn) t.tags.add("SCORCHED", fx.burn);
+      if (fx.spread && t !== def) t.tags.add("SCORCHED", fx.spread.frames);
+      if (fx.tag) t.tags.add(fx.tag[0], fx.tag[1]);
+      if (fx.corrode) t.corroded = Math.min(0.45, (t.corroded ?? 0) + fx.corrode);
+      if (fx.fling && !(t.traits.heavy && !c.postureBroken)) { const sp = fx.fling; t.knock.x = dir.x * sp; t.knock.z = dir.z * sp; }
+      if (fx.hitstop) t.hitstop = Math.max(t.hitstop, fx.hitstop);
+      if (weak) this.emit({ type: "weakness", reaction: row, fighter: t, at: { x: t.pos.x, y: t.pos.y + 1.6, z: t.pos.z } });
+      if (broke) this.emit({ type: "postureBreak", attacker: att, defender: t, ability, spec, at: { x: t.pos.x, y: t.pos.y + 1.2, z: t.pos.z } });
+      if (c.isDead) {
+        this.emit({ type: "kill", attacker: att, defender: t, ability, spec, at });
+        if (t.companion) this.emit({ type: "allyDown", fighter: t });
+        if (this.lockTarget === t) this.lockTarget = this.nearestEnemy(20, t);
+      }
+    }
+    if (fx.hitstop && att && att !== def) att.hitstop = Math.max(att.hitstop, fx.hitstop);
+    if (att?.team === Team.Player && def.team === Team.Enemy) this._surge(this.player.stats.surgeGain.reaction);
+    this.emit({ type: "reaction", reaction: row, attacker: att, defender: def, targets, at });
   }
 
   /** Drag a target to just in front of the attacker, at the attacker's height. */

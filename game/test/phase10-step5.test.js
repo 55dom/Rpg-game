@@ -50,6 +50,7 @@ const CHECKLIST = [
   ["B5", "two bile egg sacs on the cistern floor spit at you", [["sim/boss.js", /"eggsac"/]]],
   ["B5", "a high-pressure water jet sweeps the floor in a circle", [["sim/boss.js", /type: "flood"/]]],
   ["B5", "it gulps an AI ally and spits them out in a slime bubble", [["sim/boss.js", /type: "swallowed"/]]],
+  ["B5", "Weak: Storm (WET + CHARGED)", [["sim/boss.js", /get weakTo\(\) \{ return GULLMAW_TUNING\.weak; \}/], ["data/bosses2.js", /weak: Object\.freeze\(\{ Conduction:/], ["sim/boss.js", /w\.applyTag\(t, "CHARGED", L\.charge, w\.player, seen\)/]]], // (Phase 11 Step 2: the cistern's arc-lamps)
   ["B5", "Severin owes you a debt (flag); Lowmarket Renown ++", [["data/story/ep12.js", /SEVERIN_DEBT: 1/], ["data/story/ep12.js", /add: \{ RENOWN_AURELIN: \d+ \}/]]],
   // B6 · The Cantor Twins (Ep 15)
   ["B6", "they swap magic", [["sim/twins.js", /type: "twinSwap"/]]],
@@ -93,8 +94,7 @@ const CHECKLIST = [
  * The two lines of §16 no fight can answer in its own episode, and why. If either becomes answerable (someone in that
  * party gets the magic), it moves into the checklist.
  */
-const EXCEPTIONS = [
-  ["B5", "Weak: Storm (WET + CHARGED)", "nobody in Ep 12's party (Rook, and Severin on the bench) carries Storm: §7.2's Conduction needs a CHARGED hit"],
+const EXCEPTIONS = [ // (Gullmaw's Storm weakness left this list in Phase 11 Step 2: the cistern's arc-lamps carry the charge)
   ["B9", "Sunlance and Candle light disrupt Severance", "Sunlance is the Paragon's (Arc 5) and nobody carries Candle light by Ep 26 (Bas and Juno beside you)"],
 ];
 
@@ -114,15 +114,14 @@ test("All ten bosses are on the list, each with its phases", () => {
   assert.ok(CHECKLIST.length >= 60);
 });
 
-test("The exceptions are exactly the two lines no party can reach yet, named, with the reason", () => {
-  assert.equal(EXCEPTIONS.length, 2);
+test("The exceptions are exactly the lines no party can reach yet (one, since Phase 11), named, with the reason", () => {
+  assert.equal(EXCEPTIONS.length, 1);
   for (const [boss, words, why] of EXCEPTIONS) {
     assert.ok(S16.includes(words), `${boss}: "${words}"`);
     assert.ok(why.length > 30);
     assert.ok(!CHECKLIST.some(([b, w]) => b === boss && w === words));
   }
-  // Still true: no Storm (CHARGED on hit) in Rook's or Severin's kit, and no Sunlance in the Ep 26 party.
-  assert.doesNotMatch(src("data/rook.js") + src("data/severinKit.js"), /CHARGED/);
+  // Still true: no Sunlance in the Ep 26 party.
   assert.doesNotMatch(src("data/companions.js"), /Sunlance|Candle/);
 });
 

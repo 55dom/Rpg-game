@@ -137,7 +137,7 @@ const TAMSIN_STATS = Object.freeze({
   assistCooldownFrames: 480, reviveFrames: 540,
 });
 const TAMSIN_HITBOXES = Object.freeze({
-  Note: { center: [0, 0, 0], size: [0.6, 0.6, 0.6], range: 13, hit: hitSpec({ damage: 9, posture: 10, hitstop: 3, hitstun: 14, knockback: 1 }) },
+  Note: { center: [0, 0, 0], size: [0.6, 0.6, 0.6], range: 13, hit: hitSpec({ damage: 9, posture: 10, hitstop: 3, hitstun: 14, knockback: 1, applyTags: [["RESONANT", 300]] }) }, // the note rings on in what it hits (§7.2: on glass, Shatter Chorus)
   Palm: { center: [0, 1, 1.0], size: [1.6, 1.6, 1.6] },
 });
 const TAMSIN_ABILITIES = Object.freeze({

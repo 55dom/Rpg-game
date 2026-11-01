@@ -137,6 +137,7 @@ export class HaskController {
   }
 
   _surface() {
+    this.f.tags.remove("ROOTED");
     this.state = "surface";
     this.timer = this.rules.diveEvery || Infinity;
     this.eruptAt = null;
@@ -161,12 +162,12 @@ export class HaskController {
       if (!b.burnt && !b.lantern.alive) {
         b.burnt = true; b.burning = R.burnFrames;
         w.emit({ type: "reedsBurn", fighter: f, bed: { i: b.i, x: b.x, z: b.z, r: b.r }, frames: R.burnFrames });
-        if (this.diveBed === b && this.state === "diving") { this.uproot(w.player); w.emit({ type: "flushed", fighter: f, at: { x: f.pos.x, y: 1.5, z: f.pos.z } }); }
+        if (this.diveBed === b && this.state === "diving") { w.applyTag(f, "SCORCHED", R.scorch, w.player); this.uproot(w.player); w.emit({ type: "flushed", fighter: f, at: { x: f.pos.x, y: 1.5, z: f.pos.z } }); } // Wildfire: it burns out of its root
       }
       if (b.burning > 0) {
         if (w.frame % 10 === 0) for (const t of w.fighters) {
           if (!t.alive || t.traits.object || t.submerged || t.pos.y > 1 || flat(t.pos, b) > b.r) continue;
-          t.tags.add("SCORCHED", R.scorch);
+          w.applyTag(t, "SCORCHED", R.scorch, w.player); // (a gust through burning hounds is a Firestorm)
         }
         if (--b.burning === 0) w.emit({ type: "reedsOut", fighter: f, bed: { i: b.i, x: b.x, z: b.z, r: b.r } });
       }
@@ -190,6 +191,7 @@ export class HaskController {
     const f = this.f;
     f.controller.startDirect(HASK_ABILITIES.Dive, this.world.frame);
     this.state = "diving"; this.diveBed = bed; this.wadeTo = null;
+    f.tags.add("ROOTED", 99999); // down in its reeds, roots and all, until it comes up (§7.2: set them burning and it's Wildfire)
   }
 
   // ---- P2: the barricade ----
@@ -234,7 +236,7 @@ export class HaskController {
     for (let i = 0; i < n; i++) {
       const a = base + (i - (n - 1) / 2) * 0.45;
       f.yaw = a;
-      w.fireProjectile(f, HASK_ABILITIES.Dive, "Wave", 9, { x: Math.sin(a), y: 0, z: Math.cos(a) });
+      w.fireProjectile(f, HASK_ABILITIES.Dive, "Wave", 9, { x: Math.sin(a), y: 0, z: Math.cos(a) }).allies = true; // the mud doesn't care whose feet: its hounds come out WEIGHTED too (§7.2 Crush, Meteor)
     }
   }
 
@@ -613,7 +615,26 @@ export class GalenController extends PhasedBoss {
 }
 
 export class GullmawController extends PhasedBoss {
-  constructor(world, f) { super(world, f, GULLMAW_PHASES, gullmawOptions); this.jet = null; this.started = false; this.swallowed = false; this.pads = null; this.leap = null; }
+  constructor(world, f) { super(world, f, GULLMAW_PHASES, gullmawOptions); this.jet = null; this.started = false; this.swallowed = false; this.pads = null; this.leap = null; this.lamps = []; }
+  /** Storm is what it's weak to (§16 B5): a Conduction through it hurts and staggers it far more. */
+  get weakTo() { return GULLMAW_TUNING.weak; }
+  /** The arc-lamps round the cistern's edge. */
+  _setLamps() {
+    const w = this.world, L = GULLMAW_TUNING.lamps, c = this.home;
+    this.lamps = L.angles.map((a) => ({ lamp: w.spawnObject("arcLamp", c.x + Math.sin(a) * L.dist, c.z + Math.cos(a) * L.dist, this.f), fallen: false }));
+    this.objects.push(...this.lamps.map((l) => l.lamp));
+    w.emit({ type: "arcLamps", fighter: this.f, lamps: this.lamps.map((l) => ({ x: l.lamp.pos.x, z: l.lamp.pos.z })) });
+  }
+  /** A lamp knocked down falls sparking into the water: everything on the ground within reach is CHARGED; the wet conduct. */
+  _lampFalls(l) {
+    const w = this.world, L = GULLMAW_TUNING.lamps, at = { x: l.lamp.pos.x, z: l.lamp.pos.z };
+    l.fallen = true;
+    const seen = new Set(), hit = [];
+    const near = w.fighters.filter((t) => t.alive && !t.traits.object && t.pos.y < 1 && Math.hypot(t.pos.x - at.x, t.pos.z - at.z) <= L.spark)
+      .sort((a, b) => Math.hypot(a.pos.x - at.x, a.pos.z - at.z) - Math.hypot(b.pos.x - at.x, b.pos.z - at.z));
+    for (const t of near) if (w.applyTag(t, "CHARGED", L.charge, w.player, seen).length) hit.push(t);
+    w.emit({ type: "lampFall", fighter: this.f, at, r: L.spark, conducted: hit.length > 0 });
+  }
   get brainActive() { return !this.leap; } // mid-leap, the hops are the controller's
   /** The seven lily pads: the arena's centre and six around it (a hexagon), kept inside the walls. */
   _markPads() {
@@ -671,7 +692,9 @@ export class GullmawController extends PhasedBoss {
   }
   step() {
     const w = this.world, f = this.f, T = GULLMAW_TUNING;
-    if (!this.started) { this.started = true; this._ring(this.rules.sacs ?? 2, T.sacRadius, "eggsac"); }
+    if (!this.started) { this.started = true; this._ring(this.rules.sacs ?? 2, T.sacRadius, "eggsac"); this._setLamps(); }
+    if (f.alive) f.tags.add("WET", 120); // a toad-newt in a flooded cistern: always wet
+    for (const l of this.lamps) if (!l.fallen && !l.lamp.alive && f.alive) this._lampFalls(l);
     if (this.leap) { if (f.alive && !f.combatant.isStaggered) this._stepLeap(); else { this.leap = null; this.pads = null; f.pos.y = 0; f.hopAir = false; w.emit({ type: "leapEnd", fighter: f }); } }
     const h = this.jet;
     if (!h) return;

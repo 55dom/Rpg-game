@@ -25,7 +25,13 @@ export class TagSet {
 /**
  * Validate a reaction table.
  * Row: { id, name?: display name, when: tag already on the target, with: incoming tag or condition,
- *        consume?: remove `when` after firing, effect: { damage?, posture?, hitstop?, radius?, launch?, stagger? } }
+ *        consume?: remove `when` after firing, foes?: only on the player's enemies, effect }
+ * effect (all optional): damage, posture, hitstop, radius (splash onto the target's side), launch, stagger,
+ *   chain (a tag: jump to every fighter carrying it within `radius`, either side: Conduction),
+ *   spread ({ length, width, frames }: fire carried along the hit's direction onto the target's side: Firestorm),
+ *   slam (driven down at this speed: Meteor), breakPosture (Crush), burn (frames of SCORCHED: Wildfire),
+ *   tag ([name, frames] put on every target: Flash Freeze's FROZEN), corrode (armour lost for the fight: Corrode),
+ *   fling (thrown along the hit's line at this speed: Railgun).
  */
 export function defineReactions(rows) {
   const ids = new Set();
@@ -34,9 +40,11 @@ export function defineReactions(rows) {
     if (ids.has(r.id)) throw new Error(`duplicate reaction ${r.id}`);
     ids.add(r.id);
     const e = r.effect ?? {};
-    for (const k of ["damage", "posture", "hitstop", "radius", "launch", "stagger"]) {
+    for (const k of ["damage", "posture", "hitstop", "radius", "launch", "stagger", "slam", "burn", "corrode", "fling"]) {
       if ((e[k] ?? 0) < 0) throw new RangeError(`${r.id}: ${k} can't be negative`);
     }
+    if (e.spread && !(e.spread.length > 0 && e.spread.width > 0 && e.spread.frames > 0)) throw new RangeError(`${r.id}: spread needs length, width, frames`);
+    if (e.tag && !(e.tag[0] && e.tag[1] > 0)) throw new RangeError(`${r.id}: tag is [name, frames]`);
     return Object.freeze({ consume: true, name: r.id, ...r, effect: Object.freeze({ ...e }) });
   }));
 }
@@ -44,13 +52,14 @@ export function defineReactions(rows) {
 /**
  * Which reactions fire when a target carrying `targetTags` is hit by something that brings
  * `incoming` (a Set of tags it applies plus conditions such as "burst", "gust", "airborne").
- * Each `when` tag can fire at most once per hit (first matching row wins).
+ * Each `when` tag can fire at most once per hit (first matching row wins). `allow(row)`: an extra filter
+ * (the World uses it for rows that only fire on the player's enemies).
  */
-export function matchReactions(table, targetTags, incoming) {
+export function matchReactions(table, targetTags, incoming, allow = null) {
   const out = [];
   const used = new Set();
   for (const row of table) {
-    if (used.has(row.when) || !targetTags.has(row.when) || !incoming.has(row.with)) continue;
+    if (used.has(row.when) || !targetTags.has(row.when) || !incoming.has(row.with) || (allow && !allow(row))) continue;
     used.add(row.when);
     out.push(row);
   }
