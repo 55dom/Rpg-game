@@ -40,7 +40,7 @@ export class Sets {
 
   /** Switch to a set by name ("yard", "towerSteps", "towerHall", "larkspur"). */
   use(name = "yard") {
-    if (name === this.current) return this.get(name);
+    if (name === this.current) { const s = this.get(name); s?.restoreFloor?.(); return s; } // the next beat stands on a whole floor again
     if (this.current === "yard") this.arena.setVisible(false); else this.built.get(this.current)?.show(false);
     this.current = name;
     if (name === "yard") { this.arena.setVisible(true); this._env(this.arena.env, TOON_SCENE); return null; }
@@ -117,6 +117,10 @@ export class Sets {
   setBog(on, instant = false) {
     if (this.current === "yard") this.arena.setBog(on, instant); else this.built.get(this.current)?.setBog?.(on, instant);
   }
+
+  /** A floor that gives way under a fight (Galen, B4 P3): the set breaks into these slabs; restoreFloor puts it back (true if it was down). */
+  collapse(islands, height) { this.built.get(this.current)?.collapse?.(islands, height); }
+  restoreFloor() { return !!this.built.get(this.current)?.restoreFloor?.(); }
 
   /** Per-frame animation for the active set. */
   update(dt, t) { if (this.current !== "yard") this.built.get(this.current)?.update(dt, t); }
@@ -245,14 +249,17 @@ function buildTowerHall(scene, mobile) {
   const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add;
   const marble = toon(scene, "th-marble", "#5a5068"), marbleDark = toon(scene, "th-marbleDark", "#3a3448");
   const gold = toon(scene, "th-gold", "#d9ae4f");
-  const floor = add(MB.CreateCylinder("th-floor", { diameter: 40, height: 0.6, tessellation: 56 }, scene)); floor.position.y = -0.3; floor.material = marble;
+  // The floor and everything set into it are one group, so the collapse (Galen, B4 P3) can take it away whole.
+  const floorGroup = new BB.TransformNode("th-floorGroup", scene); floorGroup.parent = K.root;
+  const onFloor = (m) => { m.parent = floorGroup; return m; };
+  const floor = onFloor(add(MB.CreateCylinder("th-floor", { diameter: 40, height: 0.6, tessellation: 56 }, scene))); floor.position.y = -0.3; floor.material = marble;
   const inlay = glow(scene, "th-inlay", "#8a6424", 0.75);
   for (const [d, t] of [[8, 0.07], [16, 0.09], [26, 0.07], [34, 0.06]]) {
-    const r = add(MB.CreateTorus("th-ring", { diameter: d, thickness: t, tessellation: 64 }, scene)); r.position.y = 0.012; r.material = inlay;
+    const r = onFloor(add(MB.CreateTorus("th-ring", { diameter: d, thickness: t, tessellation: 64 }, scene))); r.position.y = 0.012; r.material = inlay;
   }
   for (let i = 0; i < 12; i++) {
     const a = (i / 12) * Math.PI * 2;
-    const sp = add(MB.CreateBox("th-spoke", { width: 0.05, height: 0.01, depth: 9 }, scene)); sp.position.set(Math.sin(a) * 8.5, 0.012, Math.cos(a) * 8.5); sp.rotation.y = a; sp.material = inlay;
+    const sp = onFloor(add(MB.CreateBox("th-spoke", { width: 0.05, height: 0.01, depth: 9 }, scene))); sp.position.set(Math.sin(a) * 8.5, 0.012, Math.cos(a) * 8.5); sp.rotation.y = a; sp.material = inlay;
   }
   // Walls (seen from inside), a ring of pillars, and a domed ceiling.
   const wall = add(MB.CreateCylinder("th-wall", { diameter: 42, height: 24, tessellation: 48, cap: BB.Mesh.NO_CAP, sideOrientation: BB.Mesh.BACKSIDE }, scene)); // no caps: a floor-level cap would z-fight the floor
@@ -286,9 +293,9 @@ function buildTowerHall(scene, mobile) {
   }
   // The dais where grimoires descend, with a column of light.
   for (const [d, h] of [[7, 0.5], [5, 0.9]]) {
-    const s = add(MB.CreateCylinder("th-dais", { diameter: d, height: h, tessellation: 32 }, scene), 0.04); s.position.set(0, h / 2, 9); s.material = d > 6 ? marbleDark : gold;
+    const s = onFloor(add(MB.CreateCylinder("th-dais", { diameter: d, height: h, tessellation: 32 }, scene), 0.04)); s.position.set(0, h / 2, 9); s.material = d > 6 ? marbleDark : gold;
   }
-  const column = K.noGlow(add(MB.CreateCylinder("th-column", { height: 30, diameter: 2.2, tessellation: 20 }, scene))); column.position.set(0, 15, 9);
+  const column = onFloor(K.noGlow(add(MB.CreateCylinder("th-column", { height: 30, diameter: 2.2, tessellation: 20 }, scene)))); column.position.set(0, 15, 9);
   const columnMat = glow(scene, "th-columnMat", "#fff0c4", 0.16, true); column.material = columnMat;
   // Grimoires drifting in the light, waiting for their owners.
   const books = [];
@@ -310,19 +317,76 @@ function buildTowerHall(scene, mobile) {
   motes.minEmitPower = 0.1; motes.maxEmitPower = 0.3; motes.blendMode = BB.ParticleSystem.BLENDMODE_ADD;
   K.systems.push(motes);
   // The sealed floor (Ep 56): once Brother Moss opens it, a ring of the under-text's pale script round the dais.
-  const scribe = K.when("$SCRIBE_FLOOR"), scribeMat = glow(scene, "th-scribe", "#e8e2ff");
+  const scribe = K.when("$SCRIBE_FLOOR"), scribeMat = glow(scene, "th-scribe", "#e8e2ff"); scribe.parent = floorGroup;
   const scribeRing = add(MB.CreateTorus("th-scribeRing", { diameter: 7.6, thickness: 0.07, tessellation: 64 }, scene)); scribeRing.parent = scribe;
   scribeRing.position.set(0, 0.03, 9); scribeRing.scaling.y = 0.15; scribeRing.material = scribeMat;
   for (let i = 0; i < 24; i++) {
     const a = (i / 24) * Math.PI * 2, g = add(MB.CreatePlane("th-scribeGlyph", { width: 0.34, height: 0.22 }, scene)); g.parent = scribe;
     g.position.set(Math.sin(a) * 4.15, 0.025, 9 + Math.cos(a) * 4.15); g.rotation.set(Math.PI / 2, a, 0); g.material = scribeMat;
   }
+  // ---- The collapse (Galen, B4 P3) ----
+  // The floor breaks into the slabs the sim holds to (world.islands) and drops down the Tower's shaft with everyone on it.
+  // Everyone's lifted H in the sim at that instant, so the whole hall is lifted H too (nothing jumps); then the slabs fall with
+  // them, under the same gravity, while the hall stays where it was: you've fallen H into the shaft. After that, dust rushing up
+  // past you and the shaft's bands sliding by say the fall goes on.
+  const pitMat = toon(scene, "th-pitMat", "#1a1528"), bandMat = glow(scene, "th-band", "#5a4422", 0.5);
+  const shaftWall = add(MB.CreateCylinder("th-shaftWall", { diameter: 42, height: 80, tessellation: 48, cap: BB.Mesh.NO_CAP, sideOrientation: BB.Mesh.BACKSIDE }, scene));
+  shaftWall.position.y = -40; shaftWall.material = pitMat; shaftWall.setEnabled(false);
+  const bands = [];
+  for (let i = 0; i < 9; i++) {
+    const band = add(MB.CreateTorus("th-shaftBand", { diameter: 41.4, thickness: 0.5, tessellation: 48 }, scene)); band.material = bandMat; band.setEnabled(false);
+    bands.push(band);
+  }
+  const rush = new BB.ParticleSystem("th-rush", mobile ? 50 : 120, scene); // dust and grit rushing up past the debris
+  rush.particleTexture = softTexture(scene);
+  rush.emitter = new BB.Vector3(0, -14, 0); rush.minEmitBox = new BB.Vector3(-17, -2, -17); rush.maxEmitBox = new BB.Vector3(17, 2, 17);
+  rush.color1 = new BB.Color4(0.75, 0.68, 0.6, 0.55); rush.color2 = new BB.Color4(0.55, 0.5, 0.48, 0.4); rush.colorDead = new BB.Color4(0.5, 0.45, 0.4, 0);
+  rush.minSize = 0.06; rush.maxSize = 0.22; rush.minLifeTime = 1.2; rush.maxLifeTime = 2.0; rush.emitRate = mobile ? 30 : 70;
+  rush.direction1 = new BB.Vector3(-0.05, 1, -0.05); rush.direction2 = new BB.Vector3(0.05, 1, 0.05); rush.minEmitPower = 14; rush.maxEmitPower = 22;
+  rush.gravity = new BB.Vector3(0, 0, 0);
+  let fall = null, debris = null;
+  const breakFloor = (islands, H) => {
+    restoreFloor();
+    const rng = mulberry(4);
+    debris = new BB.TransformNode("th-debris", scene); debris.parent = K.root;
+    for (const [i, s] of islands.entries()) { // each slab: a jagged marble disc with a rough rock underside
+      const top = add(MB.CreateCylinder("th-slab", { diameter: s.r * 2, height: 0.7, tessellation: i ? 7 : 13 }, scene), 0.04); top.parent = debris;
+      top.position.set(s.x, -0.35, s.z); top.rotation.y = rng() * Math.PI; top.material = marble;
+      const under = add(MB.CreateCylinder("th-slabRock", { diameterTop: s.r * 1.9, diameterBottom: s.r * 0.5, height: i ? 2.4 : 4.5, tessellation: i ? 6 : 10 }, scene), 0.04); under.parent = debris;
+      under.position.set(s.x, -0.7 - (i ? 1.2 : 2.25), s.z); under.rotation.y = rng() * Math.PI; under.material = marbleDark;
+      if (!i) { // the inner inlay ring and its spokes survive on the big slab
+        const r = add(MB.CreateTorus("th-slabRing", { diameter: 8, thickness: 0.07, tessellation: 64 }, scene)); r.parent = debris; r.position.set(s.x, 0.012, s.z); r.material = inlay;
+        for (let k = 0; k < 12; k++) {
+          const a = (k / 12) * Math.PI * 2, sp = add(MB.CreateBox("th-slabSpoke", { width: 0.05, height: 0.01, depth: s.r - 4.3 }, scene)); sp.parent = debris;
+          sp.position.set(s.x + Math.sin(a) * (4 + (s.r - 4) / 2), 0.012, s.z + Math.cos(a) * (4 + (s.r - 4) / 2)); sp.rotation.y = a; sp.material = inlay;
+        }
+      }
+    }
+    const chunks = []; // the rest of the floor, falling away faster, out of sight
+    for (let k = 0; k < (mobile ? 10 : 18); k++) {
+      const a = rng() * Math.PI * 2, d = 9.5 + rng() * 9, w = 1 + rng() * 2.2;
+      const c = add(MB.CreateBox("th-chunk", { width: w, height: 0.6, depth: w * (0.6 + rng() * 0.6) }, scene), 0.03); c.parent = debris;
+      c.position.set(Math.sin(a) * d, -0.3, Math.cos(a) * d); c.rotation.y = rng() * Math.PI; c.material = k % 3 ? marble : marbleDark;
+      chunks.push({ m: c, extra: 0.4 + rng() * 0.8, spin: (rng() - 0.5) * 2 });
+    }
+    floorGroup.setEnabled(false); shaftWall.setEnabled(true); for (const b of bands) b.setEnabled(true);
+    K.root.position.y = H; debris.position.y = 0;
+    fall = { H, t: 0, chunks };
+  };
+  const restoreFloor = () => {
+    const was = !!debris;
+    debris?.dispose(); debris = null; fall = null; // (the materials are the hall's own; they stay)
+    K.root.position.y = 0; floorGroup.setEnabled(true); shaftWall.setEnabled(false); for (const b of bands) b.setEnabled(false);
+    rush.stop();
+    return was;
+  };
   let dark = 0, darkTarget = 0;
   const env = { clear: "#14111f", fog: "#1d1830", fogDensity: 0.014, hemi: [0.55, "#c8bcff", "#2a1f3a"], sun: [0.6, "#ffe2b0", [-0.2, -1, 0.3]], warm: 0.3 };
   const toonEnv = { lightDir: [0.25, 1, -0.4], fogColor: "#1d1830", fogDensity: 0.012, sky: [1.04, 1.0, 1.1], ground: [0.82, 0.78, 0.96] };
   return {
     env, toon: toonEnv, conditions: K.conditions,
-    show(on) { K.show(on); if (on) dark = darkTarget = 0; }, // every visit starts in daylight
+    show(on) { K.show(on); restoreFloor(); if (on) dark = darkTarget = 0; }, // every visit starts in daylight, on a whole floor
+    collapse: breakFloor, restoreFloor,
     cue(name) { if (name === "dark") darkTarget = 1; if (name === "light") darkTarget = 0; },
     update(dt, t) {
       for (const b of books) {
@@ -333,6 +397,18 @@ function buildTowerHall(scene, mobile) {
       dark += (darkTarget - dark) * Math.min(1, dt * 1.5);
       for (const m of windows) m.emissiveColor.copyFrom(m.baseColor).scaleInPlace(1 - dark * 0.8).addInPlaceFromFloats(dark * 0.35, 0, 0);
       columnMat.alpha = 0.16 * (1 - dark * 0.7) + Math.sin(t * 2) * 0.02;
+      if (fall) { // the slabs fall with everyone (the sim's gravity, 32), then hang in the shaft; the shaft slides up past them
+        fall.t += dt;
+        const drop = Math.min(fall.H, 16 * fall.t * fall.t), landed = drop >= fall.H;
+        debris.position.y = -drop + (landed ? Math.sin(t * 1.3) * 0.04 : 0);
+        for (const c of fall.chunks) if (c.m.isEnabled()) {
+          c.m.position.y = -0.3 - drop * c.extra - (landed ? (fall.t - Math.sqrt(fall.H / 16)) * 18 * c.extra : 0); c.m.rotation.x += c.spin * dt;
+          if (c.m.position.y < -fall.H - 40) c.m.setEnabled(false);
+        }
+        if (landed && !fall.landed) { fall.landed = true; rush.start(); }
+        const scroll = (fall.landed ? (fall.t - Math.sqrt(fall.H / 16)) * 9 : 0) + drop; // the bands: the walls going by
+        for (const [i, b] of bands.entries()) b.position.y = -fall.H - 26 + (((i * 6 + scroll) % 54) + 54) % 54;
+      }
     },
   };
 }

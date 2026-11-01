@@ -93,11 +93,11 @@ export const EPISODE_18 = {
         { id: "juno", look: "juno", x: -3.4, z: 0.8, yaw: 0.6 },
       ] },
     // Boss 7: the Bloom can't be killed, only held back until it opens; then he holds the door.
-    { id: "bloom", type: "fight", ...HM, wave: [], tokens: 2,
+    { id: "bloom", type: "fight", ...HM, wave: [], tokens: 2, camera: { pitch: 0.1 }, // a flatter look: the whole flower in frame
       world: { bounds: ZONES.hollowmarch.bounds, origin: { x: G.x, z: G.z - 6 } },
       siege: {
         foes: [
-          { kind: "hollowBloom", x: G.x, z: G.z, yaw: Math.PI, floor: 0.25 },
+          { kind: "hollowBloom", x: G.x, z: G.z, yaw: Math.PI, floor: 0.25, bar: true },
           { kind: "shell", x: G.x - 4, z: G.z - 4, yaw: Math.PI },
           { kind: "shell", x: G.x + 4, z: G.z - 4, yaw: Math.PI },
         ],
@@ -109,7 +109,7 @@ export const EPISODE_18 = {
           { frame: 3600, say: ["Cal", "All right. My turn."] },
         ],
       },
-      tutorial: [{ at: 0.5, text: "BOSS 7 · THE HOLLOW BLOOM. Its pulse erases whatever stands in it: when the core flashes, get out. Hold it back as long as you can." }],
+      tutorial: [{ at: 0.5, low: true, text: "BOSS 7 · THE HOLLOW BLOOM. Its pulse erases whatever stands in it: when the core flashes, get out. Hold it back as long as you can." }],
       lines: [["Dagrun", "Hold it! Hold it back!"]],
       retryBy: "Dagrun", retry: "Up. Together. Again.",
       set: { BLOOM_FOUGHT: 1 } },

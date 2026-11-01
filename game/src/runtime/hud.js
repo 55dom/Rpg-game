@@ -178,7 +178,7 @@ export class Hud {
     });
     this.root.classList.toggle("page-ready", Object.values(world.pages).some((pg) => pg.ready));
 
-    const focus = world.lockTarget?.alive ? world.lockTarget : this.focusTimer > 0 && this.focus?.alive ? this.focus : null;
+    const focus = world.lockTarget?.alive ? world.lockTarget : this.focusTimer > 0 && this.focus?.alive ? this.focus : world.headline?.alive ? world.headline : null; // a staged fight's headline foe (sim/siege.js: bar)
     this.focusTimer -= dt;
     this.set("tHidden", e.target, "hidden", !focus);
     if (focus) {

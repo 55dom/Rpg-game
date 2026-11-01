@@ -327,7 +327,7 @@ export class PhasedBoss {
   _clearObjects() { for (const o of this.objects) if (o.alive) o.combatant.health.set(0); this.objects = []; }
   _cogFan(key, count, spread, a) { this.world.fireFan(this.f, a, key, 13, count, spread); }
   tick() {
-    if (!this.f.alive) { if (this.objects.length) this._clearObjects(); this.world.silenceAll = false; this.world.dodgeHush = 0; return; }
+    if (!this.f.alive) { if (this.objects.length) this._clearObjects(); this.world.silenceAll = false; this.world.dodgeHush = 0; this.fallen?.(); return; }
     this._checkPhase();
     this.step?.();
   }
@@ -372,32 +372,63 @@ export class IlseController extends PhasedBoss {
 }
 
 export class GalenController extends PhasedBoss {
-  constructor(world, f) { super(world, f, GALEN_PHASES, galenOptions); this.oath = false; this.chargeTimer = 0; }
+  constructor(world, f) { super(world, f, GALEN_PHASES, galenOptions); this.oath = false; this.chargeTimer = 0; this.collapsed = false; this.fall = 0; this.oathDue = false; }
   onCustom(key, value, a) {
     const w = this.world, f = this.f, T = GALEN_TUNING;
     if (key === "rot") { w.addWave(f, f.pos.x, f.pos.z, { speed: T.rotSpeed, maxR: value, width: T.rotWidth, spec: T.rot, ability: a, kind: "rot" }); return true; }
     return false;
   }
+  /** The slabs the floor breaks into: one broad one round the hall's centre, three chunks past a gap. */
+  get slabs() {
+    const C = GALEN_TUNING.collapse, c = C.center;
+    return [{ x: c.x, z: c.z, r: C.slab }, ...C.chunkAngles.map((a) => ({ x: c.x + Math.sin(a) * C.chunkDist, z: c.z + Math.cos(a) * C.chunkDist, r: C.chunk }))];
+  }
+  /** P3: he drives his lance into the floor and the Tower's hall gives way. Everyone falls with it; the debris catches them. */
+  _collapse() {
+    const w = this.world, C = GALEN_TUNING.collapse, slabs = this.slabs;
+    this.collapsed = true; this.fall = C.frames; w.islands = slabs;
+    for (const t of w.fighters) {
+      if (!t.alive || t.traits.object) continue;
+      let best = slabs[0], gap = Infinity;
+      for (const s of slabs) { const g = Math.hypot(t.pos.x - s.x, t.pos.z - s.z) - s.r; if (g < gap) { gap = g; best = s; } }
+      if (gap > -0.6) { // off the debris (or on its very edge): it lands on the nearest piece
+        const dx = t.pos.x - best.x, dz = t.pos.z - best.z, d = Math.hypot(dx, dz) || 1, k = Math.max(0, best.r - 1.2) / d;
+        t.pos.x = t.prev.x = best.x + dx * k; t.pos.z = t.prev.z = best.z + dz * k;
+      }
+      t.pos.y = t.prev.y = C.height; t.vel.x = t.vel.y = t.vel.z = 0; t.knock.x = t.knock.z = 0; t.grounded = false;
+      t.runner.interrupt(); t.combatant.invulnerableFrames = Math.max(t.combatant.invulnerableFrames, C.frames);
+      if (t === w.player) { t.dropLanding = C.landing; t.airJumps = 1; t.airDashes = 1; } // the catch: jump or dash before you land
+    }
+    w.emit({ type: "collapse", fighter: this.f, islands: slabs, height: C.height, frames: C.frames });
+  }
+  /** He's down: the debris settles, and nobody falls any more. */
+  fallen() { if (this.collapsed && this.world.islands) { this.world.islands = null; this.world.emit({ type: "floorSettle", fighter: this.f }); } }
+  /** P4: the Oath. Its three vow-seals stand out on the chunks, past the gap. */
+  _oath() {
+    const w = this.world, f = this.f, chunks = (w.islands ?? []).slice(1);
+    if (chunks.length) for (const s of chunks) this.objects.push(w.spawnObject("seal", s.x, s.z, f));
+    else this._ring(3, GALEN_TUNING.sealRadius, "seal");
+    this.oath = true; this.postureFactor = 0;
+    w.emit({ type: "oath", fighter: f });
+  }
   enterPhase(p) {
     const w = this.world, f = this.f;
-    if (p === 2) f.traits = { ...f.traits, frontalGuard: false }; // the shield rots through: no more wall in front
-    if (p === 3) { // the Oath: immune to stagger and posture until the vow-seals break
-      this._ring(3, GALEN_TUNING.sealRadius, "seal");
-      this.oath = true; this.postureFactor = 0;
-      w.emit({ type: "oath", fighter: f });
-    }
-    if (p === 4) { this.chargeTimer = 30; w.emit({ type: "desperate", fighter: f }); }
+    if (p >= 2 && f.traits.frontalGuard) f.traits = { ...f.traits, frontalGuard: false }; // the shield rots through: no more wall in front
+    if (p >= 3 && !this.collapsed) this._collapse(); // (a big enough hit skips a phase; the floor still goes)
+    if (p >= 4 && !this.oath && !this.oathDone) { if (this.fall > 0) this.oathDue = true; else this._oath(); } // once everyone's landed
+    if (p === 5) { this.chargeTimer = 30; w.emit({ type: "desperate", fighter: f }); }
   }
   step() {
     const w = this.world, f = this.f, T = GALEN_TUNING;
+    if (this.fall > 0 && --this.fall === 0) { w.emit({ type: "caught", fighter: f }); if (this.oathDue) { this.oathDue = false; this._oath(); } }
     if (this.oath) {
       if (this.objects.every((o) => !o.alive)) { // the vow breaks: he reels
-        this.oath = false; this.postureFactor = 1; this.objects = []; f.combatant.superArmor = false;
+        this.oath = false; this.oathDone = true; this.postureFactor = 1; this.objects = []; f.combatant.superArmor = false;
         f.runner.interrupt(); f.combatant.stagger(T.sealStagger); f.combatant.takePostureDamage(f.combatant.posture.max);
         w.emit({ type: "oathBroken", fighter: f, at: { x: f.pos.x, y: 1.4, z: f.pos.z } });
       }
     }
-    if (this.rules.desperate && !f.runner.isRunning && f.combatant.canAct && f.grounded && --this.chargeTimer <= 0) {
+    if (this.rules.desperate && this.fall <= 0 && !f.runner.isRunning && f.combatant.canAct && f.grounded && --this.chargeTimer <= 0) {
       this.chargeTimer = T.chargeEvery;
       f.yaw = Math.atan2(w.player.pos.x - f.pos.x, w.player.pos.z - f.pos.z);
       f.controller.startDirect(GALEN_ABILITIES.Charge, w.frame);

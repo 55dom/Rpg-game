@@ -66,6 +66,8 @@ export const Tuning = Object.freeze({
   wardFactor: 0.7, wardRadius: 8, guardArc: 0.35, heavyKnockback: 0.25,
   juggleDecay: 0.12, juggleDecayMax: 2.5, // each air hit adds 12% gravity (GDD §9.3), up to 2.5x
   weightedSpeed: 0.55, weightedJump: 0.7, // WEIGHTED (mud): slower, lower jumps
+  // A collapsed floor (Galen, B4 P3): a run carries you over a crack, a gap needs a jump or a dodge; the dark takes a bite.
+  islandGrace: 9, islandStep: 0.8, islandFall: 0.08,
 });
 
 const BOSSES = {
@@ -352,6 +354,8 @@ export class World {
     this.swapReadyFrame = 0;
     this.teamHit = null;
     this.silences = []; this.silenceAll = false; this.dodgeHush = 0; this.waves = []; this.strikes = [];
+    this.gauge = null; this.headline = null; // a staged fight's meter, and the foe it's about (sim/siege.js)
+    this.islands = null; // after a floor collapses: the debris still holding, [{ x, z, r }] (Galen's P3)
     this.companions = [];
     this.projectiles = [];
     this.injured = new Set(o.injured ?? []); // squadmates fighting hurt (Bas's arm after Ep 26)
@@ -829,7 +833,8 @@ export class World {
     const O = this.origin;
     p.pos = v3(O.x, 0, O.z - 4); p.prev = v3(O.x, 0, O.z - 4); p.vel = v3(); p.knock = v3(); p.grounded = true; p.yaw = 0;
     p.counterFrames = 0; p.hitstop = 0; this.lockTarget = null; this.slowFrames = 0; this.stopFrames = 0;
-    p.surge?.set(0); p.tags.clear();
+    p.surge?.set(0); p.tags.clear(); p.offIsland = 0;
+    if (this.islands) { this.islands = null; this.emit({ type: "floorRestore" }); } // a retry starts on a whole floor
     for (const c of this.companions) {
       c.combatant.reset(); c.runner.interrupt(); c.tags.clear(); c.deadFrames = 0; c.hitstop = 0;
       c.pos = v3(p.pos.x + c.slot[0], 0, p.pos.z + c.slot[1]); c.prev = { ...c.pos }; c.vel = v3(); c.knock = v3(); c.grounded = true;
@@ -946,6 +951,34 @@ export class World {
     for (const f of this.fighters) if (live(f)) { f.combatant.tick(); f.tags.tick(); }
     for (const f of this.fighters) if (live(f)) this._move(f);
     this._late(live);
+  }
+
+  /**
+   * After a floor collapses (Galen, B4 P3) only the debris holds. Off it, Rook falls: the dark takes a bite (never the last of
+   * their health) and the nearest slab catches them again. A few frames' grace lets a run carry over a crack; a real gap needs a
+   * jump or a dodge (in the air, or with i-frames up, you're over it). Everyone else keeps to the slabs, stepping across the gaps.
+   */
+  _islands() {
+    const I = this.islands, T = Tuning;
+    for (const f of this.fighters) {
+      if (!f.alive || f.traits.object || f.traits.immobile || f.caged || f.submerged) continue;
+      let best = I[0], gap = Infinity;
+      for (const s of I) { const g = Math.hypot(f.pos.x - s.x, f.pos.z - s.z) - s.r; if (g < gap) { gap = g; best = s; } }
+      const isPlayer = f === this.player, slack = isPlayer ? f.stats.radius * 0.6 : T.islandStep;
+      if (gap <= slack) { f.offIsland = 0; continue; }
+      const dx = f.pos.x - best.x, dz = f.pos.z - best.z, d = Math.hypot(dx, dz) || 1;
+      if (!isPlayer) { const k = (best.r + slack) / d; f.pos.x = best.x + dx * k; f.pos.z = best.z + dz * k; continue; }
+      if (!f.grounded || f.pos.y > 0.05 || f.combatant.invulnerableFrames > 0) continue;
+      if ((f.offIsland = (f.offIsland ?? 0) + 1) < T.islandGrace) continue;
+      f.offIsland = 0;
+      const from = { x: f.pos.x, y: 0, z: f.pos.z }, hp = f.combatant.health.current;
+      if (hp > 1) f.combatant.takeDamage(Math.min(Math.round(f.combatant.health.max * T.islandFall), hp - 1));
+      const k = Math.max(0, best.r - 1.4) / d; // back up on the same side it went over
+      f.pos.x = f.prev.x = best.x + dx * k; f.pos.z = f.prev.z = best.z + dz * k;
+      f.pos.y = f.prev.y = 4; f.vel.x = f.vel.y = f.vel.z = 0; f.knock.x = f.knock.z = 0; f.grounded = false;
+      f.runner.interrupt(); f.combatant.invulnerableFrames = Math.max(f.combatant.invulnerableFrames, 50);
+      this.emit({ type: "pitFall", fighter: f, from, to: { x: f.pos.x, y: 0, z: f.pos.z } });
+    }
   }
 
   /** Enemies go for the nearest member of Rook's team, preferring Rook, and stick with a choice. */
@@ -1405,6 +1438,7 @@ export class World {
         this.emit({ type: "allyRevive", fighter: f });
       }
     }
+    if (this.islands) this._islands();
     if (this.comboTimer > 0 && --this.comboTimer === 0) this.comboCount = 0;
     if (this.teamHit && this.frame >= this.teamHit.frame) { // the joint strike lands
       const { target: t } = this.teamHit; this.teamHit = null;

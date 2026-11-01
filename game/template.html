@@ -467,6 +467,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
   font: 400 14px/1.4 var(--font-body); background: rgba(15, 17, 23, 0.9); border: 1px solid var(--gale); color: var(--text); padding: 9px 16px; border-radius: 999px;
   max-width: calc(100vw - 32px); text-align: center; }
 .hint-pill.show { opacity: 1; transform: translate(-50%, 0); }
+.hint-pill.low { top: auto; bottom: 21%; }
 .hint-pill b { color: var(--gale); font-family: var(--font-mono); }
 .coldopen { position: absolute; inset: 0; background: #040306; display: grid; place-items: center; pointer-events: auto; cursor: pointer; overflow: hidden; }
 .coldopen[hidden] { display: none; }
@@ -510,6 +511,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
   .dialog { bottom: calc(7vh + 8px); padding: 20px 14px 14px; }
   .choices button { font-size: 14px; padding: 12px 10px 12px 32px; }
   .hint-pill { top: 22%; font-size: 13px; }
+  .hint-pill.low { top: auto; bottom: 24%; }
 }
 
 @media (prefers-reduced-motion: reduce) { .titlecard b::after, .titlecard span, .titlecard b, .titlecard i { animation-duration: 1ms; } .coldopen .fire { animation: none; } }

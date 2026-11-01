@@ -1579,6 +1579,12 @@ export class StoryPlayer {
     // A new world frees the camera; indoors (the Hall of Lanterns in Ep 41) it has to stay in the room.
     const room = Object.values(ZONES).find((z) => z.stage === (beat.stage ?? "yard") && !z.roamOnly && z.interior);
     if (room) this.ctx.camera.bounds = cameraBounds(room);
+    const cam = this.ctx.camera, pitchWas = cam?.pitch; // a fight can open on a flatter look (something the height of a house: the Bloom)
+    if (cam && beat.camera?.pitch != null) cam.pitch = beat.camera.pitch;
+    try { return await this._fightLoop(beat, world); } finally { if (cam && beat.camera?.pitch != null) cam.pitch = pitchWas; }
+  }
+
+  async _fightLoop(beat, world) {
     for (;;) {
       world.resetPlayer();
       if (beat.siege) { // a staged battle, not a wave to clear (sim/siege.js: the Siege of Aurelin)
@@ -1669,7 +1675,7 @@ export class StoryPlayer {
   _tutorial(dt) {
     const f = this.fight;
     f.t += dt;
-    if (f.hints.length && f.t >= f.hints[0].at) this._showHint(f.hints.shift().text);
+    if (f.hints.length && f.t >= f.hints[0].at) { const h = f.hints.shift(); this._showHint(h.text, h.low); }
     if (this.hintTimer > 0 && (this.hintTimer -= dt) <= 0) this._hint("");
   }
 
@@ -1677,7 +1683,8 @@ export class StoryPlayer {
   say(speakerId, text, name = null) { this.ctx.hud.say(name ?? speakerName(speakerId, this.player.name, this.flags), fillText(text, { ...this.player, flags: this.flags })); }
 
   /** A tutorial pill; {Light}, {Dodge}… become the current device's buttons. */
-  _showHint(text) {
+  _showHint(text, low = false) { // low: under the action, when what the fight's about stands at the top of the screen (the Bloom)
+    this.ui.hint.classList.toggle("low", !!low);
     const c = this.ctx.controls;
     const device = c.device === "keyboard" && !c.keyboardUsed && this.ctx.root.classList.contains("is-touch") ? "touch" : c.device;
     this._hint(text.replace(/\{(\w+)\}/g, (_, k) => `<b>${this.ctx.hud.label(device, k) ?? k}</b>`));

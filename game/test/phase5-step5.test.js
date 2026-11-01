@@ -47,15 +47,16 @@ test("Ilse: silence zones stop spells; her acolytes ward her; the bells silence 
   assert.ok(w.drainEvents().some((e) => e.type === "silenced" && e.what === "dodge"), "dodges silenced: parry instead");
 });
 
-test("Galen: rings of rot hit you on the ground (not in the air) and rust your guard; the Oath holds until the vow-seals break", () => {
+test("Galen: rings of rot hit you on the ground (not in the air) and rust your guard; the floor gives way; the Oath holds until the vow-seals break", () => {
   const { w, b } = boss("galen");
   setHp(b, 0.6); run(w, 2);
   const p = w.player; p.pos.x = 0; p.pos.z = 0; p.combatant.invulnerableFrames = 0;
   w.addWave(b, 0, 3, { speed: 6, maxR: 5, width: 0.9, spec: GALEN_TUNING.rot, ability: { id: "Rot", tags: [], manaCost: 0 }, kind: "rot" });
   run(w, 40);
   assert.ok(p.tags.has("RUSTED"), "the ring reached Rook on the ground");
-  setHp(b, 0.3); const l3 = run(w, 2);
-  assert.ok(l3.some((e) => e.type === "oath"));
+  setHp(b, 0.3); const l3 = run(w, GALEN_TUNING.collapse.frames + 4); // a big enough hit skips P3, but the floor still goes first
+  assert.ok(l3.some((e) => e.type === "collapse") && l3.some((e) => e.type === "caught"));
+  assert.ok(l3.findIndex((e) => e.type === "collapse") < l3.findIndex((e) => e.type === "oath"), "the Oath once everyone's landed");
   const seals = w.liveEnemies.filter((e) => e.kind === "seal"); assert.equal(seals.length, 3);
   const before = b.combatant.posture.current;
   w._resolve(p, b, { spec: hitSpec({ damage: 20, posture: 50, hitstop: 1, hitstun: 10 }), ability: { id: "x", tags: [], manaCost: 0 }, hitSet: new Set(), origin: p.pos });

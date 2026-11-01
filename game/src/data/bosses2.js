@@ -55,7 +55,7 @@ export const ILSE_TUNING = Object.freeze({
 // damage, until you break his three rusted vow-seals. P4 (15%) the desperation charge, across the hall.
 export const GALEN_STATS = Object.freeze({
   name: "Sir Galen the Rusted", maxHealth: 1300, maxPosture: 260, runSpeed: 3.0, circleSpeed: 1.8, turnRate: 0.1, radius: 0.55, height: 2.1,
-  boss: true, bossTitle: "BOSS 4 · RUST REMEMBERS", defeatText: "THE VOW BREAKS", phaseMarks: [0.65, 0.35, 0.15],
+  boss: true, bossTitle: "BOSS 4 · RUST REMEMBERS", defeatText: "THE VOW BREAKS", phaseMarks: [0.7, 0.5, 0.3, 0.12],
 });
 export const GALEN_HITBOXES = Object.freeze({
   Lance: { center: [0, 1.2, 2.2], size: [0.8, 0.9, 3.6] },
@@ -88,8 +88,14 @@ export const galenOptions = (phase) => {
   if (phase >= 2) o.push(new AttackOption(A.Charge, 4, 14, 1, 360));
   return o;
 };
-export const GALEN_PHASES = Object.freeze([{ phase: 1, above: 0.65 }, { phase: 2, above: 0.35 }, { phase: 3, above: 0.15, seals: 3 }, { phase: 4, above: 0, desperate: true }]);
+// GDD §16 B4: P1 the knight · P2 rot · P3 he brings the Tower's floor down, and the fight goes on on the falling debris (a
+// scripted fall, a catch, and on) · P4 the Oath, its three vow-seals out on the debris · the last charge.
+export const GALEN_PHASES = Object.freeze([{ phase: 1, above: 0.7 }, { phase: 2, above: 0.5 }, { phase: 3, above: 0.3, collapse: true }, { phase: 4, above: 0.12, seals: 3 }, { phase: 5, above: 0, desperate: true }]);
 export const GALEN_TUNING = Object.freeze({
+  // The collapse: everyone drops this high with the floor, and the player lands hard unless they jump or dash in the air
+  // first (the catch). After it, one broad slab round the hall's centre and three chunks out past a gap, where the seals go.
+  collapse: Object.freeze({ center: Object.freeze({ x: 0, z: 0 }), height: 12, frames: 60, landing: 40, slab: 8, chunk: 2.0, chunkDist: 11.5,
+    chunkAngles: Object.freeze([Math.PI / 3, Math.PI, (5 * Math.PI) / 3]) }),
   sealRadius: 6.5, rotWidth: 0.9, rotSpeed: 6, rustFrames: 360, rustFactor: 1.25, sealStagger: 160, chargeEvery: 150,
   rot: hitSpec({ damage: 10, posture: 10, hitstop: 3, hitstun: 14, knockback: 2, applyTags: [["RUSTED", 360]] }),
 });

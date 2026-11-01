@@ -10,7 +10,8 @@
 //           `rows` at the start, three deep, then a new rank at the rear every `every` frames while fewer than `max` stand.
 //   rear    one more fighter behind them all ({ kind, at, floor? }: the Line Marshal), who stays back and keeps them
 //           coming; with `floor`, he can't be brought below that share of his health (the story finishes him).
-//   foes    particular fighters on the other side ([{ kind, x, z, floor? }]: the Hero Party, Ep 49), there from the start.
+//   foes    particular fighters on the other side ([{ kind, x, z, floor?, bar? }]: the Hero Party, Ep 49), there from the start;
+//           with `bar`, the one the fight is about (the Hollow Bloom, Ep 18): the target card shows it whenever nothing else is in focus.
 //   allies  the Line beside you ({ kind, rows, cols, at, gap, yaw? }): guests, rank behind rank, facing the way you face.
 //   until   when the beat ends besides the meter: { kills } (enemies down), { frames }.
 //   killLines  [{ by, of, say: [speaker, text], every }]: a line when `by` puts down an `of` (not more often than `every` frames).
@@ -49,6 +50,7 @@ export class Siege {
       const e = this.w.spawnEnemy(f.kind, f.x, f.z, this.spawned++);
       e.yaw = e.prevYaw = f.yaw ?? Math.PI;
       if (f.floor) e.combatant.floor = Math.ceil(e.stats.maxHealth * f.floor);
+      if (f.bar) this.w.headline = e; // the one the fight's about: the HUD's target card rests on it when nothing else is in focus
     }
     if (A) { // the Line you stand in: shoulder to shoulder, rank behind rank, facing `yaw` (north unless it says)
       const [across, between] = A.gap ?? [1.6, 1.5], yaw = A.yaw ?? 0, fx = Math.sin(yaw), fz = Math.cos(yaw);
@@ -137,7 +139,7 @@ export class Siege {
   /** The beat's over: the field empties for whatever the story shows next. */
   end() {
     this.done = true;
-    this.w.gauge = null;
+    this.w.gauge = null; this.w.headline = null;
     for (const f of this.w.enemies) this.w.emit({ type: "despawn", fighter: f });
     this.w.fighters = this.w.fighters.filter((f) => f.team === this.w.player.team);
   }

@@ -386,7 +386,20 @@ export function boot(doc = document) {
         case "hushWarn": hud.toast("SHE DRAWS BREATH…", "danger"); vfx.warning({ x: world.player.pos.x, y: 0, z: world.player.pos.z }, ev.frames / 60); sfx.play("glint"); break;
         case "hushDodge": hud.toast("DODGE SILENCED · PARRY!", "danger"); hud.banner("FIVE SECONDS: GUARD AND PARRY"); root.classList.add("hushed"); break;
         case "hushEnd": root.classList.remove("hushed"); break;
-        case "oath": hud.toast("THE OATH", "danger"); hud.banner("NOTHING STAGGERS HIM · BREAK THE THREE VOW-SEALS"); sfx.play("bossIntro"); break;
+        case "oath": hud.toast("THE OATH", "danger"); hud.banner("NOTHING STAGGERS HIM · BREAK THE THREE VOW-SEALS OUT ON THE DEBRIS"); sfx.play("bossIntro"); break;
+        // ---- Galen's P3: the floor gives way, and the fight goes on on the falling debris ----
+        case "collapse":
+          sets.collapse(ev.islands, ev.height); impact(4, true); camera.shake(1); sfx.play("slam"); sfx.play("postureBreak", 0.7);
+          for (const s of ev.islands) vfx.ring({ x: s.x, y: 0.06, z: s.z }, s.r * 2, "#c8b49a", 0.6);
+          hud.banner("THE FLOOR GIVES WAY · JUMP OR DASH IN THE AIR BEFORE YOU LAND");
+          break;
+        case "caught": camera.shake(0.5); sfx.play("slam", 0.8); hud.banner("ON THE DEBRIS · JUMP THE GAPS · THE DARK BELOW HURTS"); break;
+        case "pitFall":
+          vfx.ring({ x: ev.to.x, y: 0.06, z: ev.to.z }, 2.2, "#c8b49a", 0.35); camera.shake(0.4); sfx.play("slam", 0.6);
+          if (ev.fighter === world.player) hud.toast("INTO THE DARK", "danger");
+          break;
+        case "floorRestore": sets.restoreFloor(); break;
+        case "floorSettle": setTimeout(() => { if (sets.restoreFloor()) impact(6, false); }, 1600); break; // the dust settles (in the field; a story beat moves on first)
         case "oathBroken": hud.toast("THE VOW BREAKS", "break"); vfx.flash(ev.at, 4, "#ff7a2a", 0.3); impact(4, true); camera.kick(0.8); sfx.play("postureBreak"); break;
         case "desperate": hud.toast("DESPERATION", "danger"); hud.banner("HE CHARGES THE WHOLE HALL · DODGE"); break;
         case "flood": hud.toast("THE CISTERN FLOODS", "danger"); hud.banner("THE WATER JET SWEEPS · JUMP IT"); waterJet.start(ev.center, ev.length); sfx.play("ultActivate"); break;
@@ -1161,7 +1174,7 @@ export function boot(doc = document) {
   // Arc 1–2 boss visuals: Ilse's silence zones (violet discs), Gullmaw's water jet.
   const BOSS_PHASE_TEXT = {
     ilse: { 2: ["THE CHOIR PIT", "PHASE 2 · SHE CALLS HER ACOLYTES · WARDED WHILE THEY STAND"], 3: ["THE BELLS", "PHASE 3 · BREAK THE BELLS"], 4: ["HUSH", "PHASE 4 · SHE CAN SILENCE YOUR DODGE"] },
-    galen: { 2: ["ROT", "PHASE 2 · RINGS OF RUST · JUMP THEM"], 3: ["THE OATH", "PHASE 3 · BREAK THE VOW-SEALS"], 4: ["DESPERATION", "PHASE 4 · THE LAST CHARGE"] },
+    galen: { 2: ["ROT", "PHASE 2 · RINGS OF RUST · JUMP THEM"], 3: ["THE FLOOR GIVES WAY", "PHASE 3 · HE BRINGS THE TOWER DOWN"], 4: ["THE OATH", "PHASE 4 · BREAK THE VOW-SEALS"], 5: ["DESPERATION", "PHASE 5 · THE LAST CHARGE"] },
     gullmaw: { 2: ["THE FLOOD", "PHASE 2 · THE WATER JET · JUMP IT"], 3: ["SWALLOWED", "PHASE 3 · BURST THE SLIME BUBBLE"] },
     eclipsed: { 2: ["THE LION", "PHASE 2 · A ZODIAC BEAST · HE'S WARDED WHILE IT STANDS"], 3: ["MIRRORLAKE", "PHASE 3 · HIS REFLECTION · THE ONE IN THE WATER IS REAL"],
       4: ["THE ECLIPSE", "PHASE 4 · HE READS A CLAUSE · YOUR SURGE IS GONE"] },
