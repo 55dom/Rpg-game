@@ -448,7 +448,40 @@ export class PhasedBoss {
 }
 
 export class IlseController extends PhasedBoss {
-  constructor(world, f) { super(world, f, ILSE_PHASES, ilseOptions); this.hushTimer = ILSE_TUNING.hushEvery; this.warn = 0; this.acolytes = []; }
+  constructor(world, f) { super(world, f, ILSE_PHASES, ilseOptions); this.hushTimer = ILSE_TUNING.hushEvery; this.warn = 0; this.acolytes = []; this.pit = null; this.unsing = 0; this.unsung = false; }
+  get brainActive() { return !this.pit?.in && this.unsing <= 0; } // down in the pit she only sings; at the end, only the one hymn
+  get untouchable() { return !!this.pit?.in; }
+  get hidden() { return !!this.pit?.in; } // (nobody's aim settles on the pit)
+  uproot() { return false; } // (wind doesn't reach down there)
+  /** P2: down into the choir pit behind her, out of reach, while her acolytes stand. */
+  _toPit() {
+    const w = this.world, f = this.f, P = ILSE_TUNING.pit, p = w.player;
+    const dx = f.pos.x - p.pos.x, dz = f.pos.z - p.pos.z, d = Math.hypot(dx, dz) || 1;
+    const at = constrain({ x: f.pos.x + (dx / d) * P.back, z: f.pos.z + (dz / d) * P.back }, P.r + 0.4, w.bounds);
+    const from = { x: f.pos.x, z: f.pos.z };
+    f.runner.interrupt(); f.pos.x = f.prev.x = at.x; f.pos.z = f.prev.z = at.z; f.submerged = true;
+    this.pit = { in: true, x: at.x, z: at.z, psalm: 60 };
+    w.emit({ type: "pitHide", fighter: f, from, at: { x: at.x, y: 0, z: at.z }, r: P.r });
+  }
+  _fromPit(stagger = true) {
+    const w = this.world, f = this.f;
+    if (!this.pit?.in) return;
+    this.pit.in = false; f.submerged = false;
+    if (stagger) { f.runner.interrupt(); f.combatant.stagger(ILSE_TUNING.pit.riseStagger); }
+    w.emit({ type: "pitRise", fighter: f, at: { x: f.pos.x, y: 0, z: f.pos.z } });
+  }
+  /** The Final: the Unsinging. The squad reels; Rook's grimoire won't let her, and the song breaks on its page. */
+  _unsing() {
+    const w = this.world, f = this.f, U = ILSE_TUNING.unsing, p = w.player;
+    this.unsung = true; f.combatant.floor = 0;
+    w.silences = []; w.silenceAll = false; w.dodgeHush = 0; // (every hush she's made goes into it)
+    const dazed = w.companions.filter((c) => c.alive && Math.hypot(c.pos.x - f.pos.x, c.pos.z - f.pos.z) <= U.r);
+    for (const c of dazed) { c.runner.interrupt(); c.combatant.stagger(U.daze); }
+    w.emit({ type: "unsinging", fighter: f, at: { x: f.pos.x, y: 0, z: f.pos.z }, r: U.r, dazed });
+    w.emit({ type: "grimoireResists", fighter: p, at: { x: p.pos.x, y: 1.2, z: p.pos.z } });
+    f.runner.interrupt(); f.combatant.stagger(U.stagger);
+    if (f.combatant.takePostureDamage(f.combatant.posture.max)) w.emit({ type: "postureBreak", attacker: p, defender: f, ability: null, at: { x: f.pos.x, y: 1.4, z: f.pos.z } });
+  }
   onCustom(key, value, a) {
     const w = this.world, f = this.f, T = ILSE_TUNING;
     if (key === "psalm") { this._cogFan("Bolt", value, 0.3, a); return true; }
@@ -458,21 +491,34 @@ export class IlseController extends PhasedBoss {
   }
   enterPhase(p) {
     const w = this.world, f = this.f;
-    if (p === 2) { // two acolytes from the choir pit; she's warded while they stand
+    if (p === 2) { // two acolytes up out of the choir pit, and down she goes into it; warded while they stand
       this.acolytes = [0, 1].map((i) => w.spawnEnemy("acolyte", f.pos.x + (i ? 3 : -3), f.pos.z + 1.5, 70 + i));
       f.tags.add("WARDED", 99999);
       w.emit({ type: "summon", fighter: f, summoned: this.acolytes });
+      this._toPit();
     }
     if (p === 3) { // the bells: silence everywhere, and she's shielded, until they break
+      this._fromPit(false);
       f.tags.remove("WARDED");
       this._ring(3, ILSE_TUNING.bellRadius, "bell");
       w.silenceAll = true; this.damageFactor = ILSE_TUNING.bellShield; this.postureFactor = ILSE_TUNING.bellShield;
       w.emit({ type: "bells", fighter: f });
     }
+    if (p === 5 && !this.unsung) { // the Final: she gathers every hush she's made into one hymn (and can't fall before it's sung)
+      this._fromPit(false);
+      this.unsing = ILSE_TUNING.unsing.warn; f.runner.interrupt(); f.combatant.floor = Math.max(1, Math.ceil(f.combatant.health.current));
+      w.emit({ type: "unsingingBegin", fighter: f, frames: this.unsing, at: { x: f.pos.x, y: 0, z: f.pos.z } });
+    }
   }
   step() {
     const w = this.world, f = this.f, T = ILSE_TUNING;
-    if (this.phase === 2 && f.tags.has("WARDED") && this.acolytes.every((e) => !e.alive)) { f.tags.remove("WARDED"); w.emit({ type: "wardBroken", fighter: f }); }
+    if (this.phase === 2 && f.tags.has("WARDED") && this.acolytes.every((e) => !e.alive)) { f.tags.remove("WARDED"); this._fromPit(); w.emit({ type: "wardBroken", fighter: f }); } // she climbs out, reeling
+    if (this.pit?.in && --this.pit.psalm <= 0) { // psalms up out of the pit
+      this.pit.psalm = ILSE_TUNING.pit.psalmEvery;
+      f.yaw = Math.atan2(w.player.pos.x - f.pos.x, w.player.pos.z - f.pos.z); f.target = w.player;
+      w.fireFan(f, ILSE_ABILITIES.Psalm, "Bolt", 13, 3, 0.3);
+    }
+    if (this.unsing > 0) { f.moveInput.x = f.moveInput.z = 0; if (--this.unsing === 0) this._unsing(); }
     if (this.phase >= 3 && w.silenceAll && this.objects.every((o) => !o.alive)) { // the last bell falls silent
       w.silenceAll = false; this.damageFactor = this.postureFactor = 1; this.objects = [];
       f.runner.interrupt(); f.combatant.stagger(150);
@@ -486,7 +532,7 @@ export class IlseController extends PhasedBoss {
 }
 
 export class GalenController extends PhasedBoss {
-  constructor(world, f) { super(world, f, GALEN_PHASES, galenOptions); this.oath = false; this.chargeTimer = 0; this.collapsed = false; this.fall = 0; this.oathDue = false; }
+  constructor(world, f) { super(world, f, GALEN_PHASES, galenOptions); this.oath = false; this.chargeTimer = 0; this.collapsed = false; this.fall = 0; this.oathDue = false; this.lastVow = 0; }
   onCustom(key, value, a) {
     const w = this.world, f = this.f, T = GALEN_TUNING;
     if (key === "rot") { w.addWave(f, f.pos.x, f.pos.z, { speed: T.rotSpeed, maxR: value, width: T.rotWidth, spec: T.rot, ability: a, kind: "rot" }); return true; }
@@ -530,7 +576,22 @@ export class GalenController extends PhasedBoss {
     if (p >= 2 && f.traits.frontalGuard) f.traits = { ...f.traits, frontalGuard: false }; // the shield rots through: no more wall in front
     if (p >= 3 && !this.collapsed) this._collapse(); // (a big enough hit skips a phase; the floor still goes)
     if (p >= 4 && !this.oath && !this.oathDone) { if (this.fall > 0) this.oathDue = true; else this._oath(); } // once everyone's landed
-    if (p === 5) { this.chargeTimer = 30; w.emit({ type: "desperate", fighter: f }); }
+    if (p === 5) { this.chargeTimer = 30; this.lastVow = 1; w.emit({ type: "desperate", fighter: f }); }
+  }
+  /**
+   * The Final: one last vow, sworn on the charge (nothing staggers him again), on a fourth seal as far out as the hall goes.
+   * The grimoire bleeds ink and the page marks it: the seal you must hit.
+   */
+  _lastVow() {
+    const w = this.world, f = this.f, chunks = (w.islands ?? []).slice(1);
+    let at;
+    if (chunks.length) at = chunks.reduce((a, b) => (Math.hypot(b.x - f.pos.x, b.z - f.pos.z) > Math.hypot(a.x - f.pos.x, a.z - f.pos.z) ? b : a));
+    else { const a = Math.atan2(this.home.x - f.pos.x, this.home.z - f.pos.z); at = { x: this.home.x + Math.sin(a) * GALEN_TUNING.sealRadius, z: this.home.z + Math.cos(a) * GALEN_TUNING.sealRadius }; }
+    const seal = w.spawnObject("seal", at.x, at.z, f);
+    this.objects.push(seal); this.lastSeal = seal; this.lastVow = 2;
+    this.oath = true; this.postureFactor = 0;
+    w.emit({ type: "lastVow", fighter: f, seal, at: { x: seal.pos.x, y: 0, z: seal.pos.z } });
+    w.emit({ type: "inkMark", fighter: w.player, target: seal, at: { x: seal.pos.x, y: 0, z: seal.pos.z } }); // the page highlights it
   }
   step() {
     const w = this.world, f = this.f, T = GALEN_TUNING;
@@ -542,6 +603,7 @@ export class GalenController extends PhasedBoss {
         w.emit({ type: "oathBroken", fighter: f, at: { x: f.pos.x, y: 1.4, z: f.pos.z } });
       }
     }
+    if (this.lastVow === 1 && !this.oath && this.fall <= 0) this._lastVow(); // (after any Oath still standing)
     if (this.rules.desperate && this.fall <= 0 && !f.runner.isRunning && f.combatant.canAct && f.grounded && --this.chargeTimer <= 0) {
       this.chargeTimer = T.chargeEvery;
       f.yaw = Math.atan2(w.player.pos.x - f.pos.x, w.player.pos.z - f.pos.z);

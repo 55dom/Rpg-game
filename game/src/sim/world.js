@@ -995,7 +995,7 @@ export class World {
     const p = this.player;
     let best = null, bestD = range;
     for (const e of this.liveEnemies) {
-      if (e === except || e.traits.prop) continue; // (a prop is yours to aim at, never where your aim drifts)
+      if (e === except || e.traits.prop || e.boss?.hidden) continue; // (a prop is yours to aim at, never where your aim drifts; and down in a pit, there's nothing to aim at)
       const d = flatDistance(p.pos, e.pos) + ((e.floor || 0) !== (p.floor || 0) ? 8 : 0); // up on a deck: only if there's nothing down here
       if (d < bestD) { best = e; bestD = d; }
     }
@@ -1187,7 +1187,7 @@ export class World {
     let best = null, bestScore = Infinity;
     for (const e of this.fighters) {
       if (e.team !== Team.Enemy || !e.alive || e.traits.dummy || e.traits.prop) continue; // the squad leaves the training dummies (and the fen lanterns) to you
-      if ((e.floor || 0) !== (c.floor || 0)) continue; // out of reach up on a deck: the squad goes for what's holding it up
+      if ((e.floor || 0) !== (c.floor || 0) || e.boss?.hidden) continue; // out of reach up on a deck (the squad goes for what's holding it up), or down in a pit
       const fromLeader = flatDistance(p.pos, e.pos);
       let score = stance === "Press" ? flatDistance(c.pos, e.pos) : fromLeader;
       if (stance === "Guard" && e.target === p && e.runner.isRunning) score -= 6; // intercept attacks on Rook

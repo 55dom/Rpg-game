@@ -122,6 +122,9 @@ export const EPISODE_8 = {
     { id: "galen", type: "fight", ...HALL, wave: ["galen"], tokens: 2,
       tutorial: [{ at: 0.5, text: "BOSS 4 · SIR GALEN THE RUSTED. Iron and rust, and two hundred years of being angry. Break his stance." }],
       lines: [["Bas", "He's an Iron Warden. Captain Brannoc's lot. …Sorry, sir."], ["Cal", "Rust remembers. Remind it it's tired."]],
+      eventHints: { // §16 B4's Final: the last vow, and the page
+        inkMark: "Your grimoire's bleeding ink. The page has marked one seal, far out: his last vow. Break it while he charges.",
+      },
       retry: "Again. He's slow. You're not.",
       set: { GALEN_DEFEATED: 1 } },
     { id: "ink", type: "scene", node: "Ep8_Ink", ...HALL,

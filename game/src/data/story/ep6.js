@@ -130,6 +130,11 @@ export const EPISODE_6 = {
       world: { bounds: ZONES.fens.bounds, origin: { x: 15, z: -1 } },
       tutorial: [{ at: 0.5, text: "BOSS 3 · DEACON ILSE MARROWIND. Silence magic: when the hymn takes your voice, your spells won't come. Keep hitting." }],
       lines: [["Cal", "Mind the Deacon's hands. That's where the hush comes from."], ["Juno", "Shut her up. Politely."]],
+      eventHints: { // §16 B3: the choir pit, and her last hymn
+        pitHide: "She's gone down into the choir pit, out of reach. Her acolytes keep her there: put them down and she has to climb out.",
+        unsingingBegin: "She's singing the whole town's memory of her away. All of it. Hold on to your grimoire.",
+        grimoireResists: "Your grimoire won't let her. The song broke on your page, and so did she: finish it!",
+      },
       retry: "Again. Sing over her.",
       set: { ILSE_DEFEATED: 1 } },
     { id: "vision", type: "scene", node: "Ep6_Vision", ...FENS, ...DUSK,

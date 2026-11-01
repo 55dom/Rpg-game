@@ -393,6 +393,16 @@ export function boot(doc = document) {
         case "bells": hud.toast("THE BELLS RING", "danger"); hud.banner("NO SPELLS ANYWHERE · BREAK THE THREE BELLS"); silenceFx.all(true); break;
         case "bellsBroken": hud.toast("SILENCE BROKEN", "break"); silenceFx.all(false); impact(3, true); sfx.play("postureBreak"); break;
         case "wardBroken": hud.toast("HER WARD FALLS", "break"); break;
+        // B3: the choir pit, and the Unsinging
+        case "pitHide": pitFx.open(ev.at, ev.r); vfx.sparksAt({ x: ev.from.x, y: 1, z: ev.from.z }, 10, "violet", 6, 3); sfx.play("mud", 0.6); hud.toast("INTO THE CHOIR PIT", "danger"); break;
+        case "pitRise": pitFx.close(); vfx.ring({ x: ev.at.x, y: 0.08, z: ev.at.z }, 3.4, "#c9b4ff", 0.35); sfx.play("slam", 0.6); break;
+        case "unsingingBegin": vfx.ring({ x: ev.at.x, y: 0.08, z: ev.at.z }, 3, "#f4f2ff", 0.6); vfx.flash({ x: ev.at.x, y: 2, z: ev.at.z }, 4, "#f4f2ff", 0.3); sfx.play("cry", 0.5); camera.kick(0.5); hud.toast("THE UNSINGING", "danger"); break;
+        case "unsinging": for (const [k, sz] of [[0, 8], [0.15, 18], [0.3, 30]]) setTimeout(() => vfx.ring({ x: ev.at.x, y: 0.1, z: ev.at.z }, sz, "#f4f2ff", 0.6), k * 1000); vfx.flash({ x: ev.at.x, y: 2, z: ev.at.z }, 9, "#ffffff", 0.35); camera.shake(0.6); break;
+        case "grimoireResists": vfx.flash({ x: ev.at.x, y: 1.4, z: ev.at.z }, 3.4, "#fff1b8", 0.4); vfx.sparksAt({ x: ev.at.x, y: 1.4, z: ev.at.z }, 18, "gold", 6, 3); vfx.ring({ x: ev.at.x, y: 1.2, z: ev.at.z }, 3, "#ffd36a", 0.5, true); sfx.play("ultActivate", 0.7); impact(3, false);
+          hud.toast("THE PAGE WON'T FORGET", "clear"); break;
+        // B4's Final: the last vow, and the page marking its seal
+        case "lastVow": hud.toast("ONE LAST VOW", "danger"); sfx.play("bossIntro", 0.7); break;
+        case "inkMark": inkMarkFx.on(ev.target); vfx.sparksAt({ x: world.player.pos.x, y: 1.2, z: world.player.pos.z }, 14, "ink", 5, 3); hud.toast("THE PAGE MARKS IT", "clear"); break;
         case "hushWarn": hud.toast("SHE DRAWS BREATH…", "danger"); vfx.warning({ x: world.player.pos.x, y: 0, z: world.player.pos.z }, ev.frames / 60); sfx.play("glint"); break;
         case "hushDodge": hud.toast("DODGE SILENCED · PARRY!", "danger"); hud.banner("FIVE SECONDS: GUARD AND PARRY"); root.classList.add("hushed"); break;
         case "hushEnd": root.classList.remove("hushed"); break;
@@ -699,7 +709,7 @@ export function boot(doc = document) {
         case "fortVolley": sfx.play("mud", 0.6); break;
         case "fortBroken": vfx.ring({ x: ev.at.x, y: 0.06, z: ev.at.z }, 7, "#c8b49a", 0.4); hud.toast("BARRICADE BROKEN", "break"); sfx.play("postureBreak", 0.7); break;
         case "fortSink": hud.pushLog("The logs settle in the drained bed"); break;
-        case "summon": for (const e of ev.summoned) vfx.ring({ x: e.pos.x, y: 0.06, z: e.pos.z }, 3, "#8a7a4a", 0.4); hud.pushLog(`Hask calls ${ev.summoned.length} hounds`); break;
+        case "summon": for (const e of ev.summoned) vfx.ring({ x: e.pos.x, y: 0.06, z: e.pos.z }, 3, "#8a7a4a", 0.4); { const kinds = [...new Set(ev.summoned.map((e) => e.stats.name))]; hud.pushLog(`${ev.fighter?.stats?.name ?? "It"} calls ${ev.summoned.length} · ${kinds.join(", ")}`); } break; // (whoever's calling, and what comes)
         case "deflect": vfx.flash(ev.at, 1.8, "#e9d8ff", 0.12); vfx.sparksAt(ev.at, 10, "white", 9, 2); vfx.number(ev.at, "DEFLECT", "text"); sfx.play("block"); break;
         case "ward": {
           sfx.play("heal");
@@ -1613,7 +1623,31 @@ export function boot(doc = document) {
       },
     };
   })();
-  resetBossFx = () => { doorFx.clear(); holdFx.end(); silenceFx.clear(); waterJet.stop(); lilyFx.clear(); reedFx.clear(); smokeFx.clear(); holeFx.clear(); memoryFx.end(); groundFx.clear(); tearFx.clear(); mouthTears = []; lineWall?.dispose(); lineWall = null; darkFx.clear();
+  // B3 P2: the choir pit, a dark hollow ringed with pale light, where she sings from out of reach.
+  const pitFx = (() => {
+    let disc = null, rim = null;
+    const dark = glow(scene, "pitDark", "#14101e"), pale = glow(scene, "pitRim", "#c9b4ff", 0.8, true);
+    return {
+      open(at, r) {
+        this.close();
+        disc = BB.MeshBuilder.CreateDisc("choirPit", { radius: r, tessellation: 28 }, scene); disc.rotation.x = Math.PI / 2; disc.position.set(at.x, 0.04, at.z); disc.material = dark; disc.isPickable = false;
+        rim = BB.MeshBuilder.CreateTorus("choirPitRim", { diameter: r * 2, thickness: 0.08, tessellation: 32 }, scene); rim.position.set(at.x, 0.06, at.z); rim.material = pale; rim.isPickable = false;
+      },
+      close() { disc?.dispose(); rim?.dispose(); disc = rim = null; },
+      update(t) { if (rim) rim.scaling.setAll(1 + Math.sin(t * 4) * 0.03); },
+    };
+  })();
+  // B4's Final: the page's mark on the seal you must hit (an ink ring round it, turning, until it breaks).
+  const inkMarkFx = (() => {
+    let mark = null, target = null;
+    const ink = glow(scene, "inkMarkMat", "#1a1430", 0.85, true);
+    return {
+      on(t) { this.off(); target = t; mark = BB.MeshBuilder.CreateTorus("inkMark", { diameter: 2.4, thickness: 0.12, tessellation: 28 }, scene); mark.material = ink; mark.isPickable = false; },
+      off() { mark?.dispose(); mark = null; target = null; },
+      update(t) { if (!mark) return; if (!target?.alive) { this.off(); return; } mark.position.set(target.pos.x, 0.12 + Math.sin(t * 3) * 0.05, target.pos.z); mark.rotation.y = t * 1.5; mark.scaling.setAll(1 + Math.sin(t * 5) * 0.06); },
+    };
+  })();
+  resetBossFx = () => { pitFx.close(); inkMarkFx.off(); doorFx.clear(); holdFx.end(); silenceFx.clear(); waterJet.stop(); lilyFx.clear(); reedFx.clear(); smokeFx.clear(); holeFx.clear(); memoryFx.end(); groundFx.clear(); tearFx.clear(); mouthTears = []; lineWall?.dispose(); lineWall = null; darkFx.clear();
     for (const m of inkMarks.values()) m.dispose(); inkMarks.clear(); root.classList.remove("leaping", "hopblur", "surge-locked"); };
 
   // Squad HQ: the board (rooms to build) and the workbench (tempering gear). One screen, two modes.
@@ -1943,7 +1977,7 @@ export function boot(doc = document) {
       if (state.ghostTimer <= 0) { const rig = viewFor(world.player); if (rig) vfx.afterimage(rig); state.ghostTimer = 0.09; }
     }
 
-    doorFx.update(dt); holdFx.update(state.time); waterJet.update(); lilyFx.update(dt); reedFx.update(dt); smokeFx.update(dt); holeFx.update(dt); memoryFx.update(dt); groundFx.update(dt); tearFx.update(dt);
+    pitFx.update(state.time); inkMarkFx.update(state.time); doorFx.update(dt); holdFx.update(state.time); waterJet.update(); lilyFx.update(dt); reedFx.update(dt); smokeFx.update(dt); holeFx.update(dt); memoryFx.update(dt); groundFx.update(dt); tearFx.update(dt);
     if (world.boss?.boss?.leap) { // motion blur on the hops: a trail of fading ghosts of Gullmaw
       state.hopGhost = (state.hopGhost ?? 0) - dt;
       if (state.hopGhost <= 0) { const rig = viewFor(world.boss); if (rig?.snapshot && settings.blur) vfx.afterimage(rig, hopGhostMat, 0.22); state.hopGhost = 0.035; } // (a motion-blur trail: the setting turns it off)

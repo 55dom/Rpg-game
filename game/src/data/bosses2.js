@@ -11,12 +11,14 @@ const box = (frame, key, frames) => ({ frame, type: E.SpawnHitbox, key, value: f
 const custom = (frame, key, value = 0) => ({ frame, type: E.Custom, key, value });
 
 // ---- B3 · Deacon Ilse Marrowind (Ep 6, "The Silence Sermon") -----------------------------------------
-// P1 silence zones: no spells inside them, so you fight in melee. P2 (65%) she calls two acolytes and is
-// warded while they stand. P3 (35%) three bells ring: the whole field is silenced and she's shielded until
-// you break them. P4 (15%) she silences your dodges in five-second windows: parry instead.
+// P1 silence zones: no spells inside them, so you fight in melee. P2 (65%) she calls two acolytes and drops into the
+// choir pit, out of reach (and warded), singing psalms up out of it; when they fall she climbs out, reeling. P3 (35%)
+// three bells ring: the whole field is silenced and she's shielded until you break them. P4 (15%) she silences your
+// dodges in five-second windows: parry instead. Final (5%): the Unsinging, her last hymn, sung to make the town forget
+// she was ever there. The squad reels; Rook's grimoire won't let her (the first hint), and the song breaks on its page.
 export const ILSE_STATS = Object.freeze({
   name: "Deacon Ilse Marrowind", maxHealth: 1100, maxPosture: 220, runSpeed: 3.2, circleSpeed: 2, turnRate: 0.12, radius: 0.45, height: 2.0,
-  boss: true, bossTitle: "BOSS 3 · THE SILENCE SERMON", defeatText: "THE SERMON ENDS", phaseMarks: [0.65, 0.35, 0.15],
+  boss: true, bossTitle: "BOSS 3 · THE SILENCE SERMON", defeatText: "THE SERMON ENDS", phaseMarks: [0.65, 0.35, 0.15, 0.05],
 });
 export const ILSE_HITBOXES = Object.freeze({
   Bolt: { center: [0, 0, 0], size: [0.7, 0.7, 0.7], range: 16, hit: hitSpec({ damage: 10, posture: 12, hitstop: 3, hitstun: 14, knockback: 1.5 }) },
@@ -43,9 +45,12 @@ export const ilseOptions = (phase) => {
   if (phase >= 2) o.push(new AttackOption(A.Toll, 0, 6, 2, 240));
   return o;
 };
-export const ILSE_PHASES = Object.freeze([{ phase: 1, above: 0.65 }, { phase: 2, above: 0.35, acolytes: 2 }, { phase: 3, above: 0.15, bells: 3 }, { phase: 4, above: 0, hushDodge: true }]);
+export const ILSE_PHASES = Object.freeze([{ phase: 1, above: 0.65 }, { phase: 2, above: 0.35, acolytes: 2 }, { phase: 3, above: 0.15, bells: 3 }, { phase: 4, above: 0.05, hushDodge: true },
+  { phase: 5, above: 0, unsinging: true }]);
 export const ILSE_TUNING = Object.freeze({
   hushRadius: 3.6, bellRadius: 7, bellShield: 0.3, hushEvery: 420, hushWarn: 60, hushFrames: 300, tollWidth: 0.9,
+  pit: Object.freeze({ back: 4.5, r: 1.7, psalmEvery: 150, riseStagger: 120 }), // P2: the choir pit, behind her
+  unsing: Object.freeze({ warn: 90, r: 16, daze: 150, stagger: 170 }), // the Final: the Unsinging
   toll: hitSpec({ damage: 16, posture: 20, hitstop: 5, hitstun: 22, knockback: 4, unblockable: true }),
 });
 
@@ -89,7 +94,8 @@ export const galenOptions = (phase) => {
   return o;
 };
 // GDD §16 B4: P1 the knight · P2 rot · P3 he brings the Tower's floor down, and the fight goes on on the falling debris (a
-// scripted fall, a catch, and on) · P4 the Oath, its three vow-seals out on the debris · the last charge.
+// scripted fall, a catch, and on) · P4 the Oath, its three vow-seals out on the debris · Final: the last charge, across
+// the whole hall, and one last vow sworn on it: a fourth seal, far out. The grimoire bleeds ink, and the page marks it.
 export const GALEN_PHASES = Object.freeze([{ phase: 1, above: 0.7 }, { phase: 2, above: 0.5 }, { phase: 3, above: 0.3, collapse: true }, { phase: 4, above: 0.12, seals: 3 }, { phase: 5, above: 0, desperate: true }]);
 export const GALEN_TUNING = Object.freeze({
   // The collapse: everyone drops this high with the floor, and the player lands hard unless they jump or dash in the air
