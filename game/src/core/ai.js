@@ -68,6 +68,7 @@ export class EnemyBrain {
     this.rng = rng;
     this.aggroRange = 14;
     this.recoverFrames = 24;
+    this.pace = null; // the difficulty's pacing (data/difficulty.js), set by the World: { recover, cooldown } multipliers
     this.state = BrainState.Idle;
     this.recoverLeft = 0;
     this._wasRunning = false;
@@ -91,7 +92,7 @@ export class EnemyBrain {
     if (this.state === BrainState.Attacking) {
       if (p.abilityRunning) { this._wasRunning = true; return out(MoveIntent.Hold); }
       this.state = BrainState.Recover;
-      this.recoverLeft = this.recoverFrames;
+      this.recoverLeft = Math.round(this.recoverFrames * (this.pace?.recover ?? 1));
     }
     if (this.state === BrainState.Recover) {
       if (this.recoverLeft-- > 0) return out(MoveIntent.Hold);
@@ -105,7 +106,7 @@ export class EnemyBrain {
     if (ready.length) {
       if (!this.pool.tryAcquire(this.id, p.frame)) { this.state = BrainState.Circle; return out(MoveIntent.Circle); }
       const pick = this._weighted(ready);
-      pick.readyFrame = p.frame + pick.cooldownFrames;
+      pick.readyFrame = p.frame + Math.round(pick.cooldownFrames * (this.pace?.cooldown ?? 1));
       this.state = BrainState.Attacking;
       return out(MoveIntent.Hold, pick.ability);
     }

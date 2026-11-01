@@ -7,6 +7,7 @@ import { World } from "./sim/world.js";
 import { ACOLYTE_ABILITIES } from "./data/acolyte.js";
 import { ROOK_ABILITIES, ROOK_STATS } from "./data/rook.js";
 import { PAGES } from "./data/pages.js";
+import { DIFFICULTY_KEYS, difficultyOf } from "./data/difficulty.js";
 import { EPISODE_4 } from "./data/run.js";
 import { B, PALETTE, glow, toon, clamp01, toonFallbackIfBroken } from "./runtime/look.js";
 import { Rig, LOOKS } from "./runtime/rig.js";
@@ -219,10 +220,10 @@ export function boot(doc = document) {
 
   // Settings, remembered between visits (GDD §19.8's accessibility toggles among them). A blocked or empty store is fine.
   const SETTINGS_KEY = "unwritten-settings";
-  const settings = { frameData: !mobile, flashes: !reduced, sound: true, assist: coarse, shake: !reduced, blur: !reduced, speedLines: !reduced, ult: reduced ? "short" : "full" };
+  const settings = { frameData: !mobile, flashes: !reduced, sound: true, assist: coarse, shake: !reduced, blur: !reduced, speedLines: !reduced, ult: reduced ? "short" : "full", difficulty: "knight" };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "null") ?? {};
-    for (const [k, v] of Object.entries(saved)) if (k in settings && typeof v === typeof settings[k] && (k !== "ult" || ULT_MODES.includes(v))) settings[k] = v;
+    for (const [k, v] of Object.entries(saved)) if (k in settings && typeof v === typeof settings[k] && (k !== "ult" || ULT_MODES.includes(v)) && (k !== "difficulty" || DIFFICULTY_KEYS.includes(v))) settings[k] = v;
   } catch { /* nothing saved, or no storage: the defaults stand */ }
   const saveSettings = () => { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch { /* not remembered this time */ } };
   const state = { frozen: false, started: false, paused: false, help: false, cinematic: 0, cinematicScale: 1, ghostTimer: 0, pending: [], time: 0 };
@@ -835,6 +836,7 @@ export function boot(doc = document) {
     for (const b of root.querySelectorAll("[data-a11y]")) {
       const k = b.dataset.a11y;
       if (k === "ult") { b.textContent = { full: "ULTIMATES: FULL", short: "ULTIMATES: SHORT", off: "ULTIMATES: SKIP" }[settings.ult]; b.setAttribute("aria-pressed", String(settings.ult !== "full")); }
+      else if (k === "difficulty") { const d = difficultyOf(settings.difficulty); b.textContent = `DIFFICULTY: ${d.name.toUpperCase()}`; b.setAttribute("aria-pressed", "true"); b.title = d.desc; }
       else b.setAttribute("aria-pressed", String(!!settings[k]));
     }
     if (save) saveSettings();
@@ -845,7 +847,10 @@ export function boot(doc = document) {
     vfx.reduceFlashes = !settings.flashes;
     sfx.setEnabled(settings.sound);
     world.assist = settings.assist;
-    controls.smartCombo = settings.assist;
+    world.difficulty = settings.difficulty; // GDD §9.7
+    controls.smartCombo = settings.assist || difficultyOf(settings.difficulty).autoCombo;
+    for (const el of root.querySelectorAll("[data-difficulty-note]")) el.textContent = difficultyOf(settings.difficulty).desc;
+    for (const el of root.querySelectorAll("[data-difficulty-name]")) el.textContent = difficultyOf(settings.difficulty).name;
   };
   // Wind Wall visuals: a translucent sheet of wind per live zone.
   const walls = (() => {
@@ -940,6 +945,7 @@ export function boot(doc = document) {
     e.currentTarget.blur(); sfx.play("ui");
     const k = b.dataset.a11y;
     if (k === "ult") settings.ult = ULT_MODES[(ULT_MODES.indexOf(settings.ult) + 1) % ULT_MODES.length];
+    else if (k === "difficulty") { settings.difficulty = DIFFICULTY_KEYS[(DIFFICULTY_KEYS.indexOf(settings.difficulty) + 1) % DIFFICULTY_KEYS.length]; hud.toast(`DIFFICULTY: ${difficultyOf(settings.difficulty).name.toUpperCase()}`); }
     else settings[k] = !settings[k];
     applySettings();
   });
@@ -953,10 +959,9 @@ export function boot(doc = document) {
   const newWorld = (opts = {}) => {
     for (const f of [...views.keys()]) removeView(f);
     walls.clear(); setBog(false, true); constellation.clear(true);
-    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, companions: true, injured: injuredNow(), annotation: annotationNow(), revision: revisionNow(), ...opts });
+    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, difficulty: settings.difficulty, companions: true, injured: injuredNow(), annotation: annotationNow(), revision: revisionNow(), ...opts });
     const ink = world.loadout.Spell1?.id === "Inscribe"; // the margin: Inscribe takes Gale's button
     const galeBtn = root.querySelector('[data-intent="Spell1"]'); if (galeBtn) galeBtn.textContent = ink ? "INK" : "GALE";
-    if (opts.tokens == null) world.tokens.capacity = mobile ? 1 : 2;
     world.pageDefs = PAGES;
     root.classList.toggle("has-tag", !!world.members.severin); root.classList.remove("tag-severin", "hushed");
     resetBossFx?.();
@@ -1914,7 +1919,7 @@ export function boot(doc = document) {
         if (cmd === "navDown") story.nav(1);
         if (cmd === "assist:bas") story.choose(0);
         if (cmd === "assist:juno") story.choose(1);
-        if (cmd === "stance") story.choose(2);
+        if (cmd === "assist:third") story.choose(2); // (3 on a keyboard; D-pad up only moves the cursor)
         if (cmd === "help") toggleHelp();
         if (cmd === "pause") { if (state.help) toggleHelp(false); else state.paused = !state.paused; root.classList.toggle("paused", state.paused); }
         continue;

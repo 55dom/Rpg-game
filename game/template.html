@@ -637,6 +637,11 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
   <div class="help" data-help hidden>
     <div class="help-card">
       <h2>SETTINGS</h2>
+      <h3>DIFFICULTY</h3>
+      <div class="a11y">
+        <button data-a11y="difficulty" aria-pressed="true" title="Story, Knight or Paragon">DIFFICULTY: KNIGHT</button>
+      </div>
+      <p class="a11y-note" data-difficulty-note>As the fights were made.</p>
       <h3>ACCESSIBILITY</h3>
       <div class="a11y" data-a11y-block>
         <button data-a11y="flashes" aria-pressed="true" title="Impact frames: off softens them to a dim flash (photosensitivity)">IMPACT FLASHES</button>
@@ -667,7 +672,8 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
         <tr><td>Ultimate: Skyrender (full Surge)</td><td><kbd>V</kbd></td><td>LB + RB</td></tr>
         <tr><td>Call Bas · call Juno (Assist)</td><td><kbd>1</kbd> · <kbd>2</kbd></td><td>D-pad ◀ · ▶</td></tr>
         <tr><td>Sandbox: jump to the boss</td><td><kbd>B</kbd></td><td>—</td></tr>
-        <tr><td>Party stance (Press / Guard / Support)</td><td><kbd>3</kbd></td><td>D-pad ▲</td></tr>
+        <tr><td>Call the third squadmate, when there is one (Assist)</td><td><kbd>3</kbd></td><td>—</td></tr>
+        <tr><td>Party stance (Press / Guard / Support)</td><td><kbd>4</kbd></td><td>D-pad ▲</td></tr>
         <tr><td>Lock on · switch target</td><td><kbd>Q</kbd> · <kbd>Tab</kbd> (<kbd>Shift</kbd>+<kbd>Tab</kbd> left)</td><td>R3 · flick right stick</td></tr>
         <tr><td>Frame data · restart · pause</td><td><kbd>G</kbd> · <kbd>Backspace</kbd> · <kbd>Esc</kbd></td><td>— · Back · —</td></tr>
         <tr><td>Touch</td><td colspan="2">Drag left side to move, upper right to look. Tap LOCK to lock or switch, hold it to release.</td></tr>
@@ -695,6 +701,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
         <li><b>Squad reactions:</b> Snare an anchored foe = <b>Taut Line</b> (long stagger). Wind spell on a bound foe = <b>Slingshot</b>. Heavy hit on an anchored foe = <b>Shatterstone</b> (splash).</li>
         <li><b>Marks:</b> Launcher, the 4th Slash, Counter, and Skyrender's finish MARK a foe (gold ring). Hit a marked foe with any spell to <b>Detonate</b> it, splashing anyone close.</li>
         <li><b>Assist (AST):</b> wider parry and perfect-dodge windows, and holding Slash keeps the combo going on touch. On by default on touch screens.</li>
+        <li><b>Difficulty:</b> <b>Story</b> (parry window 14 frames, hits land softer, enemies take their time, hold Slash to keep a combo going), <b>Knight</b> (as made), <b>Paragon</b> (tighter windows, harder hits, enemies swing more often and more of them at once). Change it any time, even mid-fight.</li>
       </ul>
       <button class="close alt" data-perf-toggle>SHOW PERFORMANCE METER</button>
       <button class="close" data-help-close>CLOSE</button>
@@ -876,7 +883,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
         <button class="go alt" data-start-world>THE WORLD</button>
         <button class="go alt" data-start-run>EPISODE 4 RUN</button>
         <button class="go alt" data-start-yard>TRAINING YARD</button>
-        <button class="go alt" data-start-settings>SETTINGS & ACCESSIBILITY</button>
+        <button class="go alt" data-start-settings>SETTINGS &amp; ACCESSIBILITY · <span data-difficulty-name>Knight</span></button>
       </div>
       <p class="hint" data-start-hint>Enter, or any attack button, starts the story.</p>
     </div>

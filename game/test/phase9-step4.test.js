@@ -53,7 +53,7 @@ test("Settings are remembered on this device (and a blocked store is fine); peop
 });
 
 test("Settings come before the first frame of play: a button on the title opens them, over the title, at the top of the card", () => {
-  assert.match(tpl, /<button class="go alt" data-start-settings>SETTINGS & ACCESSIBILITY<\/button>/);
+  assert.match(tpl, /<button class="go alt" data-start-settings>SETTINGS &amp; ACCESSIBILITY · <span data-difficulty-name>Knight<\/span><\/button>/); // (Phase 11: and the difficulty)
   assert.match(src("main.js"), /\[data-start-settings\]"\)\?\.addEventListener\("click", \(e\) => \{ e\.stopPropagation\(\); sfx\.play\("ui"\); toggleHelp\(true\); \}\)/);
   const z = (sel) => Number(new RegExp(`\\n\\${sel} \\{[^}]*z-index: (\\d+)`).exec(tpl)[1]);
   assert.ok(z(".help") > z(".start"), "the card sits over the title");

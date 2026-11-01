@@ -24,7 +24,8 @@ export class Controls {
     this.device = "keyboard";
     this.padPrev = [];
     this.touch = { stickId: null, cx: 0, cy: 0, x: 0, y: 0, lookId: null, lx: 0, ly: 0, block: false, light: false, lightTimer: 0 };
-    this.smartCombo = false; // touch assist: holding Slash keeps the string going
+    this.smartCombo = false; // touch assist, or Story difficulty (GDD §9.7): holding Slash keeps the string going
+    this.held = { mouse: false, pad: false, timer: 0 }; // Slash held on a mouse, a pad or the keyboard (for smartCombo)
     this.flickArmed = true;
     this.onFirstInput = null;
 
@@ -36,14 +37,15 @@ export class Controls {
       this.keyboardUsed = true;
       this.keys.add(e.code);
       if (KEYS[e.code]) this.presses.push(KEYS[e.code]);
+      if (KEYS[e.code] === Intent.Light) this.held.timer = 0.25;
       if (e.code === "KeyQ") this.commands.push("lock");
       if (e.code === "Tab") this.commands.push(e.shiftKey ? "switchLeft" : "switchRight");
       if (e.code === "KeyH" || e.code === "Slash") this.commands.push("help");
       if (e.code === "Backspace") this.commands.push("reset");
       if (e.code === "Digit1") this.commands.push("assist:bas");
       if (e.code === "Digit2") this.commands.push("assist:juno");
-      if (e.code === "Digit3") this.commands.push("assist:third"); // a third squadmate, when there is one (Cal, Ep 18)
-      if (e.code === "Digit3") this.commands.push("stance");
+      if (e.code === "Digit3") this.commands.push("assist:third"); // a third squadmate, when there is one (Cal, Ep 18; Tamsin, Ep 15)
+      if (e.code === "Digit4") this.commands.push("stance");
       if (e.code === "KeyB") this.commands.push("boss");
       if (e.code === "KeyP") this.commands.push("pages");
       if (e.code === "KeyT") this.commands.push("tag");
@@ -57,11 +59,12 @@ export class Controls {
     addEventListener("keyup", (e) => this.keys.delete(e.code));
     addEventListener("blur", () => this.keys.clear());
     canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+    addEventListener("pointerup", (e) => { if (e.button === 0) this.held.mouse = false; });
     canvas.addEventListener("pointerdown", (e) => {
       this._first();
       if (e.pointerType !== "mouse") return;
       this.device = "keyboard";
-      if (e.button === 0) this.presses.push(Intent.Light);
+      if (e.button === 0) { this.presses.push(Intent.Light); this.held.mouse = true; this.held.timer = 0.25; }
       if (e.button === 2) this.presses.push(Intent.Heavy);
       if (e.button === 1) { this.commands.push("lock"); e.preventDefault(); }
     });
@@ -153,6 +156,7 @@ export class Controls {
     let mx = (k.has("KeyD") ? 1 : 0) - (k.has("KeyA") ? 1 : 0);
     let my = (k.has("KeyW") ? 1 : 0) - (k.has("KeyS") ? 1 : 0);
     let block = k.has("KeyF");
+    let padLight = false;
     this.look.x += ((k.has("ArrowRight") ? 1 : 0) - (k.has("ArrowLeft") ? 1 : 0)) * 2.2 * dt;
     this.look.y += ((k.has("ArrowDown") ? 1 : 0) - (k.has("ArrowUp") ? 1 : 0)) * 1.2 * dt;
 
@@ -176,6 +180,7 @@ export class Controls {
           const other = i === 4 ? 5 : i === 5 ? 4 : -1;
           if (other >= 0 && this.padPrev[other]) this.presses.push(Intent.Ultimate);
           else if (PAD[i] !== undefined) this.presses.push(PAD[i]);
+          if (PAD[i] === Intent.Light) this.held.timer = 0.25;
           if (i === PAD_LOCK) this.commands.push("lock");
           if (i === PAD_HELP) this.commands.push("help");
           if (i === PAD_RESET) this.commands.push("pages"); // View / Back: page evolution
@@ -187,6 +192,7 @@ export class Controls {
         }
         this.padPrev[i] = down;
         if ((i === 4 || i === 6) && down) block = true;
+        if (PAD[i] === Intent.Light && down) padLight = true;
       });
       break;
     }
@@ -195,6 +201,12 @@ export class Controls {
     if (this.touch.light && this.smartCombo) {
       this.touch.lightTimer -= dt;
       if (this.touch.lightTimer <= 0) { this.presses.push(Intent.Light); this.touch.lightTimer = 0.2; }
+    }
+    // Story difficulty's auto-combo (GDD §9.7): Slash held on a keyboard, a mouse or a pad keeps the string going too.
+    this.held.pad = padLight;
+    if (this.smartCombo && (this.keys.has("KeyJ") || this.held.mouse || this.held.pad)) {
+      this.held.timer -= dt;
+      if (this.held.timer <= 0) { this.presses.push(Intent.Light); this.held.timer = 0.2; }
     }
     if (this.touch.block) block = true;
     const len = Math.hypot(mx, my);

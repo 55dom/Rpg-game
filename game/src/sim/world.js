@@ -4,7 +4,7 @@
 
 import { Intent, InputBuffer, mask } from "../core/input.js";
 import { ResourcePool } from "../core/stats.js";
-import { Combatant, Team, HitOutcome, Rules, resolveHit } from "../core/combat.js";
+import { Combatant, Team, HitOutcome, resolveHit } from "../core/combat.js";
 import { AbilityRunner, AbilityController, EventType, MoveContext, StartResult, defineAbility } from "../core/abilities.js";
 import { AttackTokenPool, EnemyBrain, MoveIntent, CompanionBrain, AllyMove, STANCES } from "../core/ai.js";
 import { COMPANIONS } from "../data/companions.js";
@@ -51,6 +51,7 @@ import { TagSet, matchReactions } from "../core/tags.js";
 import { REACTIONS } from "../data/reactions.js";
 import { ROOK_STATS, ROOK_ABILITIES, ROOK_HITBOXES, buildRookGraph, defaultLoadout } from "../data/rook.js";
 import { PAGES, PAGE_HITBOXES } from "../data/pages.js";
+import { difficultyOf } from "../data/difficulty.js";
 import { pageLevel } from "../core/progress.js";
 import { SEVERIN_KIT, SEVERIN_KIT_STATS, SEVERIN_KIT_HITBOXES, SEVERIN_KIT_LOADOUT, SEVERIN_KIT_SPELLS } from "../data/severinKit.js";
 import { hitSpec } from "../core/combat.js";
@@ -268,7 +269,7 @@ export class Fighter {
         else if (e.key === "hover") { this.vel.y = 0; this.hoverFrames = e.value; }
         else if (e.key === "timeStop") this.world.stopFrames = Math.max(this.world.stopFrames, e.value);
         else if (e.key === "slam") { this.vel.y = -e.value; this.slamming = true; }
-        else if (e.key === "parry") this.combatant.startParry(e.value + (this === this.world.player && this.world.assist ? Tuning.assistFrames : 0));
+        else if (e.key === "parry") this.combatant.startParry(this.world.parryWindow(this, e.value));
         else if (e.key === "shield") { const p = this.world.player; if (p.alive) { p.tags.add("SHIELDED", e.value); this.world.emit({ type: "shield", fighter: this, target: p }); } }
         else if (e.key === "heal") this.world.heal(this, e.value);
         else if (e.key === "sacrifice") this.world.sacrifice(this, e.value);
@@ -326,7 +327,8 @@ export class World {
       manaRegenPerSecond: ROOK_STATS.manaRegenPerSecond + m.manaRegen, runSpeed: ROOK_STATS.runSpeed * (1 + m.speed) });
     this.fighters = [];
     this.events = [];
-    this.tokens = new AttackTokenPool(o.tokens ?? 2);
+    this.baseTokens = o.tokens ?? 2;
+    this.tokens = new AttackTokenPool(this.baseTokens);
     this.rng = seededRandom(o.seed ?? 1234);
     this.slowFrames = 0;
     this.stopFrames = 0; // ultimate time stop: everyone but the caster freezes
@@ -353,6 +355,7 @@ export class World {
       graph: buildRookGraph(() => this.player.context(), ROOK_ABILITIES, this.loadout, { ultimate: this.ultimate }), x: 0, z: -4,
     }));
     if (o.kit) this._wear(o.kit); // somebody else's body (Ep 49: a soldier, in a memory)
+    this.difficulty = o.difficulty ?? "knight"; // GDD §9.7 (data/difficulty.js)
     this.assist = !!o.assist;
     this.teamAttacks = new Set(o.teamAttacks ?? []); // companions with a Team Attack unlocked (bond rank 5)
     // Tag-swap party (GDD §10): Rook plus whoever can tag in. Only one is on the field; the other waits
@@ -552,9 +555,27 @@ export class World {
 
   /** Touch assist: wider parry and perfect-dodge windows. Never changes damage. */
   get assist() { return this._assist; }
-  set assist(on) {
-    this._assist = on;
-    this.player.combatant.perfectDodgeFrames = Rules.PerfectDodgeFrames + (on ? Tuning.assistFrames : 0);
+  set assist(on) { this._assist = on; this._windows(); }
+
+  /**
+   * Difficulty (GDD §9.7): Story, Knight or Paragon. Data only: the parry and perfect-dodge windows,
+   * what reaches the squad, how often the enemies swing and how many at once. Can change mid-fight.
+   */
+  get difficulty() { return this.diff.key; }
+  set difficulty(key) {
+    this.diff = difficultyOf(key);
+    this.tokens.capacity = Math.max(1, this.baseTokens + this.diff.tokens);
+    this._windows();
+  }
+  /** The player's perfect-dodge window: the difficulty's, plus the touch assist's frames. */
+  _windows() {
+    if (!this.player || !this.diff) return;
+    this.player.combatant.perfectDodgeFrames = this.diff.perfectDodge + (this._assist ? Tuning.assistFrames : 0);
+  }
+  /** A parry's window for whoever's starting it: the player's widens or tightens with the difficulty (and the assist). */
+  parryWindow(f, frames) {
+    if (f !== this.player) return frames;
+    return Math.max(2, frames + this.diff.parry + (this._assist ? Tuning.assistFrames : 0));
   }
 
   add(f) { this.fighters.push(f); return f; }
@@ -1204,6 +1225,7 @@ export class World {
       const p = this._enemyTarget(e);
       e.target = p;
       const d = p ? flatDistance(e.pos, p.pos) : Infinity;
+      e.brain.pace = this.diff; // (how often it swings: the difficulty's)
       const out = e.brain.think({
         frame, hasTarget: !!p, distance: d, isStaggered: e.combatant.isStaggered,
         isDead: !e.alive, abilityRunning: e.runner.isRunning,
@@ -1377,6 +1399,7 @@ export class World {
     if (att === this.player && (this.mods.attack || this.mods.posture)) spec = { ...spec, damage: spec.damage * (1 + this.mods.attack), posture: spec.posture * (1 + this.mods.posture) };
     if (att === this.player && this.wearing?.attackScale) spec = { ...spec, damage: spec.damage * this.wearing.attackScale, posture: spec.posture * this.wearing.attackScale }; // a body with less in it (0★)
     if (def === this.player && this.mods.defense) spec = { ...spec, damage: spec.damage * (1 - this.mods.defense) };
+    if (def.team === Team.Player && this.diff.damageTaken !== 1) spec = { ...spec, damage: spec.damage * this.diff.damageTaken }; // the difficulty
     if (def.tags.has("RUSTED")) spec = { ...spec, damage: spec.damage * GALEN_TUNING.rustFactor }; // Galen's rot eats your guard
     if (att.tags?.has("STAR_SURGE")) spec = { ...spec, damage: spec.damage * Tuning.surgeAttack, posture: spec.posture * Tuning.surgeAttack }; // a star, for a while
     if (def.tags.has("STAR_SURGE")) spec = { ...spec, damage: spec.damage * Tuning.surgeGuard };
