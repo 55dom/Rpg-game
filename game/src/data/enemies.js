@@ -166,6 +166,46 @@ export const ENEMIES = Object.freeze({
       new AttackOption(CANTOR_ABILITIES.Shove, 0, 1.8, 2, 60)],
     traits: { ranged: true },
   },
+  // Boss 6, the Cantor Twins (Ep 15): Mirror, who turns your spells back off a shield of glass, and Smoke, who sings
+  // the other one whole again. Their hymns ward each other: break the ward (Gale), then take one down while it's open.
+  twinMirror: {
+    stats: { name: "The Cantor Twins · Mirror", maxHealth: 760, maxPosture: 180, runSpeed: 3.8, circleSpeed: 2.2, turnRate: 0.16, radius: 0.48, height: 2.0 },
+    hitboxes: { Bolt: { center: [0, 0, 0], size: [0.8, 0.8, 0.8], range: 16, hit: hitSpec({ damage: 14, posture: 16, hitstop: 4, hitstun: 18, knockback: 2 }) },
+      Palm: { center: [0, 1, 1.0], size: [1.8, 1.8, 1.8] } },
+    abilities: CANTOR_ABILITIES, poses: { rest: [0.6, 0.3, 0], SoundBolt: { from: [-0.6, 0.2, 0], to: [0.1, 0, 0] }, Hymn: { from: [-1.6, 0, 0], to: [-1.4, 0, 0], lean: -0.2 },
+      Shove: { from: [0.3, 0.5, 0], to: [0.1, -0.2, 0], lean: 0.3 } },
+    options: () => [new AttackOption(CANTOR_ABILITIES.SoundBolt, 3, 13, 3, 60), new AttackOption(CANTOR_ABILITIES.Shove, 0, 2.0, 3, 50), new AttackOption(CANTOR_ABILITIES.Hymn, 0, 16, 1, 720)],
+    traits: { frontalGuard: true },
+  },
+  twinSmoke: {
+    stats: { name: "The Cantor Twins · Smoke", maxHealth: 680, maxPosture: 150, runSpeed: 4.6, circleSpeed: 3.0, turnRate: 0.18, radius: 0.46, height: 2.0 },
+    hitboxes: { Bolt: { center: [0, 0, 0], size: [0.7, 0.7, 0.7], range: 16, hit: hitSpec({ damage: 12, posture: 14, hitstop: 3, hitstun: 16, knockback: 1.5 }) },
+      Palm: { center: [0, 1, 1.0], size: [1.6, 1.6, 1.6] } },
+    abilities: CANTOR_ABILITIES, poses: { rest: [0.6, 0.3, 0], SoundBolt: { from: [-0.6, 0.2, 0], to: [0.1, 0, 0] }, Hymn: { from: [-1.6, 0, 0], to: [-1.4, 0, 0], lean: -0.2 },
+      Shove: { from: [0.3, 0.5, 0], to: [0.1, -0.2, 0], lean: 0.3 } },
+    options: () => [new AttackOption(CANTOR_ABILITIES.SoundBolt, 3.5, 14, 3, 50), new AttackOption(CANTOR_ABILITIES.Hymn, 0, 16, 2, 480), new AttackOption(CANTOR_ABILITIES.Shove, 0, 1.8, 2, 60)],
+    traits: { ranged: true },
+  },
+  // Boss 7, the Hollow Bloom (Ep 18): Hesper's ritual flower at the heart of the Hollowmarch. It creeps; it throws blank
+  // petals that cut; and it pulses, a ring of white that erases whatever's standing in it (the glint is your warning).
+  hollowBloom: {
+    stats: { name: "The Hollow Bloom", maxHealth: 2600, maxPosture: 999, runSpeed: 0.5, circleSpeed: 0.25, turnRate: 0.05, radius: 1.5, height: 4.0 },
+    hitboxes: { Petal: { center: [0, 0, 0], size: [0.9, 0.5, 0.9], range: 18, hit: hitSpec({ damage: 13, posture: 14, hitstop: 3, hitstun: 16, knockback: 2 }) },
+      Pulse: { center: [0, 1, 0], size: [8, 3, 8] }, Lash: { center: [0, 1, 2.2], size: [2.4, 2, 3.2] } },
+    abilities: {
+      Petals: defineAbility({ id: "Petals", startup: 20, active: 2, recovery: 30, tags: ["projectile"],
+        events: [{ frame: 16, type: E.PlaySound, key: "vacuum" }, { frame: 20, type: E.Projectile, key: "Petal", value: 11 }] }),
+      Pulse: defineAbility({ id: "Pulse", startup: 54, active: 4, recovery: 50, tags: ["heavy"],
+        hit: hitSpec({ damage: 22, posture: 30, hitstop: 6, hitstun: 26, knockback: 7, unblockable: true }),
+        events: [{ frame: 0, type: E.SpawnVfx, key: "glint" }, { frame: 48, type: E.PlaySound, key: "slam" }, { frame: 54, type: E.SpawnHitbox, key: "Pulse", value: 4 }, { frame: 54, type: E.CameraCue, key: "punch" }] }),
+      Lash: defineAbility({ id: "Lash", startup: 18, active: 4, recovery: 26,
+        hit: hitSpec({ damage: 14, posture: 18, hitstop: 4, hitstun: 18, knockback: 4 }),
+        events: [{ frame: 14, type: E.PlaySound, key: "swingHeavy" }, { frame: 18, type: E.SpawnHitbox, key: "Lash", value: 4 }] }),
+    },
+    poses: { rest: [0, 0, 0] },
+    options: () => { const A = ENEMIES.hollowBloom.abilities; return [new AttackOption(A.Petals, 3, 18, 3, 60), new AttackOption(A.Pulse, 0, 4.2, 2, 300), new AttackOption(A.Lash, 0, 3.2, 2, 70)]; },
+    traits: { heavy: true },
+  },
   bulwark: {
     stats: { name: "Choir Bulwark", maxHealth: 150, maxPosture: 120, runSpeed: 3.2, circleSpeed: 1.6, turnRate: 0.09, radius: 0.55, height: 2.0 },
     hitboxes: { Bash: { center: [0, 1, 1.0], size: [2.0, 1.8, 1.6] }, Spear: { center: [0, 1.1, 1.8], size: [0.9, 1.0, 3.2] } },

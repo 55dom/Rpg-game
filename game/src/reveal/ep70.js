@@ -72,7 +72,7 @@ Four: I have thought about it. What a name is for. I would like to be called Tal
 LineSergeant: Then I will be the one who found the part after the cut. That is too long. I will think about it.
 <<if $CAL_FATE == "lantern">>
 <<shot wide>>
-And it spreads: down the table, out of the camp, along every Line on the continent, one soldier at a time, a name each, until nobody is a place in a line any more unless they want to be.
+And it spreads, down the table, out of the camp, along every Line on the continent, one soldier at a time, a name each, until nobody is a place in a line any more unless they want to be.
 <<elseif $CAL_FATE == "stay">>
 <<shot wide>>
 And it spreads through the camp, tent by tent. Further than that, it's slow. But it's started.

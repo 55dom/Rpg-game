@@ -79,6 +79,8 @@ export const CAST = Object.freeze({
   Townsman: { name: "Townsman", color: "#c9c4b4", actor: "townsman" },
   Townswoman: { name: "Townswoman", color: "#d8c4b4", actor: "townswoman" },
   // Arc 6: the Crimson Bell (data/bell.js), the Crown's inquisition.
+  Mirror: { name: "Cantor Mirror", color: "#d8e4ff", actor: "twinMirror" }, // Boss 6, the Cantor Twins (Ep 15)
+  Smoke: { name: "Cantor Smoke", color: "#a8a2b4", actor: "twinSmoke" },
   Ulric: { name: "Captain Graves", color: "#ff8a8a", actor: "ulric" },
   BellWarden: { name: "Bell Warden", color: "#e8a0a0", actor: "bellWarden" },
   // Ep 41: Lio's old teacher from the silent school.

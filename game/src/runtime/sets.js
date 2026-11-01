@@ -1,7 +1,7 @@
 // Story sets (Phase 3): each one is built on first use from primitives, carries its own sky, fog,
 // and lighting, and can be swapped in and out. "yard" is the original training yard (arena.js).
 
-import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT, BELLTOWER_LAYOUT, ISLES_LAYOUT, OLDCITY_LAYOUT, HOLLOW_LAYOUT, ARCHIVE_LAYOUT, AURELIN_GATE, BRIDGE_LAYOUT, RUINS_LAYOUT } from "../data/zones.js";
+import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT, BELLTOWER_LAYOUT, ISLES_LAYOUT, OLDCITY_LAYOUT, HOLLOW_LAYOUT, ARCHIVE_LAYOUT, AURELIN_GATE, BRIDGE_LAYOUT, RUINS_LAYOUT, HOLLOWMARCH_LAYOUT } from "../data/zones.js";
 import { WARDEN_STARS } from "../data/isles.js";
 import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } from "./look.js";
 import { buildCrowd } from "./crowd.js";
@@ -55,7 +55,7 @@ export class Sets {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, archive: buildArchive, bridge: buildBridge, camp: buildCamp, throne: buildThrone, caverns: buildCaverns, astral: buildAstral, watchhouse: buildWatchhouse, belltower: buildBelltower, ruins: buildRuins, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, hollow: buildHollow, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
+      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, archive: buildArchive, bridge: buildBridge, camp: buildCamp, throne: buildThrone, caverns: buildCaverns, astral: buildAstral, watchhouse: buildWatchhouse, belltower: buildBelltower, ruins: buildRuins, hollowmarch: buildHollowmarch, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, hollow: buildHollow, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
       if (!make) throw new Error(`no set "${name}"`);
       s = make(this.scene, this.mobile);
       s.show(false);
@@ -386,6 +386,42 @@ function buildLarkspur(scene, mobile) {
     env, toon: toonEnv, show: K.show,
     update(dt, t) { for (const f of fires) f.light.intensity = 0.8 + Math.sin(t * 13 + f.phase) * 0.15 + Math.sin(t * 7.3 + f.phase) * 0.1; },
   };
+}
+
+// ---- The Hollowmarch: grey ground, mist, bare white trees, and the standing stones round the Gate ----
+function buildHollowmarch(scene, mobile) {
+  const BB = B(), MB = BB.MeshBuilder, K = kit(scene), add = K.add, H = HOLLOWMARCH_LAYOUT;
+  const ground = add(MB.CreateCylinder("hm-ground", { diameter: H.radius * 2 + 30, height: 0.6, tessellation: 48 }, scene)); ground.position.y = -0.3; ground.material = toon(scene, "hm-ground", "#9a98a0");
+  const pale = toon(scene, "hm-pale", "#d8d6dc"), stoneM = toon(scene, "hm-stone", "#6a6872"), runeM = glow(scene, "hm-rune", "#e8e4ff");
+  const rng = mulberry(17);
+  for (const [x, z] of H.trees) { // bare trees: a trunk and three or four crooked limbs, no bark, no leaves
+    const t = add(MB.CreateCylinder("hm-trunk", { diameterTop: 0.12, diameterBottom: 0.36, height: 4.2, tessellation: 7 }, scene), 0.03); t.position.set(x, 2.1, z); t.rotation.z = (rng() - 0.5) * 0.2; t.material = pale;
+    for (let k = 0; k < 3 + (rng() < 0.5 ? 1 : 0); k++) {
+      const b = add(MB.CreateCylinder("hm-limb", { diameterTop: 0.03, diameterBottom: 0.12, height: 1.6, tessellation: 5 }, scene), 0.02);
+      const a = rng() * Math.PI * 2; b.position.set(x + Math.sin(a) * 0.4, 2.6 + rng() * 1.2, z + Math.cos(a) * 0.4); b.rotation.set(Math.cos(a) * 0.9, 0, -Math.sin(a) * 0.9); b.material = pale;
+    }
+  }
+  H.stones.forEach(([x, z], i) => { // the ring round the Gate, each with a pale rune that's been worn almost away
+    const hgt = 2.6 + rng() * 1.6, st = add(MB.CreateBox("hm-stone", { width: 1.0, height: hgt, depth: 0.6 }, scene), 0.04);
+    st.position.set(x, hgt / 2, z); st.rotation.y = Math.atan2(x - H.gate.x, z - H.gate.z); st.material = stoneM;
+    if (i % 2 === 0) { const r = add(MB.CreatePlane("hm-rune", { width: 0.4, height: 0.5 }, scene)); r.position.set(x - Math.sin(st.rotation.y) * 0.31, hgt * 0.6, z - Math.cos(st.rotation.y) * 0.31); r.rotation.y = st.rotation.y + Math.PI; r.material = runeM; }
+  });
+  const gateGlow = add(MB.CreateDisc("hm-gate", { radius: 2.4, tessellation: 40 }, scene)); gateGlow.position.set(H.gate.x, 0.03, H.gate.z); gateGlow.rotation.x = Math.PI / 2; gateGlow.material = glow(scene, "hm-gateM", "#f4f2ff"); K.noGlow(gateGlow);
+  for (let i = 0; i < (mobile ? 18 : 40); i++) { // rocks and pale grass tufts
+    const a = rng() * Math.PI * 2, r = 4 + rng() * (H.radius - 4), x = Math.sin(a) * r, z = Math.cos(a) * r;
+    if (Math.hypot(x - H.gate.x, z - H.gate.z) < 8.5) continue;
+    const rk = add(MB.CreateSphere("hm-rock", { diameter: 0.4 + rng() * 0.7, segments: 5 }, scene), 0.02); rk.position.set(x, 0.1, z); rk.scaling.y = 0.55; rk.material = stoneM;
+  }
+  const mist = new BB.ParticleSystem("hm-mist", mobile ? 40 : 90, scene);
+  mist.particleTexture = softTexture(scene); mist.emitter = new BB.Vector3(0, 0.6, 0);
+  mist.minEmitBox = new BB.Vector3(-H.radius, 0, -H.radius); mist.maxEmitBox = new BB.Vector3(H.radius, 1.2, H.radius);
+  mist.color1 = new BB.Color4(0.9, 0.9, 0.95, 0.22); mist.color2 = new BB.Color4(0.8, 0.8, 0.88, 0.16); mist.colorDead = new BB.Color4(1, 1, 1, 0);
+  mist.minSize = 3; mist.maxSize = 7; mist.minLifeTime = 6; mist.maxLifeTime = 11; mist.emitRate = mobile ? 6 : 12;
+  mist.gravity = new BB.Vector3(0.05, 0, 0); mist.direction1 = new BB.Vector3(-0.1, 0, -0.1); mist.direction2 = new BB.Vector3(0.1, 0.05, 0.1);
+  mist.blendMode = BB.ParticleSystem.BLENDMODE_STANDARD; K.systems.push(mist);
+  const env = { clear: "#b8b8c0", fog: "#c8c8d0", fogDensity: 0.03, hemi: [0.7, "#e8e8f0", "#6a6872"], sun: [0.45, "#f0eef8", [-0.2, -1, 0.3]], warm: 0 };
+  const toonEnv = { lightDir: [0.2, 1, -0.3], fogColor: "#c8c8d0", fogDensity: 0.024, sky: [1.0, 1.0, 1.04], ground: [0.8, 0.8, 0.84] };
+  return { env, toon: toonEnv, show: K.show, conditions: K.conditions, outdoor: true, update(dt, t) { gateGlow.material.alpha = 0.7 + Math.sin(t * 1.3) * 0.2; } };
 }
 
 // ---- Larkspur, fifteen years after: grass over the ash, chimney stacks, and one door ------------

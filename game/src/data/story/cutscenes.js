@@ -453,6 +453,54 @@ export const CUTSCENES = {
       { t: 5.4, caption: "One door is still standing." },
     ],
   },
+  // Ep 8: the Tower of Choosing, the night before. The Choir singing at the old tomb under the dais, and an Iron Warden
+  // captain, two hundred years in the floor, standing up.
+  ep8_rise: {
+    id: "ep8_rise",
+    stage: "towerHall",
+    sky: { daylight: 0.08 },
+    duration: 9,
+    actors: [
+      { id: "a1", look: "acolyte", x: -3.0, z: 2.6, yaw: 0.6 }, { id: "a2", look: "acolyte", x: 3.0, z: 2.6, yaw: -0.6 },
+      { id: "galen", look: "galen", x: 0, z: 5.0, yaw: Math.PI, hidden: true },
+    ],
+    camera: [
+      { t: 0, pos: [0, 1.5, -2], look: [0, 1.3, 4], fov: 0.72 },
+      { t: 4.4, pos: [0, 1.5, -1.8], look: [0, 1.3, 4], fov: 0.69, ease: "linear" },
+      { t: 4.4, cut: true, pos: [1.9, 1.5, 1.71], look: [0, 1.6, 5], fov: 0.72 },
+      { t: 9, pos: [1.84, 1.5, 1.81], look: [0, 1.6, 5], fov: 0.69, ease: "linear" },
+    ],
+    events: [
+      { t: 0.4, caption: "The Tower of Choosing. Last night." }, { t: 0.6, sfx: "hymn" },
+      { t: 3.6, sfx: "slam" }, { t: 3.7, flash: 0.06 }, { t: 3.8, show: "galen" },
+      { t: 5.2, caption: "Rust remembers." },
+    ],
+  },
+  // Ep 18: he opens a Threshold in front of the Bloom, pushes it through, and steps through after it; the door slams
+  // shut in white light, and there's nothing left.
+  ep18_door: {
+    id: "ep18_door",
+    stage: "hollowmarch",
+    duration: 8.5,
+    actors: [
+      { id: "rook", look: "player", x: 0, z: 5.0, yaw: 0 },
+      { id: "cal", look: "cal", x: 0.4, z: 7.2, yaw: 0 },
+    ],
+    camera: [
+      { t: 0, pos: [-8, 2.2, 4], look: [0, 1.6, 9], fov: 0.75 },                   // from the side: him, the door, the white
+      { t: 4.2, pos: [-7.68, 2.2, 4], look: [0, 1.6, 9], fov: 0.73, ease: "linear" },
+      { t: 4.2, cut: true, pos: [0, 1.5, 8.4], look: [0, 1.6, 5.0], fov: 0.64 },     // Rook, watching
+      { t: 8.5, pos: [0, 1.5, 8.2], look: [0, 1.6, 5.0], fov: 0.6, ease: "linear" },
+    ],
+    events: [
+      { t: 0.3, tear: { at: [0, 2.8, 14.0], kind: "pale", r: 2.4, life: 3.4 } },
+      { t: 0.8, sfx: "door" }, { t: 0.9, tear: { at: [0.2, 1.5, 12.0], kind: "gold", r: 1.1, life: 3.0 } },
+      { t: 1.2, move: { id: "cal", to: [0.2, 11.4], dur: 1.6 } },
+      { t: 3.0, hide: "cal" },
+      { t: 3.6, flash: 0.5 }, { t: 3.6, sfx: "slam" },
+      { t: 7.6, fade: "out", dur: 0.9 },
+    ],
+  },
 };
 
 Object.assign(CUTSCENES, REVEAL_CUTSCENES); // the reveal's own (src/reveal/cutscenes.js)

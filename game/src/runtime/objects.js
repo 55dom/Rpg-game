@@ -52,6 +52,17 @@ export class ObjectView {
         this.glowPart = part(MB.CreateTorus("ring", { diameter: 1.9, thickness: 0.05, tessellation: 20 }, scene), "#8ae0d0", 0, 1.0, 0, 0, true);
         break;
       }
+      case "bloom": { // Boss 7, the Hollow Bloom (Ep 18): a pale flower the height of a house, petals of blank paper, a white core
+        part(MB.CreateCylinder("stem", { height: 2.6, diameterTop: 0.5, diameterBottom: 1.1, tessellation: 10 }, scene), "#cfcad8", 0, 1.3, 0, 0.03);
+        part(MB.CreateSphere("roots", { diameter: 2.8, segments: 10 }, scene), "#a8a2b4", 0, 0.05, 0, 0.03).scaling.set(1, 0.25, 1);
+        this.head = new BB.TransformNode(`${id}-head`, scene); this.head.parent = this.root; this.head.position.y = 2.9;
+        for (let i = 0; i < 7; i++) {
+          const a = (i / 7) * Math.PI * 2, petal = part(MB.CreateSphere("petal", { diameter: 1.0, segments: 8 }, scene), "#f4f2ff", Math.sin(a) * 0.95, 0.15, Math.cos(a) * 0.95, 0.02);
+          petal.parent = this.head; petal.scaling.set(0.55, 0.16, 1.5); petal.rotation.set(0.35, a, 0);
+        }
+        this.glowPart = part(MB.CreateSphere("core", { diameter: 0.9, segments: 12 }, scene), "#ffffff", 0, 0.25, 0, 0, true); this.glowPart.parent = this.head;
+        break;
+      }
       case "wisp": { // a storm wisp (Arc 4): a ball of weather on a string of lightning, hanging at head height
         part(MB.CreateSphere("cloud", { diameter: 0.9, segments: 10 }, scene), "#c8d4e0", 0, 1.45, 0, 0.02).scaling.set(1.1, 0.8, 1.1);
         this.glowPart = part(MB.CreateSphere("core", { diameter: 0.42, segments: 8 }, scene), "#bfe8ff", 0, 1.38, 0, 0, true);

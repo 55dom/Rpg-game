@@ -30,6 +30,20 @@ import { EPISODE_1, EP1_SCRIPT } from "./data/story/ep1.js";
 import { EPISODE_2, EP2_SCRIPT } from "./data/story/ep2.js";
 import { EPISODE_3, EP3_SCRIPT } from "./data/story/ep3.js";
 import { EPISODE_4_STORY, EP4_SCRIPT } from "./data/story/ep4.js";
+import { EPISODE_5, EP5_SCRIPT } from "./data/story/ep5.js";
+import { EPISODE_6, EP6_SCRIPT } from "./data/story/ep6.js";
+import { EPISODE_7, EP7_SCRIPT } from "./data/story/ep7.js";
+import { EPISODE_8, EP8_SCRIPT } from "./data/story/ep8.js";
+import { EPISODE_9, EP9_SCRIPT } from "./data/story/ep9.js";
+import { EPISODE_10, EP10_SCRIPT } from "./data/story/ep10.js";
+import { EPISODE_11, EP11_SCRIPT } from "./data/story/ep11.js";
+import { EPISODE_12, EP12_SCRIPT } from "./data/story/ep12.js";
+import { EPISODE_13, EP13_SCRIPT } from "./data/story/ep13.js";
+import { EPISODE_14, EP14_SCRIPT } from "./data/story/ep14.js";
+import { EPISODE_15, EP15_SCRIPT } from "./data/story/ep15.js";
+import { EPISODE_16, EP16_SCRIPT } from "./data/story/ep16.js";
+import { EPISODE_17, EP17_SCRIPT } from "./data/story/ep17.js";
+import { EPISODE_18, EP18_SCRIPT } from "./data/story/ep18.js";
 import { EPISODE_19, EP19_SCRIPT } from "./data/story/ep19.js";
 import { EPISODE_20, EP20_SCRIPT } from "./data/story/ep20.js";
 import { EPISODE_21, EP21_SCRIPT } from "./data/story/ep21.js";
@@ -905,7 +919,12 @@ export function boot(doc = document) {
     onEvents: (evs) => onEvents(evs),
     openSurvey: (id) => openSurvey(id),
     onTheatre: (th) => showTheatre(th),
-  }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }, { episode: EPISODE_3, script: EP3_SCRIPT }, { episode: EPISODE_4_STORY, script: EP4_SCRIPT }, { episode: EPISODE_19, script: EP19_SCRIPT }, { episode: EPISODE_20, script: EP20_SCRIPT },
+  }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }, { episode: EPISODE_3, script: EP3_SCRIPT }, { episode: EPISODE_4_STORY, script: EP4_SCRIPT },
+    { episode: EPISODE_5, script: EP5_SCRIPT }, { episode: EPISODE_6, script: EP6_SCRIPT }, { episode: EPISODE_7, script: EP7_SCRIPT }, { episode: EPISODE_8, script: EP8_SCRIPT },
+    { episode: EPISODE_9, script: EP9_SCRIPT }, { episode: EPISODE_10, script: EP10_SCRIPT }, { episode: EPISODE_11, script: EP11_SCRIPT }, { episode: EPISODE_12, script: EP12_SCRIPT },
+    { episode: EPISODE_13, script: EP13_SCRIPT }, { episode: EPISODE_14, script: EP14_SCRIPT }, { episode: EPISODE_15, script: EP15_SCRIPT }, { episode: EPISODE_16, script: EP16_SCRIPT },
+    { episode: EPISODE_17, script: EP17_SCRIPT }, { episode: EPISODE_18, script: EP18_SCRIPT },
+    { episode: EPISODE_19, script: EP19_SCRIPT }, { episode: EPISODE_20, script: EP20_SCRIPT },
     { episode: EPISODE_21, script: EP21_SCRIPT }, { episode: EPISODE_22, script: EP22_SCRIPT },
     { episode: EPISODE_23, script: EP23_SCRIPT }, { episode: EPISODE_24, script: EP24_SCRIPT },
     { episode: EPISODE_25, script: EP25_SCRIPT }, { episode: EPISODE_26, script: EP26_SCRIPT },

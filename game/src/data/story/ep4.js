@@ -180,7 +180,7 @@ export const EPISODE_4_STORY = {
         { id: "juno", look: "juno", x: -1.6, z: 1.4, yaw: 2.4 },
         { id: "bas", look: "bas", x: 1.8, z: 1.6, yaw: -2.4 },
       ] },
-    { id: "preview", type: "preview", next: "Episode 5 · Thread and Needle",
+    { id: "preview", type: "preview", next: "Episode 5 · Thread and Needle", nextEpisode: "ep5",
       lines: [
         "Next time on UNWRITTEN:",
         "Juno thinks you're a liability. A mission where thread decides everything.",

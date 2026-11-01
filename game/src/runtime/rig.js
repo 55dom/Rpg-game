@@ -255,6 +255,7 @@ LOOKS.halvardFace = { poses: ACOLYTE_POSES, scale: 1.14, skirt: 1.0, coat: "#1a2
 LOOKS.rider = { poses: LANCE_POSES, scale: 1.0, skirt: 1.1, coat: "#3a5a7a", trim: "#e8f4ff", hairColor: "#e8e4f0", skin: "#d8c0a8",
   head: "hood", weapon: "sword", sash: true, trail: "#9ad8ff" };
 LOOKS.wisp = { form: "object", shape: "wisp", trail: "#bfe8ff" };
+LOOKS.hollowBloom = { form: "object", shape: "bloom", trail: "#f4f2ff" }; // Boss 7 (Ep 18)
 LOOKS.rod = { form: "object", shape: "rod", trail: "#bfe8ff" };
 LOOKS.warden = { poses: WARDEN_POSES, scale: 1.95, skirt: 0.9, coat: "#8a8a94", trim: "#5aa8e8", hairColor: "#6a6a74", skin: "#7a7a84",
   head: "helm", helm: "#9a9aa4", menace: true, weapon: "claw", talon: "#5a5a64", shoulders: 1.5, stoop: 0.08, eyes: "#9ad8ff", trail: "#9ad8ff" };
@@ -277,6 +278,9 @@ LOOKS.archivist = { poses: ACOLYTE_POSES, scale: 0.95, skirt: 1.25, coat: "#5e5e
 LOOKS.elodie = { poses: ACOLYTE_POSES, scale: 0.9, skirt: 1.35, coat: "#f2ead2", trim: "#d4ad4f", hairColor: "#ecd890", skin: "#f3dcc8",
   head: "face", hair: "long", headband: "#d4ad4f", weapon: "none", eyeColor: "#3a6ab0", trail: "#fff1b8" };
 // High Chancellor Aldric Valcourt: the family's gold and blue, heavy and old-fashioned; iron rings.
+// The Cantor Twins (Ep 15): the same cantor's robes, one in glass-white and silver, one in smoke-grey.
+LOOKS.twinMirror = { ...LOOKS.cantor, coat: "#f4f6fa", trim: "#9aa8c8", helm: "#c8d4e8", scale: 1.12, trail: "#d8e4ff" };
+LOOKS.twinSmoke = { ...LOOKS.cantor, coat: "#5a5660", trim: "#2a2630", helm: "#4a4650", scale: 1.1, trail: "#8a8494" };
 LOOKS.aldric = { poses: ACOLYTE_POSES, scale: 1.08, skirt: 1.2, coat: "#22305a", trim: "#d4ad4f", hairColor: "#c8c4b8", beard: "#c8c4b8", skin: "#ecd2bc",
   head: "face", hair: "swept", weapon: "none", sash: true, cape: "#1a2244", shoulders: 1.1, stern: true, eyeColor: "#2a3a60", trail: "#d4ad4f" };
 // Hesper Voss, the Pale Choir's mother superior: white-violet vestments, a singing halo, and a smile.
@@ -296,6 +300,9 @@ Object.assign(LOOKS, revealLooks(LOOKS)); // the reveal's own looks (src/reveal/
 Object.assign(LOOKS, backlashLooks(LOOKS)); // and Backlash's (src/reveal/backlash.js)
 Object.assign(LOOKS, finaleLooks(LOOKS)); // and Ep 50's (src/reveal/finale.js)
 Object.assign(LOOKS, arc7Looks(LOOKS)); // and Arc 7's (src/reveal/arc7.js)
+// The armoured husks in the Hollowmarch (Ep 17): old plate the colour of dried blood, a slit faceplate, empty; whoever
+// wore it fell through from somewhere a long time ago. Nobody in Liraen has seen armour like it.
+LOOKS.husk = { ...LOOKS.lineSoldier, coat: "#2a0c0c", trim: "#0e0606", edgeColor: "#6a2a1a", trail: "#6a2a1a" };
 
 export class Rig {
   /** @param {*} scene @param {string} kind a LOOKS key @param {string} id */

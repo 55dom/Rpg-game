@@ -207,6 +207,15 @@ export const RUINS_LAYOUT = {
   stone: { x: -2.4, z: -1.6 },
 };
 
+// The Hollowmarch (Eps 17–18): the forbidden land past the northern border. Grey ground that's almost white, mist, trees
+// with no bark and no leaves, and at its heart a ring of standing stones round the Hollowmarch Gate.
+export const HOLLOWMARCH_LAYOUT = {
+  radius: 28,
+  gate: { x: 0, z: 14, r: 7 },
+  stones: Array.from({ length: 10 }, (_, i) => { const a = (i / 10) * Math.PI * 2 + 0.31; return [Math.sin(a) * 7, 14 + Math.cos(a) * 7]; }),
+  trees: [[-12, -10], [10, -14], [-16, 4], [15, 2], [-9, -20], [13, -24], [-18, 18], [19, 20], [-6, -4], [7, -6]],
+};
+
 export const THORNWICK_LAYOUT = {
   oak: { x: 0, z: 0, r: 1.6 },
   orphanage: { x0: -8, z0: 16, x1: 8, z1: 25 },
@@ -225,7 +234,7 @@ export const THORNWICK_LAYOUT = {
 export const UNDERCROFT_BANDS = [[-34, -22, 6], [-22, -14, 2], [-14, 2, 10], [2, 10, 2], [10, 26, 12], [26, 32, 2], [32, 46, 14]];
 const UC_HALF = 14;
 
-const RU = RUINS_LAYOUT, A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT, IH = IRONHOLD_LAYOUT, WH = WATCH_LAYOUT, FH = FENHOME_LAYOUT, BT = BELLTOWER_LAYOUT, SI = ISLES_LAYOUT, AR = ARCHIVE_LAYOUT, BR = BRIDGE_LAYOUT;
+const HM_ = HOLLOWMARCH_LAYOUT, RU = RUINS_LAYOUT, A = AURELIN_LAYOUT, CF = CAFE_LAYOUT, HM = HOME_LAYOUT, HL = HALL_LAYOUT, IH = IRONHOLD_LAYOUT, WH = WATCH_LAYOUT, FH = FENHOME_LAYOUT, BT = BELLTOWER_LAYOUT, SI = ISLES_LAYOUT, AR = ARCHIVE_LAYOUT, BR = BRIDGE_LAYOUT;
 const rect = (r) => box(r.x0, r.z0, r.x1, r.z1);
 // The City Watch's patrols (data/law.js): one more walks the streets for every step $WATCH_STRENGTH takes.
 const patrol = (n, a, b) => ({ id: `patrol${n}`, name: "City Watch", look: "guard", x: a[0], z: a[1], yaw: 0, node: "W_Patrol", when: `$WATCH_STRENGTH >= ${n}`,
@@ -686,6 +695,13 @@ export const ZONES = {
     arrivals: { aurelin: { x: 0, z: -7, yaw: 0 } },
   },
   // Luke and Elsie's house (data/story/law.js), once the Fens village is safe.
+  // The Hollowmarch (Eps 17–18): story only, past the end of every road.
+  hollowmarch: {
+    id: "hollowmarch", name: "The Hollowmarch", region: "Past the northern border", stage: "hollowmarch",
+    bounds: { radius: HM_.radius - 2, solids: [...HM_.stones.map(([x, z]) => circle(x, z, 0.6)), ...HM_.trees.map(([x, z]) => circle(x, z, 0.35))] },
+    spawn: { x: 0, z: -20, yaw: 0 },
+    cast: [], pickups: [], encounters: [], exits: [], arrivals: {},
+  },
   // Larkspur, the night it burned (Cal's Path, Ch 6): story only. The houses are the fire's (runtime/sets.js buildLarkspur).
   larkspurFire: {
     id: "larkspurFire", name: "Larkspur", region: "Fifteen years ago", stage: "larkspur",
