@@ -145,12 +145,13 @@ export class FollowCamera {
       this.focus.z - Math.cos(this.yaw) * dist * cp,
     );
     // Never inside a building, tower or wall: walk out from the focus toward the camera and stop short of the
-    // first solid (the lighthouse tower, houses…). Small props (barrels, carts) are ignored: the camera is above them.
+    // first solid (the lighthouse tower, houses…). Small props (barrels, carts) are ignored: the camera is above them;
+    // a thin solid that goes all the way up (`tall`: the throne chamber's pillars) is not.
     const b = this.bounds;
     if (b?.solids?.length) {
       const fx0 = this.focus.x, fz0 = this.focus.z, dx = pos.x - fx0, dz = pos.z - fz0, len = Math.hypot(dx, dz);
       const inSolid = (x, z) => b.solids.some((sd) => {
-        if (sd.circle) { const [cx, cz, r] = sd.circle; return r >= 1.4 && Math.hypot(x - cx, z - cz) < r + 0.45; }
+        if (sd.circle) { const [cx, cz, r] = sd.circle; return (r >= 1.4 || sd.tall) && Math.hypot(x - cx, z - cz) < r + 0.45; }
         const [x0, z0, x1, z1] = sd.box; return (x1 - x0) * (z1 - z0) > 3 && x > x0 - 0.45 && x < x1 + 0.45 && z > z0 - 0.45 && z < z1 + 0.45;
       });
       if (len > 0.01 && !inSolid(fx0, fz0)) {

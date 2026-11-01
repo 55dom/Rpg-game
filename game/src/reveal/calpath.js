@@ -329,7 +329,7 @@ export const EPISODE_CALPATH = {
         { id: "unkB", look: "unkBTrue", x: 2.4, z: T.places[1][1] + 0.8, yaw: Math.PI },
       ],
       set: { CALPATH_DONE: 1 } },
-    { id: "preview", type: "preview",
+    { id: "preview", type: "preview", nextEpisode: "ep51",
       lines: [
         "Cal's Path ends here.",
         "He is the offering, and he doesn't know it.",

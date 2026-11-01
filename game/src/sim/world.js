@@ -68,6 +68,8 @@ export const Tuning = Object.freeze({
   weightedSpeed: 0.55, weightedJump: 0.7, // WEIGHTED (mud): slower, lower jumps
   // A collapsed floor (Galen, B4 P3): a run carries you over a crack, a gap needs a jump or a dodge; the dark takes a bite.
   islandGrace: 9, islandStep: 0.8, islandFall: 0.08,
+  // Maelis's Sacrifice (Arc 7): the one it's prayed for surges for a while, and is mended a little.
+  surgeAttack: 1.5, surgeGuard: 0.6, surgeMend: 0.25,
 });
 
 const BOSSES = {
@@ -263,6 +265,7 @@ export class Fighter {
         else if (e.key === "parry") this.combatant.startParry(e.value + (this === this.world.player && this.world.assist ? Tuning.assistFrames : 0));
         else if (e.key === "shield") { const p = this.world.player; if (p.alive) { p.tags.add("SHIELDED", e.value); this.world.emit({ type: "shield", fighter: this, target: p }); } }
         else if (e.key === "heal") this.world.heal(this, e.value);
+        else if (e.key === "sacrifice") this.world.sacrifice(this, e.value);
         else if (e.key === "ward") this.world.ward(this, e.value);
         else if (e.key.startsWith("windwall")) this.world.windWall(this, a, e.value, e.key === "windwallMirror" ? "mirror" : e.key === "windwallDown" ? "down" : "block");
         break;
@@ -374,6 +377,7 @@ export class World {
     if (hurt) { f.injured = true; f.look = hurt.look; }
     f.assistAbility = c.assist;
     f.guest = !!c.guest; // beside the squad, not one of it: not on the party panel, never called for an Assist
+    f.sacrifice = c.sacrifice ?? null; f.sacrificed = false; // Maelis: once a battle (reveal/allies.js)
     this.companions.push(f);
     this.emit({ type: "spawn", fighter: f });
     return this.add(f);
@@ -382,6 +386,38 @@ export class World {
   get stance() { return this.companions[0]?.brain.stance ?? STANCES[0]; }
   setStance(stance) { for (const c of this.companions) c.brain.stance = stance; this.emit({ type: "stance", stance }); }
   cycleStance() { this.setStance(STANCES[(STANCES.indexOf(this.stance) + 1) % STANCES.length]); return this.stance; }
+
+  /** The one on this side hurt worst (Rook first on ties), within `range` of `from`, never `from` itself. */
+  _worstHurt(from, range = 10) {
+    let best = null, bestRatio = 2;
+    for (const f of this.fighters) {
+      if (f === from || f.team !== from.team || !f.alive || f.traits.object || flatDistance(f.pos, from.pos) > range) continue;
+      const r = f.combatant.health.normalized - (f === this.player ? 0.001 : 0);
+      if (r < bestRatio) { bestRatio = r; best = f; }
+    }
+    return best;
+  }
+
+  /** Maelis's Sacrifice: once a battle, when one of hers drops low, she starts it, and nothing stops it. */
+  _sacrifices() {
+    for (const m of this.companions) {
+      if (!m.sacrifice || m.sacrificed || !m.alive) continue;
+      const t = this._worstHurt(m, 40);
+      if (!t || t.combatant.health.normalized >= m.sacrifice.below) continue;
+      m.sacrificed = true; m.runner.interrupt();
+      m.controller.startDirect(m.sacrifice.ability, this.frame);
+      this.emit({ type: "sacrificeBegin", fighter: m, target: t });
+    }
+  }
+
+  /** It's done: whoever's hurt worst surges for `frames`; she falls, and stays down until the fight's over. */
+  sacrifice(m, frames) {
+    const t = this._worstHurt(m, 40);
+    if (t) { t.tags.add("STAR_SURGE", frames); t.combatant.health.add(t.combatant.health.max * Tuning.surgeMend); }
+    m.noRevive = true; m.runner.interrupt(); m.combatant.health.set(0);
+    this.emit({ type: "sacrifice", fighter: m, target: t, frames, at: { x: m.pos.x, y: 1.2, z: m.pos.z } });
+    this.emit({ type: "allyDown", fighter: m });
+  }
 
   /** Heal the most hurt ally near the healer (Rook first on ties). */
   heal(healer, amount) {
@@ -837,6 +873,7 @@ export class World {
     if (this.islands) { this.islands = null; this.emit({ type: "floorRestore" }); } // a retry starts on a whole floor
     for (const c of this.companions) {
       c.combatant.reset(); c.runner.interrupt(); c.tags.clear(); c.deadFrames = 0; c.hitstop = 0;
+      c.sacrificed = false; c.noRevive = false; // a retry: she can offer again
       c.pos = v3(p.pos.x + c.slot[0], 0, p.pos.z + c.slot[1]); c.prev = { ...c.pos }; c.vel = v3(); c.knock = v3(); c.grounded = true;
       c.assistReadyFrame = 0; c.yaw = 0;
     }
@@ -1084,7 +1121,8 @@ export class World {
         if (f.mana) f.mana.add(f.stats.manaRegenPerSecond * SECONDS_PER_TICK);
       }
       f.controller.tick(frame);
-      c.superArmor = (f.traits.armoredAttacks && f.runner.isRunning) || f.tags.has("WARDED") || !!f.boss?.oath || !!f.boss?.armored; // Galen's Oath: nothing staggers him; a controller's own moments (the Sever Line)
+      c.superArmor = (f.traits.armoredAttacks && f.runner.isRunning) || f.tags.has("WARDED") || !!f.boss?.oath || !!f.boss?.armored // Galen's Oath: nothing staggers him; a controller's own moments (the Sever Line)
+        || (!!f.sacrifice && f.runner.isRunning && f.current?.id === "Sacrifice"); // Maelis's other prayer: nothing stops it
       if (f === this.player) {
         c.blocking = f.holdBlock && !f.runner.isRunning && f.grounded && c.canAct;
       }
@@ -1186,6 +1224,8 @@ export class World {
     if (att === this.player && this.wearing?.attackScale) spec = { ...spec, damage: spec.damage * this.wearing.attackScale, posture: spec.posture * this.wearing.attackScale }; // a body with less in it (0★)
     if (def === this.player && this.mods.defense) spec = { ...spec, damage: spec.damage * (1 - this.mods.defense) };
     if (def.tags.has("RUSTED")) spec = { ...spec, damage: spec.damage * GALEN_TUNING.rustFactor }; // Galen's rot eats your guard
+    if (att.tags?.has("STAR_SURGE")) spec = { ...spec, damage: spec.damage * Tuning.surgeAttack, posture: spec.posture * Tuning.surgeAttack }; // a star, for a while
+    if (def.tags.has("STAR_SURGE")) spec = { ...spec, damage: spec.damage * Tuning.surgeGuard };
     if (def.boss && ((def.boss.damageFactor ?? 1) !== 1 || (def.boss.postureFactor ?? 1) !== 1)) spec = { ...spec, damage: spec.damage * (def.boss.damageFactor ?? 1), posture: spec.posture * (def.boss.postureFactor ?? 1) }; // shields and oaths
     if (def.tags.has("EXPOSED")) { // Hask's soft underside, once the bog drains
       spec = { ...spec, damage: spec.damage * HASK_TUNING.exposedFactor, posture: spec.posture * HASK_TUNING.exposedFactor };
@@ -1433,12 +1473,13 @@ export class World {
         this.emit({ type: "reform", fighter: f, at: { x: f.pos.x, y: 0, z: f.pos.z } });
       }
       // Downed companions get back up (no permanent losses mid-fight).
-      if (f.companion && !f.alive && f.deadFrames >= f.stats.reviveFrames) {
+      if (f.companion && !f.alive && !f.noRevive && f.deadFrames >= f.stats.reviveFrames) { // (after her Sacrifice, Maelis stays down)
         f.combatant.reset(); f.combatant.health.set(f.combatant.health.max * 0.5); f.deadFrames = 0; f.tags.clear();
         this.emit({ type: "allyRevive", fighter: f });
       }
     }
     if (this.islands) this._islands();
+    this._sacrifices();
     if (this.comboTimer > 0 && --this.comboTimer === 0) this.comboCount = 0;
     if (this.teamHit && this.frame >= this.teamHit.frame) { // the joint strike lands
       const { target: t } = this.teamHit; this.teamHit = null;

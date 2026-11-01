@@ -16,7 +16,7 @@ import { CAL_KIT, CAL_STATS, CAL_WEAR } from "./finale.js";
 
 
 // ---- Allies (src/reveal/allies.js, where data/companions.js can reach them without a cycle) ----
-export { PRAYER, MAELIS_ALLY, CAL_ALLY } from "./allies.js";
+export { PRAYER, SACRIFICE, MAELIS_ALLY, CAL_ALLY } from "./allies.js";
 
 /** On the tag-swap bench (sim/world.js takes a member spec): the player can be him. */
 export const CAL_MEMBER = Object.freeze({ id: "cal", kind: "calPlayer", name: "Cal", stats: CAL_STATS, hitboxes: CAL_WEAR.hitboxes, abilities: CAL_KIT, loadout: {} });

@@ -37,9 +37,19 @@ export const PRAYER = defineAbility({ id: "Prayer", startup: 600, active: 2, rec
 const STAFF = defineAbility({ id: "Staff", startup: 14, active: 3, recovery: 24, hit: hitSpec({ damage: 5, posture: 6, hitstop: 3, hitstun: 10, knockback: 2 }),
   events: [sound(10), { frame: 14, type: E.SpawnHitbox, key: "Staff", value: 3 }] });
 
+/**
+ * Her other prayer (GDD §27.3: "Sacrifice, once per battle: an ally gains a temporary star surge, at a terrible personal
+ * cost she keeps offering to pay"). When one of hers is about to fall she starts it, and nothing stops it (BACKLASH.md Ch 4).
+ * Three seconds; then whoever's hurt worst is mended a little and surges for twelve (STAR_SURGE: hits harder, takes less),
+ * and she goes down, and stays down until the fight's over. Not her last star: that one she offers in Ep 69, and it's refused.
+ */
+export const SACRIFICE = defineAbility({ id: "Sacrifice", startup: 180, active: 2, recovery: 40,
+  events: [sound(0, "hymn"), sound(90, "hymn"), { frame: 180, type: E.Custom, key: "sacrifice", value: 720 }] });
+
 export const MAELIS_ALLY = Object.freeze({
   stats: { name: "Maelis", maxHealth: 160, maxPosture: 60, runSpeed: 3.6, turnRate: 0.12, radius: 0.42, height: 1.9, assistCooldownFrames: 99999, reviveFrames: 900 },
   hitboxes: { Staff: { center: [0, 1, 1.0], size: [1.2, 1.4, 1.4] } }, guest: true, slot: [-2.2, -2.6], assist: STAFF,
+  sacrifice: { ability: SACRIFICE, below: 0.3 }, // once a battle, when one of hers drops under 30%
   options: () => [new AttackOption(STAFF, 0, 1.8, 1, 90)],
   supports: () => [{ ability: PRAYER, kind: "heal", cooldownFrames: 900 }],
 });

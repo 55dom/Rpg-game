@@ -571,7 +571,21 @@ export function boot(doc = document) {
           vfx.thread(chest(ev.fighter), c, 0.5);
           break;
         }
-        case "allyDown": hud.toast(`${ev.fighter.stats.name.toUpperCase()} IS DOWN`, "danger"); break;
+        case "allyDown": if (!ev.fighter.noRevive || !ev.fighter.sacrifice) hud.toast(`${ev.fighter.stats.name.toUpperCase()} IS DOWN`, "danger"); break;
+        // ---- Maelis's Sacrifice (Arc 7): once a battle, nothing stops it ----
+        case "sacrificeBegin":
+          hud.toast("SACRIFICE", "danger"); hud.banner("MAELIS PRAYS THE OTHER PRAYER · NOTHING STOPS IT");
+          vfx.ring({ x: ev.fighter.pos.x, y: 0.06, z: ev.fighter.pos.z }, 3.2, "#fff2c0", 3); sfx.play("glint");
+          break;
+        case "sacrifice": {
+          const t = ev.target;
+          vfx.flash(ev.at, 5, "#fff2c0", 0.4); vfx.sparksAt(ev.at, 30, "gold", 12, 8);
+          if (t) { vfx.flash(chest(t), 3.5, "#ffd76a", 0.35); vfx.ring({ x: t.pos.x, y: 0.06, z: t.pos.z }, 4, "#ffd76a", 0.6); }
+          impact(4, false); camera.kick(0.5); sfx.play("ultActivate");
+          hud.toast(t ? `${(t === world.player ? (state.mode === "story" ? story.player.name : "Rook") : t.stats.name).toUpperCase()} · STAR SURGE` : "SACRIFICE", "afterimage");
+          hud.banner("A STAR, FOR A WHILE · SHE WON'T GET UP THIS FIGHT");
+          break;
+        }
         case "allyRevive": hud.toast(`${ev.fighter.stats.name.toUpperCase()} IS BACK`, "clear"); break;
         case "projectile": sfx.play(ev.projectile.def.flat ? "mud" : "glint", 0.6); break;
         case "bossIntro":

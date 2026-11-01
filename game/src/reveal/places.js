@@ -60,7 +60,7 @@ export const REVEAL_ZONES = {
   throne: {
     id: "throne", name: "The Throne Chamber", region: "Fifteen years ago", stage: "throne", interior: true,
     bounds: { rect: [-T.half[0] + 0.3, -T.half[1] + 0.3, T.half[0] - 0.3, T.half[1] - 0.3], solids: [
-      ...T.pillars.flatMap((z) => [circle(-5, z, 0.75), circle(5, z, 0.75)]),
+      ...T.pillars.flatMap((z) => [-5, 5].map((x) => ({ ...circle(x, z, 0.75), tall: true }))), // floor to ceiling: the camera won't go behind one
       low(box(-1.6, T.throne.z - 0.8, 1.6, T.half[1])),           // the throne and the coffin behind it
     ] },
     spawn: { x: 0, z: -19, yaw: 0 },

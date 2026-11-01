@@ -1655,6 +1655,8 @@ export class StoryPlayer {
       if (wake.flag === "REVISION") { w.revision = true; w.player.surge?.fill(); }
       if (wake.say) this.say(wake.say[0], wake.say[1]);
     }
+    if (ev.type === "sacrificeBegin") // Maelis's Sacrifice; if you asked her not to (Ep 62), she says so
+      this.say("Maelis", this.flags.get("MAELIS_PROMISE") === "dont" ? "You asked me not to. I'm not very good at being asked." : "Stay standing. I've done this before.");
     if (this.siege) this.siege.onEvent(ev);
     if (ev.type === "waveClear" && !this.siege) { f.done = true; this.sleep(0.4).then(() => f.resolve(true)); }
     if (f.beat.endOn && ev.type === f.beat.endOn) { f.done = true; this.sleep(0.6).then(() => f.resolve(true)); } // a fight the story ends (Ep 48: the Underline)
@@ -1702,9 +1704,11 @@ export class StoryPlayer {
     this._enterScene(true);
     const pv = this.ui.preview;
     const lines = pv.querySelector("[data-pv-lines]"), next = pv.querySelector("[data-pv-next]"), buttons = pv.querySelector("[data-pv-buttons]");
-    lines.innerHTML = beat.lines.map((l) => `<p>${l}</p>`).join("");
-    const nextEp = beat.nextEpisode && this.episodeById(beat.nextEpisode);
-    next.textContent = beat.next ?? (nextEp ? `Episode ${nextEp.number} · ${nextEp.title}` : ""); next.classList.remove("on"); // the next episode names itself
+    // A side road the story took (Ep 50, "His."): its episode is offered first, and the main road stays open.
+    const side = beat.side && truthy(compileExpr(beat.side.if ?? "1")(this.flags)) && this.episodeById(beat.side.episode) ? beat.side : null;
+    lines.innerHTML = [...beat.lines, ...(side?.line ? [side.line] : [])].map((l) => `<p>${l}</p>`).join("");
+    const nextEp = beat.nextEpisode && this.episodeById(beat.nextEpisode), name = (e) => e.label ?? `Episode ${e.number}`;
+    next.textContent = beat.next ?? (nextEp ? `${name(nextEp)} · ${nextEp.title}` : ""); next.classList.remove("on"); // the next episode names itself
     buttons.innerHTML = "";
     pv.hidden = false;
     this.ctx.sfx.play("surgeFull");
@@ -1718,14 +1722,16 @@ export class StoryPlayer {
         b.addEventListener("click", () => { this.ctx.sfx.play("ui"); res(value); });
         buttons.appendChild(b);
       };
-      if (nextEp) add(`PLAY EPISODE ${nextEp.number}`, "next");
+      const play = (e) => (e.label ? `PLAY ${e.label}` : `PLAY EPISODE ${e.number}`);
+      if (side) add(side.label ?? play(this.episodeById(side.episode)), "side");
+      if (nextEp) add(play(nextEp), "next", !!side);
       else add("TO BE CONTINUED", "title");
       add("EPISODE 4 RUN", "run", true);
-      this.waitingCard = () => res(nextEp ? "next" : "title");
+      this.waitingCard = () => res(side ? "side" : nextEp ? "next" : "title");
     });
     this.waitingCard = null;
     pv.hidden = true;
-    this.pendingExit = choice === "next" ? { kind: "episode", id: beat.nextEpisode } : { kind: choice };
+    this.pendingExit = choice === "side" ? { kind: "episode", id: side.episode } : choice === "next" ? { kind: "episode", id: beat.nextEpisode } : { kind: choice };
     return {};
   }
 }

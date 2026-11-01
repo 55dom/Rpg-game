@@ -239,6 +239,7 @@ export class Hud {
     const chips = [];
     if (p.tags.has("WEIGHTED")) chips.push(`<span class="chip mud">WEIGHTED</span>`);
     if (p.tags.has("SHIELDED")) chips.push(`<span class="chip shield">SHIELDED</span>`);
+    if (p.tags.has("STAR_SURGE")) chips.push(`<span class="chip surge">★ STAR SURGE</span>`); // Maelis's Sacrifice
     this.set("status", e.status, "html", chips.join(""));
     if (!e.fd.hidden) this.updateFrameData(world);
   }
