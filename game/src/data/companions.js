@@ -6,6 +6,7 @@ import { hitSpec } from "../core/combat.js";
 import { defineAbility, EventType as E } from "../core/abilities.js";
 import { AttackOption } from "../core/ai.js";
 import { BRANNOC_COMPANION } from "./ashfall.js";
+import { CAL_SQUAD } from "./cal.js";
 import { KNIGHT_ALLY, MAELIS_ALLY, CAL_ALLY } from "../reveal/allies.js";
 import { LINE_ALLY } from "../reveal/backlash.js";
 
@@ -131,6 +132,7 @@ export const COMPANIONS = Object.freeze({
   luke: LUKE_COMPANION,
   bas: { stats: BAS_STATS, hitboxes: BAS_HITBOXES, options: basOptions, supports: basSupports, assist: BAS_ABILITIES.PillarUppercut, slot: [1.8, -1.4], injured: BAS_INJURED },
   brannoc: BRANNOC_COMPANION, // fights beside the Lanterns on the Iron Front (Eps 20–22)
+  cal: CAL_SQUAD, // beside you at the Hollow Bloom (Ep 18): his saber, and his door between you and it
   knightAlly: KNIGHT_ALLY, // a guest, not a squadmate: the bridge in Ep 47 (src/reveal/allies.js)
   maelisAlly: MAELIS_ALLY, calAlly: CAL_ALLY, // Arc 7's guests (src/reveal/allies.js)
   lineAlly: LINE_ALLY, // the soldier beside him in the line (Ep 49, a memory)

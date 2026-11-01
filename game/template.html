@@ -107,6 +107,9 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
 .bossbar[hidden] { display: none; }
 .boss-name { font: 400 16px/1 var(--font-display); letter-spacing: 0.18em; color: #f1dfbf; text-shadow: 0 2px 0 #000; margin-bottom: 6px; }
 .bossbar .boss-hp { height: 12px; }
+.bossbar[data-hold="held"] .boss-hp i, .bossbar[data-hold="slip"] .boss-hp i { background: linear-gradient(90deg, #ffe9a8, #ffd36a); box-shadow: 0 0 10px rgba(255, 211, 106, 0.8); }
+.bossbar[data-hold="slip"] .boss-hp i { animation: holdSlip 0.6s ease-in-out infinite; }
+@keyframes holdSlip { 50% { opacity: 0.55; } }
 .bossbar .boss-hp s { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.7); z-index: 2; }
 .is-touch .bossbar { bottom: auto; top: 316px; width: calc(100vw - 32px); }
 .is-touch .bossbar .boss-name { font-size: 11px; }

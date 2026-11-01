@@ -69,6 +69,7 @@ export class Hud {
     else if (prop === "class") el.className = value;
     else if (prop === "hidden") el.hidden = value;
     else if (prop === "html") el.innerHTML = value;
+    else el.setAttribute(prop, value); // (data-* state for the stylesheet)
   }
 
   label(device, intent) { return (LABELS[device] ?? LABELS.keyboard)[intent]; }
@@ -103,7 +104,7 @@ export class Hud {
   updateParty(world, device) {
     const host = this.el.party;
     if (!host) return;
-    const keys = { keyboard: ["1", "2"], gamepad: ["◀", "▶"], touch: ["", ""] }[device] ?? ["1", "2"];
+    const keys = { keyboard: ["1", "2", "3"], gamepad: ["◀", "▶"], touch: ["", ""] }[device] ?? ["1", "2", "3"];
     for (const [c, el] of this.partyEls) if (!world.companions.includes(c)) { // a new world brings new companions
       el.remove(); this.partyEls.delete(c);
       for (const k of [...this.cache.keys()]) if (/^a(hp|cd|cls|key|st)\d/.test(k)) this.cache.delete(k);
@@ -225,6 +226,7 @@ export class Hud {
       this.set("bossHp", e.bossHp, "width", pct(g.value));
       this.set("bossPost", e.bossPosture, "width", "0%");
     }
+    this.set("bossHold", e.boss, "data-hold", g?.hold ? (g.held ? "held" : "slip") : ""); // Ep 18's hold: the bar goes gold, and flickers when you let go
     if (b) {
       if (this.marksFor !== b) { // phase marks on the boss bar
         this.marksFor = b;

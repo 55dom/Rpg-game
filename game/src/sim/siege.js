@@ -22,6 +22,9 @@
 //           Ep 50's Interest (he sits and watches, and only a reaction, a perfect dodge or a team attack catches his eye;
 //           `answer`: the kind of foe that answers each one) and its Links. The beat is over when it reaches `to`.
 //   idle    [speaker, text][] said in turn whenever `every` frames go by with nothing to raise the gauge ({ every, say }).
+//   hold    when the meter runs out, one last thing before the beat ends ({ frames, label, say? }): the other side holds still
+//           and a gauge fills while you hold Guard (and slips back while you don't). It can't be lost: it waits for you
+//           (Ep 18: you and Cal hold the Bloom back; GDD §16 B7's Final, a hold, not a button test).
 
 export class Siege {
   constructor(world, spec) {
@@ -41,6 +44,7 @@ export class Siege {
     this.marks = [...(spec.marks ?? [])];
     this.fired = [];
     this.rise = spec.rise ? 0 : null; this.lastGain = 0; this.idleN = 0;
+    this.holding = null; // { t }: the hold, once the meter's out
   }
 
   start() {
@@ -108,6 +112,7 @@ export class Siege {
 
   step() {
     if (this.done) return;
+    if (this.holding) { this._hold(); return; }
     this.frames++;
     const m = this.spec.meter, L = this.spec.line, u = this.spec.until ?? {};
     if (m && this.meter != null) {
@@ -128,7 +133,28 @@ export class Siege {
     const I = this.spec.idle;
     if (I && this.frames - Math.max(this.lastGain, this.lastIdle ?? 0) >= I.every) { this.lastIdle = this.frames; this.said.push(I.say[this.idleN++ % I.say.length]); } // boring play gets commentary
     const R = this.spec.rise;
-    if ((m && this.meter <= (m.end ?? 0)) || (R && this.rise >= (R.to ?? 1)) || (u.kills != null && this.kills >= u.kills) || (u.frames != null && this.frames >= u.frames)) this.done = true;
+    if ((m && this.meter <= (m.end ?? 0)) || (R && this.rise >= (R.to ?? 1)) || (u.kills != null && this.kills >= u.kills) || (u.frames != null && this.frames >= u.frames)) {
+      if (this.spec.hold && m && this.meter <= (m.end ?? 0)) this._beginHold(); else this.done = true;
+    }
+  }
+
+  _beginHold() {
+    const H = this.spec.hold;
+    this.holding = { t: 0 };
+    this.w.foesHeld = true;
+    this.w.clearErasures?.(); // (the ground and the pages come back: it's all the Bloom has, pushing)
+    this.w.emit({ type: "holdBegin", frames: H.frames, label: H.label });
+    for (const line of H.say ?? []) this.said.push(line);
+    this.w.gauge = { label: H.label ?? "", value: 0, hold: true };
+  }
+  /** Guard held: it fills; let go and it slips back (never below empty). Full, and the beat's over. */
+  _hold() {
+    const H = this.spec.hold, h = this.holding, p = this.w.player;
+    const held = !!p.holdBlock && p.alive;
+    h.t = held ? h.t + 1 : Math.max(0, h.t - 0.5);
+    h.held = held;
+    this.w.gauge = { label: H.label ?? "", value: h.t / H.frames, hold: true, held };
+    if (h.t >= H.frames) { this.w.foesHeld = false; this.w.emit({ type: "holdDone" }); this.done = true; }
   }
 
   _gauge() {
@@ -139,7 +165,7 @@ export class Siege {
   /** The beat's over: the field empties for whatever the story shows next. */
   end() {
     this.done = true;
-    this.w.gauge = null; this.w.headline = null;
+    this.w.gauge = null; this.w.headline = null; this.w.foesHeld = false;
     this.w.clearErasures?.(); // (the Hollow Bloom's holes and blank pages go with it)
     for (const f of this.w.enemies) this.w.emit({ type: "despawn", fighter: f });
     this.w.fighters = this.w.fighters.filter((f) => f.team === this.w.player.team);

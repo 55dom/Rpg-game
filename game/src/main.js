@@ -791,7 +791,11 @@ export function boot(doc = document) {
           walls.show(z);
           break;
         }
-        case "zoneEnd": walls.hide(ev.zone); break;
+        case "zoneEnd": if (ev.zone.mode === "door") doorFx.close(ev.zone); else walls.hide(ev.zone); break;
+        case "threshold": doorFx.open(ev.zone); break;
+        case "doorHeld": vfx.sparksAt({ x: ev.zone.pos.x, y: ev.zone.pos.y + 1.4, z: ev.zone.pos.z }, 10, "gold", 6, 2); vfx.flash({ x: ev.zone.pos.x, y: ev.zone.pos.y + 1.6, z: ev.zone.pos.z }, 2.4, "#ffe9a8", 0.12); sfx.play("block", 0.8); break;
+        case "holdBegin": holdFx.begin(); camera.kick(0.8); camera.shake(0.6); sfx.play("bossIntro"); hud.toast("IT'S OPENING", "danger"); break;
+        case "holdDone": holdFx.end(); impact(4, true); camera.shake(1); sfx.play("ultActivate"); break;
         case "reflect": vfx.flash(ev.at, 2, "#bff4ff", 0.14); vfx.number(ev.at, "REFLECT", "text"); sfx.play("parry"); break;
         default: break;
       }
@@ -1571,7 +1575,41 @@ export function boot(doc = document) {
   })();
   const shatter = (f, at) => { vfx.sparksAt(at, 18, "white", 9, 5); vfx.sparksAt(at, 8, "violet", 7, 4); vfx.flash(at, 1.8, "#e8eeff", 0.1); sfx.play("block", 0.8); removeView(f); if (hud.focus === f) hud.focus = null; };
   const hopGhostMat = glow(scene, "hopGhost", "#8affc8", 0.3, true);
-  resetBossFx = () => { silenceFx.clear(); waterJet.stop(); lilyFx.clear(); reedFx.clear(); smokeFx.clear(); holeFx.clear(); memoryFx.end(); groundFx.clear(); tearFx.clear(); mouthTears = []; lineWall?.dispose(); lineWall = null; darkFx.clear();
+  // Threshold (Ep 18): a golden door standing up between Rook and the Bloom, for as long as it holds.
+  const doorFx = (() => {
+    const live = new Map();
+    return {
+      open(z) {
+        const d = makeDoor(scene, "threshold", { w: 2.6, h: 3.2 }); d.position.set(z.pos.x, z.pos.y + 1.7, z.pos.z); d.rotation.y = z.yaw; d.scaling.set(0.2, 1, 1);
+        live.set(z, d); vfx.flash({ x: z.pos.x, y: z.pos.y + 1.6, z: z.pos.z }, 3.2, "#ffd36a", 0.2); sfx.play("door");
+      },
+      close(z) { const d = live.get(z); if (!d) return; live.delete(z); vfx.sparksAt({ x: z.pos.x, y: z.pos.y + 1.6, z: z.pos.z }, 10, "gold", 5, 2); d.dispose(); },
+      update(dt) { for (const [z, d] of live) { d.scaling.x = Math.min(1, d.scaling.x + dt * 6); const k = z.frames / z.max; d.getChildMeshes().forEach((m) => { m.visibility = 0.35 + 0.65 * Math.min(1, k * 4); }); } },
+      clear() { for (const d of live.values()) d.dispose(); live.clear(); },
+    };
+  })();
+  // The Bloom's last moment (Ep 18's hold): white light swelling at its heart, and two lines of gold holding it shut.
+  const holdFx = (() => {
+    let core = null, beams = [], on = false;
+    const white = glow(scene, "holdWhite", "#ffffff", 0.75, true), gold = glow(scene, "holdGold", "#ffd36a", 0.8, true);
+    const beam = (name) => { const m = BB.MeshBuilder.CreateCylinder(name, { height: 1, diameter: 0.22, tessellation: 8 }, scene); m.material = gold; m.isPickable = false; return m; };
+    const stretch = (m, a, b) => { const dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z, L = Math.hypot(dx, dy, dz) || 1; m.position.set((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2); m.scaling.set(1, L, 1);
+      m.rotation.set(Math.acos(Math.max(-1, Math.min(1, dy / L))), Math.atan2(dx, dz), 0); };
+    return {
+      begin() { on = true; core = BB.MeshBuilder.CreateSphere("holdCore", { diameter: 1, segments: 16 }, scene); core.material = white; core.isPickable = false; beams = [beam("holdBeamA"), beam("holdBeamB")]; },
+      end() { on = false; core?.dispose(); core = null; for (const b of beams) b.dispose(); beams = []; },
+      update(t) {
+        if (!on) return;
+        const bloom = world.headline, g = world.gauge;
+        if (!bloom || !g?.hold) return;
+        const c = { x: bloom.pos.x, y: 2.4, z: bloom.pos.z }, k = g.value;
+        core.position.set(c.x, c.y, c.z); core.scaling.setAll(3.6 - k * 2.4 + Math.sin(t * (g.held ? 9 : 22)) * (g.held ? 0.12 : 0.35)); // it swells when you let go
+        const holders = [world.player, world.companions.find((m) => m.assistInPlace && m.alive)].filter(Boolean);
+        beams.forEach((m, i) => { const h = holders[i]; m.setEnabled(!!h && (i > 0 || g.held)); if (h) stretch(m, { x: h.pos.x, y: h.pos.y + 1.3, z: h.pos.z }, c); });
+      },
+    };
+  })();
+  resetBossFx = () => { doorFx.clear(); holdFx.end(); silenceFx.clear(); waterJet.stop(); lilyFx.clear(); reedFx.clear(); smokeFx.clear(); holeFx.clear(); memoryFx.end(); groundFx.clear(); tearFx.clear(); mouthTears = []; lineWall?.dispose(); lineWall = null; darkFx.clear();
     for (const m of inkMarks.values()) m.dispose(); inkMarks.clear(); root.classList.remove("leaping", "hopblur", "surge-locked"); };
 
   // Squad HQ: the board (rooms to build) and the workbench (tempering gear). One screen, two modes.
@@ -1901,7 +1939,7 @@ export function boot(doc = document) {
       if (state.ghostTimer <= 0) { const rig = viewFor(world.player); if (rig) vfx.afterimage(rig); state.ghostTimer = 0.09; }
     }
 
-    waterJet.update(); lilyFx.update(dt); reedFx.update(dt); smokeFx.update(dt); holeFx.update(dt); memoryFx.update(dt); groundFx.update(dt); tearFx.update(dt);
+    doorFx.update(dt); holdFx.update(state.time); waterJet.update(); lilyFx.update(dt); reedFx.update(dt); smokeFx.update(dt); holeFx.update(dt); memoryFx.update(dt); groundFx.update(dt); tearFx.update(dt);
     if (world.boss?.boss?.leap) { // motion blur on the hops: a trail of fading ghosts of Gullmaw
       state.hopGhost = (state.hopGhost ?? 0) - dt;
       if (state.hopGhost <= 0) { const rig = viewFor(world.boss); if (rig?.snapshot && settings.blur) vfx.afterimage(rig, hopGhostMat, 0.22); state.hopGhost = 0.035; } // (a motion-blur trail: the setting turns it off)

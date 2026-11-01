@@ -94,7 +94,7 @@ export const EPISODE_18 = {
       ] },
     // Boss 7: the Bloom can't be killed, only held back until it opens; then he holds the door.
     { id: "bloom", type: "fight", ...HM, wave: [], tokens: 2, camera: { pitch: 0.1 }, // a flatter look: the whole flower in frame
-      world: { bounds: ZONES.hollowmarch.bounds, origin: { x: G.x, z: G.z - 6 } },
+      world: { bounds: ZONES.hollowmarch.bounds, origin: { x: G.x, z: G.z - 6 }, companions: ["bas", "juno", "cal"] }, // Cal beside you (§16 B7 P1)
       siege: {
         foes: [
           { kind: "hollowBloom", x: G.x, z: G.z, yaw: Math.PI, floor: 0.25, bar: true },
@@ -108,13 +108,17 @@ export const EPISODE_18 = {
           { frame: 1960, say: ["Rook", "...I've been here. I've never been here."] }, // inside its petals (P3): a fire, long ago
           { frame: 2460, say: ["Juno", "Hey! You went somewhere. Stay with us!"] },
           { frame: 2600, say: ["Lio", "It's nearly open!"] },
-          { frame: 3600, say: ["Cal", "All right. My turn."] },
+          { frame: 3600, say: ["Cal", "Nearly open. When it goes, we hold it. Both of us."] },
         ],
+        // Its Final (§16 B7): when it opens, you and Cal hold it back. Hold Guard; it can't be lost, only let slip.
+        hold: { frames: 240, label: "Hold It Back", say: [["Cal", "Now! Hold it! Don't let go!"], ["Rook", "I've got it! I've... got it!"]] },
       },
-      tutorial: [{ at: 0.5, low: true, text: "BOSS 7 · THE HOLLOW BLOOM. Its pulse erases whatever stands in it: when the core flashes, get out. Hold it back as long as you can." }],
+      tutorial: [{ at: 0.5, low: true, text: "BOSS 7 · THE HOLLOW BLOOM. Its pulse erases whatever stands in it: when the core flashes, get out. Hold it back as long as you can." },
+        { at: 9, low: true, text: "Cal's with you. When something's about to land on you, he opens a door in front of you, and nothing comes through it. (Call it yourself: 3.)" }],
       eventHints: { // its phases (GDD §16 B7), on the clock
         holeOpen: "It's erasing the ground. Don't stand on the blank: it takes a bite out of you too.",
         pageErased: "It's erasing your pages! That spell's blank for a few seconds: use another.",
+        holdBegin: "It's opening! Hold GUARD and hold it back, with Cal. Let go and it slips.",
       },
       lowHints: true,
       lines: [["Dagrun", "Hold it! Hold it back!"]],

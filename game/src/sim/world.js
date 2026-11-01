@@ -108,6 +108,7 @@ const AIR = new Set(["AirL1", "AirL2", "AirL3"]);
 const HANG = new Set(["AirL1", "AirL2", "AirL3"]); // started in the air, these hold Rook up (plus anything tagged "hang")
 const hangs = (a) => HANG.has(a.id) || a.tags.includes("hang");
 const WALL = Object.freeze({ center: [0, 1.4, 0], size: [5.2, 3.4, 1.4] });
+const DOOR_HALF = 2.6; // Threshold's door: as wide as a wind wall
 /** Team Attacks (bond rank 5): the companion's move, then the two of you strike together. */
 export const TEAM_ATTACK = defineAbility({ id: "TeamAttack", startup: 1, active: 1, recovery: 1, tags: ["team", "heavy"],
   hit: hitSpec({ damage: 48, posture: 55, hitstop: 12, hitstun: 50, launch: 10 }) });
@@ -269,6 +270,7 @@ export class Fighter {
         else if (e.key === "heal") this.world.heal(this, e.value);
         else if (e.key === "sacrifice") this.world.sacrifice(this, e.value);
         else if (e.key === "ward") this.world.ward(this, e.value);
+        else if (e.key === "threshold") this.world.threshold(this, a, e.value);
         else if (e.key.startsWith("windwall")) this.world.windWall(this, a, e.value, e.key === "windwallMirror" ? "mirror" : e.key === "windwallDown" ? "down" : "block");
         break;
       default:
@@ -361,6 +363,7 @@ export class World {
     this.silences = []; this.silenceAll = false; this.dodgeHush = 0; this.waves = []; this.strikes = [];
     this.gauge = null; this.headline = null; // a staged fight's meter, and the foe it's about (sim/siege.js)
     this.islands = null; // after a floor collapses: the debris still holding, [{ x, z, r }] (Galen's P3)
+    this.foesHeld = false; // the other side holds still (Ep 18's hold: sim/siege.js)
     this.deck = null; // a moving deck you can stand on (Varka's siege engine, B8 P2): sim/varka.js lays it, _deck() carries it
     this.holes = []; // the Hollow Bloom's erasures (B7 P2): holes in the world, [{ x, z, r, frames }]
     this.pageLocks = {}; // and its blank pages (P4): spell slot → frames until it's written back
@@ -380,7 +383,7 @@ export class World {
       brain: new CompanionBrain(kind, (hurt?.options ?? c.options)(), c.supports(), this.rng), x: p.pos.x + c.slot[0], z: p.pos.z + c.slot[1],
     });
     if (hurt) { f.injured = true; f.look = hurt.look; }
-    f.assistAbility = c.assist;
+    f.assistAbility = c.assist; f.assistInPlace = !!c.assistInPlace; // (Cal's door opens where you are, not where he is)
     f.guest = !!c.guest; // beside the squad, not one of it: not on the party panel, never called for an Assist
     f.sacrifice = c.sacrifice ?? null; f.sacrificed = false; // Maelis: once a battle (reveal/allies.js)
     this.companions.push(f);
@@ -505,11 +508,19 @@ export class World {
 
   /** The player calls a companion's signature move (GDD §10 Assist Call). */
   callAssist(kind) {
-    const c = this.companions.find((f) => f.kind === kind);
+    const squad = this.companions.filter((f) => !f.guest);
+    const c = squad.find((f) => f.kind === kind) ?? squad[{ bas: 0, juno: 1, third: 2 }[kind]]; // 1 · 2 · 3 call the squad in order when it isn't Bas and Juno
     if (!c || !c.alive || !this.player.alive) return { ok: false, reason: "down" };
     if (this.frame < c.assistReadyFrame) return { ok: false, reason: "cooldown" };
     const t = (this.lockTarget?.alive && this.lockTarget) || this.player.pickTarget(Tuning.assistRange) || this.nearestEnemy(Tuning.assistRange);
     if (!t) return { ok: false, reason: "noTarget" };
+    if (c.assistInPlace) { // (a door opens in front of you wherever he's standing)
+      c.target = t; c.runner.interrupt(); c.combatant.staggerFrames = 0;
+      c.controller.startDirect(c.assistAbility, this.frame);
+      c.assistReadyFrame = this.frame + c.stats.assistCooldownFrames;
+      this.emit({ type: "assist", fighter: c, ability: c.assistAbility, target: t });
+      return { ok: true, target: t };
+    }
     // Blink beside the target on the side away from Rook, facing it.
     const p = this.player.pos;
     const d = flatDistance(p, t.pos) || 1;
@@ -824,6 +835,31 @@ export class World {
     this.emit({ type: "windWall", zone: z });
   }
 
+  /**
+   * Threshold (Cal, Ep 18): a golden door stands up between Rook and what's coming, facing it. Nothing comes through it while
+   * it stands: shots turn on it, and a blow struck from the far side doesn't reach whoever's behind it.
+   */
+  threshold(owner, ability, frames) {
+    const p = this.player, t = (owner.target?.alive && owner.target.team !== owner.team ? owner.target : null) ?? this.nearestEnemy(20);
+    const yaw = t ? angleTo(p.pos, t.pos) : p.yaw, fx = Math.sin(yaw), fz = Math.cos(yaw);
+    const z = { owner, team: owner.team, ability, mode: "door", frames, max: frames, yaw, pos: { x: p.pos.x + fx * 1.8, y: p.floor || 0, z: p.pos.z + fz * 1.8 }, hitSet: new Set() };
+    this.zones.push(z);
+    this.emit({ type: "threshold", zone: z, fighter: owner });
+    return z;
+  }
+  /** Is a door of `def`'s side standing between them and `att`? (the line from one to the other crosses it) */
+  _doorBetween(att, def) {
+    for (const z of this.zones) {
+      if (z.mode !== "door" || z.team !== def.team) continue;
+      const rx = Math.cos(z.yaw) * DOOR_HALF, rz = -Math.sin(z.yaw) * DOOR_HALF; // along the door
+      const ax = z.pos.x - rx, az = z.pos.z - rz, bx = z.pos.x + rx, bz = z.pos.z + rz;
+      const side = (px, pz) => Math.sign((bx - ax) * (pz - az) - (bz - az) * (px - ax));
+      const cross = (px, pz, qx, qz) => { const d1 = (qx - px) * (az - pz) - (qz - pz) * (ax - px), d2 = (qx - px) * (bz - pz) - (qz - pz) * (bx - px); return Math.sign(d1) !== Math.sign(d2); };
+      if (side(att.pos.x, att.pos.z) !== side(def.pos.x, def.pos.z) && cross(att.pos.x, att.pos.z, def.pos.x, def.pos.z)) return z;
+    }
+    return null;
+  }
+
   _zones() {
     if (!this.zones.length) return;
     for (const z of this.zones) {
@@ -842,6 +878,7 @@ export class World {
           this.emit({ type: "deflect", projectile: p, by: z.owner, at: { ...p.pos } });
         }
       }
+      if (z.mode === "door") continue; // a door turns what's thrown at it; it doesn't shove anyone
       for (const e of this.fighters) {
         if (e.team === z.team || !e.alive || e.submerged || e.boss?.intangible) continue;
         if (!boxHitsCapsule(WALL, z.pos, z.yaw, e.pos, e.stats.radius, e.stats.height)) continue;
@@ -888,6 +925,7 @@ export class World {
     p.surge?.set(0); p.tags.clear(); p.offIsland = 0; p.floor = 0;
     if (this.islands) { this.islands = null; this.emit({ type: "floorRestore" }); } // a retry starts on a whole floor
     if (this.deck) { this.deck = null; this.emit({ type: "deckGone" }); } // and on the ground
+    this.foesHeld = false;
     for (const c of this.companions) {
       c.combatant.reset(); c.runner.interrupt(); c.tags.clear(); c.deadFrames = 0; c.hitstop = 0;
       c.sacrificed = false; c.noRevive = false; // a retry: she can offer again
@@ -982,7 +1020,7 @@ export class World {
     if (this.slowFrames > 0) this.slowFrames--;
     if (this.stopFrames > 0) this.stopFrames--;
     if (this.surgeLock > 0) this.surgeLock--;
-    const enemyScale = this.stopFrames > 0 ? 0 : this.slowFrames > 0 ? Tuning.afterimageScale : 1;
+    const enemyScale = this.stopFrames > 0 || this.foesHeld ? 0 : this.slowFrames > 0 ? Tuning.afterimageScale : 1; // (foesHeld: the Bloom's last moment, held back)
 
     for (const f of this.fighters) {
       f.timeScale = f.team === Team.Enemy ? enemyScale : 1;
@@ -1147,7 +1185,7 @@ export class World {
   _brains(frame, live) {
     for (const e of this.fighters) {
       if (!e.brain || !live(e)) continue;
-      if (e.companion) { this._companionBrain(e, frame); continue; }
+      if (e.companion) { if (this.foesHeld) { e.moveInput.x = e.moveInput.z = 0; if (e.target?.alive) e.yaw = turn(e.yaw, angleTo(e.pos, e.target.pos), e.stats.turnRate); continue; } this._companionBrain(e, frame); continue; } // (holding the Bloom back with you)
       if (e.boss && !e.boss.brainActive) { if (e.boss.state !== "toPolaris" && e.boss.state !== "wading") { e.moveInput.x = 0; e.moveInput.z = 0; } continue; } // the controller has it
       const p = this._enemyTarget(e);
       e.target = p;
@@ -1244,6 +1282,8 @@ export class World {
             if (def.submerged || def.boss.intangible) continue; // (inside the Hollow Bloom's memory, there's nothing there to hit)
           }
           if ((def.floor || 0) !== (att.floor || 0)) continue; // one of you is up on the deck: out of reach
+          if (this.foesHeld) continue; // the Bloom's last moment: nobody's swinging
+          if (this.zones.length) { const door = this._doorBetween(att, def); if (door) { hb.hitSet.add(def); this.emit({ type: "doorHeld", zone: door, attacker: att, defender: def }); continue; } } // Cal's door holds
           const grace = def.combatant.invulnerableFrames > 0 ? Tuning.nearMissGrace : 0;
           if (!boxHitsCapsule(hb.def, att.pos, att.yaw, def.pos, def.stats.radius + grace, def.stats.height)) continue;
           hb.hitSet.add(def);
@@ -1282,7 +1322,7 @@ export class World {
     const dt = SECONDS_PER_TICK;
     for (const p of ps) {
       if (p.dead) continue;
-      const scale = p.team === Team.Enemy ? (this.stopFrames > 0 ? 0 : this.slowFrames > 0 ? Tuning.afterimageScale : 1) : 1;
+      const scale = p.team === Team.Enemy ? (this.stopFrames > 0 || this.foesHeld ? 0 : this.slowFrames > 0 ? Tuning.afterimageScale : 1) : 1;
       if (scale === 0) continue; // frozen by a time stop
       p.pos.x += p.dir.x * p.speed * dt * scale; p.pos.y += p.dir.y * p.speed * dt * scale; p.pos.z += p.dir.z * p.speed * dt * scale;
       p.life -= scale;

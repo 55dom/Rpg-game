@@ -42,6 +42,7 @@ export class Controls {
       if (e.code === "Backspace") this.commands.push("reset");
       if (e.code === "Digit1") this.commands.push("assist:bas");
       if (e.code === "Digit2") this.commands.push("assist:juno");
+      if (e.code === "Digit3") this.commands.push("assist:third"); // a third squadmate, when there is one (Cal, Ep 18)
       if (e.code === "Digit3") this.commands.push("stance");
       if (e.code === "KeyB") this.commands.push("boss");
       if (e.code === "KeyP") this.commands.push("pages");
