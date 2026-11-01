@@ -168,7 +168,8 @@ export const EPISODE_4_STORY = {
         wading: "It's making for the reeds: it can only dive in a reed bed. Knock that bed's lantern down ({Light}) and the reeds burn.",
         fortRise: "Logs! Your wind just hits the wood. Break a pile ({Heavy}), or slip through a gap and take it up close.",
       },
-      retry: "Again. Wind tears it out of the mud." },
+      retry: "Again. Wind tears it out of the mud.",
+      set: { HASK_DEFEATED: 1 }, add: { RENOWN_FENS: 6 } }, // the Fens' villagers hear (§16 B2)
     { id: "after", type: "scene", node: "Ep4_After", ...FENS, if: "$MIRREN_SAVED",
       rook: { x: 0, z: 0, yaw: 0 },
       cast: [

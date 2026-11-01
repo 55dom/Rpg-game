@@ -72,7 +72,7 @@ export const EPISODE_12 = {
       tutorial: [{ at: 0.5, text: "BOSS 5 · GULLMAW, THE CISTERN TOAD. When it swallows the water, its tongue comes next: be somewhere else. Severin is on the bench." }],
       lines: [["Severin", "Watch the tongue!"], ["Juno", "Keep it away from the cages!"]],
       retry: "Again. The cages.",
-      set: { GULLMAW_DEFEATED: 1 } },
+      set: { GULLMAW_DEFEATED: 1, SEVERIN_DEBT: 1 }, add: { RENOWN_AURELIN: 8 } }, // Severin owes you one; the Lowmarket hears (§16 B5)
     { id: "after", type: "scene", node: "Ep12_After", ...UC,
       rook: { x: 0.6, z: 36.0, yaw: Math.PI },
       cast: [

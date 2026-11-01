@@ -126,7 +126,7 @@ export const EPISODE_8 = {
         inkMark: "Your grimoire's bleeding ink. The page has marked one seal, far out: his last vow. Break it while he charges.",
       },
       retry: "Again. He's slow. You're not.",
-      set: { GALEN_DEFEATED: 1 } },
+      set: { GALEN_DEFEATED: 1 }, add: { REP_SQUAD: 2 } }, // the Iron Wardens' respect (§16 B4)
     { id: "ink", type: "scene", node: "Ep8_Ink", ...HALL,
       rook: { x: 0.4, z: 0.2, yaw: 0 },
       cast: [

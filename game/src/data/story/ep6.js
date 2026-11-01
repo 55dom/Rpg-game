@@ -136,7 +136,7 @@ export const EPISODE_6 = {
         grimoireResists: "Your grimoire won't let her. The song broke on your page, and so did she: finish it!",
       },
       retry: "Again. Sing over her.",
-      set: { ILSE_DEFEATED: 1 } },
+      set: { ILSE_DEFEATED: 1 }, add: { RENOWN_FENS: 4 } }, // a town remembers you (§16 B3)
     { id: "vision", type: "scene", node: "Ep6_Vision", ...FENS, ...DUSK,
       rook: { x: 12.4, z: -2.4, yaw: 0.5 },
       cast: [{ id: "hesper", look: "hesper", x: 14.4, z: 0.6, yaw: Math.PI + 0.6 }] },

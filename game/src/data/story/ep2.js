@@ -193,6 +193,7 @@ export const EPISODE_2 = {
       getUps: 3, countFlag: "EXAM_GET_UPS",
       getUpLines: [["Cal", "That's one."], ["Dagrun", "...That's two."], ["Severin", "Stay down!"]],
       setWin: { EXAM_DUEL_WON: 1 }, setLose: { EXAM_DUEL_WON: 0 },
+      lines: [["Severin", "One page. They should've given you none."]], // (§16 B1)
       tutorial: [
         { at: 0.5, text: "Star Needles fly in threes. Press {Dodge} to dodge sideways, or slash them out of the air." },
         { at: 9, text: "He's quick at range. Close the distance and press him." },

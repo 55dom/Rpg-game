@@ -45,12 +45,15 @@ export class EpisodeDirector {
 
   /**
    * Finish the current beat. result: { won?: boolean } for fights. Applies the beat's `set`
-   * (always), `setWin` / `setLose` (fights), then moves on.
+   * (always), `setWin` / `setLose` (fights), and `add` (amounts added to flags, such as renown: only the first time
+   * the beat's own `set` flags go on, so playing an episode again doesn't pay twice), then moves on.
    */
   complete(result = {}) {
     const b = this.beat;
     if (!b) return null;
+    const first = Object.keys(b.set ?? {}).some((k) => !this.flags.get(k));
     for (const [k, v] of Object.entries(b.set ?? {})) this.flags.set(k, v);
+    if (first) for (const [k, v] of Object.entries(b.add ?? {})) this.flags.add(k, v);
     if (b.type === BeatType.Fight) {
       const writes = result.won ? b.setWin : b.setLose;
       for (const [k, v] of Object.entries(writes ?? {})) this.flags.set(k, v);
