@@ -127,6 +127,14 @@ export class Hud {
       this.set(`akey${i}`, el.querySelector("kbd"), "text", keys[i] ?? "");
       this.set(`ast${i}`, el.querySelector("small"), "text", c.alive ? c.brain.stance.toUpperCase() : "DOWN");
     });
+    // The Bond gauge (GDD §9.2): the party's, under the squad. Full, it glows (a Team Attack is ready if someone has one).
+    let bond = this.bondEl;
+    if (!bond) { bond = this.bondEl = document.createElement("div"); bond.className = "bond-gauge"; bond.innerHTML = `<span>BOND</span><div class="bar"><i></i></div>`; host.appendChild(bond); }
+    if (bond.parentNode !== host || bond !== host.lastChild) host.appendChild(bond);
+    const full = world.bondGauge >= 100, ready = full && world.companions.some((c) => world.teamAttacks?.has(c.kind) && c.alive);
+    this.set("bondw", bond.querySelector("i"), "width", pct((world.bondGauge ?? 0) / 100));
+    this.set("bondc", bond, "class", `bond-gauge${full ? " full" : ""}${ready ? " ready" : ""}`);
+    bond.hidden = !world.companions.some((c) => !c.guest);
   }
 
   hurt() {

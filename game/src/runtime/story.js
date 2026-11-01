@@ -35,6 +35,7 @@ import { WorldClock } from "../sim/weather.js";
 import { RainFX } from "./weather.js";
 import { Secrets } from "../core/secrets.js";
 import { Corruption } from "../core/corruption.js";
+import { SKITS } from "../data/skits.js";
 import { CORRUPTION, CORRUPTION_STAGES } from "../data/forbidden.js";
 import { SECRET_PAGES } from "../data/secretPages.js";
 import { LawWatch } from "./law.js";
@@ -1489,6 +1490,7 @@ export class StoryPlayer {
       const zone = ZONES[id];
       this.zone = zone; this.arrival = arr;
       if (id === "hall") this._found(this.secrets.hallVisit(this.day, !!this.clock?.night)); // (Lantern's Answer: the Hall at night, after the Bloom)
+      this._skit(id);
       const world = this.ctx.getWorld();
       world.bounds = zone.bounds;
       this.ctx.camera.bounds = cameraBounds(zone);
@@ -1665,6 +1667,15 @@ export class StoryPlayer {
       if (k.join && !w.companions.some((c) => c.kind === k.join)) w.addCompanion(k.join); // back at your side (Ep 50: the Links)
     }
     if (s.done && !f.done) { f.done = true; this.sleep(0.3).then(() => f.resolve(true)); }
+  }
+
+  /** A camp skit for this place, if one's due (GDD §10): once each, from where you are and the story's flags. */
+  _skit(zoneId) {
+    const k = SKITS.find((sk) => sk.zone === zoneId && !this.flags.get(`SKIT_${sk.id}`) && truthy(compileExpr(sk.when ?? "1")(this.flags)));
+    if (!k) return null;
+    this.flags.set(`SKIT_${k.id}`, 1);
+    this.sleep(1.6).then(() => { if (this.roaming && this.zone?.id === zoneId) this.ctx.playSkit?.(k, this.player?.name ?? "Rook"); });
+    return k;
   }
 
   /** A secret page just found (GDD §8.4): said once, loudly, and kept. */

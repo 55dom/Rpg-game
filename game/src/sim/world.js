@@ -118,7 +118,11 @@ const NOTE_RING = hitSpec({ damage: 10, posture: 28, hitstop: 6, hitstun: 20, kn
 /** Team Attacks (bond rank 5): the companion's move, then the two of you strike together. */
 export const TEAM_ATTACK = defineAbility({ id: "TeamAttack", startup: 1, active: 1, recovery: 1, tags: ["team", "heavy"],
   hit: hitSpec({ damage: 48, posture: 55, hitstop: 12, hitstun: 50, launch: 10 }) });
-export const TEAM_SURGE = 50;
+/**
+ * The Bond gauge (GDD §9.2: the party's; it fills from synergy, reactions and assists, and is spent on Team Attacks).
+ * Full, a rank-5 squadmate's Assist becomes a Team Attack.
+ */
+export const BOND_GAUGE = Object.freeze({ max: 100, reaction: 15, assist: 20 });
 /** The tag-in strike: a shockwave around whoever comes in. */
 export const TAG_STRIKE = defineAbility({ id: "TagStrike", startup: 1, active: 1, recovery: 1, tags: ["tag"],
   hit: hitSpec({ damage: 10, posture: 18, hitstop: 6, hitstun: 26, knockback: 4 }) }); // Surge spent on a Team Attack
@@ -370,6 +374,7 @@ export class World {
     this.lanternUsed = false; this.castOnce = new Set(); this.mudHit = false; this.haskDone = false;
     this.assist = !!o.assist;
     this.teamAttacks = new Set(o.teamAttacks ?? []); // companions with a Team Attack unlocked (bond rank 5)
+    this.bondGauge = 0; // GDD §9.2 (BOND_GAUGE)
     // Tag-swap party (GDD §10): Rook plus whoever can tag in. Only one is on the field; the other waits
     // off-screen, keeps their own health and mana, and recovers a little while out.
     this.active = "player";
@@ -538,6 +543,7 @@ export class World {
       c.controller.startDirect(c.assistAbility, this.frame);
       c.assistReadyFrame = this.frame + c.stats.assistCooldownFrames;
       this.emit({ type: "assist", fighter: c, ability: c.assistAbility, target: t });
+      this._bond(BOND_GAUGE.assist);
       return { ok: true, target: t };
     }
     // Blink beside the target on the side away from Rook, facing it.
@@ -555,13 +561,12 @@ export class World {
     c.controller.startDirect(c.assistAbility, this.frame);
     c.assistReadyFrame = this.frame + c.stats.assistCooldownFrames;
     this.emit({ type: "assist", fighter: c, ability: c.assistAbility, target: t });
-    // Bond rank 5 and half a Surge gauge: the assist becomes a Team Attack, and Rook strikes with them.
-    const s = this.player.surge;
-    if (this.teamAttacks.has(kind) && s && s.current >= TEAM_SURGE) {
-      s.trySpend(TEAM_SURGE);
+    // Bond rank 5 and a full Bond gauge: the assist becomes a Team Attack, and Rook strikes with them.
+    if (this.teamAttacks.has(kind) && this.bondGauge >= BOND_GAUGE.max) {
+      this.bondGauge = 0;
       this.teamHit = { frame: this.frame + TEAM_DELAY, target: t, by: c };
       this.emit({ type: "teamAttack", fighter: c, kind, target: t });
-    }
+    } else this._bond(BOND_GAUGE.assist);
     return { ok: true, target: t };
   }
 
@@ -1577,6 +1582,14 @@ export class World {
     return r.outcome;
   }
 
+  /** The Bond gauge fills (GDD §9.2: synergy). Full, it says so once. */
+  _bond(n) {
+    if (!this.companions.length) return;
+    const was = this.bondGauge;
+    this.bondGauge = Math.min(BOND_GAUGE.max, this.bondGauge + n);
+    if (was < BOND_GAUGE.max && this.bondGauge >= BOND_GAUGE.max) this.emit({ type: "bondFull", ready: this.companions.some((c) => this.teamAttacks.has(c.kind) && c.alive) });
+  }
+
   _surge(amount) {
     const s = this.player.surge;
     if (!s || amount <= 0 || !this.ultimate || this.surgeLock > 0) return;
@@ -1682,7 +1695,7 @@ export class World {
       }
     }
     if (fx.hitstop && att && att !== def) att.hitstop = Math.max(att.hitstop, fx.hitstop);
-    if (att?.team === Team.Player && def.team === Team.Enemy) this._surge(this.player.stats.surgeGain.reaction);
+    if (att?.team === Team.Player && def.team === Team.Enemy) { this._surge(this.player.stats.surgeGain.reaction); this._bond(BOND_GAUGE.reaction); }
     this.emit({ type: "reaction", reaction: row, attacker: att, defender: def, targets, at });
   }
 

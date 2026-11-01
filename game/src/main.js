@@ -598,6 +598,7 @@ export function boot(doc = document) {
         case "leapEnd": root.classList.remove("leaping"); setTimeout(() => { if (!world.boss?.boss?.leap) lilyFx.clear(); }, 450); break;
         case "swallowed": hud.toast("SWALLOWED!", "danger"); hud.banner(ev.target ? `${ev.target.stats.name.toUpperCase()} IS STUCK IN A SLIME BUBBLE · BURST IT` : "MORE EGG SACS"); sfx.play("mud"); break;
         case "freed": hud.toast(`${ev.fighter.stats.name.toUpperCase()} IS FREE`, "clear"); break;
+        case "bondFull": if (ev.ready) hud.toast("BOND FULL · TEAM ATTACK READY", "afterimage"); sfx.play("assist"); break; // (GDD §9.2)
         case "teamAttack": {
           const b = BONDS[ev.kind];
           hud.toast("TEAM ATTACK", "finisher"); hud.banner((b?.team?.name ?? "TEAM ATTACK").toUpperCase());
@@ -1044,6 +1045,7 @@ export function boot(doc = document) {
     getWorld: () => world,
     makeWorld: (opts) => newWorld({ ...opts, mods: addMods(statMods(partyOf(opts.companions)), opts.mods), progress: story.progress, teamAttacks: story.bonds.teamAttacks(), pageXpBonus: story.crafting.pageXpBonus }),
     openUI: (kind) => openHQ(kind),
+    playSkit: (k, name) => playSkit(k, name), // a camp skit (GDD §10)
     onSecret: () => { world.margin = new Set(story.secrets.margin); refreshGrimDot(); }, // a secret page found (and pinned, if there was room)
     onCorruption: () => { if (!grim.hidden) renderGrimoire(); },
     onMeal: () => { hud.toast("WARM AND FULL", "clear"); hud.banner("+20 HEALTH · +5% DAMAGE UNTIL MIDNIGHT"); sfx.play("heal"); applyGear(); const p = world.player; p.combatant.health.fill(); },
@@ -1970,6 +1972,30 @@ export function boot(doc = document) {
   hud.quality = quality;
 
   let last = performance.now();
+  // Camp skits (GDD §10): two portraits (an initial in each one's colour), the lines one at a time, a soft tick for the voice.
+  const skitEl = root.querySelector("[data-skit]");
+  let skitRun = null;
+  const playSkit = (k, name) => {
+    if (!skitEl) return;
+    const id = (skitRun = {});
+    const cast = skitEl.querySelector("[data-skit-cast]"), line = skitEl.querySelector("[data-skit-line]");
+    skitEl.querySelector("[data-skit-title]").textContent = `SKIT · ${k.title}`;
+    cast.replaceChildren(...k.cast.map((c) => { const i = document.createElement("i"); i.textContent = c[0].toUpperCase(); i.style.background = LOOKS[c]?.trail ?? "#ccc"; i.dataset.who = c; return i; }));
+    let n = 0, wait = null;
+    const show = () => {
+      if (skitRun !== id) return;
+      if (n >= k.lines.length) { skitEl.hidden = true; skitRun = null; return; }
+      const [who, text] = k.lines[n++];
+      const b = document.createElement("b"); b.textContent = who; // (a player's name is never markup)
+      line.replaceChildren(b, document.createTextNode(text.replaceAll("{name}", name)));
+      for (const i of cast.children) i.classList.toggle("on", i.dataset.who === who.toLowerCase());
+      sfx.play("click", 0.5); // the voice placeholder
+      clearTimeout(wait); wait = setTimeout(show, Math.max(2600, text.length * 55));
+    };
+    skitEl.onclick = () => { clearTimeout(wait); show(); };
+    skitEl.hidden = false; show();
+  };
+
   // Corruption 75 (GDD §8.3): the Hollow whispers in your fights. The picture frays at the edges; now and then, a word.
   const whisperEl = root.querySelector("[data-whisper]");
   const WHISPERS = ["write nothing", "let it go blank", "you were never written", "rest", "unmake it", "nobody would remember"];

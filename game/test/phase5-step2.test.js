@@ -7,7 +7,7 @@ import { WORLD_SCRIPT } from "../src/data/story/world.js";
 import { parseScript, DialogueRunner } from "../src/core/script.js";
 import { CAST } from "../src/data/story/cast.js";
 import { ZONES } from "../src/data/zones.js";
-import { World, TEAM_SURGE } from "../src/sim/world.js";
+import { World, BOND_GAUGE } from "../src/sim/world.js";
 import { WorldClock } from "../src/sim/weather.js";
 
 const nodes = parseScript(WORLD_SCRIPT, "world");
@@ -90,7 +90,7 @@ test("buying a gift at a stall and giving it: the dialogue path", () => {
   assert.equal(s.type, "options"); assert.equal(s.options.find((o) => o.text.startsWith("Give")).enabled, false);
 });
 
-test("rank 3 passives: party passives only with that companion fighting; rank 5 Team Attack spends Surge and strikes", () => {
+test("rank 3 passives: party passives only with that companion fighting; rank 5 Team Attack spends the Bond gauge (§9.2, since Phase 11) and strikes", () => {
   const f = new FlagStore(), b = new Bonds(f);
   for (const id of ["bas", "tamsin"]) { f.set(`BOND_EV_${id.toUpperCase()}_2`, 1); b.add(id, RANK_POINTS[2]); }
   assert.deepEqual(b.mods([]), { surge: 0.1 }, "Bas's passive needs Bas beside you");
@@ -100,18 +100,18 @@ test("rank 3 passives: party passives only with that companion fighting; rank 5 
 
   const w = new World({ seed: 9, companions: ["bas"], teamAttacks: b.teamAttacks() }); w.drainEvents();
   const e = w.spawnEnemy("acolyte", 0, 3); e.brain = null; e.combatant.health.max = e.combatant.health.current = 5000; w.drainEvents();
-  w.player.surge.set(80);
+  w.bondGauge = BOND_GAUGE.max; w.player.surge.set(80);
   assert.ok(w.callAssist("bas").ok);
-  assert.equal(w.player.surge.current, 80 - TEAM_SURGE);
+  assert.equal(w.bondGauge, 0, "the gauge is spent"); assert.equal(w.player.surge.current, 80, "Surge is the Ultimate's");
   const log = [];
   for (let i = 0; i < 60; i++) { w.step(); log.push(...w.drainEvents()); }
   assert.ok(log.some((x) => x.type === "teamStrike"));
   assert.ok(log.some((x) => x.type === "hit" && x.ability.id === "TeamAttack"));
-  // Without enough Surge it's an ordinary assist.
+  // Without a full gauge it's an ordinary assist (and the assist fills the gauge a little).
   const w2 = new World({ seed: 9, companions: ["bas"], teamAttacks: ["bas"] }); w2.drainEvents();
-  const e2 = w2.spawnEnemy("acolyte", 0, 3); e2.brain = null; w2.drainEvents(); w2.player.surge.set(10);
+  const e2 = w2.spawnEnemy("acolyte", 0, 3); e2.brain = null; w2.drainEvents(); w2.player.surge.set(100);
   w2.callAssist("bas"); const l2 = w2.drainEvents();
-  assert.ok(!l2.some((x) => x.type === "teamAttack"));
+  assert.ok(!l2.some((x) => x.type === "teamAttack")); assert.equal(w2.bondGauge, BOND_GAUGE.assist);
 });
 
 test("the world clock counts days (one chat and one gift per squadmate per day)", () => {

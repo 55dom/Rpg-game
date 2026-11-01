@@ -41,6 +41,21 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
 .a11y button[aria-pressed="true"] { color: var(--text); border-color: var(--lantern); }
 .a11y button[data-a11y="ult"] { color: var(--text); }
 .a11y-note { margin: 4px 0 0; font-size: 11px; color: var(--muted); }
+/* Camp skits (GDD §10): two of the squad talking, in a corner, while you walk. */
+.skit { position: fixed; left: 16px; bottom: 120px; z-index: 6; width: min(360px, calc(100vw - 32px)); background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px 8px; cursor: pointer; animation: skitIn 0.3s ease-out; }
+@keyframes skitIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.skit-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font: 600 10px/1 var(--font-mono); letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; }
+.skit-head span { display: flex; gap: 4px; }
+.skit-head i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 11px/1 var(--font-mono); font-style: normal; color: #14121a; opacity: 0.45; }
+.skit-head i.on { opacity: 1; box-shadow: 0 0 0 2px var(--text); }
+.skit p { margin: 8px 0 4px; font-size: 14px; line-height: 1.4; color: var(--text); min-height: 2.8em; }
+.skit p b { color: var(--lantern); font-weight: 600; margin-right: 6px; }
+.skit small { font-size: 10px; color: var(--muted); }
+.bond-gauge { display: flex; align-items: center; gap: 6px; margin-top: 4px; font: 600 9px/1 var(--font-mono); letter-spacing: 0.12em; color: var(--muted); }
+.bond-gauge .bar { flex: 1; height: 4px; }
+.bond-gauge .bar i { background: #e6a8d8; }
+.bond-gauge.full { color: var(--text); }
+.bond-gauge.ready .bar i { background: #ffd27a; box-shadow: 0 0 8px #ffd27a; }
 /* Corruption 75 (GDD §8.3): the Hollow whispers in your fights. The edges of the picture fray and darken; a word, now and then. */
 .whispers canvas { filter: saturate(0.55) contrast(1.12); }
 .whispers::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 4; box-shadow: inset 0 0 160px 40px rgba(8, 6, 14, 0.85); animation: fray 2.6s steps(6) infinite; }
@@ -605,6 +620,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
     <div class="bar posture"><i data-boss-posture></i></div>
   </div>
   <div class="whisper" data-whisper aria-hidden="true"></div>
+  <div class="skit" data-skit hidden><div class="skit-head"><b data-skit-title></b><span data-skit-cast></span></div><p data-skit-line></p><small>tap to skip</small></div>
   <div class="ultcard" data-ultcard><b>SKYRENDER</b><span>WIND GRIMOIRE · LEGENDARY PAGE</span></div>
 
   <section class="fd" data-fd aria-label="Frame data">

@@ -37,7 +37,7 @@ export const BONDS = Object.freeze({
     lines: { 3: "...Is this a honey bun. For me. I'm going to eat it very slowly and think about you.", 2: "Useful. Thanks.", 1: "Huh. Thanks.", 0: "That's... sour. I'll give it to Dagrun." },
     lore: "Bas grew up on a stone farm in the north: a farm that grows nothing but rocks, which you then carry somewhere else. He says it made him patient. He is not patient.",
     passive: { name: "Shoulder to Shoulder", desc: "With Bas beside you, you take 8% less damage.", mods: { defense: 0.08 }, party: true },
-    team: { name: "Stone and Gale", desc: "With Surge at half or more, calling Bas becomes a Team Attack: his pillar launches, your gale finishes." },
+    team: { name: "Stone and Gale", desc: "With the Bond gauge full (reactions and assists fill it), calling Bas becomes a Team Attack: his pillar launches, your gale finishes." },
     events: { 2: "B_Bas_2", 4: "B_Bas_4" },
   },
   juno: {
@@ -46,7 +46,7 @@ export const BONDS = Object.freeze({
     lines: { 3: "Silver. You remembered. ...I'm going to make you something with it and you're going to wear it.", 2: "Oh, that's lovely. Thank you.", 1: "Thank you! That's sweet.", 0: "A rock. For sharpening. I sew, {name}." },
     lore: "Juno's mother had a loom in the Weavers' Row that took up the whole front room. They sold it the winter Juno was nine. Every Mark from the café goes into a tin marked 'LOOM'.",
     passive: { name: "Mended", desc: "With Juno beside you, you have 20 more health.", mods: { health: 20 }, party: true },
-    team: { name: "Thread and Gale", desc: "With Surge at half or more, calling Juno becomes a Team Attack: her thread binds, your gale cuts through." },
+    team: { name: "Thread and Gale", desc: "With the Bond gauge full (reactions and assists fill it), calling Juno becomes a Team Attack: her thread binds, your gale cuts through." },
     events: { 2: "B_Juno_2", 4: "B_Juno_4" },
   },
   tamsin: {
