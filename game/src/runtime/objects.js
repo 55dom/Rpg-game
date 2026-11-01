@@ -61,6 +61,7 @@ export class ObjectView {
           petal.parent = this.head; petal.scaling.set(0.55, 0.16, 1.5); petal.rotation.set(0.35, a, 0);
         }
         this.glowPart = part(MB.CreateSphere("core", { diameter: 0.9, segments: 12 }, scene), "#ffffff", 0, 0.25, 0, 0, true); this.glowPart.parent = this.head;
+        this.root.scaling.setAll(1.7); // the height of a house
         break;
       }
       case "wisp": { // a storm wisp (Arc 4): a ball of weather on a string of lightning, hanging at head height
