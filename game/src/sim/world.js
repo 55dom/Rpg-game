@@ -361,6 +361,7 @@ export class World {
     this.silences = []; this.silenceAll = false; this.dodgeHush = 0; this.waves = []; this.strikes = [];
     this.gauge = null; this.headline = null; // a staged fight's meter, and the foe it's about (sim/siege.js)
     this.islands = null; // after a floor collapses: the debris still holding, [{ x, z, r }] (Galen's P3)
+    this.deck = null; // a moving deck you can stand on (Varka's siege engine, B8 P2): sim/varka.js lays it, _deck() carries it
     this.holes = []; // the Hollow Bloom's erasures (B7 P2): holes in the world, [{ x, z, r, frames }]
     this.pageLocks = {}; // and its blank pages (P4): spell slot → frames until it's written back
     this.companions = [];
@@ -604,7 +605,7 @@ export class World {
 
   /** An expanding ring along the ground from (x, z): anyone on the ground it crosses is hit once. Jump it or dodge through. */
   addWave(owner, x, z, { speed = 6, maxR = 9, width = 0.9, spec, ability, kind = "toll" }) {
-    const w = { owner, x, z, r: 0.4, speed, maxR, width, spec, ability, kind, hitSet: new Set() };
+    const w = { owner, x, z, y: owner.floor || 0, r: 0.4, speed, maxR, width, spec, ability, kind, hitSet: new Set() }; // it rolls along the floor it was struck on
     this.waves.push(w);
     this.emit({ type: "groundWave", wave: w }); // not "wave": that event means a new enemy wave
     return w;
@@ -615,9 +616,9 @@ export class World {
    * `lift` (Wraithe's Undertow): the ground opens instead, and whoever it catches drops out of the air that high up.
    * `landing`: and lands hard for that much (never the last of their health), unless they jump or dash in the air first.
    */
-  addStrike(owner, x, z, { delay = 60, r = 1.7, spec, ability, kind = "thunder", lift = 0, landing = 0 }) {
+  addStrike(owner, x, z, { delay = 60, r = 1.7, spec, ability, kind = "thunder", lift = 0, landing = 0, y = 0 }) {
     ({ x, z } = constrain({ x, z }, 0.3, this.bounds));
-    const s = { owner, x, z, r, t: delay, delay, spec, ability, kind, lift, landing };
+    const s = { owner, x, z, y, r, t: delay, delay, spec, ability, kind, lift, landing }; // y: the floor it lands on (Varka's deck, or the ground)
     this.strikes.push(s);
     this.emit({ type: "strikeWarn", strike: s });
     return s;
@@ -626,7 +627,7 @@ export class World {
     for (const s of this.strikes) {
       if (--s.t > 0) continue;
       for (const t of this.fighters) {
-        if (t.team === s.owner.team || !t.alive || t.traits.object || t.pos.y > 2.2) continue;
+        if (t.team === s.owner.team || !t.alive || t.traits.object || (t.floor || 0) !== s.y || t.pos.y - s.y > 2.2) continue;
         if (Math.hypot(t.pos.x - s.x, t.pos.z - s.z) > s.r + t.stats.radius * 0.5) continue;
         const outcome = this._resolve(s.owner, t, { spec: s.spec, ability: s.ability, hitSet: new Set(), origin: { x: s.x, y: 0.5, z: s.z }, projectile: true });
         if (s.lift && outcome === HitOutcome.Hit && t.alive) { // through the floor, and out of the air above it
@@ -643,7 +644,7 @@ export class World {
     for (const w of this.waves) {
       w.r += w.speed / 60;
       for (const t of this.fighters) {
-        if (t.team === w.owner.team || !t.alive || w.hitSet.has(t) || t.pos.y > 0.7 || t.traits.object) continue;
+        if (t.team === w.owner.team || !t.alive || w.hitSet.has(t) || (t.floor || 0) !== w.y || t.pos.y - w.y > 0.7 || t.traits.object) continue;
         const d = Math.hypot(t.pos.x - w.x, t.pos.z - w.z);
         if (Math.abs(d - w.r) > w.width + t.stats.radius) continue;
         w.hitSet.add(t);
@@ -717,9 +718,11 @@ export class World {
     const t = owner === this.player ? (this.lockTarget?.alive ? this.lockTarget : this.nearestEnemy(16)) : owner.target?.alive ? owner.target : this.player;
     const base = t && t !== owner ? angleTo(owner.pos, t.pos) : owner.yaw;
     owner.yaw = base;
+    // Down off a deck (or up onto one): the fan tilts to the target's chest.
+    const rise = t && t !== owner && (t.floor || 0) !== (owner.floor || 0) ? (t.pos.y + 1.1 - (owner.pos.y + 1.3)) / Math.max(1, flatDistance(owner.pos, t.pos)) : 0;
     for (let i = 0; i < count; i++) {
-      const a = base + (i - (count - 1) / 2) * spread;
-      this.fireProjectile(owner, ability, key, speed, { x: Math.sin(a), y: 0, z: Math.cos(a) });
+      const a = base + (i - (count - 1) / 2) * spread, n = Math.hypot(1, rise);
+      this.fireProjectile(owner, ability, key, speed, { x: Math.sin(a) / n, y: rise / n, z: Math.cos(a) / n });
     }
   }
 
@@ -728,6 +731,7 @@ export class World {
     for (const f of this.enemies) this.emit({ type: "despawn", fighter: f });
     this.fighters = this.fighters.filter((f) => f.team !== Team.Enemy);
     this.projectiles.length = 0; this.zones.length = 0; this.boss = null; this.lockTarget = null;
+    if (this.deck) { this.deck = null; for (const f of this.fighters) f.floor = 0; this.emit({ type: "deckGone" }); }
   }
 
   /** Back on your feet mid-fight (story duels let you get up). */
@@ -752,7 +756,7 @@ export class World {
       const dx = t.pos.x - pos.x, dy = t.pos.y + 1.1 - pos.y, dz = t.pos.z - pos.z, d = Math.hypot(dx, dy, dz) || 1;
       dir = { x: dx / d, y: dy / d, z: dz / d };
     }
-    const p = { owner, team: owner.team, def, spec: def.hit ?? ability.hit, ability, pos, dir, speed,
+    const p = { owner, team: owner.team, floor: owner.floor || 0, def, spec: def.hit ?? ability.hit, ability, pos, dir, speed,
       life: Math.round(((def.range ?? 14) / speed) * 60), hitSet: new Set(), id: ++this._projectileIds || (this._projectileIds = 1) };
     this.projectiles.push(p);
     this.emit({ type: "projectile", projectile: p });
@@ -881,12 +885,13 @@ export class World {
     const O = this.origin;
     p.pos = v3(O.x, 0, O.z - 4); p.prev = v3(O.x, 0, O.z - 4); p.vel = v3(); p.knock = v3(); p.grounded = true; p.yaw = 0;
     p.counterFrames = 0; p.hitstop = 0; this.lockTarget = null; this.slowFrames = 0; this.stopFrames = 0;
-    p.surge?.set(0); p.tags.clear(); p.offIsland = 0;
+    p.surge?.set(0); p.tags.clear(); p.offIsland = 0; p.floor = 0;
     if (this.islands) { this.islands = null; this.emit({ type: "floorRestore" }); } // a retry starts on a whole floor
+    if (this.deck) { this.deck = null; this.emit({ type: "deckGone" }); } // and on the ground
     for (const c of this.companions) {
       c.combatant.reset(); c.runner.interrupt(); c.tags.clear(); c.deadFrames = 0; c.hitstop = 0;
       c.sacrificed = false; c.noRevive = false; // a retry: she can offer again
-      c.pos = v3(p.pos.x + c.slot[0], 0, p.pos.z + c.slot[1]); c.prev = { ...c.pos }; c.vel = v3(); c.knock = v3(); c.grounded = true;
+      c.pos = v3(p.pos.x + c.slot[0], 0, p.pos.z + c.slot[1]); c.prev = { ...c.pos }; c.vel = v3(); c.knock = v3(); c.grounded = true; c.floor = 0;
       c.assistReadyFrame = 0; c.yaw = 0;
     }
   }
@@ -939,7 +944,7 @@ export class World {
     let best = null, bestD = range;
     for (const e of this.liveEnemies) {
       if (e === except || e.traits.prop) continue; // (a prop is yours to aim at, never where your aim drifts)
-      const d = flatDistance(p.pos, e.pos);
+      const d = flatDistance(p.pos, e.pos) + ((e.floor || 0) !== (p.floor || 0) ? 8 : 0); // up on a deck: only if there's nothing down here
       if (d < bestD) { best = e; bestD = d; }
     }
     return best;
@@ -1035,6 +1040,55 @@ export class World {
   }
 
   /**
+   * A moving deck (Varka's siege engine, B8 P2): a floor `h` up, on the engine's back, that rolls and turns with it.
+   * Aboard (`floor === h`) you're carried; step off its edge and you drop to the ground (knocked off, and it's a hard
+   * landing unless you jump or dash in the air). Below, its hull is solid: you climb up the ramp at the back, or jump on.
+   */
+  _deck() {
+    const D = this.deck, e = D.engine;
+    if (!e?.alive) return; // (its controller brings everyone down)
+    const ox = D.x, oz = D.z, oy = D.yaw;
+    D.x = e.pos.x; D.z = e.pos.z; D.yaw = e.yaw;
+    const toLocal = (x, z, cx, cz, yaw) => { const c = Math.cos(yaw), s = Math.sin(yaw), rx = x - cx, rz = z - cz; return { x: rx * c - rz * s, z: rx * s + rz * c }; };
+    const toWorld = (l) => { const c = Math.cos(D.yaw), s = Math.sin(D.yaw); return { x: D.x + l.x * c + l.z * s, z: D.z - l.x * s + l.z * c }; };
+    const inside = (l, m = 0) => Math.abs(l.x) <= D.hw - m && l.z >= -D.hl + m && l.z <= D.front - m;
+    for (const f of this.fighters) {
+      if (!f.alive || f.traits.object || f.submerged || f.caged) continue;
+      if (f.floor === D.h) { // aboard: carried with it
+        const l = toLocal(f.pos.x, f.pos.z, ox, oz, oy);
+        f.yaw += D.yaw - oy;
+        if (f === this.player && !inside(l)) { // over the edge
+          const knocked = Math.hypot(f.knock.x, f.knock.z) > 1.2 || f.combatant.isStaggered;
+          const w = toWorld(l); f.pos.x = w.x; f.pos.z = w.z;
+          f.floor = 0; f.grounded = false; f.vel.y = Math.min(f.vel.y, 0);
+          if (knocked) { f.dropLanding = D.offLanding; f.airJumps = 1; f.airDashes = 1; } // jump or dash before you land
+          this.emit({ type: "deckOff", fighter: f, knocked, at: { x: f.pos.x, y: f.pos.y, z: f.pos.z } });
+          continue;
+        }
+        if (!inside(l)) { l.x = Math.max(-D.hw, Math.min(D.hw, l.x)); l.z = Math.max(-D.hl, Math.min(D.front, l.z)); } // the rest keep to the deck
+        const w = toWorld(l); f.pos.x = w.x; f.pos.z = w.z;
+        continue;
+      }
+      const l = toLocal(f.pos.x, f.pos.z, D.x, D.z, D.yaw), r = f.stats.radius;
+      if (f === this.player) {
+        if (!f.grounded && f.pos.y >= D.h - 0.35 && inside(l, 0.2)) { f.floor = D.h; this.emit({ type: "deckBoard", fighter: f, at: { x: f.pos.x, y: D.h, z: f.pos.z } }); continue; } // jumped on
+        if (f.grounded && Math.abs(l.x) <= D.rampHalf && l.z < -D.hl && l.z >= -D.hl - D.ramp) { // up the ramp at the back
+          const w = toWorld({ x: l.x, z: -D.hl + 0.5 }); f.pos.x = w.x; f.pos.z = w.z;
+          f.floor = D.h; f.grounded = false; f.vel.y = Math.sqrt(2 * Tuning.gravity * (D.h + 0.15));
+          this.emit({ type: "deckBoard", fighter: f, ramp: true, at: { x: f.pos.x, y: D.h, z: f.pos.z } });
+          continue;
+        }
+      }
+      if (f.pos.y >= D.h - 0.2) continue; // over it in the air
+      if (Math.abs(l.x) < D.hw + r && l.z > -D.hl - r && l.z < D.hl + r) { // the hull: out to its nearest side
+        const gaps = [D.hw + r - l.x, D.hw + r + l.x, D.hl + r - l.z, D.hl + r + l.z], m = Math.min(...gaps);
+        if (m === gaps[0]) l.x = D.hw + r; else if (m === gaps[1]) l.x = -D.hw - r; else if (m === gaps[2]) l.z = D.hl + r; else l.z = -D.hl - r;
+        const w = toWorld(l); f.pos.x = w.x; f.pos.z = w.z;
+      }
+    }
+  }
+
+  /**
    * The Hollow Bloom's holes (B7 P2): blank ground. Stand on it and it takes a bite out of you too (never the last of your
    * health) and you come to on its edge; a few frames' grace lets a run carry you across. Everyone else steps round them.
    */
@@ -1081,6 +1135,7 @@ export class World {
     let best = null, bestScore = Infinity;
     for (const e of this.fighters) {
       if (e.team !== Team.Enemy || !e.alive || e.traits.dummy || e.traits.prop) continue; // the squad leaves the training dummies (and the fen lanterns) to you
+      if ((e.floor || 0) !== (c.floor || 0)) continue; // out of reach up on a deck: the squad goes for what's holding it up
       const fromLeader = flatDistance(p.pos, e.pos);
       let score = stance === "Press" ? flatDistance(c.pos, e.pos) : fromLeader;
       if (stance === "Guard" && e.target === p && e.runner.isRunning) score -= 6; // intercept attacks on Rook
@@ -1170,7 +1225,7 @@ export class World {
         c.blocking = f.holdBlock && !f.runner.isRunning && f.grounded && c.canAct;
       }
       // AI fighters track their target through the wind-up, then commit.
-      if (f.brain && f.target?.alive && f.runner.isRunning && f.runner.frame < f.current.startup - 4) {
+      if (f.brain && f.target?.alive && f.runner.isRunning && f.runner.frame < f.current.startup - 4 && f !== this.deck?.engine) { // (a deck holds its heading)
         f.yaw = turn(f.yaw, angleTo(f.pos, f.target.pos), f.stats.turnRate);
       }
     }
@@ -1188,6 +1243,7 @@ export class World {
             if (hb.ability.tags.includes("gust") && boxHitsCapsule(hb.def, att.pos, att.yaw, def.pos, def.stats.radius + 0.6, 2.5) && def.boss.uproot(att)) hb.hitSet.add(def);
             if (def.submerged || def.boss.intangible) continue; // (inside the Hollow Bloom's memory, there's nothing there to hit)
           }
+          if ((def.floor || 0) !== (att.floor || 0)) continue; // one of you is up on the deck: out of reach
           const grace = def.combatant.invulnerableFrames > 0 ? Tuning.nearMissGrace : 0;
           if (!boxHitsCapsule(hb.def, att.pos, att.yaw, def.pos, def.stats.radius + grace, def.stats.height)) continue;
           hb.hitSet.add(def);
@@ -1243,6 +1299,7 @@ export class World {
         const below = def.pos.y - p.pos.y, above = p.pos.y - (def.pos.y + def.stats.height);
         const dy = below > 0 ? below : above > 0 ? above : 0;
         if (dx * dx + dz * dz + dy * dy > r * r) continue;
+        if ((def.floor || 0) > p.floor) { p.dead = true; this.emit({ type: "railTurn", projectile: p, defender: def, at: { ...p.pos } }); break; } // up at Varka's deck: the iron rail turns it
         p.hitSet.add(def);
         const outcome = this._resolve(p.owner, def, { def: p.def, spec: p.spec, ability: p.ability, hitSet: p.hitSet, origin: p.pos, projectile: true });
         if (outcome !== HitOutcome.Dodged && outcome !== HitOutcome.PerfectDodge) { p.dead = true; break; }
@@ -1438,7 +1495,7 @@ export class World {
     const busy = f.runner.isRunning;
     if (f.traits.immobile) { // bells, seals, egg sacs, bubbles: turn to aim, never walk (their brains can ask for odd moves)
       f.moveInput.x = f.moveInput.z = 0; f.vel.x = f.vel.z = 0; f.knock.x = f.knock.z = 0;
-      if (f.alive && f.target?.alive && f.stats.turnRate) f.yaw = turn(f.yaw, angleTo(f.pos, f.target.pos), f.stats.turnRate);
+      if (f.alive && f.target?.alive && f.stats.turnRate && f !== this.deck?.engine) f.yaw = turn(f.yaw, angleTo(f.pos, f.target.pos), f.stats.turnRate); // (a deck holds its heading)
       return;
     }
     const canSteer = f.combatant.canAct && f.alive && (!busy || !f.grounded) && !f.tags.has("BOUND"); // threads hold you in place
@@ -1471,8 +1528,9 @@ export class World {
       if (f.hoverFrames > 0) { f.hoverFrames--; f.vel.y = 0; g = 0; } // air dash flies flat
       f.vel.y -= g * dt;
       f.pos.y += f.vel.y * dt;
-      if (f.pos.y <= 0) {
-        f.pos.y = 0; f.vel.y = 0; f.grounded = true;
+      const fl = f.floor || 0; // the ground, or the deck you're standing on (climbing up to it, you land on the way down)
+      if (f.pos.y <= fl && (fl === 0 || f.vel.y <= 0)) {
+        f.pos.y = fl; f.vel.y = 0; f.grounded = true;
         if (f.dropLanding) { // dropped out of the sky: did they right themselves in the air?
           const recovered = f.airJumps === 0 || f.airDashes === 0, hp = f.combatant.health.current;
           if (!recovered) { f.combatant.takeDamage(Math.min(f.dropLanding, hp - 1)); f.combatant.stagger(30); }
@@ -1551,6 +1609,7 @@ export class World {
         f.runner.interrupt(); f.moveInput.x = f.moveInput.z = 0;
       }
     }
+    if (this.deck) this._deck();
     for (const [id, m] of Object.entries(this.members)) { // the one on the bench gets a little breath back
       if (id === this.active || !m || m.hp == null || m.hp <= 0) continue;
       m.hp = Math.min(m.stats.maxHealth, m.hp + (m.stats.maxHealth * 0.004) / 60); // 0.4% a second

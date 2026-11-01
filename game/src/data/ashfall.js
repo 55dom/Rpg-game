@@ -104,9 +104,12 @@ export const BRANNOC_COMPANION = Object.freeze({
 
 // ---- B8 · General Varka Ironsong (Ep 22, "Ironsong") --------------------------------------------
 // P1 (100–65%): on the ground in front of her siege engine, the Ironsong, which fires bolt volleys.
-// P2 (65%): the engine rolls: it drives across the field down a marked lane. Get out of the lane.
+// P2 (65%): she vaults up onto the engine's deck and it rolls: across the field down a marked lane (on the ground, get
+//   out of it). Up there she's out of reach: board it (jump on, or the ramp at the back) and fight her on the moving deck,
+//   where her hammer's shock ring can throw you off; or break the engine from below (the squad goes for it) and she falls.
 //   Her Magnet pulls you in close.
-// P3 (35%): the engine breaks apart: burning wreckage falls all over the field (rings, then impact).
+// P3 (35%): the engine breaks apart under her: the deck goes up in three burning sections that come down across the
+//   field (jump or dash in the air before you land), and wreckage keeps falling everywhere (rings, then impact).
 // P4 (15%): Railgun: she charges herself with Storm and dashes the length of the field. Dodge.
 // Final (6%): Brannoc's Final Vow ends it (scripted). He doesn't get up.
 export const VARKA_STATS = Object.freeze({
@@ -161,6 +164,9 @@ export const VARKA_TUNING = Object.freeze({
   debris: hitSpec({ damage: 16, posture: 18, hitstop: 5, hitstun: 20, knockback: 3, unblockable: true, applyTags: [SCORCH] }),
   shock: hitSpec({ damage: 10, posture: 12, hitstop: 3, hitstun: 16, knockback: 3, unblockable: true, applyTags: [CHARGE] }),
   thunder: THUNDER,
+  // P2's deck (sim/world.js _deck): h up; hw × the length behind the tower (-hl … front); the ramp at the back.
+  deck: { h: 1.5, hw: 2.1, hl: 3.2, front: 1.3, ramp: 1.8, rampHalf: 0.9, offLanding: 12, rollEvery: 260, rollFrames: 120,
+    sections: [-2.4, 0, 2.4], sectionDelay: 54, sectionRadius: 2.3, sectionLanding: 14, brokenStagger: 120 },
 });
 // What the engine's ram and the falling wreckage are called when they hit (no moves of their own: the controller fires them).
 export const ENGINE_RAM = defineAbility({ id: "EngineRam", startup: 1, active: 1, recovery: 1, hit: VARKA_TUNING.roll, events: [] });
@@ -172,7 +178,7 @@ export const ENGINE_ABILITIES = Object.freeze({
     events: [glint(20), sound(30, "slam"), { frame: 34, type: E.Projectile, key: "Bolt", value: 14 }] }),
 });
 export const ASH_OBJECTS = Object.freeze({
-  engine: { stats: { name: "The Ironsong (siege engine)", maxHealth: 700, maxPosture: 999, runSpeed: 0, circleSpeed: 0, turnRate: 0.06, radius: 1.6, height: 4.5 }, shape: "engine",
+  engine: { stats: { name: "The Ironsong (siege engine)", maxHealth: 700, maxPosture: 999, runSpeed: 0, circleSpeed: 0, turnRate: 0.06, radius: 1.8, height: 4.5 }, shape: "engine",
     options: () => [new AttackOption(ENGINE_ABILITIES.Volley, 0, 24, 1, 110)] },
 });
 export const ASH_OBJECT_HITBOXES = Object.freeze({ Bolt: VARKA_HITBOXES.Bolt });

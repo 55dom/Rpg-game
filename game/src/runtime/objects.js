@@ -78,21 +78,29 @@ export class ObjectView {
         this.glowPart = part(MB.CreateSphere("tip", { diameter: 0.3, segments: 8 }, scene), "#bfe8ff", 0, 3.3, 0, 0, true);
         break;
       }
-      case "engine": { // the Ironsong: a wheeled war tower, iron-plated, a storm-charged ballista on top
-        const wood = "#5a3a22", iron = "#3a3f48";
-        part(MB.CreateBox("deck", { width: 2.8, height: 0.5, depth: 3.6 }, scene), wood, 0, 0.75, 0, 0.03);
+      case "engine": { // the Ironsong: a wheeled war wagon, iron-plated, its tower at the front with a storm-charged ballista on top,
+        // and behind the tower an open deck you can stand on (1.5 up: B8 P2), railed at the sides, with steps down at the back
+        const wood = "#5a3a22", iron = "#3a3f48", plank = "#6a4a2c";
+        part(MB.CreateBox("frame", { width: 3.6, height: 0.6, depth: 6.0 }, scene), iron, 0, 0.75, 0, 0.02);
+        part(MB.CreateBox("deck", { width: 4.4, height: 0.5, depth: 6.6 }, scene), plank, 0, 1.25, 0, 0.03);
+        for (const z of [-2.6, -1.6, -0.6, 0.4]) part(MB.CreateBox("seam", { width: 4.3, height: 0.02, depth: 0.05 }, scene), "#3a2614", 0, 1.51, z, 0); // the planks
         this.wheels = [];
-        for (const x of [-1.5, 1.5]) for (const z of [-1.2, 1.2]) {
-          const w = part(MB.CreateCylinder("wheel", { height: 0.3, diameter: 1.1, tessellation: 12 }, scene), iron, x, 0.55, z, 0.02);
+        for (const x of [-2.25, 2.25]) for (const z of [-2.4, 0, 2.4]) {
+          const w = part(MB.CreateCylinder("wheel", { height: 0.32, diameter: 1.3, tessellation: 12 }, scene), iron, x, 0.65, z, 0.02);
           w.rotation.z = Math.PI / 2; this.wheels.push(w);
         }
-        part(MB.CreateBox("tower", { width: 2.2, height: 2.6, depth: 2.4 }, scene), wood, 0, 2.3, -0.2, 0.03);
-        for (const y of [1.5, 2.4, 3.3]) part(MB.CreateBox("plate", { width: 2.3, height: 0.25, depth: 2.5 }, scene), iron, 0, y, -0.2, 0.015);
-        part(MB.CreateBox("ram", { width: 0.5, height: 0.5, depth: 1.4 }, scene), iron, 0, 1.1, 2.2, 0.02);
-        const bow = part(MB.CreateBox("ballista", { width: 2.4, height: 0.18, depth: 0.25 }, scene), iron, 0, 3.9, 0.6, 0.02); bow.rotation.y = 0;
-        part(MB.CreateBox("rail", { width: 0.25, height: 0.2, depth: 2.2 }, scene), wood, 0, 3.85, 0.4, 0.015);
-        for (const x of [-0.8, 0.8]) part(MB.CreateBox("banner", { width: 0.6, height: 1.4, depth: 0.04 }, scene), "#a02a2a", x, 2.4, 1.0, 0.012);
-        this.glowPart = part(MB.CreateTorus("coil", { diameter: 0.7, thickness: 0.09, tessellation: 16 }, scene), "#9ad8ff", 0, 4.3, -0.4, 0, true);
+        part(MB.CreateBox("tower", { width: 3.8, height: 2.6, depth: 2.0 }, scene), wood, 0, 2.8, 2.3, 0.03);
+        for (const y of [2.0, 2.9, 3.8]) part(MB.CreateBox("plate", { width: 3.9, height: 0.25, depth: 2.1 }, scene), iron, 0, y, 2.3, 0.015);
+        part(MB.CreateBox("ram", { width: 0.6, height: 0.6, depth: 1.6 }, scene), iron, 0, 1.0, 4.0, 0.02);
+        part(MB.CreateBox("ballista", { width: 2.6, height: 0.18, depth: 0.25 }, scene), iron, 0, 4.3, 2.8, 0.02);
+        part(MB.CreateBox("rail", { width: 0.25, height: 0.2, depth: 2.2 }, scene), wood, 0, 4.25, 2.6, 0.015);
+        for (const x of [-1.1, 1.1]) for (const z of [1.28, 3.32]) part(MB.CreateBox("banner", { width: 0.7, height: 1.4, depth: 0.04 }, scene), "#a02a2a", x, 2.6, z, 0.012);
+        for (const x of [-2.15, 2.15]) { // the side rails round the open deck
+          part(MB.CreateBox("siderail", { width: 0.1, height: 0.1, depth: 4.4 }, scene), iron, x, 2.0, -1.0, 0.01);
+          for (const z of [-3.1, -1.9, -0.7, 0.5]) part(MB.CreateBox("post", { width: 0.12, height: 0.5, depth: 0.12 }, scene), iron, x, 1.75, z, 0.01);
+        }
+        for (const [z, top] of [[-3.65, 1.1], [-4.15, 0.72], [-4.65, 0.36]]) part(MB.CreateBox("step", { width: 1.8, height: top, depth: 0.5 }, scene), plank, 0, top / 2, z, 0.02); // the steps at the back
+        this.glowPart = part(MB.CreateTorus("coil", { diameter: 0.7, thickness: 0.09, tessellation: 16 }, scene), "#9ad8ff", 0, 4.7, 2.0, 0, true);
         this.glowPart.rotation.x = Math.PI / 2;
         break;
       }

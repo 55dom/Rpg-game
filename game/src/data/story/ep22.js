@@ -102,8 +102,9 @@ export const EPISODE_22 = {
         { at: 10, text: "Rings on the ground are Thunderheads. Step out of them before the bolt lands." },
       ],
       eventHints: {
-        engineRoll: "The engine is charging down the red lane. Get out of it.",
-        engineBreaks: "Burning wreckage is falling. Orange rings: move.",
+        deckUp: "She's up on the engine's deck: nothing reaches her from down here. Jump on, or take the steps at the back. Or break the engine and bring her down.",
+        engineRoll: "The engine is charging down the red lane. On the ground, get out of it. Aboard, hold on and keep swinging.",
+        engineBreaks: "The deck's coming apart! Jump or dash in the air before you land, then mind the orange rings.",
         railgun: "Railgun: a red glint, then she fires herself down the field. Dodge it.",
       },
       lines: [["Brannoc", "Iron Wardens! The wall does not move!"]],

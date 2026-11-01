@@ -386,7 +386,7 @@ export function boot(doc = document) {
         case "silenceZone": silenceFx.add(ev.zone); sfx.play("heal", 0.7); break;
         case "silenceEnd": silenceFx.remove(ev.zone); break;
         case "silenced": hud.toast(ev.what === "dodge" ? "DODGE SILENCED · PARRY!" : "SILENCED", "danger"); sfx.play("block", 0.5); break;
-        case "groundWave": vfx.ring({ x: ev.wave.x, y: 0.08, z: ev.wave.z }, ev.wave.maxR, { toll: "#c9b4ff", rot: "#c86a2a", splash: "#6ac8d8", shock: "#9ad8ff", gale: "#e8f4ff", erasure: "#f4f2ff" }[ev.wave.kind] ?? "#ffffff", ev.wave.maxR / ev.wave.speed); sfx.play(ev.wave.kind === "rot" ? "mud" : "slam", 0.7); camera.shake(0.2); break;
+        case "groundWave": vfx.ring({ x: ev.wave.x, y: (ev.wave.y || 0) + 0.08, z: ev.wave.z }, ev.wave.maxR, { toll: "#c9b4ff", rot: "#c86a2a", splash: "#6ac8d8", shock: "#9ad8ff", gale: "#e8f4ff", erasure: "#f4f2ff" }[ev.wave.kind] ?? "#ffffff", ev.wave.maxR / ev.wave.speed); sfx.play(ev.wave.kind === "rot" ? "mud" : "slam", 0.7); camera.shake(0.2); break;
         case "rodsRise": hud.toast("THE RODS RISE", "danger"); sfx.play("glint"); break;
         case "rodsBroken": hud.toast("THE CHARGE GOES OUT OF IT", "break"); impact(3, true); sfx.play("postureBreak"); break;
         case "constellation": hud.toast("THE STARS LIGHT UP", "danger"); break;
@@ -545,6 +545,15 @@ export function boot(doc = document) {
         case "engineRoll": groundFx.lane(ev.from, ev.to, ev.half * 1.6); hud.toast("THE IRONSONG CHARGES", "danger"); sfx.play("bossIntro", 0.6); break;
         case "engineStop": groundFx.clearLanes(); camera.shake(0.3); sfx.play("slam"); break;
         case "engineBreaks": groundFx.clearLanes(); vfx.ring({ x: ev.at.x, y: 0.1, z: ev.at.z }, 9, "#ff7a3a", 0.6); vfx.flash({ x: ev.at.x, y: 2.5, z: ev.at.z }, 6, "#ffb070", 0.2); vfx.sparksAt({ x: ev.at.x, y: 2, z: ev.at.z }, 30, "gold", 12, 9); impact(3, true); sfx.play("postureBreak"); camera.shake(0.9); break;
+        // B8 P2: the deck (sim/world.js _deck, sim/varka.js)
+        case "deckUp": vfx.ring({ x: ev.at.x, y: ev.at.y + 0.08, z: ev.at.z }, 4, "#9ad8ff", 0.4); vfx.sparksAt({ x: ev.at.x, y: ev.at.y + 0.4, z: ev.at.z }, 12, "gold", 6, 4); sfx.play("jump"); sfx.play("slam", 0.6); camera.shake(0.3);
+          hud.toast("SHE'S ON THE DECK", "danger"); break;
+        case "deckBoard": if (ev.fighter === world.player) { vfx.ring({ x: ev.at.x, y: ev.at.y + 0.06, z: ev.at.z }, 1.8, "#e8d8b0", 0.3); sfx.play("land"); hud.toast("ABOARD", "clear"); } break;
+        case "deckOff": if (ev.fighter === world.player) { sfx.play("dodge", 0.7); hud.toast(ev.knocked ? "THROWN OFF THE DECK" : "OFF THE DECK", ev.knocked ? "danger" : "clear"); } break;
+        case "deckBroken": vfx.ring({ x: ev.at.x, y: 0.1, z: ev.at.z }, 7, "#ff7a3a", 0.5); vfx.sparksAt({ x: ev.at.x, y: 1.6, z: ev.at.z }, 24, "gold", 10, 7); impact(3, true); sfx.play("postureBreak"); camera.shake(0.8);
+          hud.toast("THE ENGINE'S DOWN", "clear"); hud.banner("SHE'S FALLEN WITH IT · GET IN WHILE SHE'S REELING"); break;
+        case "deckSections": camera.kick(0.6); sfx.play("slam", 0.8); break; // (Ep 22's hint says what to do)
+        case "railTurn": vfx.sparksAt(ev.at, 6, "white", 5, 2); sfx.play("block", 0.5); break;
         case "magnet": hud.toast("MAGNET", "danger"); vfx.ring({ x: ev.fighter.pos.x, y: 1, z: ev.fighter.pos.z }, 8, "#9ad8ff", 0.4, true); break;
         case "railgun": vfx.flash({ x: ev.fighter.pos.x, y: 1.4, z: ev.fighter.pos.z }, 3, "#9ad8ff", 0.2); break;
         case "finalVow": {
@@ -1289,7 +1298,7 @@ export function boot(doc = document) {
     paragon: { 2: ["ZENITH", "PHASE 2 · LINES OF LIGHT RUN OUT FROM HIM IN A CROSS · STAND BETWEEN THEM"] },
     eraser: { 2: ["UNWRITE", "PHASE 2 · THE FLOOR GOES BLANK UNDER YOU · STEP OFF THE PALE PATCHES"], 3: ["ERASURE", "PHASE 3 · A WALL OF BLANK ROLLS OUT OF IT · JUMP IT"] },
     halvard: { 2: ["FORM THE LINE", "PHASE 2 · TWO LANCES · THE LINE CHARGES DOWN A RED LANE · STEP OUT OF IT"], 3: ["THE SHIELD SPLITS", "PHASE 3 · NO GUARD · HIS THRUST COMES TWICE"] },
-    varka: { 2: ["THE IRONSONG ROLLS", "PHASE 2 · THE ENGINE CHARGES DOWN A LANE · GET OUT OF IT"], 3: ["THE ENGINE BREAKS", "PHASE 3 · FALLING WRECKAGE · WATCH THE RINGS"],
+    varka: { 2: ["THE IRONSONG ROLLS", "PHASE 2 · SHE'S ON THE DECK · JUMP ON, OR THE STEPS AT THE BACK · OR BREAK THE ENGINE"], 3: ["THE ENGINE BREAKS", "PHASE 3 · THE DECK COMES DOWN IN PIECES · WATCH THE RINGS"],
       4: ["RAILGUN", "PHASE 4 · SHE FIRES HERSELF DOWN THE FIELD · DODGE"] },
   };
   // Strikes from above (Thunderheads, falling wreckage) and the siege engine's lane: warnings on the ground first.
@@ -1313,12 +1322,12 @@ export function boot(doc = document) {
           const p = BB.MeshBuilder.CreatePlane("sealWarn", { size: s.r * 1.7, sideOrientation: BB.Mesh.DOUBLESIDE }, scene); p.rotation.set(Math.PI / 2, (s.x * 7 + s.z * 3) % Math.PI, 0);
           p.position.set(s.x, 0.05, s.z); p.material = sealMat; p.isPickable = false; p.scaling.setAll(0.2); strikes.set(s, p); sfx.play("glint", 0.5); return;
         }
-        const d = BB.MeshBuilder.CreateDisc("strikeWarn", { radius: s.r, tessellation: 28 }, scene); d.rotation.x = Math.PI / 2; d.position.set(s.x, 0.05, s.z);
+        const d = BB.MeshBuilder.CreateDisc("strikeWarn", { radius: s.r, tessellation: 28 }, scene); d.rotation.x = Math.PI / 2; d.position.set(s.x, (s.y || 0) + 0.05, s.z); // (on the deck, if that's where it's falling)
         d.material = s.kind === "debris" ? debrisMat : s.kind === "sun" ? sunMat : thunderMat; d.isPickable = false; d.scaling.setAll(0.2); strikes.set(s, d);
       },
       hit(s) {
         strikes.get(s)?.dispose(); strikes.delete(s);
-        const at = { x: s.x, y: 0.1, z: s.z };
+        const at = { x: s.x, y: (s.y || 0) + 0.1, z: s.z };
         if (s.kind === "rift") { vfx.flash({ x: s.x, y: 0.3, z: s.z }, 1.8, "#f0ecff", 0.12); sfx.play("rift", 0.8); return; } // it seals
         if (s.kind === "sever") { vfx.flash({ x: s.x, y: 0.3, z: s.z }, 1.8, "#9cb8ff", 0.12); sfx.play("tear", 0.8); return; }
         if (s.kind === "gold") { vfx.flash({ x: s.x, y: 0.3, z: s.z }, 1.8, "#ffd36a", 0.12); sfx.play("door", 0.8); return; }

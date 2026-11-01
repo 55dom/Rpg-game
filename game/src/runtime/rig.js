@@ -1261,8 +1261,9 @@ export class Rig {
     this.markRing.setEnabled(marked);
     if (marked) { this.markRing.rotation.y += dt * 4; this.markRing.scaling.setAll(1 + Math.sin(this.time * 8) * 0.08); }
 
-    this.shadow.position.set(x, 0.03, z);
-    const s = Math.max(0.35, 1 - y * 0.12) * (this.look.scale ?? 1) * (this.look.form === "beast" ? 1.2 : 1);
+    const floor = fighter.floor || 0; // the ground, or a deck (Varka's engine)
+    this.shadow.position.set(x, floor + 0.03, z);
+    const s = Math.max(0.35, 1 - (y - floor) * 0.12) * (this.look.scale ?? 1) * (this.look.form === "beast" ? 1.2 : 1);
     this.shadow.scaling.set(s, s, s);
     this.shadow.visibility = this.visibility;
   }
