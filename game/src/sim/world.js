@@ -17,6 +17,8 @@ import { WARDEN_STATS, WARDEN_HITBOXES, wardenOptions, ISLES_OBJECTS } from "../
 import { StormWardenController } from "./warden.js";
 import { BloomController } from "./bloom.js";
 import { BLOOM_TUNING } from "../data/bloom.js";
+import { shatterNote } from "./twins.js";
+import { RESONANCE } from "../data/twins.js";
 import { VARKA_STATS, VARKA_HITBOXES, varkaOptions, ASH_OBJECTS, ASH_OBJECT_HITBOXES, THUNDER, BRANNOC_SPAR_STATS, BRANNOC_HITBOXES, brannocSparOptions } from "../data/ashfall.js";
 import { SEAL, BELL_TUNING } from "../data/bell.js";
 import { VarkaController, SparBoss } from "./varka.js";
@@ -109,6 +111,7 @@ const HANG = new Set(["AirL1", "AirL2", "AirL3"]); // started in the air, these 
 const hangs = (a) => HANG.has(a.id) || a.tags.includes("hang");
 const WALL = Object.freeze({ center: [0, 1.4, 0], size: [5.2, 3.4, 1.4] });
 const DOOR_HALF = 2.6; // Threshold's door: as wide as a wind wall
+const NOTE_RING = hitSpec({ damage: 10, posture: 28, hitstop: 6, hitstun: 20, knockback: 1 }); // Shatter Note, on the one it's rung at
 /** Team Attacks (bond rank 5): the companion's move, then the two of you strike together. */
 export const TEAM_ATTACK = defineAbility({ id: "TeamAttack", startup: 1, active: 1, recovery: 1, tags: ["team", "heavy"],
   hit: hitSpec({ damage: 48, posture: 55, hitstop: 12, hitstun: 50, launch: 10 }) });
@@ -271,6 +274,7 @@ export class Fighter {
         else if (e.key === "sacrifice") this.world.sacrifice(this, e.value);
         else if (e.key === "ward") this.world.ward(this, e.value);
         else if (e.key === "threshold") this.world.threshold(this, a, e.value);
+        else if (e.key === "shatterNote") this.world.shatterNoteAt(this, a);
         else if (e.key.startsWith("windwall")) this.world.windWall(this, a, e.value, e.key === "windwallMirror" ? "mirror" : e.key === "windwallDown" ? "down" : "block");
         break;
       default:
@@ -846,6 +850,16 @@ export class World {
     this.zones.push(z);
     this.emit({ type: "threshold", zone: z, fighter: owner });
     return z;
+  }
+  /** Tamsin's Shatter Note (Ep 15): rung at whoever she's after; glass breaks (sim/twins.js), and it rings them hard. */
+  shatterNoteAt(owner, ability) {
+    const t = (owner.target?.alive && owner.target.team !== owner.team ? owner.target : null) ?? this.nearestEnemy(20);
+    if (!t) return null;
+    const at = { x: t.pos.x, z: t.pos.z };
+    this.emit({ type: "shatterNote", fighter: owner, at: { x: at.x, y: 1.4, z: at.z }, r: RESONANCE.r });
+    const out = shatterNote(this, owner, at);
+    if (t.alive && !t.traits.echo) this._resolve(owner, t, { spec: NOTE_RING, ability, hitSet: new Set(), origin: { x: at.x, y: 1.4, z: at.z }, projectile: true });
+    return out;
   }
   /** Is a door of `def`'s side standing between them and `att`? (the line from one to the other crosses it) */
   _doorBetween(att, def) {

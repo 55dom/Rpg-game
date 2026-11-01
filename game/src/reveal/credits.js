@@ -12,6 +12,7 @@ const CHOICES = [
   (f) => f.EXAM_DUEL_WON ? "You beat Severin at the Knight Exam." : "You lost the Knight Exam, and got up three times.",
   (f) => f.MIRREN_SAVED === 1 ? "You saved the girl in the bog. Her name is Mirren." : f.MIRREN_SAVED === 0 ? "You chased the acolyte into the fog." : null,
   (f) => f.ALDRIC_OFFER === "refused" ? "You told the Chancellor the grimoire was yours." : f.ALDRIC_OFFER === "deferred" ? "You told the Chancellor you'd think about it." : null,
+  (f) => f.LIO_READ_TWIN === 1 ? "You asked Lio to read the twin in the chapel." : null,
   (f) => f.LUKE_HOME_VISITED ? "You knocked on Luke's door in the Fens." : null,
   (f) => f.PERSPECTIVE === "cal" ? "When it asked whose story, you said his." : f.PERSPECTIVE === "rook" ? "When it asked whose story, you said yours." : null,
   (f) => f.MAELIS_PROMISE === "dont" ? "You asked Maelis not to." : f.MAELIS_PROMISE === "why" ? "You asked Maelis why she keeps offering." : null,

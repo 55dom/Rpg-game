@@ -12,3 +12,7 @@ export const TWINS_TUNING = Object.freeze({
   smoke: Object.freeze({ frames: 840, every: 1320, echoes: 4, ring: 5.2, shiftEvery: 180 }),
   absorb: Object.freeze({ heal: 0.3, speed: 1.2, wardEvery: 540 }),
 });
+
+// Resonance (Tamsin's Shatter Note, Ep 15: §16 B6 "Resonance shatters mirrors"): a note rung at the one she aims at.
+// Every reflection within `r` of it breaks at once, and the glass guard on a twin in it cracks for `glassFrames`.
+export const RESONANCE = Object.freeze({ r: 4.5, glassFrames: 420 });

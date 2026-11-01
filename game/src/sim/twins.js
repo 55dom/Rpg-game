@@ -4,7 +4,7 @@
 
 import { EnemyBrain } from "../core/ai.js";
 import { ENEMIES } from "../data/enemies.js"; // (read only inside methods: the enemy table imports this file)
-import { TWINS_TUNING as T } from "../data/twins.js";
+import { RESONANCE, TWINS_TUNING as T } from "../data/twins.js";
 
 const TWINS = new Set(["twinMirror", "twinSmoke"]);
 const gusty = (a) => !!a?.tags?.includes?.("gust");
@@ -36,6 +36,7 @@ export class TwinDuo {
     if (this.twins.length < 2) return; // one alone is no duo
     const alive = this.twins.filter((t) => t.alive);
     if (!alive.length) { this._clearSmoke(false); return; }
+    for (const t of alive) if (t.glassBroken > 0 && --t.glassBroken === 0) { this._apply(t, t.magic); w.emit({ type: "glassMend", fighter: t }); } // the crack closes
     if (alive.length === 1 && !this.absorbed) this._absorb(alive[0]);
     if (this.absorbed) { this._absorbedStep(); return; }
     const hp = this.health;
@@ -53,7 +54,7 @@ export class TwinDuo {
   _apply(f, magic) {
     const M = magic === "both" ? null : MAGIC[magic], def = ENEMIES[M ? M.kind : f.kind];
     f.magic = magic;
-    f.traits = { ...f.traits, frontalGuard: magic === "both" ? true : M.guard, ranged: magic === "both" ? true : M.ranged };
+    f.traits = { ...f.traits, frontalGuard: (f.glassBroken ?? 0) > 0 ? false : magic === "both" ? true : M.guard, ranged: magic === "both" ? true : M.ranged }; // (cracked glass guards nothing)
     const opts = magic === "both" ? [...ENEMIES.twinMirror.options(), ...ENEMIES.twinSmoke.options()] : def.options();
     const was = f.brain; f.brain = new EnemyBrain(f.id, was.pool, opts, this.w.rng); f.brain.aggroRange = 40;
   }
@@ -128,6 +129,23 @@ export class TwinDuo {
       s.controller.startDirect(ENEMIES.twinSmoke.abilities.Hymn, this.w.frame);
     }
   }
+}
+
+/**
+ * Resonance (Tamsin's Shatter Note): every reflection within reach of the note breaks at once, and a twin's glass cracks
+ * (no guard) for a while. Returns what it broke.
+ */
+export function shatterNote(w, owner, at) {
+  const broke = [], cracked = [];
+  for (const e of w.fighters) {
+    if (!e.alive || e.team === owner.team || Math.hypot(e.pos.x - at.x, e.pos.z - at.z) > RESONANCE.r) continue;
+    if (e.traits.echo) { e.combatant.health.set(0); broke.push(e); w.emit({ type: "echoShatter", fighter: e, at: { x: e.pos.x, y: 1.2, z: e.pos.z }, by: owner }); continue; }
+    if (TWINS.has(e.kind) && (e.magic === "glass" || e.magic === "both")) {
+      e.glassBroken = RESONANCE.glassFrames; e.traits = { ...e.traits, frontalGuard: false }; cracked.push(e);
+      w.emit({ type: "glassShatter", fighter: e, by: owner, frames: RESONANCE.glassFrames, at: { x: e.pos.x, y: 1.4, z: e.pos.z } });
+    }
+  }
+  return { broke, cracked };
 }
 
 /** On each twin and each reflection: the twins tick the duo; anything of theirs hit by Gale blows the smoke away. */

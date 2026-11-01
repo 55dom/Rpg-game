@@ -675,6 +675,10 @@ export function boot(doc = document) {
           vfx.thread(ev.at[0], ev.at[1], 0.35); hud.toast("THEY SWAP", "afterimage"); sfx.play("heal", 0.7); break;
         case "smokeUp": smokeFx.up(ev.center, ev.r); for (const e of ev.echoes) vfx.flash({ x: e.pos.x, y: 1.2, z: e.pos.z }, 1.6, "#e8eeff", 0.18); sfx.play("vacuum"); break;
         case "mirrorShift": vfx.flash(ev.from, 1.3, "#e8eeff", 0.1); vfx.flash(ev.to, 1.3, "#e8eeff", 0.1); sfx.play("glint", 0.5); break;
+        case "shatterNote": for (const [k, sz] of [[0, 2.4], [0.12, 5], [0.24, 9]]) setTimeout(() => vfx.ring({ x: ev.at.x, y: 1.3, z: ev.at.z }, sz, "#ffe9a8", 0.35, true), k * 1000); // a held note, ringing out
+          vfx.flash(ev.at, 2.2, "#fff6d8", 0.14); sfx.play("glint"); sfx.play("parry", 0.6); break;
+        case "glassShatter": vfx.sparksAt(ev.at, 20, "white", 9, 5); vfx.sparksAt(ev.at, 10, "violet", 7, 4); vfx.flash(ev.at, 2.4, "#e8eeff", 0.16); sfx.play("postureBreak", 0.8); camera.shake(0.3); hud.toast("THE GLASS BREAKS", "clear"); break;
+        case "glassMend": vfx.flash({ x: ev.fighter.pos.x, y: 1.4, z: ev.fighter.pos.z }, 1.6, "#cfe0ff", 0.12); sfx.play("glint", 0.5); break;
         case "echoShatter": shatter(ev.fighter, ev.at); break;
         case "smokeDispersed": vfx.ring({ x: ev.at.x, y: 0.1, z: ev.at.z }, 12, PALETTE.gale, 0.5); hud.toast("SMOKE BLOWN AWAY", "afterimage"); camera.shake(0.3); break;
         case "smokeClear": smokeFx.clear(); if (ev.shattered) hud.toast("EVERY MIRROR BROKEN", "break"); break;

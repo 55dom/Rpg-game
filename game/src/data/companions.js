@@ -128,11 +128,38 @@ const LUKE_COMPANION = Object.freeze({
   supports: () => [],
 });
 
+// ---- Tamsin (Resonance): beside you at the Cantor Twins (Ep 15; GDD §6 Resonance, §16 B6 "Resonance shatters mirrors") ----
+// Notes, sung (a sound bolt from a little way back: she's brave, not reckless), a shove if anything gets close, and her
+// Assist: Shatter Note, one note held and rung at whoever she's after. Glass breaks: every reflection near it, and the
+// glass guard on a twin, for a while (sim/twins.js shatterNote).
+const TAMSIN_STATS = Object.freeze({
+  name: "Tamsin", maxHealth: 240, maxPosture: 100, runSpeed: 5.4, turnRate: 0.2, radius: 0.4, height: 1.85,
+  assistCooldownFrames: 480, reviveFrames: 540,
+});
+const TAMSIN_HITBOXES = Object.freeze({
+  Note: { center: [0, 0, 0], size: [0.6, 0.6, 0.6], range: 13, hit: hitSpec({ damage: 9, posture: 10, hitstop: 3, hitstun: 14, knockback: 1 }) },
+  Palm: { center: [0, 1, 1.0], size: [1.6, 1.6, 1.6] },
+});
+const TAMSIN_ABILITIES = Object.freeze({
+  Note: defineAbility({ id: "Note", startup: 16, active: 2, recovery: 22, tags: ["projectile", "resonance"],
+    events: [{ frame: 4, type: E.SpawnVfx, key: "sing" }, swing(12, "glint"), { frame: 16, type: E.Projectile, key: "Note", value: 14 }] }),
+  Shove: defineAbility({ id: "Shove", startup: 9, active: 3, recovery: 16,
+    hit: hitSpec({ damage: 6, posture: 8, hitstop: 3, hitstun: 12, knockback: 5 }), events: [swing(7), { frame: 9, type: E.SpawnHitbox, key: "Palm", value: 3 }] }),
+  ShatterNote: defineAbility({ id: "ShatterNote", startup: 14, active: 2, recovery: 22, tags: ["assist", "resonance"],
+    events: [{ frame: 0, type: E.SpawnVfx, key: "sing" }, swing(10, "glint"), { frame: 14, type: E.Custom, key: "shatterNote", value: 0 }] }),
+});
+export const TAMSIN_COMPANION = Object.freeze({
+  stats: TAMSIN_STATS, hitboxes: TAMSIN_HITBOXES, assist: TAMSIN_ABILITIES.ShatterNote, assistInPlace: true, slot: [-1.2, -2.4],
+  options: () => [new AttackOption(TAMSIN_ABILITIES.Note, 3, 12, 3, 60), new AttackOption(TAMSIN_ABILITIES.Shove, 0, 1.8, 2, 60)],
+  supports: () => [],
+});
+
 export const COMPANIONS = Object.freeze({
   luke: LUKE_COMPANION,
   bas: { stats: BAS_STATS, hitboxes: BAS_HITBOXES, options: basOptions, supports: basSupports, assist: BAS_ABILITIES.PillarUppercut, slot: [1.8, -1.4], injured: BAS_INJURED },
   brannoc: BRANNOC_COMPANION, // fights beside the Lanterns on the Iron Front (Eps 20–22)
   cal: CAL_SQUAD, // beside you at the Hollow Bloom (Ep 18): his saber, and his door between you and it
+  tamsin: TAMSIN_COMPANION, // beside you at the Cantor Twins (Ep 15): notes, and the one that breaks glass
   knightAlly: KNIGHT_ALLY, // a guest, not a squadmate: the bridge in Ep 47 (src/reveal/allies.js)
   maelisAlly: MAELIS_ALLY, calAlly: CAL_ALLY, // Arc 7's guests (src/reveal/allies.js)
   lineAlly: LINE_ALLY, // the soldier beside him in the line (Ep 49, a memory)

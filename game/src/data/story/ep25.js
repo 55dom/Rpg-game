@@ -76,6 +76,12 @@ Lio: Then the Tower handed you one page, {name}. And it was the book.
 <<shot on Lio>>
 Lio: I wrote them two letters. The first said: the Palimpsest is with the Lanterns. The second, the night your book bled ink at the Tower: it's started.
 Lio: I never sent the third. I stopped. I stayed. I don't know when I stopped being theirs. I know that I'm not.
+<<if $LIO_READ_TWIN == 1>>
+    <<shot on Lio>>
+    Lio: In the chapel, when you asked me to read the twin. The cold cloister, and the woman humming. I didn't have to read that. I'd been there.
+    <<shot on Rook>>
+    That's why he stopped. That's why his hands were shaking in the water.
+<<endif>>
 <<shot on Juno>>
 Juno: Two years. You sat at our table for two years.
 Lio: I know.

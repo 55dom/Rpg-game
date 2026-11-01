@@ -43,6 +43,26 @@ Mirror: The Mother is going to open the Hollowmarch Gate. The Bloom will sing, a
 Juno: The Hollowmarch. Nobody goes into the Hollowmarch.
 <<shot on Mirror>>
 Mirror: Nobody comes out. That's different.
+<<shot on Lio>>
+Lio has come down into the water behind you. He's looking at her the way he looks at a page nobody else can see.
+-> "Lio. Can you read her?"
+    <<set $LIO_READ_TWIN to 1>>
+    <<shot on Lio>>
+    He kneels beside her. He doesn't touch her. For a moment his eyes go pale, the way they do over a page that isn't there.
+    Lio: Two girls in a cold cloister. Nobody speaks. Not a word, for years. There's a woman they call Mother, and she hums, and the walls hum back.
+    Lio: She tells them the Bloom is a kindness. That a place with nothing written on it can't hurt anyone.
+    Lio: There's a garden under the Gate. White flowers, in rows. They've been tending it since they were small.
+    <<shot on Lio>>
+    He stops, all at once, like a door shutting. His hands are shaking in the black water.
+    Lio: ...That's all. That's all there is.
+    <<shot on Juno>>
+    Juno: You all right?
+    <<shot on Lio>>
+    Lio: Cold water. I'm fine.
+-> "Let her be."
+    <<set $LIO_READ_TWIN to 0>>
+    <<shot on Lio>>
+    Lio looks at her a long moment, then away, and doesn't say anything at all.
 <<set $CHOIR_TARGET to "gate">>
 <<shot on Cal>>
 Cal is looking north, where the Hollowmarch would be, if you could see it from here. You can't. He looks anyway.
@@ -75,13 +95,15 @@ export const EPISODE_15 = {
       lines: [["Juno", "The chapel's lit. They're inside."], ["Bas", "Shield first. Then the singer."]],
       retry: "Again. The chapel." },
     { id: "twins", type: "fight", ...FENS, ...NIGHT, wave: ["twinMirror", "twinSmoke"], tokens: 2,
-      world: { bounds: ZONES.fens.bounds, origin: { x: 10, z: -4 } },
-      tutorial: [{ at: 0.5, text: "BOSS 6 · THE CANTOR TWINS. Mirror's glass turns away whatever hits it head-on: get round her. Smoke's hymn wards her sister: Gale breaks it." }],
-      lines: [["Cal", "Two faces, one song. Break the song."], ["Juno", "Smoke first! She's keeping the other one whole!"]],
+      world: { bounds: ZONES.fens.bounds, origin: { x: 10, z: -4 }, companions: ["bas", "juno", "tamsin"] }, // Tamsin's Resonance (§16 B6)
+      tutorial: [{ at: 0.5, text: "BOSS 6 · THE CANTOR TWINS. Mirror's glass turns away whatever hits it head-on: get round her. Smoke's hymn wards her sister: Gale breaks it." },
+        { at: 9, text: "Tamsin's with you. Her Shatter Note (3) breaks glass: Mirror's guard cracks for a while, and every reflection near the note breaks at once." }],
+      lines: [["Cal", "Two faces, one song. Break the song."], ["Juno", "Smoke first! She's keeping the other one whole!"], ["Tamsin", "Glass, I can do. Glass, I'm actually good at."]],
       eventHints: { // the duo (GDD §16 B6): the swap, the smoke and mirrors, the absorbing
         twinSwap: "They've swapped! Whoever holds the glass now turns you away head-on: get round her.",
         smokeUp: "Smoke and mirrors. The real two are hurt (watch the bars); a reflection breaks at a touch. Gale ({Spell1}) blows the smoke away.",
         twinAbsorb: "One's down, and the other's taken her song: the glass and the ward both. Gale the ward, then get round the glass.",
+        glassShatter: "The glass is cracked! Hit her head-on while it's down. It mends in a few seconds.",
       },
       retry: "Again. Break the song.",
       set: { TWINS_DEFEATED: 1 } },
@@ -90,6 +112,7 @@ export const EPISODE_15 = {
       cast: [
         { id: "twinMirror", look: "twinMirror", x: 10.6, z: -4.2, yaw: Math.PI + 0.6, pose: "kneel" },
         { id: "juno", look: "juno", x: 7.4, z: -5.2, yaw: 1.2 },
+        { id: "lio", look: "lio", x: 11.6, z: -6.6, yaw: -0.4 }, // (to read her, if you ask: GDD §16 B6)
         { id: "cal", look: "cal", x: 8.4, z: -8.6, yaw: 0.2 },
       ],
       set: { EP15_DONE: 1 } },
