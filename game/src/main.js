@@ -74,6 +74,7 @@ import { EPISODE_45, EP45_SCRIPT } from "./data/story/ep45.js";
 import { EPISODE_46, EP46_SCRIPT } from "./data/story/ep46.js";
 import { EPISODE_47, EP47_SCRIPT } from "./data/story/ep47.js";
 import { EPISODE_48, EP48_SCRIPT } from "./reveal/ep48.js";
+import { creditsFor, CREDITS_SECONDS } from "./reveal/credits.js";
 import { EPISODE_49, EP49_SCRIPT } from "./reveal/ep49.js";
 import { EPISODE_50, EP50_SCRIPT } from "./reveal/ep50.js";
 import { EPISODE_CALPATH, CALPATH_SCRIPT } from "./reveal/calpath.js";
@@ -1075,7 +1076,23 @@ export function boot(doc = document) {
     if (exit?.kind === "episode" && story.episodeById(exit.id)) { story.stop(); state.started = false; playStory(exit.id, 0); return; }
     backToTitle();
     if (exit?.kind === "run") start("run");
+    if (exit?.kind === "credits") showCredits();
   };
+  // The credits after Ep 70 (built from your flags), rolling over the title. Skip any time; reduced motion gets a still list.
+  const creditsEl = root.querySelector("[data-credits]");
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const showCredits = () => {
+    const roll = creditsEl.querySelector("[data-credits-roll]");
+    roll.innerHTML = creditsFor(story.flags, story.player.name).map((sec) => `<section${sec.big ? ' class="big"' : ""}>${sec.head ? `<h3>${esc(sec.head)}</h3>` : ""}${
+      sec.lines.map((l) => (Array.isArray(l) ? `<p class="pair"><b>${esc(l[0])}</b><span>${esc(l[1])}</span></p>` : `<p>${esc(l)}</p>`)).join("")}</section>`).join("");
+    roll.style.animationDuration = `${CREDITS_SECONDS}s`;
+    creditsEl.hidden = false; creditsEl.scrollTop = 0;
+    roll.classList.remove("rolling"); void roll.offsetWidth; if (!reduced) roll.classList.add("rolling");
+    sfx.play("tuneMarch"); // the Lighthouse Tune, all four notes
+  };
+  const hideCredits = () => { creditsEl.hidden = true; creditsEl.querySelector("[data-credits-roll]").classList.remove("rolling"); };
+  creditsEl.querySelector("[data-credits-roll]").addEventListener("animationend", () => creditsEl.querySelector("[data-credits-done]").focus());
+  creditsEl.querySelector("[data-credits-done]").addEventListener("click", (e) => { e.stopPropagation(); sfx.play("ui"); hideCredits(); });
   const createModal = root.querySelector("[data-create]");
   const nameInput = createModal.querySelector("[data-pc-name]");
   let pronouns = "they";

@@ -1725,9 +1725,10 @@ export class StoryPlayer {
       const play = (e) => (e.label ? `PLAY ${e.label}` : `PLAY EPISODE ${e.number}`);
       if (side) add(side.label ?? play(this.episodeById(side.episode)), "side");
       if (nextEp) add(play(nextEp), "next", !!side);
+      else if (beat.end) add("ROLL CREDITS", "credits"); // the last card (Ep 70): the story's over, not continued
       else add("TO BE CONTINUED", "title");
-      add("EPISODE 4 RUN", "run", true);
-      this.waitingCard = () => res(side ? "side" : nextEp ? "next" : "title");
+      if (beat.end) add("BACK TO THE TITLE", "title", true); else add("EPISODE 4 RUN", "run", true);
+      this.waitingCard = () => res(side ? "side" : nextEp ? "next" : beat.end ? "credits" : "title");
     });
     this.waitingCard = null;
     pv.hidden = true;

@@ -149,7 +149,7 @@ export const EPISODE_70 = {
         { id: "cal", look: "cal", x: 6.55, z: 3.5, yaw: -Math.PI / 2, pose: "sit", when: "$CAL_FATE == \"lantern\"" },
       ],
       set: { EP70_DONE: 1, STORY_COMPLETE: 1 } },
-    { id: "preview", type: "preview",
+    { id: "preview", type: "preview", end: true, // the last card: ROLL CREDITS (src/reveal/credits.js)
       lines: [
         "UNWRITTEN",
         "The end.",
