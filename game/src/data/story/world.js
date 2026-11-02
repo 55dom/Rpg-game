@@ -7,6 +7,7 @@ import { BOND_SCRIPT } from "../bonds.js";
 import { CRAFT_SCRIPT } from "../crafting.js";
 import { LORE_SCRIPT, MURAL_SCRIPT, FORBIDDEN_SCRIPT } from "../lore.js";
 import { RANK_SCRIPT } from "../ranks.js";
+import { SIDEQUEST_SCRIPT } from "./sidequests.js";
 import { TECHNIQUE_SCRIPT } from "../techniques.js";
 import { NOTEBOOK_READ } from "./ep23.js";
 import { LAW_SCRIPT, LUKE_SCRIPT } from "./law.js";
@@ -16,6 +17,9 @@ import { OLDCITY_SCRIPT } from "./ep33.js";
 const BASE_SCRIPT = `
 title: W_Dagrun
 ---
+<<if $CQ_DAGRUN_RIBBON and not $CQ_DAGRUN_DONE>>
+    <<jump CQ_Dagrun_Ribbon>>
+<<endif>>
 <<if $Q_FRIED == 2>>
     Dagrun: Is that... fried? From the fountain cart? Give it here.
     <<set $FRIED_DELIVERED to 1>>
@@ -45,6 +49,10 @@ Dagrun: Aurelin's down the road if you want to stretch your legs.
 
 title: W_Juno
 ---
+<<if $Q_CQ_JUNO == 3>>
+    Juno: Four hundred. I counted it three times. The loom's at the vendor's house in the Lowmarket: come with me? I'll meet you there.
+    <<stop>>
+<<endif>>
 <<if $JUNO_HAS_NOTEBOOK and $BOND_JUNO >= 75>>
     Juno: {name}. I've read it every night. I think I'm ready now. Sit with me?
     <<jump W_Juno_Read>>
@@ -54,6 +62,13 @@ Juno: If you're going to the capital, don't buy anything in the Lowmarket that's
 
 title: W_Bas
 ---
+<<if $CQ_BAS_STONE and not $CQ_BAS_DONE>>
+    <<jump CQ_Bas_Wall>>
+<<endif>>
+<<if $Q_CQ_BAS == 3>>
+    Bas: See that crack, by the stair? Been there longer than me. I want a stone for it. Flat. Thornwick, by the mill race: that's good stone.
+    <<stop>>
+<<endif>>
 <<if $BAS_ARM_BROKEN>>
     Bas: The healer says six weeks. I said three. She said six again, louder.
     Bas: I can still hold a wall one-handed. I just can't hit anything very hard with it.
@@ -64,6 +79,13 @@ title: W_Bas
 
 title: W_Tamsin
 ---
+<<if $CQ_TAMSIN_SHELL and not $CQ_TAMSIN_DONE>>
+    <<jump CQ_Tamsin_Shell>>
+<<endif>>
+<<if $TAMSIN_THIRD_LINE>>
+    Tamsin: Three lines! I sing them to the lamp every night. Gran was right: it does look less lonely.
+    <<stop>>
+<<endif>>
 Tamsin: I finished the song! Well. Two lines of it. It still doesn't rhyme.
 ===
 
@@ -76,6 +98,23 @@ Cal: ...Probably not.
 
 title: W_Lio
 ---
+<<if $CQ_LIO_PAGES and not $CQ_LIO_DONE>>
+    <<jump CQ_Lio_Pages>>
+<<endif>>
+<<if $BURNED_PETAL and not $CLUE_A5>>
+    <<jump CQ_Lio_Burned>>
+<<endif>>
+<<if $CLUE_A4 and $EP28_DONE and not $EP48_DONE and $Q_BURNED == 0>>
+    Lio: {name}. The notebook. I've been thinking about it. About that night.
+    Lio: I read memories, you know that. Places keep them, if you know how to look. I could try to rebuild the last minute at the stones. Not the Bloom, I can't bear the Bloom. Just the end.
+    Lio: I'd need something that was there. Something from inside the ring.
+    -> "I'll bring you something."
+        <<quest start burned>>
+        Lio: Thank you. ...I might not like what I find. I want to look anyway.
+    -> "Leave it, Lio."
+        Lio: Maybe you're right. Ask me again, if you change your mind.
+    <<stop>>
+<<endif>>
 <<if $LIO_SECRET>>
     Lio: Juno still reads over my shoulder when I write. I've started writing her notes. "Hello, Juno." She hasn't laughed yet.
     Lio: Thank you for letting me stay, {name}. I'm going to find out what's under your page. For you this time. Not for them.
@@ -86,6 +125,12 @@ title: W_Lio
 
 title: W_LioHall
 ---
+<<if $CQ_LIO_PAGES and not $CQ_LIO_DONE>>
+    <<jump CQ_Lio_Pages>>
+<<endif>>
+<<if $BURNED_PETAL and not $CLUE_A5>>
+    <<jump CQ_Lio_Burned>>
+<<endif>>
 Lio: {name}. You came. ...The Keeper lets me sleep in the archive. It's quiet. Everyone here is either reading or dead.
 Lio: I'm still looking for what's under your page. When I find something, you'll be the first to know. The only one, if you want.
 ===
@@ -233,6 +278,13 @@ Crier: All squads to parade! Even, by royal decree, the Lanterns.
 ===
 title: W_Cook
 ---
+<<if $Q_CQ_LIO == 3 and not $CQ_LIO_PAGES>>
+    Cook: The paper? Bought a stack off a bookbinder in the Row. Pennies. Wraps a cod beautifully.
+    Cook: You want it? Take what's left. It's mostly about pies, which I find a bit pointed, frankly.
+    You fold the pages away. They smell strongly of fish.
+    <<set $CQ_LIO_PAGES to 1>>
+    <<stop>>
+<<endif>>
 <<if $Q_BELOW == 3>>
     Cook: Well? What's down there?
     You tell the cook about the rats, the fish bones, and the brass thing that guarded them.
@@ -397,4 +449,4 @@ ${NOTEBOOK_READ}
 `;
 
 /** Every free-roam talk node: the towns, the Gilded Spoon café (data/story/cafe.js), and bonds (data/bonds.js). */
-export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT + CRAFT_SCRIPT + LORE_SCRIPT + MURAL_SCRIPT + FORBIDDEN_SCRIPT + RANK_SCRIPT + TECHNIQUE_SCRIPT + HALL_SCRIPT + IRON_SCRIPT + NOTEBOOK_SCRIPT + LAW_SCRIPT + LUKE_SCRIPT + ISLES_SCRIPT + OLDCITY_SCRIPT;
+export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT + CRAFT_SCRIPT + LORE_SCRIPT + MURAL_SCRIPT + FORBIDDEN_SCRIPT + RANK_SCRIPT + TECHNIQUE_SCRIPT + SIDEQUEST_SCRIPT + HALL_SCRIPT + IRON_SCRIPT + NOTEBOOK_SCRIPT + LAW_SCRIPT + LUKE_SCRIPT + ISLES_SCRIPT + OLDCITY_SCRIPT;

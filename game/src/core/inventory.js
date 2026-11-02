@@ -18,6 +18,8 @@ export class Inventory {
   temperOf(id) { return this.temper[id] ?? 0; }
 
   earn(n) { this.marks += Math.max(0, Math.floor(n)); return this.marks; }
+  /** A gift (a quest's keepsake): owned now, free. False if it's unknown or already yours. */
+  give(id) { if (!ITEMS[id] || this.owned.has(id)) return false; this.owned.add(id); return true; }
 
   /** Buy an item: needs enough marks and not already owned (equipment is unique). */
   buy(id, priceFactor = 1) {

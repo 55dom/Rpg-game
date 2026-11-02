@@ -1058,6 +1058,7 @@ export function boot(doc = document) {
     onSecret: () => { world.margin = new Set(story.secrets.margin); refreshGrimDot(); }, // a secret page found (and pinned, if there was room)
     onCorruption: () => { if (!grim.hidden) renderGrimoire(); },
     onContract: () => { sfx.play("surgeFull"); }, // (the banner says what it paid)
+    onKeepsake: (id) => { sfx.play("surgeFull"); hud.toast(`KEEPSAKE · ${ITEMS[id].name.toUpperCase()} · in your bag`, "finisher"); },
     onTechnique: (t) => { world.setTechniques(techniquesNow()); sfx.play("surgeFull"); hud.toast(`TECHNIQUE · ${t.name.toUpperCase()}`, "finisher"); }, // learned: in Rook's hands at once
     onRank: (rk) => { sfx.play("surgeFull"); hud.toast(`KNIGHT RANK · ${rk.name.toUpperCase()}`, "finisher"); vfx.flash({ x: world.player.pos.x, y: 1.4, z: world.player.pos.z }, 4, "#ffd36a", 0.5); },
     onMeal: () => { hud.toast("WARM AND FULL", "clear"); hud.banner("+20 HEALTH · +5% DAMAGE UNTIL MIDNIGHT"); sfx.play("heal"); applyGear(); const p = world.player; p.combatant.health.fill(); },

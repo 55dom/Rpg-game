@@ -384,6 +384,9 @@ class DialogueView {
  * Drives one episode. ctx is supplied by main.js:
  * { root, scene, camera, hud, sfx, vfx, controls, getWorld, makeWorld(opts), onEvents, saves, onExit(kind) }
  */
+/** Quests that start themselves (the character quests, data/story/sidequests.js). */
+const AUTO_QUESTS = Object.keys(QUESTS).filter((id) => QUESTS[id].character);
+
 export class StoryPlayer {
   constructor(ctx, episodes, extraScripts = []) {
     this.ctx = ctx;
@@ -404,14 +407,21 @@ export class StoryPlayer {
     this.ranks = new Ranks(this.flags); // Knight Rank (GDD §17): the KNIGHT_RANK flag, and the exam in progress
     this.contracts = new Contracts(this.flags); // Squad Contracts (GDD §18.1): today's board, the one taken, the pay
     this.quests = new QuestLog(QUESTS, this.flags, {
-      onReward: (q, r) => { if (r.marks) this.inventory.earn(r.marks); this.gainXp(r.xp ?? QUEST_XP); for (const [id, n] of Object.entries(r.bond ?? {})) this.bondGain(id, n); },
+      onReward: (q, r) => {
+        if (r.marks) this.inventory.earn(r.marks); this.gainXp(r.xp ?? QUEST_XP); for (const [id, n] of Object.entries(r.bond ?? {})) this.bondGain(id, n);
+        if (r.item && this.inventory.give(r.item)) this.ctx.onKeepsake?.(r.item); // a character quest's keepsake (§18.1)
+      },
       onEvent: (e) => this.ctx.onQuest?.(e),
     });
     let updating = false;
     this.flags.onChange(() => { // any flag write can finish a quest stage
       if (updating) return;
       updating = true;
-      try { this.quests.update(); } finally { updating = false; }
+      try {
+        // Character quests (§18.1) start by themselves once their first chapter's been seen; the rest by dialogue.
+        for (const id of AUTO_QUESTS) if (this.quests.canStart(id)) this.quests.start(id);
+        this.quests.update();
+      } finally { updating = false; }
     });
     for (const cs of Object.values(CUTSCENES)) validateCutscene(cs);
     for (const { episode } of episodes) for (const b of episode.beats) if (b.cutscene && !CUTSCENES[b.cutscene]) throw new Error(`${episode.id}/${b.id}: no cutscene ${b.cutscene}`);

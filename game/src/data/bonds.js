@@ -57,7 +57,7 @@ export const BONDS = Object.freeze({
     lines: { 3: "A SONGBOOK. Half of these are rude! I love it! I love you! In a squad way!", 2: "Ooh, thank you!", 1: "Aw, thanks!", 0: "Ink? I don't write songs down. They'd stop being songs." },
     lore: "Tamsin's been writing the same song for three years. It's about the lighthouse. It has two lines, and both of them are the word 'light'.",
     passive: { name: "Encore", desc: "Tamsin's tunes stay with you: Surge fills 10% faster.", mods: { surge: 0.1 } },
-    events: { 2: "B_Tamsin_2" },
+    events: { 2: "B_Tamsin_2", 4: "B_Tamsin_4" },
   },
   lio: {
     name: "Lio", cast: "Lio",
@@ -65,7 +65,7 @@ export const BONDS = Object.freeze({
     lines: { 3: "Iron-gall ink. Do you know what this COSTS? ...Thank you. Truly.", 2: "Oh, thank you. Really.", 1: "Thank you.", 0: "Fish. Dried fish. It's... looking at me." },
     lore: "Lio reads in the dark because he can't sleep. He keeps a list of every book in the capital with pages torn out. The list is getting longer.",
     passive: { name: "Marginalia", desc: "Lio's notes in your grimoire: mana comes back 1 a second faster.", mods: { manaRegen: 1 } },
-    events: { 2: "B_Lio_2" },
+    events: { 2: "B_Lio_2", 4: "B_Lio_4" },
   },
   cal: {
     name: "Cal", cast: "Cal",
@@ -81,7 +81,7 @@ export const BONDS = Object.freeze({
     lines: { 3: "Dried fish. Fried AND dried. You're a good kid. The best kid.", 2: "Mm. Good.", 1: "Thanks, kid.", 0: "Don't let Tamsin see this. She'll sing it." },
     lore: "Dagrun has led the Lanterns for twenty years. The squad has never ranked higher than sixth. He's never once asked to be transferred.",
     passive: { name: "Captain's Eye", desc: "Dagrun's advice: you hit 4% harder.", mods: { attack: 0.04 } },
-    events: { 2: "B_Dagrun_2" },
+    events: { 2: "B_Dagrun_2", 4: "B_Dagrun_4" },
   },
 });
 
@@ -220,6 +220,51 @@ Lio: Not torn. Cut. Clean. Someone sat down and did it carefully.
 <<shot on Lio>>
 Lio: Forty-one books. That's the list. Forty-one holes in what we know. I don't sleep much.
 <<set $BOND_EV_LIO_2 to 1>>
+===
+
+title: B_Tamsin_4
+---
+<<shot two Tamsin Rook>>
+Tamsin is sitting on the lighthouse steps with her lute across her knees, not playing it, which is how you know something's wrong.
+Tamsin: Can I tell you a secret? The Bardic College didn't throw me out for singing wrong. They threw me out for singing loud. "A song should be heard, not felt in the teeth," they said.
+Tamsin: My gran had a lighthouse once. Not this one. A real one, by a real sea. She used to sing to it every night so it wouldn't get lonely.
+-> "And the third line?" #earnest
+    Tamsin: That's the thing. Every lighthouse song has the sea in it. And I've never heard the sea. Not once. This one's dry.
+-> "Sing it loud, then." #bold
+    Tamsin: Oh, I will. When I've got it. You'll hear it from Aurelin.
+<<shot on Tamsin>>
+Tamsin: You can't write the sea if you've never heard it. Gran said that. She also said eels were a kind of bird, so.
+<<set $BOND_EV_TAMSIN_4 to 1>>
+===
+
+title: B_Lio_4
+---
+<<shot two Lio Rook>>
+Lio has his list out, forty-one lines in small, careful handwriting. One of them has a question mark next to it.
+Lio: Book thirty-four. "Pies of the Southern Coast." Pages cut out, same as the others. Same knife, I'd swear to it.
+Lio: And yesterday the fish cook in the plaza wrapped my lunch in a page that said "...and crimp the edges with a fork."
+-> "You think it's the same book?" #earnest
+    Lio: I think somebody cuts pages out of books, and I think some of those pages end up wrapped round fried cod. I think I need to know which.
+-> "A conspiracy of pastry." #wry
+    Lio: Don't. ...Don't make me laugh, I'm trying to be serious about this.
+<<shot on Lio>>
+Lio: If I'm wrong, it's a cookbook. If I'm right, it's still a cookbook. But it's one hole fewer.
+<<set $BOND_EV_LIO_4 to 1>>
+===
+
+title: B_Dagrun_4
+---
+<<shot two Dagrun Rook>>
+Dagrun is awake, which is the first strange thing. He's looking at the Merit roll pinned by the stove.
+Dagrun: Twenty years. Never higher than sixth. You know what they call us in the Guild Ward? The Last Lanterns. Like it's a joke. It was a joke. Mine.
+Dagrun: I came last at my own exam. Forty of us. The Proctor handed me something at the end and I threw it on the sand. Wouldn't look at it.
+-> "What was it?" #earnest
+    Dagrun: I told you. I wouldn't look at it. ...I've wondered since.
+-> "You came last on purpose?" #wry
+    Dagrun: I came last because I was terrible. On purpose came later.
+<<shot on Dagrun>>
+Dagrun: Anyway. Don't tell the others I was awake. They'll expect it.
+<<set $BOND_EV_DAGRUN_4 to 1>>
 ===
 
 title: B_Cal_2

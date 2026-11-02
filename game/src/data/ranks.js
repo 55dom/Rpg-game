@@ -80,6 +80,14 @@ ${qs.map(([who, q, answers]) => `${who}: ${q}\n${answers.map(([a, ok, reply]) =>
 export const RANK_SCRIPT = `
 title: W_Proctor
 ---
+<<if $Q_CQ_DAGRUN == 3 and not $CQ_DAGRUN_RIBBON>>
+    Proctor: Holt sent you? No. Holt never sends anyone for anything. You came on your own.
+    Proctor: Here. Twenty years in my desk. He threw it on my sand and walked off, and I picked it up, because somebody had to.
+    You take it. A ribbon, grey with age, with one word stitched on it.
+    Proctor: Tell him I said he's still terrible at exams.
+    <<set $CQ_DAGRUN_RIBBON to 1>>
+    <<stop>>
+<<endif>>
 <<rank check>>
 <<if $EXAM_READY > 0>>
     Proctor: The ring's yours. Step in when you're ready; I'll be counting.

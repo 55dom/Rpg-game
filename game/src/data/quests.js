@@ -1,7 +1,10 @@
 // Side quests (GDD §18.1). Stages complete when their flag condition holds; flags are set by
 // dialogue (<<set>>, <<pay>>), pickups in zones, and fights. Rewards add Marks and reputation.
 
+import { SIDE_QUESTS } from "./story/sidequests.js";
+
 export const QUESTS = {
+  ...SIDE_QUESTS, // character quests and the Fork & Fold quests (§18.1, §18.2): data/story/sidequests.js
   fried: {
     title: "Something Fried for the Captain", giver: "Dagrun", region: "The Lighthouse",
     stages: [

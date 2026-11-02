@@ -35,9 +35,12 @@ test("ranks climb with points; a bond can't pass a gate until its event is seen"
   assert.equal(b.eventReady("bas"), null);
   b.add("bas", 500);
   assert.equal(b.rank("bas"), 4); assert.equal(b.eventReady("bas"), "B_Bas_4");
-  // Tamsin's rank-4 scene isn't written yet: her bond waits there for a later chapter.
+  // Cal's rank-4 scene was never written (his chapter ends at Ep 18): his bond waits there. (Tamsin's, Lio's and Dagrun's
+  // came with their character quests in Phase 12.)
+  f.set("BOND_EV_CAL_2", 1); b.add("cal", 999);
+  assert.equal(b.rank("cal"), 4); assert.ok(b.waiting("cal")); assert.equal(b.eventReady("cal"), null);
   f.set("BOND_EV_TAMSIN_2", 1); b.add("tamsin", 999);
-  assert.equal(b.rank("tamsin"), 4); assert.ok(b.waiting("tamsin")); assert.equal(b.eventReady("tamsin"), null);
+  assert.equal(b.rank("tamsin"), 4); assert.equal(b.eventReady("tamsin"), "B_Tamsin_4");
 });
 
 test("one chat and one gift a day; gifts follow likes and dislikes", () => {

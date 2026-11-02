@@ -1,5 +1,6 @@
 import { REVEAL_ZONES } from "../reveal/places.js";
 import { KNIGHT_RANKS } from "./ranks.js";
+import { SIDE_PLACES as SQ } from "./story/sidequests.js";
 // Explorable zones (GDD §13: large interconnected zones, not a seamless open world).
 // Each zone names its set, bounds and solids (also used to build the set's buildings),
 // where you arrive, who's there, and its exits. Talk nodes live in data/story/world.js.
@@ -324,6 +325,7 @@ export const ZONES = {
       { id: "squadBoard", x: 1.0, z: 10.9, show: "1", ui: "hq", marker: false, label: "Read the squad board (contracts, HQ rooms)" },
       { id: "workbench", x: -9.5, z: 1.7, show: "1", ui: "temper", marker: false, label: "Use the workbench (temper gear)" },
       { id: "meal", x: 5, z: 2.9, show: "$HQ_KITCHEN", node: "W_Meal", marker: false, label: "Sit down for Dagrun's stew" },
+      { id: "wellLetter", x: SQ.letter.x, z: SQ.letter.z, show: "$EP4_DONE and not $MIRREN_SAVED and $EP24_DONE and $Q_WELL_B == 0", node: "W_WellLetter", label: "A letter on the bench" }, // (Fork & Fold, §18.2)
       frag(1, -12.6, 10), mural(1, 8, -10), mural(2, 12, 3),
     ],
     exits: [
@@ -429,7 +431,10 @@ export const ZONES = {
       { id: "waterman", look: "townsman", x: -3.6, z: -4.2, yaw: -1.6,
         routine: { home: [-15.2, -3], steps: [{ do: "work", at: [-3.7, -3.9], face: -1.9, anim: "work", dur: [6, 9] }, { do: "walk", to: [-13, 2] }, { do: "idle", at: [-13, 2], face: 0, dur: [5, 8] }] } },
     ],
-    pickups: [{ id: "ledger", x: -3, z: 14.6, show: "1", flag: "LEDGER_READ", node: "W_Ledger", label: "Read the orphan ledger" }, frag(3, 0, -2.7), mural(8, 6, -6), mural(9, -8, 8),
+    pickups: [ // (character quests, §18.1: Bas's stone by the mill race, Tamsin's shell where the fields meet the Dry Sea)
+      { id: "millStone", x: SQ.millStone.x, z: SQ.millStone.z, show: "$Q_CQ_BAS == 3 and not $CQ_BAS_STONE", node: "CQ_MillStone", label: "A flat grey stone by the mill race" },
+      { id: "shell", x: SQ.shell.x, z: SQ.shell.z, show: "$Q_CQ_TAMSIN == 3 and not $CQ_TAMSIN_SHELL", node: "CQ_Shell", label: "Something white in the sand" },
+{ id: "ledger", x: -3, z: 14.6, show: "1", flag: "LEDGER_READ", node: "W_Ledger", label: "Read the orphan ledger" }, frag(3, 0, -2.7), mural(8, 6, -6), mural(9, -8, 8),
       { id: "shrine", x: 10, z: 4, show: "1", node: "W_Shrine", label: "The Verdant Oath shrine" }], // one of the slow ways back from Corruption (§8.3)
     encounters: [
       { id: "bandits", rect: [8, -29, 29, -19], at: { x: 18, z: -24, r: 4 }, wave: ["bandit", "bandit", "bandit"], when: "$Q_BANDITS == 1", flag: "BANDITS_CLEARED", label: "BANDITS ON THE MILL ROAD" },
@@ -444,7 +449,10 @@ export const ZONES = {
     id: "fens", name: "The Greywater Fens", region: "Swamp Villages", stage: "fens",
     bounds: { rect: [-30, -30, 30, 30], solids: fensSolids },
     spawn: { x: 0, z: -25, yaw: 0 },
-    cast: [{ id: "ness", look: "ness", x: 12.6, z: -8.6, yaw: 2.36, node: "W_Ness",
+    cast: [ // Mirren, saved in Ep 4, and the well quest (Fork & Fold, §18.2): by the water, then waiting at the well
+      { id: "mirren", look: "mirren", x: SQ.mirren.x, z: SQ.mirren.z, yaw: 2.6, node: "W_Mirren", when: "$MIRREN_SAVED and $EP24_DONE and $Q_WELL_A != 1" },
+      { id: "mirren", look: "mirren", x: SQ.mirrenWell.x, z: SQ.mirrenWell.z, yaw: 0.9, node: "W_MirrenWell", when: "$Q_WELL_A == 1" },
+{ id: "ness", look: "ness", x: 12.6, z: -8.6, yaw: 2.36, node: "W_Ness",
       routine: { role: "elder", steps: [{ do: "work", at: [12.6, -8.6], face: 2.36, anim: "fish", dur: [20, 30] }, { do: "idle", at: [10.5, -5.5], face: 2.6, dur: [5, 8] }] } },
       // Elsie (data/story/law.js): hiding by her house when the Choir comes back for her; then Ness's, by the water; then home.
       { id: "elsie", look: "elsie", x: -4.4, z: 15.6, yaw: Math.PI, node: "W_Elsie", when: "not $LUKE_HOME_OPEN",
@@ -457,7 +465,8 @@ export const ZONES = {
       { id: "fenpost", name: "City Watch", look: "guard", x: 1.4, z: 9.6, yaw: Math.PI, node: "W_Patrol", when: "$LUKE_HOME_OPEN",
         routine: { role: "guard", steps: [{ do: "idle", at: [1.4, 9.6], face: Math.PI, dur: [8, 12] }, { do: "walk", to: [-2.6, 13.6] }, { do: "idle", at: [-2.6, 13.6], face: 2.6, dur: [6, 9] }, { do: "walk", to: [1.4, 9.6] }] } },
     ],
-    pickups: [{ id: "hymn", x: -1.4, z: 15.2, show: "1", flag: "HYMN_READ", node: "W_Hymn", label: "Read the hymn nailed to the well" }, frag(4, -10.4, 9.5), mural(10, 6, 4), mural(11, -4, -10),
+    pickups: [{ id: "oldWell", x: SQ.well.x, z: SQ.well.z, show: "$Q_WELL_B == 1 and not $WELL_SEEN", node: "W_WellAlone", label: "The old well on the north path" },
+{ id: "hymn", x: -1.4, z: 15.2, show: "1", flag: "HYMN_READ", node: "W_Hymn", label: "Read the hymn nailed to the well" }, frag(4, -10.4, 9.5), mural(10, 6, 4), mural(11, -4, -10),
       { id: "choirCache", x: 8, z: -14, show: "$ILSE_DEFEATED and not $FORBIDDEN_FOUND", node: "W_ChoirCache", faint: true, label: "A loose flagstone" }], // a Pale Choir cache: Hollow Bite, a forbidden page (§8.2)
     // Field fights: they come back each visit. Run far enough and they give up the chase.
     encounters: [
@@ -560,7 +569,8 @@ export const ZONES = {
       low(box(HM.table.x - 0.6, HM.table.z - 0.4, HM.table.x + 0.6, HM.table.z + 0.4)), low(circle(4.3, -3.3, 0.4)), low(circle(4.2, -2.3, 0.4)), low(circle(-4.4, -3.4, 0.35)),
     ] },
     spawn: { x: 0, z: -2.6, yaw: 0 },
-    cast: [{ id: "hetty", look: "hetty", x: 2.2, z: 2.6, yaw: 0, node: "W_Hetty",
+    cast: [{ id: "juno", look: "juno", x: SQ.junoHome.x, z: SQ.junoHome.z, yaw: 1.2, node: "CQ_Juno_Loom", when: "$Q_CQ_JUNO == 3" }, // her loom (§18.1, Juno's quest)
+      { id: "hetty", look: "hetty", x: 2.2, z: 2.6, yaw: 0, node: "W_Hetty",
       routine: { steps: [{ do: "work", at: [2.3, 2.6], face: 0, anim: "stir", dur: [10, 14] }, { do: "work", at: [-1.2, 3.2], face: 0, anim: "work", dur: [6, 8] }, { do: "work", at: [1.6, -0.5], face: 0, anim: "wipe", dur: [5, 7] }] } }],
     exits: [{ id: "door", rect: [-0.9, -3.75, 0.9, -3.0], to: "aurelin", spawn: "home", label: "Back out to the street" }],
     arrivals: { aurelin: { x: 0, z: -2.6, yaw: 0 } },
@@ -725,7 +735,8 @@ export const ZONES = {
     id: "hollowmarch", name: "The Hollowmarch", region: "Past the northern border", stage: "hollowmarch", mapWhen: "$EP17_DONE", // (on the map once you've been: Ep 17)
     bounds: { radius: HM_.radius - 2, solids: [...HM_.stones.map(([x, z]) => circle(x, z, 0.6)), ...HM_.trees.map(([x, z]) => circle(x, z, 0.35))] },
     spawn: { x: 0, z: -20, yaw: 0 },
-    cast: [], pickups: [], encounters: [], exits: [], arrivals: {},
+    cast: [], encounters: [], exits: [], arrivals: {},
+    pickups: [{ id: "petal", x: SQ.petal.x, z: SQ.petal.z, show: "$Q_BURNED == 1 and not $BURNED_PETAL", node: "W_Petal", label: "Something pale in the ring of stones" }], // (Quest C, §18.2)
   },
   // Larkspur, the night it burned (Cal's Path, Ch 6): story only. The houses are the fire's (runtime/sets.js buildLarkspur).
   larkspurFire: {

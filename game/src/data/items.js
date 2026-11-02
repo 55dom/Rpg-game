@@ -21,6 +21,12 @@ export const ITEMS = Object.freeze({
   inkDrop: { name: "Ink Drop", kind: "charm", price: 90, mods: { manaRegen: 1.5 }, desc: "A bead of old ink that never dries. Mana returns faster." },
   whetCharm: { name: "Whetstone Charm", kind: "charm", price: 85, mods: { attack: 0.06 }, desc: "A tiny whetstone on a cord. Every cut lands a little cleaner." },
   fenReed: { name: "Fen Reed Knot", kind: "charm", price: 55, mods: { defense: 0.06 }, desc: "A knot of bog reed. Fen folk swear it turns bad luck." },
+  // Keepsakes (GDD §18.1's character quests): given, never sold.
+  junoKnot: { name: "Three-Strand Cord", kind: "charm", price: 0, keepsake: true, mods: { health: 20, defense: 0.04 }, desc: "Red, blue, and a third strand from the last row on her mother's loom. Juno tied it." },
+  basStone: { name: "Wall Chip", kind: "charm", price: 0, keepsake: true, mods: { posture: 0.15, defense: 0.03 }, desc: "The chip off the stone that mended the Lighthouse wall. Something else you've carried." },
+  tamsinLine: { name: "Two Lines on a Scrap", kind: "charm", price: 0, keepsake: true, mods: { surge: 0.15, manaRegen: 0.5 }, desc: "\"Light, oh light, upon the... light.\" Tamsin doesn't need it any more. She's got three." },
+  lioBookmark: { name: "Page Two Hundred and Six", kind: "charm", price: 0, keepsake: true, mods: { manaRegen: 1, attack: 0.03 }, desc: "Fish pie, cut very neatly from a cookbook. Lio says it's the most useful page in Aurelin." },
+  dagrunRibbon: { name: "LAST", kind: "charm", price: 0, keepsake: true, mods: { attack: 0.05, surge: 0.05 }, desc: "A ribbon twenty years old, the gold gone grey. Dagrun gave it to you like it said FIRST." },
 });
 
 export const SHOPS = Object.freeze({
