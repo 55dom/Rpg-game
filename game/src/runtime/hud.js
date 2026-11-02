@@ -135,6 +135,9 @@ export class Hud {
     this.set("bondw", bond.querySelector("i"), "width", pct((world.bondGauge ?? 0) / 100));
     this.set("bondc", bond, "class", `bond-gauge${full ? " full" : ""}${ready ? " ready" : ""}`);
     bond.hidden = !world.companions.some((c) => !c.guest);
+    // On a touch screen the Assist button that would start a Team Attack reads TEAM (GDD §20.3).
+    const team = world.teamReady ? ["bas", "juno"].filter((k) => world.teamReady(k)).join(" ") : "";
+    if (this.root && this.root.dataset.team !== team) this.root.dataset.team = team;
   }
 
   hurt() {

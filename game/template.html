@@ -168,7 +168,6 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
 button.go { border: 0; cursor: pointer; }
 button.go.alt { background: transparent; color: var(--text); border: 1px solid var(--line); animation: none; }
 .start .hint, .modal .hint { font-size: 12px; color: var(--muted); margin-top: 12px; }
-.pad .b-wall { right: 6px; bottom: 228px; width: 50px; height: 50px; font-size: 10px; border-color: var(--gale); }
 .pad .b-page { right: 66px; bottom: 210px; width: 46px; height: 46px; font-size: 9px; display: none; border-color: #fff; animation: pulse 0.6s ease-in-out infinite alternate; }
 .page-ready .pad .b-page { display: block; }
 @media (max-width: 640px) { .pcards { grid-template-columns: 1fr; } .rank { font-size: 72px; } .line { bottom: 40%; font-size: 13px; } }
@@ -285,8 +284,18 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .pad .b-guard { right: 74px; bottom: 76px; width: 54px; height: 54px; }
 .pad .b-gale { right: 6px; bottom: 162px; width: 54px; height: 54px; border-color: var(--gale); }
 .pad .b-lock { right: 140px; bottom: 74px; width: 46px; height: 46px; font-size: 10px; }
-.pad .b-pull { right: 66px; bottom: 146px; width: 50px; height: 50px; font-size: 10px; border-color: var(--gale); }
-.pad .b-edge { right: 126px; bottom: 132px; width: 50px; height: 50px; font-size: 10px; border-color: var(--gale); }
+/* The Magic button and its ring (GDD §20.3): hold and slide to a spell, or tap it and tap one. */
+.pad .b-magic { right: 66px; bottom: 146px; width: 50px; height: 50px; font-size: 9px; border-color: var(--gale); }
+.pad .ring { position: absolute; right: 66px; bottom: 146px; width: 50px; height: 50px; pointer-events: none; display: none; z-index: 3; }
+.ring-open .ring { display: block; }
+.ring-open .b-magic { background: rgba(143, 233, 255, 0.35); }
+.pad .ring button { right: auto; bottom: auto; width: 50px; height: 50px; font-size: 10px; border-color: var(--gale); background: rgba(14, 22, 30, 0.88); }
+.pad .ring .r-gale { left: 12px; top: -71px; } .pad .ring .r-pull { left: -41px; top: -59px; }
+.pad .ring .r-edge { left: -71px; top: -12px; } .pad .ring .r-wall { left: -59px; top: 41px; }
+.pad .ring button.hot { background: rgba(143, 233, 255, 0.9); color: var(--ink); transform: scale(1.12); }
+/* A Team Attack (GDD §20.3: it appears when charged): the Assist button that would start one reads TEAM. */
+[data-team~="bas"] .pad .b-bas, [data-team~="juno"] .pad .b-juno { border-color: #fff; color: var(--ink); background: linear-gradient(135deg, rgba(255,241,184,0.92), rgba(255,143,163,0.85)); animation: pulse 0.6s ease-in-out infinite alternate; }
+[data-team~="bas"] .pad .b-bas::after, [data-team~="juno"] .pad .b-juno::after { content: "TEAM"; position: absolute; left: 50%; top: -13px; transform: translateX(-50%); font-size: 9px; color: #fff1b8; text-shadow: 0 1px 2px #000; }
 .is-touch .spells { display: none; }
 .is-touch .fd { bottom: auto; top: 112px; width: min(300px, 60vw); }
 .is-touch .combo { top: 22%; }
@@ -348,7 +357,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .no-ult .bar.surge, .no-ult .b-ult { display: none; }
 .solo .party, .solo .b-bas, .solo .b-juno, .solo .b-stance { display: none; }
 .spell[hidden] { display: none; }
-[data-locked~="Spell2"] .b-pull, [data-locked~="Spell3"] .b-edge, [data-locked~="Spell4"] .b-wall, [data-locked~="pages"] .b-page { display: none; }
+[data-locked~="Spell2"] .r-pull, [data-locked~="Spell3"] .r-edge, [data-locked~="Spell4"] .r-wall, [data-locked~="pages"] .b-page { display: none; }
 .dialog { position: absolute; left: 50%; bottom: calc(7vh + 14px); transform: translateX(-50%); width: min(860px, calc(100vw - 32px));
   background: linear-gradient(180deg, #14161f, #0c0d13); border: 1px solid #3a3f55; border-left: 3px solid var(--lantern); z-index: 6; isolation: isolate;
   border-radius: 12px; padding: 22px 22px 18px; pointer-events: auto; cursor: pointer; min-height: 112px; }
@@ -647,14 +656,18 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <button class="b-jump" data-intent="Jump">JUMP</button>
       <button class="b-guard" data-intent="Block">GUARD</button>
       <button class="b-gale" data-intent="Spell1">GALE</button>
-      <button class="b-pull" data-intent="Spell2">PULL</button>
-      <button class="b-edge" data-intent="Spell3">EDGE</button>
+      <button class="b-magic" data-magic aria-label="Magic: hold and slide to a spell, or tap and choose">MAGIC</button>
+      <div class="ring" data-ring>
+        <button class="r-gale" data-intent="Spell1" data-ring-item>GALE</button>
+        <button class="r-pull" data-intent="Spell2" data-ring-item>PULL</button>
+        <button class="r-edge" data-intent="Spell3" data-ring-item>EDGE</button>
+        <button class="r-wall" data-intent="Spell4" data-ring-item>WALL</button>
+      </div>
       <button class="b-ult" data-intent="Ultimate">ULT</button>
       <button class="b-bas" data-intent="cmd:assist:bas">BAS</button>
       <button class="b-juno" data-intent="cmd:assist:juno">JUNO</button>
       <button class="b-stance" data-intent="cmd:stance">STNC</button>
       <button class="b-tag" data-intent="cmd:tag">TAG</button>
-      <button class="b-wall" data-intent="Spell4">WALL</button>
       <button class="b-page" data-intent="cmd:pages">PAGE</button>
       <button class="b-lock" data-intent="Lock">LOCK</button>
     </div>
@@ -680,6 +693,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
         <button data-a11y="sound" aria-pressed="true" title="Sound">SOUND</button>
         <button data-a11y="frameData" aria-pressed="true" title="The frame data panel">FRAME DATA</button>
         <button data-a11y="assist" aria-pressed="false" title="Wider parry and perfect-dodge windows; hold Slash to keep comboing">ASSIST</button>
+        <button data-a11y="battery" aria-pressed="false" title="Battery Saver: 30 frames a second at a lower resolution, cooler and longer on a phone. The fight itself runs exactly the same">BATTERY SAVER</button>
       </div>
       <p class="a11y-note">Remembered on this device.</p>
       <h2>CONTROLS</h2>
@@ -704,7 +718,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
         <tr><td>Party stance (Press / Guard / Support)</td><td><kbd>4</kbd></td><td>D-pad ▲</td></tr>
         <tr><td>Lock on · switch target</td><td><kbd>Q</kbd> · <kbd>Tab</kbd> (<kbd>Shift</kbd>+<kbd>Tab</kbd> left)</td><td>R3 · flick right stick</td></tr>
         <tr><td>Frame data · restart · pause</td><td><kbd>G</kbd> · <kbd>Backspace</kbd> · <kbd>Esc</kbd></td><td>— · Back · —</td></tr>
-        <tr><td>Touch</td><td colspan="2">Drag left side to move, upper right to look. Tap LOCK to lock or switch, hold it to release.</td></tr>
+        <tr><td>Touch</td><td colspan="2">Drag left side to move, upper right to look. Tap LOCK to lock or switch, hold it to release. Hold MAGIC and slide to a spell (or tap it, then tap the spell). ULT appears when Surge is full; an Assist button reads TEAM when the Bond gauge is.</td></tr>
       </table>
       <h3>TECHNIQUES</h3>
       <ul>

@@ -534,10 +534,21 @@ export class World {
     return true;
   }
 
+  /** Who an Assist button calls: that squadmate, or the one in that place (1 · 2 · 3 call the squad in order when it isn't Bas and Juno). */
+  assistFor(kind) {
+    const squad = this.companions.filter((f) => !f.guest);
+    return squad.find((f) => f.kind === kind) ?? squad[{ bas: 0, juno: 1, third: 2 }[kind]] ?? null;
+  }
+
+  /** That button would start a Team Attack now (GDD §20.3: the Team Attack appears when it's charged). */
+  teamReady(kind) {
+    const c = this.assistFor(kind);
+    return !!c && c.alive && this.player.alive && this.frame >= c.assistReadyFrame && this.teamAttacks.has(c.kind) && this.bondGauge >= BOND_GAUGE.max;
+  }
+
   /** The player calls a companion's signature move (GDD §10 Assist Call). */
   callAssist(kind) {
-    const squad = this.companions.filter((f) => !f.guest);
-    const c = squad.find((f) => f.kind === kind) ?? squad[{ bas: 0, juno: 1, third: 2 }[kind]]; // 1 · 2 · 3 call the squad in order when it isn't Bas and Juno
+    const c = this.assistFor(kind);
     if (!c || !c.alive || !this.player.alive) return { ok: false, reason: "down" };
     if (this.frame < c.assistReadyFrame) return { ok: false, reason: "cooldown" };
     const t = (this.lockTarget?.alive && this.lockTarget) || this.player.pickTarget(Tuning.assistRange) || this.nearestEnemy(Tuning.assistRange);

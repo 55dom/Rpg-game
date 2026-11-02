@@ -233,7 +233,7 @@ export function boot(doc = document) {
 
   // Settings, remembered between visits (GDD §19.8's accessibility toggles among them). A blocked or empty store is fine.
   const SETTINGS_KEY = "unwritten-settings";
-  const settings = { frameData: !mobile, flashes: !reduced, sound: true, assist: coarse, shake: !reduced, blur: !reduced, speedLines: !reduced, ult: reduced ? "short" : "full", twos: true, difficulty: "knight" };
+  const settings = { frameData: !mobile, flashes: !reduced, sound: true, assist: coarse, shake: !reduced, blur: !reduced, speedLines: !reduced, ult: reduced ? "short" : "full", twos: true, battery: false, difficulty: "knight" };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "null") ?? {};
     for (const [k, v] of Object.entries(saved)) if (k in settings && typeof v === typeof settings[k] && (k !== "ult" || ULT_MODES.includes(v)) && (k !== "difficulty" || DIFFICULTY_KEYS.includes(v))) settings[k] = v;
@@ -1043,8 +1043,8 @@ export function boot(doc = document) {
     walls.clear(); setBog(false, true); constellation.clear(true);
     world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, difficulty: settings.difficulty, companions: true, injured: injuredNow(), annotation: annotationNow(), revision: revisionNow(), margin: marginNow(), forbidden: forbiddenNow(), corruption: corruptionNow(), techniques: techniquesNow(), ...opts });
     const ink = world.loadout.Spell1?.id === "Inscribe"; // the margin: Inscribe takes Gale's button
-    const galeBtn = root.querySelector('[data-intent="Spell1"]'); if (galeBtn) galeBtn.textContent = ink ? "INK" : "GALE";
-    const wallBtn = root.querySelector('[data-intent="Spell4"]'); if (wallBtn) wallBtn.textContent = world.loadout.Spell4?.id === "HollowBite" ? "BITE" : "WALL"; // the forbidden page takes Wind Wall's button (§8.3)
+    for (const b of root.querySelectorAll('[data-intent="Spell1"]')) b.textContent = ink ? "INK" : "GALE"; // (the Gale button and its place in the Magic ring)
+    for (const b of root.querySelectorAll('[data-intent="Spell4"]')) b.textContent = world.loadout.Spell4?.id === "HollowBite" ? "BITE" : "WALL"; // the forbidden page takes Wind Wall's button (§8.3)
     world.pageDefs = PAGES;
     world.t2Mode = (id) => t2Mode(settings.ult, id); // Team Attacks: full, short (after one full view) or skipped (GDD §19.1)
     root.classList.toggle("has-tag", !!world.members.severin); root.classList.remove("tag-severin", "hushed");
@@ -1848,7 +1848,7 @@ export function boot(doc = document) {
       story.flags.set("FORBIDDEN_ON", now ? 1 : 0);
       if (now) story.corrupt(CORRUPTION.equip);
       world.setForbidden(now); onEvents(world.drainEvents());
-      const wb = root.querySelector('[data-intent="Spell4"]'); if (wb) wb.textContent = world.loadout.Spell4?.id === "HollowBite" ? "BITE" : "WALL";
+      for (const wb of root.querySelectorAll('[data-intent="Spell4"]')) wb.textContent = world.loadout.Spell4?.id === "HollowBite" ? "BITE" : "WALL";
       sfx.play(now ? "rift" : "ui"); story.saveNow(); renderGrimoire();
     });
     for (const btn of grim.querySelectorAll("[data-pin]")) btn.addEventListener("click", (e) => {
@@ -2035,20 +2035,25 @@ export function boot(doc = document) {
   results.querySelector("[data-again]")?.addEventListener("click", () => replay("run"));
   results.querySelector("[data-yard]")?.addEventListener("click", () => replay("yard"));
 
-  // Adaptive resolution: drop render resolution when frames run long, restore it when there's headroom.
+  // Adaptive resolution: drop render resolution when frames run long, restore it when there's headroom. Battery Saver
+  // (GDD §20.3) caps the frame rate at 30 and the resolution at one pixel per CSS pixel, and the targets move with it.
   const maxRatio = Math.min(devicePixelRatio || 1, mobile ? 1.5 : 2);
   const quality = {
-    ratio: maxRatio, avg: 1 / 60, timer: 0, fps: 60,
+    ratio: maxRatio, avg: 1 / 60, timer: 0, fps: 60, saver: false,
+    get cap() { return this.saver ? Math.min(1, maxRatio) : maxRatio; },
+    get target() { return this.saver ? 30 : 60; },
+    set(r) { if (r !== this.ratio) { this.ratio = r; engine.setHardwareScalingLevel(1 / r); } },
     update(dt) {
+      if (this.saver !== !!settings.battery) { this.saver = !!settings.battery; this.avg = 1 / this.target; this.timer = 0; this.set(this.cap); }
       this.avg += (dt - this.avg) * 0.05;
       this.fps = 1 / this.avg;
       this.timer += dt;
       if (this.timer < 2) return;
       this.timer = 0;
       let next = this.ratio;
-      if (this.fps < 48) next = Math.max(0.6, this.ratio - 0.15);
-      else if (this.fps > 58 && this.ratio < maxRatio) next = Math.min(maxRatio, this.ratio + 0.1);
-      if (next !== this.ratio) { this.ratio = next; engine.setHardwareScalingLevel(1 / next); }
+      if (this.fps < this.target * 0.8) next = Math.max(0.6, this.ratio - 0.15);
+      else if (this.fps > this.target * 0.965 && this.ratio < this.cap) next = Math.min(this.cap, this.ratio + 0.1);
+      this.set(next);
     },
   };
   hud.quality = quality;
@@ -2094,6 +2099,7 @@ export function boot(doc = document) {
 
   engine.runRenderLoop(() => {
     const now = performance.now();
+    if (settings.battery && now - last < 1000 / 30 - 4) return; // Battery Saver (GDD §20.3): 30 frames a second; the 60 Hz fight clock catches up in whole steps, so the fight is the same
     const dt = Math.min(0.1, (now - last) / 1000);
     last = now;
     state.time += dt;
@@ -2231,9 +2237,12 @@ export function boot(doc = document) {
     scene.render();
   });
   addEventListener("resize", () => engine.resize());
-  // Leaving the tab pauses the fight (and stops the clock from catching up afterwards).
+  // Leaving the tab pauses the fight (and stops the clock from catching up afterwards), and out in the world it saves
+  // (GDD §20.3, suspend & resume: a phone may close a hidden tab and never bring it back). An episode already saves at every beat.
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden && state.started && !state.paused) { state.paused = true; root.classList.add("paused"); }
+    if (!document.hidden) return;
+    if (state.started && !state.paused) { state.paused = true; root.classList.add("paused"); }
+    if (state.mode === "story" && story.roaming && story.zone) story.saveNow();
   });
 
   // Test hook: freeze the live clock so automated checks can step the sim frame-exactly.

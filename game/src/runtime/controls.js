@@ -148,6 +148,54 @@ export class Controls {
       btn.addEventListener("pointercancel", up);
       btn.addEventListener("pointerleave", up);
     }
+    const magic = root.querySelector("[data-magic]"), ring = root.querySelector("[data-ring]");
+    if (magic && ring) this._bindRing(root, magic, ring);
+  }
+
+  /** The Magic button (GDD §20.3): it opens the four-spell ring. Hold it and slide toward a spell, and letting go casts
+   *  it; or tap it, and the ring stays open a moment for a tap on the spell. The fight doesn't stop meanwhile. */
+  _bindRing(root, magic, ring) {
+    const items = [...ring.querySelectorAll("[data-ring-item]")];
+    const r = this.ring = { open: false, sticky: false, id: null, x: 0, y: 0, hot: null, timer: null };
+    const setHot = (el) => { if (r.hot === el) return; r.hot?.classList.remove("hot"); r.hot = el; el?.classList.add("hot"); };
+    const setOpen = (on) => {
+      r.open = on; root.classList.toggle("ring-open", on);
+      if (!on) { setHot(null); r.sticky = false; clearTimeout(r.timer); for (const el of items) el.classList.remove("down"); }
+    };
+    // The spell whose direction from the button is nearest the slide's (a spell that isn't on the page yet isn't shown).
+    const pick = (dx, dy) => {
+      const c = magic.getBoundingClientRect(), cx = c.left + c.width / 2, cy = c.top + c.height / 2, a = Math.atan2(dy, dx);
+      let best = null, bd = Infinity;
+      for (const el of items) {
+        if (!el.offsetParent) continue;
+        const b = el.getBoundingClientRect();
+        let d = Math.abs(a - Math.atan2(b.top + b.height / 2 - cy, b.left + b.width / 2 - cx));
+        if (d > Math.PI) d = 2 * Math.PI - d;
+        if (d < bd) { bd = d; best = el; }
+      }
+      return best;
+    };
+    magic.addEventListener("pointerdown", (e) => {
+      e.preventDefault(); this._first(); this.device = "touch";
+      if (r.open && r.sticky) { setOpen(false); return; } // a second tap closes it
+      r.id = e.pointerId; r.x = e.clientX; r.y = e.clientY;
+      try { magic.setPointerCapture(e.pointerId); } catch { /* the slide is read either way */ } magic.classList.add("down"); setOpen(true);
+    });
+    magic.addEventListener("pointermove", (e) => {
+      if (e.pointerId !== r.id) return;
+      const dx = e.clientX - r.x, dy = e.clientY - r.y;
+      setHot(Math.hypot(dx, dy) > 18 ? pick(dx, dy) : null);
+    });
+    const release = (e) => {
+      if (e.pointerId !== r.id) return;
+      r.id = null; magic.classList.remove("down");
+      if (r.hot) { this.presses.push(Intent[r.hot.dataset.intent]); setOpen(false); return; }
+      if (e.type === "pointercancel") { setOpen(false); return; }
+      r.sticky = true; clearTimeout(r.timer); r.timer = setTimeout(() => setOpen(false), 2500);
+    };
+    magic.addEventListener("pointerup", release);
+    magic.addEventListener("pointercancel", release);
+    for (const el of items) el.addEventListener("pointerdown", () => { if (r.open) setTimeout(() => setOpen(false), 0); }); // (its press went in above)
   }
 
   /** Sample all devices once per render frame. */
