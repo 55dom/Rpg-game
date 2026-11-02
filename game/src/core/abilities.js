@@ -68,6 +68,7 @@ export function defineAbility(o) {
     hit: o.hit ?? null,
     hasHit: isHitSet(o.hit),
     tags: Object.freeze(o.tags ?? []),
+    step: o.step ?? null, // how it's drawn (GDD §19.6, core/stepping.js): "twos" | "hybrid" | "full", or by its tier
   });
 }
 

@@ -23,6 +23,7 @@ import { backlashLooks } from "../reveal/backlash.js";
 import { finaleLooks } from "../reveal/finale.js";
 import { arc7Looks } from "../reveal/arc7.js";
 import { EventType } from "../core/abilities.js";
+import { steppedFrame, animTier } from "../core/stepping.js";
 import { buildBody, skinBake } from "./body.js";
 import { animateHumanoid } from "./motion.js";
 
@@ -1077,9 +1078,14 @@ export class Rig {
     const rest = this.poses.rest;
     const a = fighter.current;
     const p = a && this.poses[a.id];
-    if (!p) return { rot: rest, lean: 0, active: false, spin: 0 };
-    const f = fighter.runner.frame + (fighter.frozen ? 0 : t);
+    if (!p) { this.smear = 0; return { rot: rest, lean: 0, active: false, spin: 0 }; }
+    // Limited animation (GDD §19.6, §19.7; core/stepping.js): the pose is drawn on twos, or on twos with the release at
+    // full rate, by the move's tier. The fight itself never steps.
+    const raw = fighter.runner.frame + (fighter.frozen ? 0 : t);
+    const f = steppedFrame(a, raw, { on: Rig.twos });
     const s = a.startup, act = a.active;
+    // Smear frames (§19.6: "on major attacks only"): the first frames of a major release draw the blade's whole arc.
+    this.smear = isAttack(a) && animTier(a) !== "A" && raw >= s && raw < s + Math.min(act, 3) ? 1 : 0;
     // Optional full turns: over the active frames for attacks, over the whole move otherwise.
     let spin = 0;
     const attack = isAttack(a);
@@ -1346,6 +1352,7 @@ export class Rig {
 }
 
 Rig.view = null;        // the camera's ground position, set by the game each frame
+Rig.twos = true;        // limited animation (GDD §19.6): the ANIMATION setting turns it off
 Rig.outlineRange = 30;  // metres
 
 // Hanging at the side, angled a little out from the shoulder so it clears the coat and anything worn across it.

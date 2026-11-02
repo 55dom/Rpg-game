@@ -231,7 +231,7 @@ export function boot(doc = document) {
 
   // Settings, remembered between visits (GDD §19.8's accessibility toggles among them). A blocked or empty store is fine.
   const SETTINGS_KEY = "unwritten-settings";
-  const settings = { frameData: !mobile, flashes: !reduced, sound: true, assist: coarse, shake: !reduced, blur: !reduced, speedLines: !reduced, ult: reduced ? "short" : "full", difficulty: "knight" };
+  const settings = { frameData: !mobile, flashes: !reduced, sound: true, assist: coarse, shake: !reduced, blur: !reduced, speedLines: !reduced, ult: reduced ? "short" : "full", twos: true, difficulty: "knight" };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "null") ?? {};
     for (const [k, v] of Object.entries(saved)) if (k in settings && typeof v === typeof settings[k] && (k !== "ult" || ULT_MODES.includes(v)) && (k !== "difficulty" || DIFFICULTY_KEYS.includes(v))) settings[k] = v;
@@ -861,6 +861,7 @@ export function boot(doc = document) {
   const applySettings = (save = true) => {
     fdPanel.hidden = !settings.frameData;
     camera.shakeScale = settings.shake ? 1 : 0;
+    Rig.twos = settings.twos !== false; // limited animation (GDD §19.6): poses drawn at 12 fps, or every frame
     root.classList.toggle("no-blur", !settings.blur);
     root.classList.toggle("no-speedlines", !settings.speedLines);
     for (const b of root.querySelectorAll("[data-a11y]")) {
@@ -2133,7 +2134,7 @@ export function boot(doc = document) {
       const t = f.timeScale < 1 ? clamp01(f.timeAcc + alpha * f.timeScale) : alpha;
       rig.update(f, running ? t : 1, dt);
       const tr = trails.get(f);
-      if (tr) { const { hilt, tip } = rig.bladeWorld(); tr.push(hilt, tip, rig.swinging, dt); }
+      if (tr) { const { hilt, tip } = rig.bladeWorld(); tr.push(hilt, tip, rig.swinging, dt, rig.smear); }
     }
 
     const lock = world.lockTarget?.alive ? world.lockTarget : null;

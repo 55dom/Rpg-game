@@ -33,25 +33,47 @@ export class Trail {
     mesh.isPickable = false;
     this.mesh = mesh; this.pos = pos; this.col = col;
     this.energy = 0;
+    this.lastHilt = new BB.Vector3(); this.lastTip = new BB.Vector3(); this.tmpA = new BB.Vector3(); this.tmpB = new BB.Vector3(); this.tmpC = new BB.Vector3();
+    this.fan = 0; // samples of the last smear still bright
   }
 
   setColor(hex) { this.color = color3(hex); }
 
   /** Feed the blade each render frame. `on` widens the ribbon; off lets it collapse. */
-  push(hilt, tip, on, dt) {
-    if (this.count && B().Vector3.DistanceSquared(this.tips[this.head], tip) > 9) this.count = 0; // teleported
+  /**
+   * Feed the blade each render frame. `on` widens the ribbon; off lets it collapse. A blade drawn on twos can jump a
+   * long way between drawings: the ribbon fills that jump with the arc it swept round the hilt, not a straight chord.
+   * `smear` (major attacks, GDD §19.6) draws that arc as a smear frame: full width and bright.
+   */
+  push(hilt, tip, on, dt, smear = 0) {
+    const V = B().Vector3;
+    if (this.count && V.DistanceSquared(this.tips[this.head], tip) > 9) this.count = 0; // teleported
     this.energy = on ? 1 : Math.max(0, this.energy - dt * 7);
     const base = this.energy > 0 ? hilt : tip;
+    const jump = this.count && on ? V.Distance(this.lastTip, tip) : 0;
+    const fill = Math.min(this.n - 2, Math.floor(jump / 0.25)); // extra samples along the arc
+    for (let j = 1; j <= fill; j++) { // round the hilt, from the last drawing to this one
+      const u = j / (fill + 1);
+      const h = V.LerpToRef(this.lastHilt, hilt, u, this.tmpA);
+      const la = V.Distance(this.lastTip, this.lastHilt), lb = V.Distance(tip, hilt);
+      this.tmpB.copyFrom(this.lastTip).subtractInPlace(this.lastHilt).normalize().scaleInPlace(1 - u);
+      const d = this.tmpC.copyFrom(tip).subtractInPlace(hilt).normalize().scaleInPlace(u).addInPlace(this.tmpB).normalize().scaleInPlace(la + (lb - la) * u);
+      this.head = (this.head + this.n - 1) % this.n;
+      this.tips[this.head].copyFrom(h).addInPlace(d); this.hilts[this.head].copyFrom(h);
+    }
+    this.fan = smear ? fill + 1 : Math.max(0, this.fan - 1);
     this.head = (this.head + this.n - 1) % this.n;
     this.tips[this.head].copyFrom(tip); this.hilts[this.head].copyFrom(base);
-    this.count = Math.min(this.n, this.count + 1);
+    this.lastTip.copyFrom(tip); this.lastHilt.copyFrom(hilt);
+    this.count = Math.min(this.n, this.count + 1 + fill);
     const k = this.count;
     for (let i = 0; i < this.n; i++) {
       const slot = (this.head + Math.min(i, k - 1)) % this.n;
       const t = this.tips[slot], h = this.hilts[slot];
-      const fade = Math.pow(1 - i / this.n, 1.6) * this.energy;
-      // Taper: older samples pull the inner edge out toward the tip.
-      const w = 1 - i / this.n;
+      const smeared = i < this.fan;
+      const fade = (smeared ? 1.5 : Math.pow(1 - i / this.n, 1.6)) * this.energy;
+      // Taper: older samples pull the inner edge out toward the tip (a smear keeps its full width).
+      const w = smeared ? 1 : 1 - i / this.n;
       const hx = lerp(t.x, h.x, w), hy = lerp(t.y, h.y, w), hz = lerp(t.z, h.z, w);
       const c = this.color, o = i * 8, pp = i * 6, col = this.col, pos = this.pos;
       pos[pp] = t.x; pos[pp + 1] = t.y; pos[pp + 2] = t.z; pos[pp + 3] = hx; pos[pp + 4] = hy; pos[pp + 5] = hz;
