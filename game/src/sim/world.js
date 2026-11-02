@@ -6,6 +6,7 @@ import { Intent, InputBuffer, mask } from "../core/input.js";
 import { ResourcePool } from "../core/stats.js";
 import { Combatant, Team, HitOutcome, resolveHit } from "../core/combat.js";
 import { AbilityRunner, AbilityController, EventType, MoveContext, StartResult, defineAbility } from "../core/abilities.js";
+import { TEAM_SEQUENCES } from "../data/cinematics.js";
 import { AttackTokenPool, EnemyBrain, MoveIntent, CompanionBrain, AllyMove, STANCES } from "../core/ai.js";
 import { COMPANIONS } from "../data/companions.js";
 import { ENEMIES, WAVES } from "../data/enemies.js";
@@ -126,7 +127,6 @@ export const BOND_GAUGE = Object.freeze({ max: 100, reaction: 15, assist: 20 });
 /** The tag-in strike: a shockwave around whoever comes in. */
 export const TAG_STRIKE = defineAbility({ id: "TagStrike", startup: 1, active: 1, recovery: 1, tags: ["tag"],
   hit: hitSpec({ damage: 10, posture: 18, hitstop: 6, hitstun: 26, knockback: 4 }) }); // Surge spent on a Team Attack
-const TEAM_DELAY = 24;        // frames after the companion's move starts
 
 const WALL_HIT = hitSpec({ damage: 4, posture: 10, hitstop: 3, hitstun: 16, knockback: 3 });
 const WALL_LAUNCH = hitSpec({ damage: 6, posture: 12, hitstop: 4, hitstun: 30, launch: 9 });
@@ -377,6 +377,7 @@ export class World {
     this.lanternUsed = false; this.castOnce = new Set(); this.mudHit = false; this.haskDone = false;
     this.assist = !!o.assist;
     this.teamAttacks = new Set(o.teamAttacks ?? []); // companions with a Team Attack unlocked (bond rank 5)
+    this.t2Mode = o.t2Mode ?? (() => "full"); // how a T2 sequence plays (GDD §19.1): "full" | "short" | "off" (the game sets it from the setting)
     this.bondGauge = 0; // GDD §9.2 (BOND_GAUGE)
     // Tag-swap party (GDD §10): Rook plus whoever can tag in. Only one is on the field; the other waits
     // off-screen, keeps their own health and mana, and recovers a little while out.
@@ -561,15 +562,22 @@ export class World {
     c.target = t;
     c.runner.interrupt();
     c.combatant.staggerFrames = 0;
-    c.controller.startDirect(c.assistAbility, this.frame);
     c.assistReadyFrame = this.frame + c.stats.assistCooldownFrames;
-    this.emit({ type: "assist", fighter: c, ability: c.assistAbility, target: t });
-    // Bond rank 5 and a full Bond gauge: the assist becomes a Team Attack, and Rook strikes with them.
-    if (this.teamAttacks.has(kind) && this.bondGauge >= BOND_GAUGE.max) {
+    // Bond rank 5 and a full Bond gauge: the assist becomes a Team Attack (GDD §19.1 T2: data/cinematics.js). Rook's
+    // controls are taken for the sequence; the squadmate's move waits for the release, and the strike lands on the impact.
+    if (this.teamAttacks.has(c.kind) && this.bondGauge >= BOND_GAUGE.max) {
       this.bondGauge = 0;
-      this.teamHit = { frame: this.frame + TEAM_DELAY, target: t, by: c };
-      this.emit({ type: "teamAttack", fighter: c, kind, target: t });
-    } else this._bond(BOND_GAUGE.assist);
+      const mode = this.t2Mode(`team-${c.kind}`), seq = TEAM_SEQUENCES[mode === "full" ? "full" : "short"], pl = this.player;
+      pl.runner.interrupt(); pl.combatant.staggerFrames = 0; pl.yaw = pl.prevYaw = angleTo(pl.pos, t.pos);
+      pl.controller.startDirect(seq.ability, this.frame);
+      // (+1: the sequence's first frame runs on the next step, so its beats land a frame after they're scheduled)
+      this.teamHit = { frame: this.frame + seq.at.impact + 1, start: this.frame + seq.at.release + 1, target: t, by: c, mode };
+      this.emit({ type: "teamAttack", fighter: c, kind: c.kind, target: t, mode, ability: seq.ability });
+      return { ok: true, target: t };
+    }
+    c.controller.startDirect(c.assistAbility, this.frame);
+    this.emit({ type: "assist", fighter: c, ability: c.assistAbility, target: t });
+    this._bond(BOND_GAUGE.assist);
     return { ok: true, target: t };
   }
 
@@ -1336,6 +1344,7 @@ export class World {
   }
 
   _companionBrain(c, frame) {
+    if (this.teamHit?.by === c && !this.teamHit.started) { c.moveInput.x = 0; c.moveInput.z = 0; c.faceMove = false; return; } // posed for the Team Attack
     const p = this.player;
     const t = this._companionTarget(c);
     c.target = t;
@@ -1824,6 +1833,14 @@ export class World {
     for (const s in this.pageLocks) if (--this.pageLocks[s] <= 0) { delete this.pageLocks[s]; this.emit({ type: "pageRestored", slot: s }); }
     this._sacrifices();
     if (this.comboTimer > 0 && --this.comboTimer === 0) this.comboCount = 0;
+    if (this.teamHit && !this.teamHit.started && this.frame >= this.teamHit.start) { // the release: the squadmate moves
+      const h = this.teamHit, c = h.by; h.started = true;
+      if (c.alive && h.target.alive) {
+        c.runner.interrupt(); c.target = h.target; c.yaw = c.prevYaw = angleTo(c.pos, h.target.pos);
+        c.controller.startDirect(c.assistAbility, this.frame);
+        this.emit({ type: "assist", fighter: c, ability: c.assistAbility, target: h.target, team: true });
+      }
+    }
     if (this.teamHit && this.frame >= this.teamHit.frame) { // the joint strike lands
       const { target: t } = this.teamHit; this.teamHit = null;
       if (t.alive && this.player.alive) {

@@ -108,7 +108,7 @@ test("rank 3 passives: party passives only with that companion fighting; rank 5 
   assert.ok(w.callAssist("bas").ok);
   assert.equal(w.bondGauge, 0, "the gauge is spent"); assert.equal(w.player.surge.current, 80, "Surge is the Ultimate's");
   const log = [];
-  for (let i = 0; i < 60; i++) { w.step(); log.push(...w.drainEvents()); }
+  for (let i = 0; i < 260; i++) { w.step(); log.push(...w.drainEvents()); } // (a T2 sequence: the strike lands on its impact beat, GDD §19.4)
   assert.ok(log.some((x) => x.type === "teamStrike"));
   assert.ok(log.some((x) => x.type === "hit" && x.ability.id === "TeamAttack"));
   // Without a full gauge it's an ordinary assist (and the assist fills the gauge a little).

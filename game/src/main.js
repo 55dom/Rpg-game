@@ -114,6 +114,8 @@ import { storyBracket, storyEpisode } from "./core/ranks.js";
 import { KNIGHT_RANKS, rankOf } from "./data/ranks.js";
 import { TECHNIQUES, TP_FLAG, techFlag, learnedTechniques } from "./data/techniques.js";
 import { BONDS, RANK_POINTS, RANK_UNLOCKS, GIFTS } from "./data/bonds.js";
+import { FEEDBACK, t2Mode, t2MarkSeen } from "./data/cinematics.js";
+import { SHOTS } from "./runtime/shots.js";
 import { MATERIALS, HQ, TEMPER } from "./data/crafting.js";
 import { FRAGMENTS, CLAUSE } from "./data/lore.js";
 import { rumorBoard } from "./data/rumors.js";
@@ -248,6 +250,31 @@ export function boot(doc = document) {
     impactLeft = frames / 60;
   };
 
+  // Speed lines (GDD §19.6: a screen-space overlay driven by a cue): the screen streaks for a moment.
+  let speedTimer = 0;
+  const speedLines = (sec) => { if (!settings.speedLines) return; root.classList.add("speeding"); clearTimeout(speedTimer); speedTimer = setTimeout(() => root.classList.remove("speeding"), sec * 1000); };
+  /** A T1 combat cue (GDD §19.1; data/cinematics.js FEEDBACK): shake, FOV punch, impact frames, speed lines. */
+  const feedback = (key) => {
+    const fb = FEEDBACK[key];
+    if (!fb) return false;
+    if (fb.kick) camera.kick(fb.kick);
+    if (fb.shake) camera.shake(fb.shake);
+    if (fb.impact) impact(fb.impact, !!fb.strong);
+    if (fb.speedLines) speedLines(fb.speedLines);
+    return true;
+  };
+  // The T2 playing now (GDD §19.1: Skyrender, a Team Attack): which, how ("full" | "short" | "off"), and if it was skipped.
+  const t2End = (finished) => {
+    const t = state.t2; if (!t) return;
+    state.t2 = null;
+    if (camera.inShot) camera.cue("ult-return");
+    root.classList.remove("ult-desat");
+    if (finished && t.mode === "full" && !t.skipped) t2MarkSeen(t.id); // the short version is offered after one full view
+  };
+  const t2Skip = () => { const t = state.t2; if (!t || t.skipped || t.mode === "off") return false; t.skipped = true; if (camera.inShot) camera.cue("ult-return"); root.classList.remove("ult-desat"); ultCard.classList.remove("show"); return true; };
+  addEventListener("keydown", (e) => { if (state.t2 && !e.repeat && !["Shift", "Control", "Alt", "Meta"].includes(e.key)) t2Skip(); }, true);
+  canvas.addEventListener("pointerdown", () => { if (state.t2) t2Skip(); });
+
   const head = (f) => ({ x: f.pos.x, y: f.pos.y + 1.9, z: f.pos.z });
   const chest = (f) => ({ x: f.pos.x, y: f.pos.y + 1.2, z: f.pos.z });
 
@@ -299,7 +326,10 @@ export function boot(doc = document) {
               for (const [h, s, life] of [[0.1, 9, 0.7], [1, 6, 0.6], [2, 4, 0.5]]) vfx.ring({ x: f.pos.x, y: f.pos.y + h, z: f.pos.z }, s, PALETTE.gale, life, true);
               vfx.sparksAt({ x: f.pos.x, y: f.pos.y + 1, z: f.pos.z }, 14, "mint", 5, 3);
             }
-            if (e.key === "ultName" && settings.ult === "full") showUltCard();
+            if (e.key === "ultName" && state.t2?.mode === "full" && !state.t2.skipped) showUltCard();
+            if (e.key === "teamName" && state.t2?.mode === "full" && !state.t2.skipped) showTeamCard(state.t2.kind);
+            if (e.key === "teamCharge") { const a = state.t2?.ally ?? f; for (const g of [f, a]) for (const [h, sz] of [[0.1, 5], [1.1, 3.2]]) vfx.ring({ x: g.pos.x, y: g.pos.y + h, z: g.pos.z }, sz, LOOKS[g.kind]?.trail ?? PALETTE.gale, 0.6, true); vfx.sparksAt(chest(a), 12, "gold", 5, 3); }
+            if (e.key === "teamBurst") { vfx.ring({ x: f.pos.x, y: 0.06, z: f.pos.z }, 12, PALETTE.gale, 0.5); vfx.sparksAt({ x: f.pos.x, y: 0.5, z: f.pos.z }, 20, "mint", 12, 6); }
             if (e.key === "ultBurst") {
               vfx.ring({ x: f.pos.x, y: 0.06, z: f.pos.z }, 20, PALETTE.gale, 0.6);
               vfx.ring({ x: f.pos.x, y: 1.2, z: f.pos.z }, 14, "#ffffff", 0.45);
@@ -308,12 +338,20 @@ export function boot(doc = document) {
               camera.shake(0.5);
             }
           } else if (e.type === EventType.CameraCue) {
-            if (e.key === "punch") { camera.kick(0.35); camera.shake(0.2); }
-            if (e.key === "finisher") { camera.kick(1); camera.shake(0.45); }
-            if (e.key.startsWith("ult-") && isPlayer(f) && settings.ult !== "off" && !(settings.ult === "short" && ULT_SHORT_SKIPS.has(e.key))) {
-              const shot = camera.cue(e.key);
-              root.classList.toggle("ult-desat", !!shot?.desaturate);
-              if (e.key === "ult-impact") { impact(4, true); camera.shake(0.8); }
+            const t2key = /^(ult|team)-/.test(e.key);
+            if (!t2key) { if (e.key !== "speed" || isPlayer(f)) feedback(e.key); } // T1 (GDD §19.1): data/cinematics.js FEEDBACK
+            else if (isPlayer(f)) { // T2: the sequence's camera and post-FX tracks (§19.4)
+              if (e.key === "ult-activate") state.t2 = { id: ev.ability.id, mode: t2Mode(settings.ult, ev.ability.id) };
+              const t = state.t2, plays = t && t.mode !== "off" && !t.skipped && !(t.mode === "short" && ULT_SHORT_SKIPS.has(e.key));
+              if (plays) {
+                if (SHOTS[e.key]) {
+                  const sub = SHOTS[e.key].subject === "ally" ? t.ally : SHOTS[e.key].subject === "target" ? t.target : null;
+                  const shot = camera.cue(e.key, sub ? () => ({ pos: sub.pos, yaw: sub.yaw, scale: LOOKS[sub.kind]?.scale ?? 1 }) : null);
+                  root.classList.toggle("ult-desat", !!shot?.desaturate);
+                }
+                feedback(e.key);
+              }
+              if (/-return$/.test(e.key)) t2End(true);
             }
           }
           break;
@@ -602,17 +640,20 @@ export function boot(doc = document) {
         case "swallowed": hud.toast("SWALLOWED!", "danger"); hud.banner(ev.target ? `${ev.target.stats.name.toUpperCase()} IS STUCK IN A SLIME BUBBLE · BURST IT` : "MORE EGG SACS"); sfx.play("mud"); break;
         case "freed": hud.toast(`${ev.fighter.stats.name.toUpperCase()} IS FREE`, "clear"); break;
         case "bondFull": if (ev.ready) hud.toast("BOND FULL · TEAM ATTACK READY", "afterimage"); sfx.play("assist"); break; // (GDD §9.2)
-        case "teamAttack": {
+        case "teamAttack": { // a T2 sequence (GDD §19.1, §19.4): Rook's TeamSequence move carries its tracks
           const b = BONDS[ev.kind];
-          hud.toast("TEAM ATTACK", "finisher"); hud.banner((b?.team?.name ?? "TEAM ATTACK").toUpperCase());
-          sfx.play("ultActivate"); camera.shake(0.3); vfx.flash(chest(world.player), 3, "#ffd27a", 0.2);
+          state.t2 = { id: `team-${ev.kind}`, kind: ev.kind, mode: ev.mode, ally: ev.fighter, target: ev.target };
+          hud.toast("TEAM ATTACK", "finisher"); if (ev.mode !== "full") hud.banner((b?.team?.name ?? "TEAM ATTACK").toUpperCase());
+          vfx.flash(chest(world.player), 3, "#ffd27a", 0.2);
           break;
         }
         case "teamStrike": {
           vfx.ring({ x: ev.target.pos.x, y: 0.05, z: ev.target.pos.z }, 8, PALETTE.gale, 0.5); vfx.sparksAt(ev.at, 24, "mint", 14, 6);
-          vfx.flash(ev.at, 4, "#ffffff", 0.25); impact(5, true); camera.kick(1); sfx.play("finisher");
+          vfx.flash(ev.at, 4, "#ffffff", 0.25); sfx.play("finisher");
+          if (!state.t2 || state.t2.mode === "off") feedback("team-flash"); // (otherwise the sequence's post-FX track flashes it)
           break;
         }
+        case "ended": if (isPlayer(ev.fighter) && state.t2 && (ev.ability.tags.includes("ultimate") || ev.ability.tags.includes("team"))) t2End(ev.how === "finished"); break;
         case "shield": sfx.play("shield"); vfx.ring({ x: ev.target.pos.x, y: 0.06, z: ev.target.pos.z }, 4, "#e8b46a", 0.4); hud.pushLog("Bas: Bastion Wall"); break;
         case "shieldBlock": vfx.flash(ev.at, 1.4, "#e8b46a", 0.1); break;
         case "heal": {
@@ -879,6 +920,7 @@ export function boot(doc = document) {
     sfx.setEnabled(settings.sound);
     world.assist = settings.assist;
     world.difficulty = settings.difficulty; // GDD §9.7
+    world.t2Mode = (id) => t2Mode(settings.ult, id);
     controls.smartCombo = settings.assist || difficultyOf(settings.difficulty).autoCombo;
     for (const el of root.querySelectorAll("[data-difficulty-note]")) el.textContent = difficultyOf(settings.difficulty).desc;
     for (const el of root.querySelectorAll("[data-difficulty-name]")) el.textContent = difficultyOf(settings.difficulty).name;
@@ -938,6 +980,11 @@ export function boot(doc = document) {
   // Ultimate name card (the "technique shout" beat).
   const ultCard = root.querySelector("[data-ultcard]");
   const showUltCard = () => { ultCard.classList.remove("show"); void ultCard.offsetWidth; ultCard.classList.add("show"); };
+  const showTeamCard = (kind) => { // the Team Attack's close-up: the technique's name (GDD §19.4 voice track)
+    ultCard.innerHTML = `<b>${(BONDS[kind]?.team?.name ?? "Team Attack").toUpperCase()}</b><span>TEAM ATTACK · ${kind.toUpperCase()} &amp; ROOK</span>`;
+    showUltCard();
+    later(1.4, () => { ultCard.innerHTML = "<b>SKYRENDER</b><span>WIND GRIMOIRE · LEGENDARY PAGE</span>"; });
+  };
 
   // Boss title card (reuses the ultimate's card styling).
   const showBossCard = (name, sub) => {
@@ -998,6 +1045,7 @@ export function boot(doc = document) {
     const galeBtn = root.querySelector('[data-intent="Spell1"]'); if (galeBtn) galeBtn.textContent = ink ? "INK" : "GALE";
     const wallBtn = root.querySelector('[data-intent="Spell4"]'); if (wallBtn) wallBtn.textContent = world.loadout.Spell4?.id === "HollowBite" ? "BITE" : "WALL"; // the forbidden page takes Wind Wall's button (§8.3)
     world.pageDefs = PAGES;
+    world.t2Mode = (id) => t2Mode(settings.ult, id); // Team Attacks: full, short (after one full view) or skipped (GDD §19.1)
     root.classList.toggle("has-tag", !!world.members.severin); root.classList.remove("tag-severin", "hushed");
     resetBossFx?.();
     camera.bounds = null;
@@ -2149,7 +2197,7 @@ export function boot(doc = document) {
     const p = world.player;
     const pr = views.get(p)?.root.position ?? p.pos;
     const pyaw = views.get(p)?.root.rotation.y ?? p.yaw;
-    if (camera.inShot && !(p.current?.surgeCost > 0)) { camera.cue("ult-return"); root.classList.remove("ult-desat"); } // safety: never strand the camera
+    if (camera.inShot && !(p.current?.surgeCost > 0 || p.current?.tags.includes("team"))) { camera.cue("ult-return"); root.classList.remove("ult-desat"); } // safety: never strand the camera (a T2 holds it: GDD §19.1)
     camera.update(dt, pr, lock?.pos ?? null, look, pyaw);
     root.classList.toggle("surge-full", !!p.surge?.isFull);
     vfx.syncProjectiles(world.projectiles, dt);

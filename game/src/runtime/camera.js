@@ -29,11 +29,11 @@ export class FollowCamera {
   }
 
   /** Play a named shot from SHOTS. Returns the shot (for desaturation etc.) or null. */
-  cue(name) {
+  cue(name, subject = null) {
     const s = SHOTS[name];
     if (!s) return null;
     if (s.clear) { if (this.shot) this.returnBlend = 1; this.shot = null; return s; }
-    this.shot = { ...s, t: 0, fresh: true };
+    this.shot = { ...s, t: 0, fresh: true, subject }; // subject: who the shot is framed on (a Team Attack's close-up: the squadmate), else the player
     return s;
   }
 
@@ -50,7 +50,7 @@ export class FollowCamera {
   release() { if (this.scripted) { this.scripted = null; this.returnBlend = 1; } }
   get isScripted() { return !!this.scripted; }
 
-  _shotTarget(s, p, yaw) {
+  _shotTarget(s, p, yaw, k = 1) { // k: the subject's size (a close-up on Bas stands further back than one on Juno)
     const f = { x: Math.sin(yaw), z: Math.cos(yaw) };
     let ang;
     switch (s.mode) {
@@ -59,10 +59,10 @@ export class FollowCamera {
       case "orbit": ang = yaw + Math.PI + s.t * (s.orbitSpeed ?? 1); break;
       default: ang = yaw + Math.PI + (s.angle ?? 0);
     }
-    this.tmp.set(p.x + Math.sin(ang) * s.dist, p.y + s.height, p.z + Math.cos(ang) * s.dist);
+    this.tmp.set(p.x + Math.sin(ang) * s.dist * k, p.y + s.height * k, p.z + Math.cos(ang) * s.dist * k);
     const ahead = s.mode === "behind" ? 2 : 0;
     const side = s.lookSide ?? 0; // subject's right is (cos yaw, -sin yaw)
-    return { pos: this.tmp, lx: p.x + f.x * ahead + Math.cos(yaw) * side, ly: p.y + (s.lookHeight ?? 1.5), lz: p.z + f.z * ahead - Math.sin(yaw) * side };
+    return { pos: this.tmp, lx: p.x + f.x * ahead + Math.cos(yaw) * side, ly: p.y + (s.lookHeight ?? 1.5) * k, lz: p.z + f.z * ahead - Math.sin(yaw) * side };
   }
 
   shake(amount) { this.trauma = Math.min(1, this.trauma + amount * (this.reduceMotion ? 0.4 : 1) * this.shakeScale); }
@@ -104,7 +104,8 @@ export class FollowCamera {
     if (this.shot) {
       const s = this.shot;
       s.t += dt;
-      const { pos, lx, ly, lz } = this._shotTarget(s, playerPos, playerYaw);
+      const who = s.subject?.(), sp = who?.pos ?? playerPos, sy = who ? who.yaw : playerYaw;
+      const { pos, lx, ly, lz } = this._shotTarget(s, sp, sy, who?.scale ?? 1);
       const k = s.fresh && s.cut ? 1 : 1 - Math.exp(-(s.ease ?? 8) * dt);
       s.fresh = false;
       this.shotPos.x = lerp(this.shotPos.x, pos.x, k); this.shotPos.y = lerp(this.shotPos.y, pos.y, k); this.shotPos.z = lerp(this.shotPos.z, pos.z, k);

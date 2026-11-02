@@ -5,6 +5,7 @@
 import { Intent, parseMask } from "../core/input.js";
 import { hitSpec } from "../core/combat.js";
 import { defineAbility, EventType as E, ComboGraph, MoveContext as C } from "../core/abilities.js";
+import { sequence } from "./cinematics.js";
 
 export const ROOK_STATS = Object.freeze({
   maxHealth: 220, maxPosture: 100, maxMana: 100, manaRegenPerSecond: 6,
@@ -93,7 +94,7 @@ export const ROOK_ABILITIES = (() => {
     cancels: [{ from: 3, to: 7, into: m("Light|Heavy|Dodge|AnySpell") }] });
   add({ id: "AirDash", startup: 0, active: 9, recovery: 10,
     events: [{ frame: 0, type: E.Custom, key: "airDash", value: 19 }, { frame: 0, type: E.Move, key: "toTarget", value: 4.5 },
-      { frame: 0, type: E.Invulnerable, value: 6 }, swing(0, "dodge")],
+      { frame: 0, type: E.Invulnerable, value: 6 }, swing(0, "dodge"), { frame: 0, type: E.CameraCue, key: "speed" }],
     cancels: [{ from: 6, to: 18, into: m("Light|Heavy|Jump|AnySpell") }] });
 
   const airHit = hitSpec({ damage: 10, posture: 8, hitstop: 3, hitstun: 16, launch: 3 });
@@ -114,7 +115,7 @@ export const ROOK_ABILITIES = (() => {
     cancels: [{ from: 22, to: 39, into: m("Dodge|AnySpell") }] });
   add({ id: "DashStrike", startup: 6, active: 4, recovery: 16,
     hit: hitSpec({ damage: 14, posture: 12, hitstop: 4, hitstun: 18, knockback: 3 }),
-    events: [swing(4), { frame: 6, type: E.Move, value: 2 }, blade(6, 4)],
+    events: [swing(4), { frame: 6, type: E.Move, value: 2 }, blade(6, 4), { frame: 6, type: E.CameraCue, key: "speed" }],
     cancels: [{ from: 10, to: 25, into: followUps }] });
   add({ id: "Dodge", startup: 0, active: 12, recovery: 18,
     events: [{ frame: 0, type: E.Invulnerable, value: 12 }, { frame: 0, type: E.Move, value: 4.2 }, swing(0, "dodge")],
@@ -162,26 +163,30 @@ export const ROOK_ABILITIES = (() => {
       { frame: 14, type: E.CameraCue, key: "finisher" }],
     cancels: [{ from: 30, to: 47, into: m("Dodge|Jump|AnySpell") }] });
 
-  // Phase 2: the ultimate. Timed to the GDD §19.4 template: activation, charge, close-up,
-  // release, impact, aftermath, return. Camera shots are cues; everything else stops for the charge.
-  add({ id: "Skyrender", startup: 48, active: 72, recovery: 36, surgeCost: 100, tags: ["ultimate", "burst", "gust"],
-    events: [
-      { frame: 0, type: E.Invulnerable, value: 156 }, { frame: 0, type: E.Custom, key: "timeStop", value: 48 },
-      { frame: 0, type: E.CameraCue, key: "ult-activate" }, { frame: 0, type: E.PlaySound, key: "ultActivate" },
-      { frame: 0, type: E.SpawnVfx, key: "ultCharge" },
-      { frame: 22, type: E.CameraCue, key: "ult-charge" }, { frame: 22, type: E.PlaySound, key: "charge" },
-      { frame: 34, type: E.CameraCue, key: "ult-closeup" }, { frame: 34, type: E.SpawnVfx, key: "ultName" },
-      { frame: 48, type: E.SpawnHitbox, key: "SkyRing", value: 3 }, { frame: 48, type: E.CameraCue, key: "ult-release" },
-      { frame: 48, type: E.PlaySound, key: "gale" }, { frame: 48, type: E.SpawnVfx, key: "ultBurst" },
-      { frame: 51, type: E.Custom, key: "jump", value: 15 },
-      { frame: 60, type: E.Custom, key: "hover", value: 54 },
-      ...[60, 68, 76, 84, 92, 100, 108].flatMap((f) => [
-        { frame: f, type: E.SpawnHitbox, key: "SkyCut", value: 3 }, { frame: f, type: E.PlaySound, key: "swing" }]),
-      { frame: 114, type: E.Custom, key: "slam", value: 34 }, { frame: 114, type: E.SpawnHitbox, key: "SkyFinal", value: 6 },
-      { frame: 114, type: E.CameraCue, key: "ult-impact" },
-      { frame: 124, type: E.CameraCue, key: "ult-aftermath" },
-      { frame: 148, type: E.CameraCue, key: "ult-return" },
-    ] });
+  // Phase 2: the ultimate, the GDD §19.4 template filled in (data/cinematics.js): activation, charge, close-up,
+  // release, impact, aftermath, return, on its own lengths, with each track's entries (camera shots are cues; everything
+  // else stops for the charge).
+  add(sequence({
+    id: "Skyrender", tags: ["ultimate", "burst", "gust"], surgeCost: 100,
+    frames: { activation: 22, charge: 12, closeup: 14, release: 66, impact: 10, aftermath: 24, return: 8 },
+    phases: { startup: 48, active: 72, recovery: 36 },
+    tracks: {
+      camera: { activation: "ult-activate", charge: "ult-charge", closeup: "ult-closeup", release: "ult-release", impact: "ult-impact", aftermath: "ult-aftermath", return: "ult-return" },
+      anim: {
+        activation: [{ at: 0, type: E.Invulnerable, value: (F) => F.total }, { at: 0, type: E.Custom, key: "timeStop", value: (F) => F.release }],
+        release: [
+          { at: 0, type: E.SpawnHitbox, key: "SkyRing", value: 3 }, { at: 3, type: E.Custom, key: "jump", value: 15 },
+          { at: 12, type: E.Custom, key: "hover", value: 54 },
+          ...[12, 20, 28, 36, 44, 52, 60].flatMap((at) => [{ at, type: E.SpawnHitbox, key: "SkyCut", value: 3 }, { at, type: E.PlaySound, key: "swing" }]),
+        ],
+        impact: [{ at: 0, type: E.Custom, key: "slam", value: 34 }, { at: 0, type: E.SpawnHitbox, key: "SkyFinal", value: 6 }],
+      },
+      vfx: { activation: "ultCharge", release: "ultBurst" },
+      sfx: { activation: "ultActivate", charge: "charge", release: "gale" },
+      voice: { closeup: "ultName" },
+      post: { impact: "ult-flash" },
+    },
+  }).options);
   return Object.freeze(a);
 })();
 

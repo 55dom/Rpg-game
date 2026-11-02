@@ -14,4 +14,13 @@ export const SHOTS = Object.freeze({
   "ult-impact": { mode: "wide", dist: 10, height: 0.9, lookHeight: 0.9, angle: 2.1, fov: 0.95, cut: true },
   "ult-aftermath": { mode: "wide", dist: 15, height: 7, lookHeight: 1, angle: 2.4, fov: 0.9, ease: 1.5 },
   "ult-return": { clear: true },
+  // A Team Attack (GDD §19.1 T2, the §19.4 template): the two of you, then the squadmate's close-up, then the strike.
+  //   subject: "ally" frames the squadmate, "target" whoever's being hit (otherwise Rook).
+  "team-activate": { mode: "behind", dist: 4.6, height: 1.9, lookHeight: 1.4, fov: 0.78, cut: true, desaturate: true },
+  "team-charge": { mode: "orbit", dist: 6.2, height: 0.5, lookHeight: 1.7, orbitSpeed: 1.2, fov: 0.85, ease: 6, desaturate: true },
+  "team-closeup": { mode: "front", subject: "ally", dist: 3.0, height: 1.9, lookHeight: 1.85, angle: -0.75, lookSide: -0.25, fov: 0.62, cut: true }, // three-quarters on, the face toward the lens
+  "team-release": { mode: "wide", dist: 9.5, height: 2.8, lookHeight: 1.6, angle: -0.9, fov: 0.95, cut: true, ease: 4 },
+  "team-impact": { mode: "wide", subject: "target", dist: 7, height: 0.8, lookHeight: 1.2, angle: 1.9, fov: 0.95, cut: true },
+  "team-aftermath": { mode: "wide", subject: "target", dist: 13, height: 6, lookHeight: 1, angle: 2.3, fov: 0.9, ease: 1.5 },
+  "team-return": { clear: true },
 });

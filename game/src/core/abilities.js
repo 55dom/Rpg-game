@@ -237,7 +237,7 @@ export class ComboGraph {
   /** The node we're in, or null if what's playing isn't ours. */
   get currentNodeId() {
     const playing = this.runner?.current ?? null;
-    if (!playing || !this._current || this._current !== playing.id) return null;
+    if (!playing || !this._current || this._current !== playing.id || !this.nodes.has(this._current)) return null; // (a scripted move, a T2 sequence: no edges out)
     return this._current;
   }
 

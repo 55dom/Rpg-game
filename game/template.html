@@ -33,6 +33,7 @@ body { font-family: var(--font-body); -webkit-user-select: none; user-select: no
   background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(220, 255, 240, 0.0) 0deg 4deg, rgba(220, 255, 240, 0.22) 4deg 4.6deg, rgba(220, 255, 240, 0.0) 4.6deg 9deg);
   -webkit-mask-image: radial-gradient(ellipse at center, transparent 38%, #000 78%); mask-image: radial-gradient(ellipse at center, transparent 38%, #000 78%); }
 .leaping .speedlines { opacity: 1; animation: speedspin 0.45s linear infinite; }
+.speeding .speedlines { opacity: 0.85; animation: speedspin 0.45s linear infinite; } /* a cue (GDD §19.6): a lunge, an air dash, a release */
 @keyframes speedspin { from { transform: rotate(0deg) scale(1); } 50% { transform: rotate(3deg) scale(1.03); } to { transform: rotate(6deg) scale(1); } }
 .hopblur .stage { filter: blur(1.2px) saturate(1.15); }
 .no-speedlines .speedlines { display: none !important; } /* speed lines off */
@@ -671,7 +672,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
         <button data-a11y="flashes" aria-pressed="true" title="Impact frames: off softens them to a dim flash (photosensitivity)">IMPACT FLASHES</button>
         <button data-a11y="shake" aria-pressed="true" title="Camera shake and push-ins">CAMERA SHAKE</button>
         <button data-a11y="blur" aria-pressed="true" title="Motion blur on fast moves">MOTION BLUR</button>
-        <button data-a11y="speedLines" aria-pressed="true" title="Anime speed lines on big leaps">SPEED LINES</button>
+        <button data-a11y="speedLines" aria-pressed="true" title="Anime speed lines on lunges, air dashes, big leaps and releases">SPEED LINES</button>
         <button data-a11y="twos" aria-pressed="true" title="Animate on twos: moves drawn at 12 poses a second, the anime look (off: every frame)">ANIMATE ON TWOS</button>
         <button data-a11y="ult" aria-pressed="false" title="Ultimates: the full cinematic, a short one, or none">ULTIMATES: FULL</button>
         <button data-a11y="sound" aria-pressed="true" title="Sound">SOUND</button>

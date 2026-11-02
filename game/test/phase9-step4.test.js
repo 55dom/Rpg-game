@@ -21,8 +21,9 @@ test("Each toggle does what it says", () => {
   assert.match(tpl, /\.no-speedlines \.speedlines \{ display: none !important; \}/);
   assert.match(main, /if \(settings\.blur\) \{ root\.classList\.add\("hopblur"\)/, "motion blur");
   assert.match(main, /rig\?\.snapshot && settings\.blur/, "and the ghost trail");
-  assert.match(main, /e\.key === "ultName" && settings\.ult === "full"/, "the Ultimate's name card only in full");
-  assert.match(main, /settings\.ult !== "off" && !\(settings\.ult === "short" && ULT_SHORT_SKIPS\.has\(e\.key\)\)/, "short skips to the release; off skips the cinematic");
+  assert.match(main, /e\.key === "ultName" && state\.t2\?\.mode === "full"/, "the Ultimate's name card only in full");
+  assert.match(main, /t\.mode !== "off" && !t\.skipped && !\(t\.mode === "short" && ULT_SHORT_SKIPS\.has\(e\.key\)\)/, "short skips to the release; off skips the cinematic");
+  assert.match(main, /state\.t2 = \{ id: ev\.ability\.id, mode: t2Mode\(settings\.ult, ev\.ability\.id\) \}/, "(since Phase 13: short after the first full view, §19.1)");
   assert.match(main, /const ULT_SHORT_SKIPS = new Set\(\["ult-activate", "ult-charge", "ult-closeup"\]\)/);
 });
 

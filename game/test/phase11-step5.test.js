@@ -77,7 +77,7 @@ const CHECKLIST = [
   // §10 · Party
   ["§10", "**Active party:** protagonist + 2 companions", [["sim/world.js", /\["bas", "juno"\]\) this\.addCompanion\(kind\)/]]],
   ["§10", "*Press* (aggressive), *Guard* (protect the player), *Support* (spells and heals)", [["core/ai.js", /export const STANCES = Object\.freeze\(\[Stance\.Press, Stance\.Guard, Stance\.Support\]\)/]]],
-  ["§10", "**Team Attacks:** spend the Bond gauge", [["sim/world.js", /this\.bondGauge = 0;\n\s+this\.teamHit/]]],
+  ["§10", "**Team Attacks:** spend the Bond gauge", [["sim/world.js", /this\.bondGauge = 0;\n[^]*?this\.teamHit = \{ frame/]]],
   ["§10", "**Character switching** (tag-swap)", [["sim/world.js", /tagSwap\(forced = false\) \{/]]],
   ["§10", "**Party banter:** short \"camp skits\"", [["data/skits.js", /export const SKITS/], ["runtime/story.js", /_skit\(zoneId\) \{/], ["main.js", /const playSkit = \(k, name\) =>/]]],
   // §11 · Bonds
