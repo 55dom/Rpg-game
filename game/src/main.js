@@ -1144,6 +1144,7 @@ export function boot(doc = document) {
     onEvents: (evs) => onEvents(evs),
     openSurvey: (id) => openSurvey(id),
     onTheatre: (th) => showTheatre(th),
+    impact: (frames, strong) => impact(frames, strong), speedLines: (sec) => speedLines(sec), // cutscene impact frames and speed lines (GDD §19.6)
   }, [{ episode: EPISODE_1, script: EP1_SCRIPT }, { episode: EPISODE_2, script: EP2_SCRIPT }, { episode: EPISODE_3, script: EP3_SCRIPT }, { episode: EPISODE_4_STORY, script: EP4_SCRIPT },
     { episode: EPISODE_5, script: EP5_SCRIPT }, { episode: EPISODE_6, script: EP6_SCRIPT }, { episode: EPISODE_7, script: EP7_SCRIPT }, { episode: EPISODE_8, script: EP8_SCRIPT },
     { episode: EPISODE_9, script: EP9_SCRIPT }, { episode: EPISODE_10, script: EP10_SCRIPT }, { episode: EPISODE_11, script: EP11_SCRIPT }, { episode: EPISODE_12, script: EP12_SCRIPT },
@@ -1990,6 +1991,7 @@ export function boot(doc = document) {
     theatreBar.querySelector("[data-th-title]").textContent = `LORE ARCHIVE · ${(theatreList().find((x) => x.id === th.id)?.title ?? th.id).toUpperCase()}${th.notes.length ? " · ANNOTATED EDITION" : ""}`;
     theatreBar.querySelector('[data-th="pause"]').textContent = th.paused ? "▶" : "❚❚";
     for (const b of theatreBar.querySelectorAll('[data-th="speed"]')) b.setAttribute("aria-pressed", String(!th.paused && Number(b.dataset.v) === th.speed));
+    theatreBar.querySelector("[data-th-cut]").textContent = th.cutLabel ?? ""; // a storyboarded scene: CUT 013 · FRAME 2/4
     const note = theatreBar.querySelector("[data-th-note]");
     note.hidden = !th.note; if (th.note) note.textContent = th.note.text;
   };

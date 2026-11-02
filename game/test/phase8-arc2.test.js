@@ -134,9 +134,10 @@ test("I'll Hold the Door (Ep 18, the end of Arc 2): the Bloom (B7); the door; 'I
   assert.ok(b.siege.foes[0].floor > 0, "it can't be killed, only held back");
   assert.equal(LOOKS.hollowBloom.shape, "bloom");
   assert.match(src("runtime/objects.js"), /case "bloom":/);
-  assert.match(run(18, "Ep18_Door").text, /Cal: I'll hold the door\. Don't wait up\./);
-  const d = CUTSCENES.ep18_door.events;
-  assert.ok(d.some((e) => e.tear?.kind === "gold") && d.some((e) => e.hide === "cal") && d.some((e) => e.flash >= 0.4));
+  assert.match(run(18, "Ep18_Door").text, /Cal: Doors, Lio\. I make doors\./);
+  const d = CUTSCENES.ep18_door.events; // (since Phase 13: §19.3's storyboard, cut for cut; the line is its cut 011)
+  assert.ok(d.some((e) => e.caption === "Cal: I'll hold the door. Don't wait up."));
+  assert.ok(d.some((e) => e.cue === "door") && d.some((e) => e.hide === "cal") && d.some((e) => e.invert > 0) && d.some((e) => e.cue === "slam"));
   const n = run(18, "Ep18_Nothing");
   assert.match(n.text, /No body\. No grimoire\./);
   assert.match(n.text, /Lio: There's no residue\. None\./);

@@ -395,6 +395,8 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .theatre-bar { position: absolute; left: 50%; bottom: max(14px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 60; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; max-width: calc(100% - 24px); padding: 8px 10px; border-radius: 12px; background: rgba(10, 12, 20, 0.82); border: 1px solid #343a50; }
 .theatre-bar button { min-width: 44px; min-height: 40px; padding: 0 10px; border-radius: 8px; border: 1px solid #3a4058; background: #1d2131; color: var(--text); font: 600 13px/1 var(--mono, monospace); }
 .theatre-bar button[aria-pressed="true"] { border-color: #ffd36a; color: #ffe08a; }
+.theatre-bar .th-cut { width: 100%; text-align: center; font: 600 12px/1 var(--mono, monospace); letter-spacing: 0.1em; color: #ffe08a; }
+.theatre-bar .th-cut:empty { display: none; }
 .theatre-bar [data-th-title] { width: 100%; text-align: center; font-size: 11px; letter-spacing: 0.12em; color: var(--muted); }
 .th-note { position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%); width: min(420px, 90vw); margin: 0; padding: 10px 12px; border-radius: 10px; background: #efe6cf; color: #2a2230; font: italic 15px/1.4 Georgia, serif; box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
 .theatre .menu, .theatre .cut-skip, .theatre [data-cutskip] { display: none !important; } /* the bar is the only control */
@@ -835,6 +837,7 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
   <div class="theatre-bar" data-theatre hidden>
     <p class="th-note" data-th-note hidden></p>
     <span data-th-title></span>
+    <span class="th-cut" data-th-cut></span>
     <button data-th="restart" aria-label="Restart">⟲</button>
     <button data-th="pause" aria-label="Pause">❚❚</button>
     <button data-th="step" aria-label="One frame forward">▶|</button>

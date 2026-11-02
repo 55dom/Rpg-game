@@ -1,7 +1,7 @@
 // Story sets (Phase 3): each one is built on first use from primitives, carries its own sky, fog,
 // and lighting, and can be swapped in and out. "yard" is the original training yard (arena.js).
 
-import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT, BELLTOWER_LAYOUT, ISLES_LAYOUT, OLDCITY_LAYOUT, HOLLOW_LAYOUT, ARCHIVE_LAYOUT, AURELIN_GATE, BRIDGE_LAYOUT, RUINS_LAYOUT, HOLLOWMARCH_LAYOUT } from "../data/zones.js";
+import { AURELIN_LAYOUT, THORNWICK_LAYOUT, UNDERCROFT_BANDS, CAFE_LAYOUT, HOME_LAYOUT, HALL_LAYOUT, IRONHOLD_LAYOUT, VAULT_LAYOUT, WATCH_LAYOUT, FENHOME_LAYOUT, BELLTOWER_LAYOUT, ISLES_LAYOUT, OLDCITY_LAYOUT, HOLLOW_LAYOUT, ARCHIVE_LAYOUT, AURELIN_GATE, BRIDGE_LAYOUT, RUINS_LAYOUT, HOLLOWMARCH_LAYOUT, HOLLOWMARCH_BOARD } from "../data/zones.js";
 import { WARDEN_STARS } from "../data/isles.js";
 import { B, toon, glow, inkOutline, color3, setToonEnvironment, TOON_SCENE } from "./look.js";
 import { buildCrowd } from "./crowd.js";
@@ -495,9 +495,65 @@ function buildHollowmarch(scene, mobile) {
   mist.minSize = 3; mist.maxSize = 7; mist.minLifeTime = 6; mist.maxLifeTime = 11; mist.emitRate = mobile ? 6 : 12;
   mist.gravity = new BB.Vector3(0.05, 0, 0); mist.direction1 = new BB.Vector3(-0.1, 0, -0.1); mist.direction2 = new BB.Vector3(0.1, 0.05, 0.1);
   mist.blendMode = BB.ParticleSystem.BLENDMODE_STANDARD; K.systems.push(mist);
+  // Ep 18's storyboard (GDD §19.3; data/story/cutscenes.js) films three things the fight doesn't have, each cued:
+  //   the Bloom over the stones ("bloom", "bloomBeat": its core contracting, "swallow": into the door),
+  //   the door Cal tears open in the air ("door"; "slam": shut, toward the camera), and an insert of Rook's palm with
+  //   the brass key in it ("palm"). "gone" clears them all: nothing remains.
+  const BL = HOLLOWMARCH_BOARD, petalM = toon(scene, "hm-petal", "#eceaf4"), coreM = glow(scene, "hm-core", "#ffffff"), doorM = glow(scene, "hm-doorM", "#ffe6a8"); // (pale, not lit: lit, it whites out the frame)
+  const bloom = new BB.TransformNode("hm-bloom", scene); bloom.parent = K.root; bloom.position.set(BL.bloom.x, 0, BL.bloom.z); bloom.setEnabled(false);
+  const petals = [];
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2, piv = new BB.TransformNode("hm-petalPiv", scene); piv.parent = bloom; piv.position.y = 1.6; piv.rotation.y = a;
+    const pt = MB.CreateDisc("hm-petalM", { radius: 1.5, tessellation: 12, sideOrientation: BB.Mesh.DOUBLESIDE }, scene); pt.parent = piv; pt.isPickable = false;
+    pt.scaling.set(0.62, 1.4, 1); pt.position.set(0, 1.6, 0.55); pt.rotation.x = -0.38; pt.material = petalM; inkOutline(pt, 0.02); petals.push(piv);
+  }
+  const stem = MB.CreateCylinder("hm-stem", { height: 2.2, diameterTop: 0.5, diameterBottom: 0.9, tessellation: 10 }, scene); stem.parent = bloom; stem.position.y = 1.1; stem.material = petalM; stem.isPickable = false;
+  const core = MB.CreateSphere("hm-coreM", { diameter: 1.4, segments: 12 }, scene); core.parent = bloom; core.position.y = 3.4; core.material = coreM; core.isPickable = false;
+  const door = new BB.TransformNode("hm-door", scene); door.parent = K.root; door.position.set(BL.door.x, 0, BL.door.z); door.setEnabled(false);
+  for (const [w, h, x, y] of [[0.36, 6.4, -1.9, 3.2], [0.36, 6.4, 1.9, 3.2], [4.2, 0.42, 0, 6.4]]) { const b = MB.CreateBox("hm-doorFrame", { width: w, height: h, depth: 0.36 }, scene); b.parent = door; b.position.set(x, y, 0); b.material = doorM; b.isPickable = false; K.noGlow(b); }
+  const hinge = new BB.TransformNode("hm-hinge", scene); hinge.parent = door; hinge.position.set(-1.72, 0, 0);
+  const panel = MB.CreateBox("hm-doorPanel", { width: 3.44, height: 6.2, depth: 0.12 }, scene); panel.parent = hinge; panel.position.set(1.72, 3.1, 0); panel.material = toon(scene, "hm-panel", "#f2eee4"); panel.isPickable = false; inkOutline(panel, 0.03);
+  const palm = new BB.TransformNode("hm-palm", scene); palm.parent = K.root; palm.position.set(BL.palm.x, BL.palm.y, BL.palm.z); palm.setEnabled(false);
+  { // a hand, open, palm up, the cuff of Rook's coat behind it; the key across it
+    const skin = toon(scene, "hm-skin", "#f0d0b2"), coat = toon(scene, "hm-cuff", "#2b3a5c"), brass = glow(scene, "hm-brass", "#e6b54e");
+    const hand = add(MB.CreateSphere("hm-hand", { diameter: 0.2, segments: 8 }, scene), 0.008); hand.parent = palm; hand.scaling.set(1, 0.32, 1.15); hand.material = skin;
+    for (let f = 0; f < 4; f++) { const fg = add(MB.CreateCylinder("hm-finger", { height: 0.1, diameter: 0.035, tessellation: 6 }, scene), 0.006); fg.parent = palm; fg.position.set(-0.06 + f * 0.04, 0.012, 0.15); fg.rotation.x = Math.PI / 2 - 0.25; fg.material = skin; }
+    const th = add(MB.CreateCylinder("hm-thumb", { height: 0.08, diameter: 0.04, tessellation: 6 }, scene), 0.006); th.parent = palm; th.position.set(-0.11, 0.015, 0.03); th.rotation.set(Math.PI / 2, 0, 0.9); th.material = skin;
+    const cuff = add(MB.CreateCylinder("hm-cuffM", { height: 0.3, diameter: 0.15, tessellation: 10 }, scene), 0.01); cuff.parent = palm; cuff.position.set(0, -0.01, -0.22); cuff.rotation.x = Math.PI / 2; cuff.material = coat;
+    const bow = MB.CreateTorus("hm-keyBow", { diameter: 0.06, thickness: 0.014, tessellation: 12 }, scene); bow.parent = palm; bow.position.set(-0.04, 0.035, 0.02); bow.material = brass;
+    const shaft = MB.CreateBox("hm-keyShaft", { width: 0.1, height: 0.012, depth: 0.014 }, scene); shaft.parent = palm; shaft.position.set(0.035, 0.035, 0.02); shaft.material = brass;
+    const bit = MB.CreateBox("hm-keyBit", { width: 0.016, height: 0.012, depth: 0.03 }, scene); bit.parent = palm; bit.position.set(0.075, 0.035, 0.036); bit.material = brass;
+  }
+  const st = { beat: 0, swallow: -1, grow: -1, slam: -1 };
   const env = { clear: "#b8b8c0", fog: "#c8c8d0", fogDensity: 0.03, hemi: [0.7, "#e8e8f0", "#6a6872"], sun: [0.45, "#f0eef8", [-0.2, -1, 0.3]], warm: 0 };
   const toonEnv = { lightDir: [0.2, 1, -0.3], fogColor: "#c8c8d0", fogDensity: 0.024, sky: [1.0, 1.0, 1.04], ground: [0.8, 0.8, 0.84] };
-  return { env, toon: toonEnv, show: K.show, conditions: K.conditions, outdoor: true, update(dt, t) { gateGlow.material.alpha = 0.7 + Math.sin(t * 1.3) * 0.2; } };
+  return { env, toon: toonEnv, show: K.show, conditions: K.conditions, outdoor: true,
+    cue(name) {
+      if (name === "bloom") { bloom.setEnabled(true); bloom.position.set(BL.bloom.x, 0, BL.bloom.z); bloom.scaling.setAll(1); st.swallow = -1; }
+      if (name === "bloomBeat") st.beat = 1;
+      if (name === "door") { door.setEnabled(true); st.grow = 0; hinge.rotation.y = -1.35; st.slam = -1; }
+      if (name === "swallow") st.swallow = 0;
+      if (name === "slam") st.slam = 0;
+      if (name === "palm") palm.setEnabled(true);
+      if (name === "gone") { bloom.setEnabled(false); door.setEnabled(false); palm.setEnabled(false); st.swallow = st.grow = st.slam = -1; }
+    },
+    update(dt, t) {
+      gateGlow.material.alpha = 0.7 + Math.sin(t * 1.3) * 0.2;
+      if (bloom.isEnabled()) {
+        st.beat = Math.max(0, st.beat - dt * 1.6);
+        core.scaling.setAll(1 + Math.sin(t * 2.4) * 0.05 - Math.sin(st.beat * Math.PI) * 0.4); // the core contracts, and swells back
+        for (const [i, pv] of petals.entries()) pv.rotation.z = Math.sin(t * 0.8 + i) * 0.04;
+        if (st.swallow >= 0) { // drawn into the door, and gone
+          st.swallow = Math.min(1, st.swallow + dt / 0.9); const k = st.swallow * st.swallow;
+          bloom.position.z = BL.bloom.z + (BL.door.z - BL.bloom.z) * k; bloom.scaling.setAll(1 - k * 0.97);
+          if (st.swallow >= 1) bloom.setEnabled(false);
+        }
+      }
+      if (door.isEnabled()) {
+        if (st.grow >= 0 && st.grow < 1) { st.grow = Math.min(1, st.grow + dt / 0.7); door.scaling.set(1, Math.max(0.02, 1 - (1 - st.grow) ** 3), 1); }
+        if (st.slam >= 0 && st.slam < 1) { st.slam = Math.min(1, st.slam + dt / 0.12); hinge.rotation.y = -1.35 * (1 - st.slam); } // shut, from the far side, toward us
+      }
+    } };
 }
 
 // ---- Larkspur, fifteen years after: grass over the ash, chimney stacks, and one door ------------

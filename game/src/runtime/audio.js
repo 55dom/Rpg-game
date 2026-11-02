@@ -184,6 +184,28 @@ export class Sfx {
         this._noise(t, 0.25, { f0: 2400, f1: 900, q: 1.2, gain: 0.16 * p });
         this._tone(t, 0.6, { type: "triangle", f0: 1320, f1: 1280, gain: 0.06 * p, attack: 0.005 });
         break;
+      case "tuneThree": // Ep 18 (GDD §19.3 cut 005): the Lighthouse Tune on one soft instrument, three of its four notes, and then nothing
+        for (const [i, f] of [659, 784, 880].entries()) {
+          const t0 = t + i * 0.36;
+          this._tone(t0, 0.34, { type: "triangle", f0: f, gain: 0.06 * p, attack: 0.03 });
+          this._tone(t0, 0.34, { type: "sine", f0: f * 2, gain: 0.012 * p, attack: 0.03 });
+        }
+        break;
+      case "choirDrone": // a low choir drone under the wind: three voices, barely moving
+        for (const [f, g] of [[110, 0.05], [164.8, 0.035], [220, 0.025]]) this._tone(t, 3.2, { type: "sine", f0: f, f1: f * 0.995, gain: g * p, attack: 1.0 });
+        this._noise(t, 3.2, { type: "bandpass", f0: 420, f1: 520, q: 0.7, gain: 0.05 * p, attack: 1.2 });
+        break;
+      case "roar": // something vast collapsing into silence
+        this._noise(t, 1.1, { type: "lowpass", f0: 1600, f1: 60, q: 1.2, gain: 0.3 * p, attack: 0.02 });
+        this._tone(t, 1.1, { type: "sawtooth", f0: 120, f1: 30, gain: 0.08 * p, attack: 0.02 });
+        break;
+      case "steps": // footsteps on stone, unhurried: nothing else
+        for (let k = 0; k < 4; k++) this._noise(t + k * 0.48, 0.09, { type: "lowpass", f0: 900, f1: 300, q: 1, gain: 0.14 * p, attack: 0.005 });
+        break;
+      case "keyRing": // far away and very faint: a ring that doesn't fade the way a sound should
+        this._tone(t, 1.9, { type: "sine", f0: 2637, f1: 2633, gain: 0.018 * p, attack: 0.5 });
+        this._tone(t + 0.1, 1.8, { type: "sine", f0: 3951, f1: 3947, gain: 0.008 * p, attack: 0.6 });
+        break;
       case "tuneMarch": // the Lighthouse Tune, all four notes, at last: low and steady, like a march
         for (const [i, f] of [330, 392, 440, 294].entries()) {
           const t0 = t + i * 0.7;

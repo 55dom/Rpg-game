@@ -10,6 +10,7 @@ import { compileExpr, truthy } from "../core/flags.js";
 /** The scenes, in story order. */
 export const THEATRE = Object.freeze([
   { id: "ep1_larkspur", title: "Larkspur Burning", episode: 1 },
+  { id: "ep18_door", title: "I'll Hold the Door", episode: 18, then: "ep18_dusk" }, // §19.3's sixteen cuts, the last one at the Lighthouse
   { id: "ep24_tear", title: "The Cindermaw Falls", episode: 24 },
   { id: "ep26_arm", title: "Reliquary Seven", episode: 26 },
   { id: "ep28_lake", title: "Under the Lake", episode: 28 },
@@ -24,6 +25,15 @@ export const ANNOTATED = Object.freeze({
   opens: "$CAL_IDENTITY_REVEALED",
   notes: Object.freeze({
     ep1_larkspur: [{ t: 9, text: "Someone walked out of that fire carrying something. Nobody else did." }],
+    // Ep 18, the rewatch §15.9 describes (times are the board's cuts: 004, 005, 006, 010, 013, 015).
+    ep18_door: [
+      { t: 5.4, text: "He wasn't afraid of it. He looked interested." },
+      { t: 7.4, text: "Three notes. He always whistled four." },
+      { t: 8.6, text: "\"Keep the key.\" Not goodbye." },
+      { t: 15.1, text: "He walked toward it. Nobody pushed him." },
+      { t: 20.1, dur: 3.5, text: "Somebody was holding the door. From the other side." },
+      { t: 23.9, text: "It rang. Like it knew a door was open somewhere." },
+    ],
     ep24_tear: [{ t: 8.4, text: "Not a tear in front of it. Under it." }, { t: 17, text: "He'd been standing there the whole time." }],
     ep26_arm: [{ t: 11.8, text: "He listened before he left. Like he was waiting for me to finish." }],
     ep28_crypt: [{ t: 9.5, text: "A flower. Somebody here is missed." }],

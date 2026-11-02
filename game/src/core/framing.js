@@ -12,13 +12,15 @@ const BODY = 2.22, HEAD = 0.62, LETTERBOX = 0.86;
 /** Every actor's position and visibility at time t. */
 export function actorsAt(cs, t, scaleOf = () => 1) {
   const out = new Map();
-  for (const a of cs.actors ?? []) out.set(a.id, { id: a.id, x: a.x, z: a.z, y: a.y ?? 0, shown: !a.hidden, scale: scaleOf(a.look), down: !!a.down });
+  const LOWER = { kneel: 0.5, kneelUp: 0.5, sit: 0.5 }; // down on one knee, or sitting: the head that much lower (runtime/motion.js: the hips at seat height)
+  for (const a of cs.actors ?? []) out.set(a.id, { id: a.id, x: a.x, z: a.z, y: a.y ?? 0, shown: !a.hidden, scale: scaleOf(a.look), down: !!a.down, lower: LOWER[a.pose] ?? 0 });
   const evs = [...(cs.events ?? [])].sort((p, q) => p.t - q.t);
   for (const e of evs) {
     if (e.t > t) break;
     if (e.show && out.has(e.show)) out.get(e.show).shown = true;
     if (e.hide && out.has(e.hide)) out.get(e.hide).shown = false;
     if (e.pose && out.has(e.pose.id) && (e.pose.name === "down" || e.pose.name === "up")) out.get(e.pose.id).down = e.pose.name === "down";
+    else if (e.pose && out.has(e.pose.id) && ["kneel", "kneelUp", "sit", "none", "reach", "pat", "lift"].includes(e.pose.name)) out.get(e.pose.id).lower = LOWER[e.pose.name] ?? 0;
     if (e.move && out.has(e.move.id)) {
       const a = out.get(e.move.id), dur = e.move.dur ?? Math.hypot(e.move.to[0] - a.x, e.move.to[1] - a.z) / 2.4;
       const k = Math.max(0, Math.min(1, (t - e.t) / Math.max(1e-6, dur)));
@@ -47,7 +49,7 @@ export function shotProblems(cs, t, scaleOf = () => 1) {
   const out = [];
   for (const a of actorsAt(cs, t, scaleOf)) {
     if (!a.shown || a.down) continue; // someone lying on the ground is in nobody's way
-    const h = BODY * a.scale, ax = a.x - px, az = a.z - pz;
+    const h = (BODY - (a.lower ?? 0)) * a.scale, ax = a.x - px, az = a.z - pz;
     const along = ax * ux + az * uz, side = Math.abs(ax * -uz + az * ux), dist = Math.hypot(ax, az);
     const camInBody = py > a.y - 0.2 && py < a.y + h + 0.2;
     const subject = Math.hypot(a.x - qx, a.z - qz) < 0.7;
@@ -65,8 +67,9 @@ export function shotProblems(cs, t, scaleOf = () => 1) {
   const aspect = 20 / 9, halfW = Math.atan(Math.tan(cam.fov / 2) * aspect); // a phone held sideways: the widest screen it plays on
   const seen = actorsAt(cs, t, scaleOf).filter((a) => a.shown && !a.down).map((a) => {
     const ax = a.x - px, az = a.z - pz, along = ax * ux + az * uz, side = ax * -uz + az * ux;
-    const lo = Math.atan2(a.y - py, Math.max(0.1, along)), hi = Math.atan2(a.y + BODY * a.scale - py, Math.max(0.1, along));
-    const headLo = Math.atan2(a.y + (BODY - HEAD) * a.scale - py, Math.max(0.1, along)); // where their head starts
+    const tall = BODY - (a.lower ?? 0);
+    const lo = Math.atan2(a.y - py, Math.max(0.1, along)), hi = Math.atan2(a.y + tall * a.scale - py, Math.max(0.1, along));
+    const headLo = Math.atan2(a.y + (tall - HEAD) * a.scale - py, Math.max(0.1, along)); // where their head starts
     return { ...a, along, ang: Math.atan2(side, along), w: Math.atan2(0.26 * a.scale, Math.max(0.1, along)), lo, hi, headLo };
   }).filter((a) => a.along > 0.8 && Math.abs(a.ang) - a.w < halfW); // any part of them on screen
   const overlap = (a0, a1, b0, b1) => Math.max(0, Math.min(a1, b1) - Math.max(a0, b0));
@@ -89,7 +92,7 @@ export function shotProblems(cs, t, scaleOf = () => 1) {
   // Looming: someone near the lens (not the subject) whose head takes up a big piece of the frame, usually cut off by its edge.
   for (const a of seen) {
     if (Math.hypot(a.x - qx, a.z - qz) < 0.7 || (key.ots && key.ots === a.id)) continue;
-    const hy = a.y + (BODY - HEAD / 2) * a.scale - py; // the middle of their head, above or below the camera
+    const hy = a.y + (BODY - (a.lower ?? 0) - HEAD / 2) * a.scale - py; // the middle of their head, above or below the camera
     const head = Math.atan2(HEAD * a.scale, Math.hypot(a.along, hy)), mid = Math.atan2(hy, a.along) - pitch;
     if (Math.abs(mid) > half + head / 2) continue; // their head is out of the shot altogether
     const size = head / (2 * half), cut = Math.abs(mid) + head / 2 > half || Math.abs(a.ang) + head * 0.4 > halfW; // sliced by the frame's edge

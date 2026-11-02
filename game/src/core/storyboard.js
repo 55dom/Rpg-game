@@ -21,9 +21,9 @@ export const BOARD_FPS = 24;
 /** Shot sizes (the PICTURE column's MS, CU, ECU…): distance from the subject, lens, and what the lens is on. */
 export const SIZES = Object.freeze({
   ECU: { dist: 1.0, fov: 0.3, at: "eyes" },
-  CU: { dist: 1.8, fov: 0.42, at: "head" },
+  CU: { dist: 2.2, fov: 0.54, at: "head" },
   INSERT: { dist: 1.2, fov: 0.42, at: "hand" },
-  MS: { dist: 3.4, fov: 0.55, at: "chest" },
+  MS: { dist: 3.8, fov: 0.6, at: "chest" },
   TWO: { dist: 4.6, fov: 0.58, at: "chest" },
   WIDE: { dist: 10, fov: 0.75, at: "waist" },
   ESTABLISHING: { dist: 19, fov: 0.8, at: "ground", rise: 7 },
@@ -113,7 +113,8 @@ function baseFraming(cs, cut, t, scaleOf) {
     const o = actorsAt(cs, t, scaleOf).find((a) => a.id === cut.ots);
     if (!o) throw new Error(`${cs.id} cut ${cut.cut}: no actor "${cut.ots}" to look over`);
     const back = flat(sub({ x: o.x, y: 0, z: o.z }, { x: s.x, y: 0, z: s.z })), side = rotY(back, Math.PI / 2);
-    pos = { x: o.x + back.x * 1.1 + side.x * 0.5, y: o.y + 1.95 * o.scale, z: o.z + back.z * 1.1 + side.z * 0.5 };
+    const sd = 0.62 * (cut.otsSide ?? 1); // which shoulder (+1 / -1)
+    pos = { x: o.x + back.x * 1.1 + side.x * sd, y: o.y + 1.95 * o.scale, z: o.z + back.z * 1.1 + side.z * sd };
   }
   const f = { pos, look, fov: cut.fov ?? size.fov, roll: 0, shake: 0 };
   for (const p of presets) p?.frame?.(f, { dist, k });
@@ -148,7 +149,7 @@ export const cutSeconds = (cut) => cut.sec ?? cut.frames / BOARD_FPS;
 
 /**
  * A storyboard → a cutscene. board = { id, stage, actors, cuts: [{ cut, picture, action, audio, sec | frames, size, cam,
- * on, from?, yaw?, dist?, rise?, lookY?, fov?, ots?, say?: "Who: words" | null, events?: [{ at, …event }] }], tail?: events }.
+ * on, from?, yaw?, dist?, rise?, lookY?, fov?, ots?, otsSide?, say?: "Who: words" | null, events?: [{ at, …event }] }], tail?: events }.
  * The result carries `cuts` ([{ cut, t, dur, picture }]) so the Theatre can say which cut a frame is in.
  */
 export function storyboard(board, scaleOf = () => 1) {

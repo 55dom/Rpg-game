@@ -8,7 +8,8 @@
 //   camera: [{ t, pos: [x,y,z], look: [x,y,z], fov?, roll?, shake?, ease?: "linear"|"in"|"out"|"inOut", cut?, ots?, ecu? }],
 //            (roll: a Dutch angle, radians · shake: a hand-held drift, metres; core/storyboard.js lays these out from a board)
 //   events: [{ t, caption? | sfx? | fx? | move?: { id, to: [x,z], dur } | show? | hide? | fade?: "in"|"out" | pose?: { id, name }
-//              | cue? | tear?: { at: [x,y,z], kind?: "pale"|"black", r?, yaw?, life?, ground? } }],
+//              | cue? | tear?: { at: [x,y,z], kind?: "pale"|"black", r?, yaw?, life?, ground? }
+//              | invert?: frames (an inverted impact frame) | speed?: seconds (speed lines) }],
 // }
 // Camera keys interpolate toward the next key unless that key is a `cut` (a hard cut to a new shot).
 // `ots: id` on a shot's first key marks it as over that actor's shoulder (core/framing.js lets them fill the foreground).
@@ -20,7 +21,7 @@ export const EASE = Object.freeze({
   inOut: (k) => (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2),
 });
 
-const EVENT_KEYS = ["caption", "sfx", "fx", "move", "show", "hide", "fade", "pose", "cue", "tear", "flash", "memory", "face", "stars"];
+const EVENT_KEYS = ["caption", "sfx", "fx", "move", "show", "hide", "fade", "pose", "cue", "tear", "flash", "memory", "face", "stars", "invert", "speed"];
 
 export function validateCutscene(cs) {
   if (!cs?.id) throw new Error("cutscene needs an id");
@@ -65,6 +66,7 @@ export function eventsBetween(events, from, to) {
 
 /** Where a moving actor is at time t (straight line, eased start and stop). */
 export function sampleMove(from, to, start, dur, t, ease = "inOut") {
+  if (dur <= 0.05) return t >= start ? [to[0], to[1]] : [from[0], from[1]]; // placed between cuts: there from the cut's first frame
   const k = EASE[ease](Math.max(0, Math.min(1, (t - start) / Math.max(1e-6, dur))));
   return [from[0] + (to[0] - from[0]) * k, from[1] + (to[1] - from[1]) * k];
 }

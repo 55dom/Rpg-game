@@ -1,7 +1,10 @@
 // Cutscene timelines (see core/timeline.js for the format). Times are in seconds.
 
-import { IRONHOLD_LAYOUT, VAULT_LAYOUT } from "../zones.js";
+import { IRONHOLD_LAYOUT, VAULT_LAYOUT, HOLLOWMARCH_BOARD } from "../zones.js";
+import { storyboard } from "../../core/storyboard.js";
 import { REVEAL_CUTSCENES } from "../../reveal/cutscenes.js";
+
+const LIGHTHOUSE_RACK = { x: 2.5, z: 12.4 }; // the squad's lantern rack (runtime/sets.js LIGHTHOUSE.lanterns)
 
 const PI = Math.PI;
 const RG = IRONHOLD_LAYOUT.ridge, EN = IRONHOLD_LAYOUT.engine;
@@ -478,29 +481,71 @@ export const CUTSCENES = {
   },
   // Ep 18: he opens a Threshold in front of the Bloom, pushes it through, and steps through after it; the door slams
   // shut in white light, and there's nothing left.
-  ep18_door: {
-    id: "ep18_door",
-    stage: "hollowmarch",
-    duration: 8.5,
-    actors: [
-      { id: "rook", look: "player", x: 0, z: 5.0, yaw: 0 },
-      { id: "cal", look: "cal", x: 0.4, z: 7.2, yaw: 0 },
-    ],
-    camera: [
-      { t: 0, pos: [-8, 2.2, 4], look: [0, 1.6, 9], fov: 0.75 },                   // from the side: him, the door, the white
-      { t: 4.2, pos: [-7.68, 2.2, 4], look: [0, 1.6, 9], fov: 0.73, ease: "linear" },
-      { t: 4.2, cut: true, pos: [0, 1.5, 8.4], look: [0, 1.6, 5.0], fov: 0.64 },     // Rook, watching
-      { t: 8.5, pos: [0, 1.5, 8.2], look: [0, 1.6, 5.0], fov: 0.6, ease: "linear" },
-    ],
-    events: [
-      { t: 0.3, tear: { at: [0, 2.8, 14.0], kind: "pale", r: 2.4, life: 3.4 } },
-      { t: 0.8, sfx: "door" }, { t: 0.9, tear: { at: [0.2, 1.5, 12.0], kind: "gold", r: 1.1, life: 3.0 } },
-      { t: 1.2, move: { id: "cal", to: [0.2, 11.4], dur: 1.6 } },
-      { t: 3.0, hide: "cal" },
-      { t: 3.6, flash: 0.5 }, { t: 3.6, sfx: "slam" },
-      { t: 7.6, fade: "out", dur: 0.9 },
-    ],
-  },
 };
+
+// Ep 18, "I'll Hold the Door": §19.3's storyboard, cut for cut (core/storyboard.js lays it out). Cuts 001–015 on the
+// plateau; then the squad's moment there (the "nothing" scene: no residue, A1); then cut 016, the Lighthouse at dusk.
+// The Lore Archive's Theatre plays the board straight through, frame by frame at 24 (§15.10, §19.3's fairness check).
+const B18 = HOLLOWMARCH_BOARD, KNEEL = 1.45; // (Rook's eyes, down on one knee) · they stand south of the stones, clear of them
+export const EP18_BOARD = Object.freeze({
+  id: "ep18_door", stage: "hollowmarch",
+  actors: [
+    { id: "rook", look: "player", x: 0, z: 2.0, yaw: 0, pose: "kneel" },
+    { id: "cal", look: "cal", x: 1.4, z: 4.2, yaw: 0 },
+    { id: "figure", look: "cal", x: 0.2, z: B18.door.z + 0.25, yaw: Math.PI, hidden: true, pose: "reach" }, // cut 013: one frame, in the doorway
+  ],
+  cuts: [
+    { cut: "001", picture: "Wide: the Hollow Bloom over the shattered plateau, sky bleeding white", action: "Slow crane down", audio: "Low choir drone, wind", sec: 3.0,
+      size: "WIDE", dist: 14, on: [B18.bloom.x, 2.6, B18.bloom.z], yaw: Math.PI, from: 0.3, cam: "CAM_CRANE_DOWN_SLOW",
+      events: [{ at: 0, cue: "bloom" }, { at: 0, sfx: "choirDrone" }, { at: 0, sfx: "wind" }] },
+    { cut: "002", picture: "MS: Rook on one knee, grimoire flickering", action: "Static, slight handheld", audio: "Ragged breathing", sec: 1.5,
+      size: "MS", on: "rook", from: -0.4, lookY: 1.2, cam: "CAM_HANDHELD", events: [{ at: 0, sfx: "breath" }] },
+    { cut: "003", picture: "CU: the Bloom's core contracting", action: "Snap zoom", audio: "Deep heartbeat, accelerating", sec: 0.8,
+      size: "CU", dist: 3.4, on: [B18.bloom.x, 3.4, B18.bloom.z], yaw: Math.PI, from: 0.15, cam: "CAM_SNAP_ZOOM",
+      events: [{ at: 0, cue: "bloomBeat" }, { at: 0, sfx: "heartbeat" }] },
+    { cut: "004", picture: "OTS from Cal toward the Bloom", action: "Slow dolly in", audio: "CAL: \"Huh. That's a big one.\"", sec: 2.0,
+      size: "MS", fov: 0.72, on: [B18.bloom.x, 3.0, B18.bloom.z], ots: "cal", otsSide: -1, cam: "CAM_DOLLY_IN_SLOW", say: "Cal: Huh. That's a big one." },
+    { cut: "005", picture: "CU: Cal tilts his head, listening to the Bloom, half-smile", action: "Hold pose, limited animation", audio: "The Lighthouse Tune on a solo instrument: three of its four notes, unresolved; then music cuts", sec: 1.2,
+      size: "CU", on: "cal", from: 0.45, cam: "CAM_HOLD", say: null, events: [{ at: 0, pose: { id: "cal", name: "tilt" } }, { at: 0.05, sfx: "tuneThree" }] },
+    { cut: "006", picture: "Two-shot: Cal and Rook", action: "Cal places a hand on Rook's head", audio: "CAL: \"Kid. Keep the key.\"", sec: 2.5,
+      size: "TWO", on: ["cal", "rook"], yaw: 0, from: -0.3, lookY: 1.45, cam: "CAM_HOLD", say: "Cal: Kid. Keep the key.",
+      events: [{ at: 0, move: { id: "cal", to: [0.92, 2.15], dur: 0.01 } }, { at: 0, face: ["cal", "rook"] }, { at: 0, pose: { id: "cal", name: "pat" } }, { at: 0, pose: { id: "rook", name: "kneelUp" } }] },
+    { cut: "007", picture: "ECU: Rook's eyes widening", action: "Static", audio: "ROOK (VO_PLACEHOLDER): \"Cal, what are you…\"", sec: 1.0,
+      on: "rook", from: 0.12, lookY: KNEEL, cam: "CAM_ECU", say: "{name}: Cal, what are you…" },
+    { cut: "008", picture: "Low angle: Cal raises his hand; a vast door frame tears open in the air", action: "Tilt up, Dutch angle", audio: "Reality tearing (SFX)", sec: 1.8,
+      size: "MS", fov: 0.78, on: "cal", from: Math.PI - 0.5, lookY: 3.0, cam: "CAM_LOW_ANGLE CAM_TILT_UP CAM_DUTCH", say: null,
+      events: [{ at: 0, move: { id: "cal", to: [0.5, 6.0], dur: 0.01 } }, { at: 0, face: ["cal", "cal"] } /* (no one to look at: back to facing the stones) */, { at: 0, pose: { id: "cal", name: "lift" } }, { at: 0, cue: "door" }, { at: 0, sfx: "tear" }, { at: 0.2, sfx: "door" }] },
+    { cut: "009", picture: "Wide: the door swallows the Bloom", action: "Whip pan following the Bloom", audio: "Roar collapsing into silence", sec: 1.2,
+      size: "WIDE", dist: 11, on: [0, 2.5, 11.8], yaw: Math.PI, from: -0.7, cam: "CAM_WHIP_PAN_FAST", events: [{ at: 0, cue: "swallow" }, { at: 0, sfx: "roar" }] },
+    { cut: "010", picture: "MS from behind Cal: he walks toward the door", action: "Tracking shot, slow", audio: "Footsteps only", sec: 2.0,
+      size: "MS", on: "cal", from: Math.PI - 0.45, cam: "CAM_TRACKING",
+      events: [{ at: 0, pose: { id: "cal", name: "none" } }, { at: 0, move: { id: "cal", to: [0.2, B18.door.z - 0.8], dur: 2.0, ease: "linear" } }, { at: 0, sfx: "steps" }] },
+    { cut: "011", picture: "CU: Cal, turning his head back, smiling", action: "Held frame", audio: "CAL: \"I'll hold the door. Don't wait up.\"", sec: 2.5,
+      size: "CU", on: "cal", from: Math.PI + 0.3, cam: "CAM_HOLD", say: "Cal: I'll hold the door. Don't wait up.", events: [{ at: 0.1, face: ["cal", "rook"] }] },
+    { cut: "012", picture: "MS: Rook lunging forward", action: "Speed lines, smear frames", audio: "ROOK: \"CAL!\"", sec: 0.6,
+      size: "MS", dist: 4.2, lookY: 1.5, on: "rook", from: 0.9, cam: "CAM_TRACKING", say: "{name}: CAL!",
+      events: [{ at: 0, pose: { id: "rook", name: "reach" } }, { at: 0, move: { id: "rook", to: [0, 3.6], dur: 0.45 } }, { at: 0, speed: 0.6 }] },
+    { cut: "013", picture: "Impact frame: inverted white silhouette of the door slamming toward the camera; in one frame, a figure stands in the doorway with a hand on the door", action: "2-frame flash", audio: "Single massive slam", frames: 4,
+      size: "WIDE", dist: 8, rise: 1.6, on: [B18.door.x, 3.2, B18.door.z], yaw: Math.PI, from: 0.4, cam: "CAM_HOLD", say: null,
+      events: [{ at: 0, hide: "cal" }, { at: 0, cue: "slam" }, { at: 0, invert: 9 }, { at: 0, sfx: "slam" }, { at: 1 / 24, show: "figure" }, { at: 2 / 24, hide: "figure" }] },
+    { cut: "014", picture: "Wide: empty plateau, white mist, nothing remains", action: "Static, held 3 seconds", audio: "Total silence", sec: 3.5,
+      size: "WIDE", dist: 12, on: [0, 1.0, 10], yaw: Math.PI, from: 1.0, cam: "CAM_HOLD", events: [{ at: 0, cue: "gone" }, { at: 0, hide: "figure" }, { at: 0, pose: { id: "rook", name: "kneel" } }] },
+    { cut: "015", picture: "Insert: Rook's open palm, the brass key", action: "Slow push in", audio: "A faint, distant ringing (the key resonating)", sec: 2.0,
+      size: "INSERT", rise: 0.75, on: [B18.palm.x, B18.palm.y, B18.palm.z], yaw: 0, from: Math.PI - 0.3, cam: "CAM_PUSH_IN_SLOW",
+      events: [{ at: 0, cue: "palm" }, { at: 0.3, sfx: "keyRing" }, { at: 2.0, cue: "gone" }] },
+  ],
+});
+export const EP18_DUSK_BOARD = Object.freeze({
+  id: "ep18_dusk", stage: "lighthouse", sky: { daylight: 0.3 }, actors: [],
+  cuts: [
+    { cut: "016", picture: "Wide: the lighthouse at dusk; one lantern dark", action: "Slow pull back", audio: "Ambient wind; no music", sec: 4.0,
+      size: "WIDE", dist: 8, fov: 0.66, on: [LIGHTHOUSE_RACK.x, 2.0, LIGHTHOUSE_RACK.z], yaw: Math.PI, from: 0.15, cam: "CAM_PULL_BACK_SLOW", events: [{ at: 0, sfx: "wind" }, { at: 3.2, fade: "out", dur: 0.8 }] },
+  ],
+});
+/** The cast's sizes, so the layout frames them (runtime/rig.js LOOKS; a test keeps these the same). */
+export const BOARD_SCALES = Object.freeze({ player: 1, cal: 1.06 });
+const boardScale = (look) => BOARD_SCALES[look] ?? 1;
+CUTSCENES.ep18_door = storyboard(EP18_BOARD, boardScale);
+CUTSCENES.ep18_dusk = storyboard(EP18_DUSK_BOARD, boardScale);
 
 Object.assign(CUTSCENES, REVEAL_CUTSCENES); // the reveal's own (src/reveal/cutscenes.js)

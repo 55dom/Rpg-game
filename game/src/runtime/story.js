@@ -16,7 +16,8 @@ import { B, toon2, glow, color3 } from "./look.js";
 import { makeTear, makeDoor, makeVoid } from "./tears.js";
 import { starPlane } from "./stars.js";
 import { GuideTrail } from "./trail.js";
-import { theatreMark, theatreNotes } from "../data/theatre.js";
+import { theatreMark, theatreNotes, THEATRE } from "../data/theatre.js";
+import { cutAt } from "../core/storyboard.js";
 import { findPath, trailMarks, guideTarget } from "../sim/guide.js";
 import { ZONES, arrivalPoint } from "../data/zones.js";
 import { Inventory } from "../core/inventory.js";
@@ -57,6 +58,10 @@ const GESTURES = Object.freeze({
   sit: { arm: [0.75, -0.3, 0], bow: 0.05, seated: 0.5 },   // on a bunk, a bench
   kneel: { arm: [0.6, -0.4, 0], bow: 0.32, seated: 0.42 }, // down on one knee, head bowed
   fist: { arm: [0.35, -0.3, 0.2] },
+  kneelUp: { arm: [0.6, -0.4, 0], seated: 0.42 }, // on one knee, looking up
+  pat: { off: [-0.85, 0, -0.15], bow: 0.12 },  // the free hand on someone's head (Ep 18, §19.3 cut 006)
+  lift: { off: [-2.3, 0, -0.25] },             // the free hand raised high, open (cut 008)
+  reach: { off: [-1.45, 0, -0.1], bow: -0.08, seated: 0 }, // reaching out after someone, up off the ground (cut 012)
 });
 
 const CPS = 48; // typewriter characters per second
@@ -552,6 +557,8 @@ export class StoryPlayer {
     this.ctx.onTheatre?.(th);
     for (;;) {
       await this.playCutscene(id);
+      const then = THEATRE.find((x) => x.id === id)?.then; // a scene in two parts (Ep 18's board: the plateau, then the Lighthouse at dusk)
+      if (then && !th.restart && !th.exit && CUTSCENES[then]) await this.playCutscene(then);
       if (th.restart && !th.exit) { th.restart = false; continue; }
       break;
     }
@@ -565,17 +572,20 @@ export class StoryPlayer {
     const th = this.theatre;
     if (!th) return;
     if (cmd === "pause") th.paused = !th.paused;
-    if (cmd === "step") { th.paused = true; th.step = 1 / 30; } // one frame forward
+    if (cmd === "step") { th.paused = true; th.step = 1 / (this.cut?.cs.fps ?? 30); } // one frame forward (a storyboard's frame: 1/24 s)
     if (cmd === "speed") { th.speed = value; th.paused = false; }
-    if (cmd === "restart" && this.cut) { th.restart = true; this.cut.t = this.cut.cs.duration; th.paused = false; }
-    if (cmd === "exit" && this.cut) { th.exit = true; this.cut.t = this.cut.cs.duration; th.paused = false; th.step = 0; }
+    if (cmd === "restart" && this.cut) { th.restart = true; this.cut.t = this.cut.cs.duration; this.cut.skipped = true; th.paused = false; }
+    if (cmd === "exit" && this.cut) { th.exit = true; this.cut.t = this.cut.cs.duration; this.cut.skipped = true; th.paused = false; th.step = 0; }
     this.ctx.onTheatre?.(th);
   }
 
   /** Margin notes (the Annotated Edition) appear at their moments, if this edition is open. */
   _theatreTick() {
     const th = this.theatre, c = this.cut;
-    if (!c || !th.notes.length) return;
+    if (!c) return;
+    const at = c.cs.cuts ? cutAt(c.cs, c.t) : null, label = at ? `CUT ${at.cut} · FRAME ${at.frame}/${at.of}` : ""; // a storyboarded scene says which cut, which frame
+    if (label !== (th.cutLabel ?? "")) { th.cutLabel = label; this.ctx.onTheatre?.(th); }
+    if (!th.notes.length) return;
     const note = th.notes.filter((n) => c.t >= n.t && c.t < n.t + (n.dur ?? 3)).at(-1) ?? null;
     if (note !== th.note) { th.note = note; this.ctx.onTheatre?.(th); }
   }
@@ -584,7 +594,7 @@ export class StoryPlayer {
   confirm() {
     if (this.clash) { this.clash.press(); return; } // the Clash takes every press (timed, never mashed)
     if (this.theatre) { this.theatreControl("pause"); return; } // in the Theatre, a tap pauses
-    if (this.cut) { this.cut.t = this.cut.cs.duration; return; } // skip the cutscene
+    if (this.cut) { this.cut.t = this.cut.cs.duration; this.cut.skipped = true; return; } // skip the cutscene
     if (this.waitingCard) { const r = this.waitingCard; this.waitingCard = null; r(); return; }
     this.view.advance();
   }
@@ -1690,6 +1700,7 @@ export class StoryPlayer {
     const c = this.cut, cs = c.cs;
     c.t = Math.min(cs.duration, c.t + dt);
     for (const e of eventsBetween(cs.events, c.prev, c.t)) {
+      if (c.skipped && (e.sfx || e.flash || e.invert || e.speed || "caption" in e || e.tear)) continue; // skipped: where everyone ends up, not every sound at once
       if ("caption" in e) this._caption(e.caption);
       if (e.sfx) this.ctx.sfx.play(e.sfx);
       if (e.show) this.stage.show(e.show, true);
@@ -1703,6 +1714,8 @@ export class StoryPlayer {
       if (e.flash) this._flash(e.flash);                   // an impact frame: white, for a fraction of a second
       if ("memory" in e) this.ctx.setMemory?.(!!e.memory, false); // into a memory (Ep 49): the colour drains out over a second and a half
       if ("stars" in e) this.stage.showStars(!!e.stars); // through an eye that sees them (Cal's Path: the Astral Path)
+      if (e.invert) this.ctx.impact?.(e.invert, true);    // an inverted impact frame (GDD §19.6), e.invert frames long at 60 Hz
+      if (e.speed) this.ctx.speedLines?.(e.speed);        // speed lines (§19.6), seconds
     }
     c.prev = c.t;
     const cam = sampleCamera(cs.camera, c.t);
@@ -1721,7 +1734,7 @@ export class StoryPlayer {
     const el = this.ui.caption;
     if (!el) return;
     if (!text) { el.classList.remove("show"); return; }
-    el.textContent = text;
+    el.textContent = fillText(text, { ...this.player, flags: this.flags }); // ({name}: what the player called Rook)
     el.className = `caption${CAPS.test(text) ? " caps" : ""}`;
     void el.offsetWidth; el.classList.add("show");
   }

@@ -5,6 +5,7 @@
 // Cal opens a Threshold, pushes the Bloom through, and steps through after it, and the door slams shut in white light.
 // Nothing remains: no body, no grimoire. His last line, to Rook: "I'll hold the door. Don't wait up." Lio: "There's no
 // residue. None." (A1.) At the Lighthouse that night his lantern is dark. Nobody says anything. No music.
+// The door itself is GDD §19.3's storyboard, cut for cut (data/story/cutscenes.js EP18_BOARD).
 
 import { AFTER_EP17 } from "./arc12.js";
 import { ZONES, HOLLOWMARCH_LAYOUT as H } from "../zones.js";
@@ -34,10 +35,6 @@ Lio: It's going to go! It's going to go and we can't stop it!
 Cal steps past you. Past all of you. Between you and it. He's not hurrying.
 <<shot on Cal>>
 Cal: Doors, Lio. I make doors.
-<<shot on Cal>>
-He looks back at you, just once, over his shoulder, and smiles the way he does when he's about to say something stupid.
-<<shot on Cal>>
-Cal: I'll hold the door. Don't wait up.
 ===
 
 title: Ep18_Nothing
@@ -57,6 +54,7 @@ Lio: There's no residue. None. Not his. Not anything. It's like he was never her
 <<set $CLUE_A1 to 1>>
 <<shot on Dagrun>>
 Dagrun doesn't say anything. He stands at the edge of the stones for a long time, and then he turns round and starts walking south, and one by one, so do the rest of you.
+<<set $CAL_STATE to 1>>
 ===
 
 title: Ep18_Lantern
@@ -131,7 +129,7 @@ export const EPISODE_18 = {
         { id: "lio", look: "lio", x: -2.0, z: G.z - 9.6, yaw: 0.4 },
         { id: "juno", look: "juno", x: 2.0, z: G.z - 9.8, yaw: -0.4 },
       ] },
-    { id: "door", type: "cutscene", cutscene: "ep18_door" },
+    { id: "door", type: "cutscene", cutscene: "ep18_door" }, // §19.3's storyboard, cuts 001–015 (data/story/cutscenes.js EP18_BOARD)
     { id: "nothing", type: "scene", node: "Ep18_Nothing", ...HM,
       rook: { x: 0, z: G.z - 9.0, yaw: 0 },
       cast: [
@@ -140,6 +138,7 @@ export const EPISODE_18 = {
         { id: "dagrun", look: "dagrun", x: -3.0, z: G.z - 10.2, yaw: 0.4 },
         { id: "bas", look: "bas", x: 3.6, z: G.z - 11.0, yaw: -0.5 },
       ] },
+    { id: "dusk", type: "cutscene", cutscene: "ep18_dusk" }, // cut 016: the Lighthouse at dusk, one lantern dark
     { id: "lantern", type: "scene", node: "Ep18_Lantern", ...LH, ...NIGHT,
       rook: null,
       cast: [

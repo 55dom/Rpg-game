@@ -218,6 +218,9 @@ export const HOLLOWMARCH_LAYOUT = {
   trees: [[-12, -10], [10, -14], [-16, 4], [15, 2], [-9, -20], [13, -24], [-18, 18], [19, 20], [-6, -4], [7, -6]],
 };
 
+/** Where Ep 18's storyboard puts the Bloom, the door, and the insert of Rook's palm (GDD §19.3; runtime/sets.js builds them). */
+export const HOLLOWMARCH_BOARD = Object.freeze({ bloom: { x: 0, z: 14 }, door: { x: 0, z: 9.6 }, palm: { x: 0, y: 1.05, z: -6 } });
+
 export const THORNWICK_LAYOUT = {
   oak: { x: 0, z: 0, r: 1.6 },
   orphanage: { x0: -8, z0: 16, x1: 8, z1: 25 },
