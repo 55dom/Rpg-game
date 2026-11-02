@@ -112,6 +112,7 @@ import { CORRUPTION } from "./data/forbidden.js";
 import { SKILLS, TREE_COLUMNS, XP_BY_KIND, PAGE_ROMAN, MAX_LEVEL, killXp, bracketOf } from "./data/skills.js";
 import { storyBracket, storyEpisode } from "./core/ranks.js";
 import { KNIGHT_RANKS, rankOf } from "./data/ranks.js";
+import { TECHNIQUES, TP_FLAG, techFlag, learnedTechniques } from "./data/techniques.js";
 import { BONDS, RANK_POINTS, RANK_UNLOCKS, GIFTS } from "./data/bonds.js";
 import { MATERIALS, HQ, TEMPER } from "./data/crafting.js";
 import { FRAGMENTS, CLAUSE } from "./data/lore.js";
@@ -986,11 +987,12 @@ export function boot(doc = document) {
   let annotationNow = () => false; // the Palimpsest's Annotation stage (after Ep 28)
   let marginNow = () => []; // the secret pages pinned in the margin (GDD §8.1, §8.4), from the story's flags
   let forbiddenNow = () => false, corruptionNow = () => 0; // the forbidden page pinned, and Corruption (GDD §8.3)
+  let techniquesNow = () => []; // sword techniques the mentors have taught (GDD §17)
   let revisionNow = () => false;   // and its Revision stage (after Ep 40)
   const newWorld = (opts = {}) => {
     for (const f of [...views.keys()]) removeView(f);
     walls.clear(); setBog(false, true); constellation.clear(true);
-    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, difficulty: settings.difficulty, companions: true, injured: injuredNow(), annotation: annotationNow(), revision: revisionNow(), margin: marginNow(), forbidden: forbiddenNow(), corruption: corruptionNow(), ...opts });
+    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, difficulty: settings.difficulty, companions: true, injured: injuredNow(), annotation: annotationNow(), revision: revisionNow(), margin: marginNow(), forbidden: forbiddenNow(), corruption: corruptionNow(), techniques: techniquesNow(), ...opts });
     const ink = world.loadout.Spell1?.id === "Inscribe"; // the margin: Inscribe takes Gale's button
     const galeBtn = root.querySelector('[data-intent="Spell1"]'); if (galeBtn) galeBtn.textContent = ink ? "INK" : "GALE";
     const wallBtn = root.querySelector('[data-intent="Spell4"]'); if (wallBtn) wallBtn.textContent = world.loadout.Spell4?.id === "HollowBite" ? "BITE" : "WALL"; // the forbidden page takes Wind Wall's button (§8.3)
@@ -1055,6 +1057,7 @@ export function boot(doc = document) {
     playSkit: (k, name) => playSkit(k, name), // a camp skit (GDD §10)
     onSecret: () => { world.margin = new Set(story.secrets.margin); refreshGrimDot(); }, // a secret page found (and pinned, if there was room)
     onCorruption: () => { if (!grim.hidden) renderGrimoire(); },
+    onTechnique: (t) => { world.setTechniques(techniquesNow()); sfx.play("surgeFull"); hud.toast(`TECHNIQUE · ${t.name.toUpperCase()}`, "finisher"); }, // learned: in Rook's hands at once
     onRank: (rk) => { sfx.play("surgeFull"); hud.toast(`KNIGHT RANK · ${rk.name.toUpperCase()}`, "finisher"); vfx.flash({ x: world.player.pos.x, y: 1.4, z: world.player.pos.z }, 4, "#ffd36a", 0.5); },
     onMeal: () => { hud.toast("WARM AND FULL", "clear"); hud.banner("+20 HEALTH · +5% DAMAGE UNTIL MIDNIGHT"); sfx.play("heal"); applyGear(); const p = world.player; p.combatant.health.fill(); },
     openShop: (id) => openShop(id),
@@ -1127,6 +1130,7 @@ export function boot(doc = document) {
   marginNow = () => story.secrets.margin;
   forbiddenNow = () => !!story.flags.get("FORBIDDEN_FOUND") && !!story.flags.get("FORBIDDEN_ON");
   corruptionNow = () => story.corruption.value;
+  techniquesNow = () => learnedTechniques(story.flags);
   const playerName = root.querySelector(".player-card .name");
   const showName = (n) => { if (playerName?.firstChild) playerName.firstChild.textContent = `${n.toUpperCase()} `; };
   const backToTitle = () => {
@@ -1289,6 +1293,8 @@ export function boot(doc = document) {
     journal.querySelector("[data-rep]").innerHTML = [
       // Rook's own standing (§17): Knight Rank, and the level the story expects by now (its bosses' brackets).
       ["KNIGHT RANK", `${KNIGHT_RANKS[kr].name}${nx ? ` · next: ${nx.name}, by exam at the Exam Grounds (after ${nx.afterText}, near level ${nx.level})` : " · the top of the ladder"}`],
+      ["SWORD TECHNIQUES", (() => { const known = Object.entries(TECHNIQUES).filter(([id]) => f.get(techFlag(id))); const tp = Number(f.get(TP_FLAG)) || 0;
+        return `${known.length ? known.map(([, t]) => `<b>${t.name}</b> (${t.desc})`).join(" ") : "None yet."} · ${tp} point${tp === 1 ? "" : "s"} to spend · a drill a day with Bas or Dagrun at the Lighthouse${f.get("HAS_SUMMONS") && !f.get("BRANNOC_DEAD") ? ", or a bout with Brannoc at Ironhold" : ""}`; })()],
       ["LEVEL", `${story.progress.level}${ep ? ` · the story expects about ${br} by now, ${bracketOf(Math.min(70, ep + 1))} by the next episode` : ""}`],
       ["SQUAD RANK", `The Lanterns are ${["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th (last)"][rank.place]} of seven`],
       ["MERIT", `${f.get("MERIT") || 0}${rank.next ? ` · next rank at ${rank.next}` : " · top of the Crown's ranking"}`],

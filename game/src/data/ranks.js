@@ -7,7 +7,8 @@
 // What a rank opens (§17: "mission tiers, story gates, page tiers, title in dialogue"):
 //   • page tiers: the Grimoire Tree's second row needs Spark, its third needs Flame (data/skills.js tier);
 //   • mission tiers: the squad board's contracts, one tier a rank (Phase 12 Step 3);
-//   • title in dialogue: {rank} in any line, and the city's knights and guards use it.
+//   • title in dialogue: {rank} in any line, and the city's knights and guards use it;
+//   • and a Technique Point each (data/techniques.js), for the mentors to spend.
 
 export const KNIGHT_RANKS = Object.freeze([
   { id: "ember", name: "Ember", desc: "The colour every new knight is given at the exam. It means: not yet." },
@@ -16,7 +17,7 @@ export const KNIGHT_RANKS = Object.freeze([
     guest: "Ysolde", node: "R_Spark",
     trial: { label: "SPARK EXAM · THE PACK", wave: ["hound", "hound", "hound", "hound", "hound"], goal: "evade", n: 3,
       text: "Three perfect dodges or parries. Show me the thing you learned the day you got here." },
-    reward: { marks: 60, flags: { MERIT: 10, REP_SQUAD: 3 } },
+    reward: { marks: 60, flags: { MERIT: 10, REP_SQUAD: 3, TECH_POINTS: 1 } },
     tiers: "the Grimoire Tree's second row; the squad board's second tier",
   },
   {
@@ -24,7 +25,7 @@ export const KNIGHT_RANKS = Object.freeze([
     guest: "Sylvie", node: "R_Flame",
     trial: { label: "FLAME EXAM · THE WALL", wave: ["bulwark", "bulwark", "acolyte", "acolyte"], goal: "break", n: 2,
       text: "Break two guards. A wall that won't move is still a wall you can go through." },
-    reward: { marks: 120, flags: { MERIT: 15, REP_SQUAD: 4 } },
+    reward: { marks: 120, flags: { MERIT: 15, REP_SQUAD: 4, TECH_POINTS: 1 } },
     tiers: "the Grimoire Tree's third row; the squad board's third tier",
   },
   {
@@ -32,7 +33,7 @@ export const KNIGHT_RANKS = Object.freeze([
     guest: "Corvina", node: "R_Blaze",
     trial: { label: "BLAZE EXAM · THE LINE", wave: ["lance", "lance", "rider", "rider"], goal: "clean", n: 3,
       text: "Win, and let no more than three blows land on you. A Blaze comes home in one piece." },
-    reward: { marks: 220, flags: { MERIT: 20, REP_SQUAD: 5 } },
+    reward: { marks: 220, flags: { MERIT: 20, REP_SQUAD: 5, TECH_POINTS: 1 } },
     tiers: "the squad board's fourth tier",
   },
   {
@@ -40,7 +41,7 @@ export const KNIGHT_RANKS = Object.freeze([
     guest: "Nobody (Silent Quill)", node: "R_Sun",
     trial: { label: "SUN EXAM · THE LONG MINUTE", wave: ["bulwark", "bulwark", "clockwork", "clockwork", "beast"], goal: "fast", n: 90,
       text: "Five of the worst things we keep in the cellars. Ninety seconds." },
-    reward: { marks: 400, flags: { MERIT: 30, REP_SQUAD: 6 } },
+    reward: { marks: 400, flags: { MERIT: 30, REP_SQUAD: 6, TECH_POINTS: 1 } },
     tiers: "the squad board's last tier",
   },
 ]);

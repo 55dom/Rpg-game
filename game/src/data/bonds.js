@@ -3,6 +3,8 @@
 // are the gates: a bond can't grow past one until its scene has been seen. State lives in story flags
 // (BOND_<ID> points, BOND_EV_<ID>_<rank> seen), so it saves with everything else.
 
+import { MENTORS } from "./techniques.js";
+
 /** Points needed for each rank (index 0 = rank 1). */
 export const RANK_POINTS = Object.freeze([0, 20, 45, 75, 110, 150, 200, 260, 330, 410]);
 export const RANK_TITLES = Object.freeze(["Stranger", "Stranger", "Acquaintance", "Acquaintance", "Comrade", "Comrade", "Trusted", "Trusted", "Sworn", "Sworn"]);
@@ -94,12 +96,13 @@ export const RANK_UNLOCKS = Object.freeze({
   10: "Awakening (later chapter)",
 });
 
-// ---- Generated dialogue: gift menus, gift shops, and the menu after talking to a squadmate ----
+// ---- Generated dialogue: gift menus (and, for the mentors, training), gift shops, and the menu after talking to a squadmate ----
 const up = (s) => s.toUpperCase();
 function giftMenus() {
   let out = "";
   for (const [id, b] of Object.entries(BONDS)) {
-    out += `title: B_Menu_${id}\n---\n-> Give ${b.name} a gift. <<if $GIFTS_OWNED > 0>>\n    <<jump B_Gift_${id}>>\n-> See you later.\n===\n\n`;
+    const train = MENTORS[id] ? `-> Training. <<if $CAN_TRAIN>>\n    <<jump T_Menu_${id}>>\n` : ""; // Bas and Dagrun teach sword techniques (GDD §17)
+    out += `title: B_Menu_${id}\n---\n${MENTORS[id] ? `<<technique check ${id}>>\n` : ""}-> Give ${b.name} a gift. <<if $GIFTS_OWNED > 0>>\n    <<jump B_Gift_${id}>>\n${train}-> See you later.\n===\n\n`;
     out += `title: B_Gift_${id}\n---\n`;
     for (const [g, gi] of Object.entries(GIFTS)) out += `-> ${gi.name}. <<if $GIFT_${up(g)} > 0>>\n    <<gift ${id} ${g}>>\n`;
     out += `-> Never mind.\n    <<stop>>\n`;

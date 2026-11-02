@@ -264,7 +264,7 @@ export class Fighter {
       case EventType.Projectile: this.world.fireProjectile(this, a, e.key, e.value); break;
       case EventType.Custom:
         if (e.key === "jump") { this.vel.y = e.value * (this.tags.has("WEIGHTED") ? Tuning.weightedJump : 1); this.grounded = false; }
-        else if (e.key === "airJump") { this.vel.y = e.value * (this.tags.has("WEIGHTED") ? Tuning.weightedJump : 1); this.airJumps = 0; }
+        else if (e.key === "airJump") { this.vel.y = e.value * (this.tags.has("WEIGHTED") ? Tuning.weightedJump : 1); this.airJumps = Math.max(0, this.airJumps - 1); }
         else if (e.key === "submerge") this.boss?.submerge();
         else if (e.key === "summon") { this.world.summon(this, "hound", e.value); this.boss?.onSummon?.(); }
         else if (e.key === "fan") this.world.fireFan(this, a, "Needle", 15, e.value, 0.26);
@@ -272,7 +272,7 @@ export class Fighter {
         else if (e.key === "seal") { const t = this.target?.alive ? this.target : this.world.player; this.world.addStrike(this, t.pos.x, t.pos.z, { delay: e.value, r: BELL_TUNING.seal.r, spec: SEAL, ability: a, kind: "seal" }); } // a Binding Seal under you
         else if (e.key === "stars") this.boss?.placeStars?.();
         else if (this.boss?.onCustom?.(e.key, e.value, a)) { /* handled by the boss's controller */ }
-        else if (e.key === "airDash") { this.vel.y = 0; this.hoverFrames = e.value; this.airDashes = 0; }
+        else if (e.key === "airDash") { this.vel.y = 0; this.hoverFrames = e.value; this.airDashes = Math.max(0, this.airDashes - 1); }
         else if (e.key === "hover") { this.vel.y = 0; this.hoverFrames = e.value; }
         else if (e.key === "timeStop") this.world.stopFrames = Math.max(this.world.stopFrames, e.value);
         else if (e.key === "slam") { this.vel.y = -e.value; this.slamming = true; }
@@ -363,10 +363,13 @@ export class World {
     if (o.forbidden && this.loadout.Spell4 && [PAGES.Spell4.base, ...PAGES.Spell4.branches.map((b) => b.ability)].some((a) => a.id === this.loadout.Spell4.id)) this.loadout.Spell4 = HOLLOW_BITE;
     this._fitLoadout();
     this.zones = [];
+    // Sword techniques learned from the mentors (GDD §17; data/techniques.js): new routes and cancels in Rook's graph, more air.
+    this.techniques = new Set(o.techniques ?? []);
     this.player = this.add(new Fighter(this, {
       id: "rook", kind: "player", team: Team.Player, stats: this.playerStats, hitboxes: { ...ROOK_HITBOXES, ...PAGE_HITBOXES, ...INSCRIPTION_HITBOXES, ...FORBIDDEN_HITBOXES },
-      graph: buildRookGraph(() => this.player.context(), ROOK_ABILITIES, this.loadout, { ultimate: this.ultimate }), x: 0, z: -4,
+      graph: buildRookGraph(() => this.player.context(), ROOK_ABILITIES, this.loadout, { ultimate: this.ultimate, techniques: this.techniques }), x: 0, z: -4,
     }));
+    this.player.airJumps = this.airMax(this.player, "jump"); this.player.airDashes = this.airMax(this.player, "dash");
     if (o.kit) this._wear(o.kit); // somebody else's body (Ep 49: a soldier, in a memory)
     this.difficulty = o.difficulty ?? "knight"; // GDD §9.7 (data/difficulty.js)
     // Secret pages pinned in the margin (GDD §8.1, §8.4; data/secretPages.js): passives this fight reads.
@@ -515,7 +518,7 @@ export class World {
     p.runner.interrupt(); p.buffer.clear(); p.hitboxes = [];
     this.active = to;
     const graph = to === "player"
-      ? buildRookGraph(() => p.context(), ROOK_ABILITIES, this.loadout, { ultimate: this.ultimate })
+      ? buildRookGraph(() => p.context(), ROOK_ABILITIES, this.loadout, { ultimate: this.ultimate, techniques: this.techniques })
       : buildRookGraph(() => p.context(), m.abilities, m.loadout, { ultimate: false });
     graph.runner = p.runner; p.controller.resolver = graph;
     if (to === "player" && this._rookDirty) { this._rookDirty = false; this.applyLoadout(); }
@@ -861,9 +864,21 @@ export class World {
     this._fitLoadout();
     if (this.active && this.active !== "player") { this._rookDirty = true; return; } // Rook's on the bench: rebuild when he's back
     const p = this.player;
-    const g = buildRookGraph(() => p.context(), ROOK_ABILITIES, this.loadout, { ultimate: this.ultimate });
+    const g = buildRookGraph(() => p.context(), ROOK_ABILITIES, this.loadout, { ultimate: this.ultimate, techniques: this.techniques });
     g.runner = p.runner;
     p.controller.resolver = g;
+  }
+
+  /** Learn (or forget) sword techniques mid-roam: the graph is rebuilt at once. */
+  setTechniques(ids) {
+    this.techniques = new Set(ids ?? []); this.applyLoadout();
+    const p = this.player; if (p.grounded !== false) { p.airJumps = this.airMax(p, "jump"); p.airDashes = this.airMax(p, "dash"); }
+  }
+
+  /** Air jumps and dashes Rook gets per airtime: one each, two with Hang Time / Second Wind (Dagrun's techniques). */
+  airMax(f, kind) {
+    if (f !== this.player || this.wearing || (this.active && this.active !== "player")) return 1;
+    return kind === "jump" ? (this.techniques.has("hangTime") ? 2 : 1) : (this.techniques.has("secondWind") ? 2 : 1);
   }
 
   /** Choose a branch for a page that's ready to evolve. */
@@ -1762,7 +1777,7 @@ export class World {
           this.emit({ type: recovered ? "airRecover" : "hardLanding", fighter: f, at: { x: f.pos.x, y: 0, z: f.pos.z } });
           f.dropLanding = 0;
         }
-        f.airJumps = 1; f.airDashes = 1; f.hoverFrames = 0; f.juggleHits = 0;
+        f.airJumps = this.airMax(f, "jump"); f.airDashes = this.airMax(f, "dash"); f.hoverFrames = 0; f.juggleHits = 0;
         const slam = f.slamming; f.slamming = false;
         if (f.runner.isRunning && AIR.has(f.current.id)) f.runner.interrupt();
         this.emit({ type: slam ? "slamLand" : "land", fighter: f });

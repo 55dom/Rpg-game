@@ -86,7 +86,8 @@ test("buying a gift at a stall and giving it: the dialogue path", () => {
   assert.equal(b.points("juno"), BOND_GAIN.gift[3]);
   // With nothing in the bag, the gift option isn't offered.
   const empty = new FlagStore();
-  const r = new DialogueRunner(nodes, empty, {}).start("B_Menu_bas"); const s = r.next();
+  const r = new DialogueRunner(nodes, empty, {}).start("B_Menu_bas"); let s = r.next();
+  while (s.type === "command") s = r.next(); // (Bas checks whether there's training on offer first: Phase 12)
   assert.equal(s.type, "options"); assert.equal(s.options.find((o) => o.text.startsWith("Give")).enabled, false);
 });
 

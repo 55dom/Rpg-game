@@ -7,6 +7,7 @@ import { BOND_SCRIPT } from "../bonds.js";
 import { CRAFT_SCRIPT } from "../crafting.js";
 import { LORE_SCRIPT, MURAL_SCRIPT, FORBIDDEN_SCRIPT } from "../lore.js";
 import { RANK_SCRIPT } from "../ranks.js";
+import { TECHNIQUE_SCRIPT } from "../techniques.js";
 import { NOTEBOOK_READ } from "./ep23.js";
 import { LAW_SCRIPT, LUKE_SCRIPT } from "./law.js";
 import { ISLES_SCRIPT } from "./ep30.js";
@@ -396,4 +397,4 @@ ${NOTEBOOK_READ}
 `;
 
 /** Every free-roam talk node: the towns, the Gilded Spoon café (data/story/cafe.js), and bonds (data/bonds.js). */
-export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT + CRAFT_SCRIPT + LORE_SCRIPT + MURAL_SCRIPT + FORBIDDEN_SCRIPT + RANK_SCRIPT + HALL_SCRIPT + IRON_SCRIPT + NOTEBOOK_SCRIPT + LAW_SCRIPT + LUKE_SCRIPT + ISLES_SCRIPT + OLDCITY_SCRIPT;
+export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT + CRAFT_SCRIPT + LORE_SCRIPT + MURAL_SCRIPT + FORBIDDEN_SCRIPT + RANK_SCRIPT + TECHNIQUE_SCRIPT + HALL_SCRIPT + IRON_SCRIPT + NOTEBOOK_SCRIPT + LAW_SCRIPT + LUKE_SCRIPT + ISLES_SCRIPT + OLDCITY_SCRIPT;

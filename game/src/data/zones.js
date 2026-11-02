@@ -577,7 +577,7 @@ export const ZONES = {
     ] },
     spawn: { x: 0, z: -29, yaw: Math.PI },
     cast: [
-      { id: "brannoc", look: "brannoc", x: 0, z: -31.6, yaw: Math.PI, node: "W_Brannoc", when: "not $BRANNOC_DEAD",
+      { id: "brannoc", look: "brannoc", x: 0, z: -31.6, yaw: Math.PI, node: "W_Brannoc", after: "T_Brannoc", when: "not $BRANNOC_DEAD",
         routine: { steps: [{ do: "idle", at: [0, -31.6], face: Math.PI, dur: [10, 14] }, { do: "walk", to: [0, -23.5] }, { do: "idle", at: [0, -23.5], face: 0, dur: [6, 9] }] } },
       { id: "warden", look: "guard", x: -2.2, z: -23.2, yaw: 0, node: "W_Warden",
         routine: { role: "guard", steps: [{ do: "idle", at: [-2.2, -23.2], face: 0, dur: [8, 12] }, { do: "idle", at: [2.2, -23.2], face: 0, dur: [8, 12] }] } },

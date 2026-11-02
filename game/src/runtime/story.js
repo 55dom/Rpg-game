@@ -27,6 +27,7 @@ import { BONDS, BOND_GAIN } from "../data/bonds.js";
 import { EPISODE_XP, QUEST_XP, episodeXp, bracketOf, xpToReach, CATCH_UP } from "../data/skills.js";
 import { Ranks, storyBracket } from "../core/ranks.js";
 import { TRIAL_GOALS, KNIGHT_RANKS, rankBracket } from "../data/ranks.js";
+import { TECHNIQUES, MENTORS, DRILL_POSTS, TP_FLAG, learnTechnique } from "../data/techniques.js";
 import { EPISODE_REWARD } from "../data/items.js";
 import { QuestLog } from "../core/quests.js";
 import { QUESTS } from "../data/quests.js";
@@ -912,6 +913,18 @@ export class StoryPlayer {
         } else if (args[0] === "cancel") this.flags.set("EXAM_READY", 0);
         break;
       }
+      case "technique": { // the mentors (GDD §17): <<technique check bas>> sets $DRILL_READY (a drill today?) and $CAN_TRAIN
+        // (roaming, so training's on offer at all); <<technique learn risingEdge>> spends the points and teaches it
+        if (args[0] === "check") {
+          const M = MENTORS[args[1]];
+          this.flags.set("CAN_TRAIN", this.roaming && M ? 1 : 0);
+          this.flags.set("DRILL_READY", this.roaming && M && Number(this.flags.get(`DRILL_${args[1].toUpperCase()}_DAY`)) !== this.day ? 1 : 0);
+        } else if (args[0] === "learn") {
+          if (learnTechnique(this.flags, args[1])) this.ctx.onTechnique?.(TECHNIQUES[args[1]]);
+        }
+        break;
+      }
+      case "drill": this.flags.set(`DRILL_${(args[0] ?? "").toUpperCase()}_DAY`, this.day); this._drillNext = args[0]; break; // (it starts when the talk ends)
       case "forbidden": if (args[0] === "take") { this.flags.set("FORBIDDEN_FOUND", 1); this.ctx.hud.toast("FORBIDDEN PAGE · HOLLOW BITE", "danger"); } break;
       default: break;   // unknown commands are ignored (forward-compatible scripts)
     }
@@ -1137,6 +1150,7 @@ export class StoryPlayer {
 
   _objective() {
     if (this.ranks.trial && this.exploring?.combat?.exam) { this._trialHud(true); return; } // (an exam's goal holds the line while it lasts)
+    if (this.drill) { this._drillText = null; this._drillHud(); return; }
     const x = this.exploring, b = x.beat, { n, total } = objectiveCount(b, x.talked); // sim/episode.js
     this.ui.objective.innerHTML = fillText(b.objective ?? "", { ...this.player, flags: this.flags }).replace("{n}", n).replace("{total}", total).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
     if (this.roaming) {
@@ -1153,6 +1167,11 @@ export class StoryPlayer {
     if (!x || x.busy) return;
     if (x.cooldown > 0) x.cooldown -= dt;
     if (this.ranks.trial && x.combat?.exam) { this.ranks.tick(dt); if (this.ranks.trial.goal === "fast") this._trialHud(); } // (the Sun exam's clock)
+    if (this.drill) { // a drill on the posts: against the clock
+      this.drill.t += dt; this._drillHud();
+      if (this.drill.got >= this.drill.n) this._finishDrill(this.drill.mentor, true);
+      else if (this.drill.t > this.drill.limit) this._finishDrill(this.drill.mentor, false);
+    }
     const pp = this.ctx.getWorld().player.pos;
     if (x.combat?.law) { // a run-in with the law: no talking, but the way out is open (running is a choice)
       if (!this.ui.talk.hidden) this.ui.talk.hidden = true;
@@ -1377,8 +1396,56 @@ export class StoryPlayer {
     x.busy = false; x.near = null; x.cooldown = 0.6; // the key that closed the last line mustn't reopen it
     this._objective();
     if (this.roaming) this.saveNow(); // talking can start or finish quests
+    if (this._drillNext) { const m = this._drillNext; this._drillNext = null; this._startDrill(m, c); } // a mentor said "go"
     if (x.beat.required?.length && x.beat.required.every((id) => x.talked.has(id))) x.resolve();
     return true;
+  }
+
+  // ---- Training with the mentors (GDD §17; data/techniques.js): a drill on the posts, or a bout; a point if it's done ----
+  _startDrill(mentor, npc) {
+    const M = MENTORS[mentor], d = M?.drill, x = this.exploring, world = this.ctx.getWorld(), pp = world.player.pos;
+    if (!d || !x) return;
+    if (d.goal === "spar") { // a bout with the mentor himself, on open ground in front of him
+      this.stage.show?.(npc?.id ?? mentor, false); this._sparHidden = npc?.id ?? mentor;
+      this._startCombat(x, { id: `drill-${mentor}`, at: { x: npc?.x ?? pp.x, z: (npc?.z ?? pp.z) + 3, r: 2 }, wave: ["brannocSpar"], label: d.label, leash: 30, boss: true, drill: mentor });
+      return;
+    }
+    // The Lighthouse ring's straw dummies do; anywhere else, two posts go up in front of you for the drill.
+    const posts = world.dummies.length ? [] : DRILL_POSTS.map(([dx, dz], i) => world.spawnDummy(pp.x + dx, pp.z + dz, Math.PI, 90 + i));
+    this.drill = { mentor, goal: d.goal, n: d.n, limit: d.limit, got: 0, t: 0, posts };
+    world.player.relaxed = false;
+    this.ctx.onEvents(world.drainEvents());
+    this.ctx.hud.banner(`${d.label} · ${d.text}`);
+    this._drillHud();
+  }
+
+  _drillHud() {
+    const d = this.drill;
+    if (!d) return;
+    const html = `<b>${MENTORS[d.mentor].name.toUpperCase()}'S DRILL</b> · ${d.goal === "air" ? "Hits from the air" : "Clean hits"}: ${d.got}/${d.n} · ${Math.max(0, Math.ceil(d.limit - d.t))}s`;
+    if (html === this._drillText) return;
+    this._drillText = html; this.ui.objective.innerHTML = html; this.ui.objective.hidden = false;
+  }
+
+  /** The drill's over: the posts go, and a Technique Point if it was done in time. */
+  _finishDrill(mentor, ok) {
+    const world = this.ctx.getWorld(), d = this.drill;
+    if (d) {
+      for (const f of d.posts) world.emit({ type: "despawn", fighter: f });
+      world.fighters = world.fighters.filter((f) => !d.posts.includes(f));
+      this.ctx.onEvents(world.drainEvents());
+      world.player.relaxed = true;
+    }
+    this.drill = null; this._drillText = null;
+    if (this._sparHidden) { this.stage.show?.(this._sparHidden, true); this._sparHidden = null; }
+    const who = MENTORS[mentor]?.name ?? "Bas";
+    if (ok) {
+      this.flags.add(TP_FLAG, 1);
+      this.ctx.hud.banner(`TECHNIQUE POINT · ${this.flags.get(TP_FLAG)} to spend · Talk to a mentor to learn something with it`);
+      this.say(who, { bas: "Good. Your hands remember now. Tomorrow they'll forget, and we'll do it again.", dagrun: "...Huh. You didn't fall over. I'm proud. Don't tell anyone.", brannoc: "Good. Again tomorrow." }[mentor] ?? "Good.");
+    } else this.say(who, { bas: "Too slow. Not bad. Too slow. Tomorrow.", dagrun: "You came down. Everyone comes down. Tomorrow, come down later.", brannoc: "You'll stand longer tomorrow." }[mentor] ?? "Tomorrow.");
+    this._objective();
+    this.saveNow();
   }
 
   // ---- Field and dungeon fights (GDD §13): walk into an encounter's area and it starts ----
@@ -1455,6 +1522,7 @@ export class StoryPlayer {
     for (const b of this.bars ?? []) b.dispose(false, true);
     this.bars = null;
     if (e.exam) { this._finishExam(e, won); if (won) { world.player.relaxed = true; return; } }
+    if (e.drill) { this._finishDrill(e.drill, won); if (won) { world.player.relaxed = true; return; } } // (a bout with a mentor: won is the drill done)
     if (won) {
       e.done = true;
       if (e.flag) { // (an episode's walk-around has no zone, and no visits to count)
@@ -1777,6 +1845,8 @@ export class StoryPlayer {
     if (ev.type === "parry" && ev.defender === this.ctx.getWorld().player) this._found(this.secrets.parry(this.ctx.getWorld().companions.some((c) => c.kind === "juno" && c.alive))); // (Juror's Thread)
     if (ev.type === "haskDown") this._found(this.secrets.haskDown(ev.clean)); // (Weight of Nothing)
     if (this.ranks.trial) { this.ranks.event(ev, this.ctx.getWorld().player); this._trialHud(); } // a promotion exam, counting
+    if (this.drill && ev.type === "hit" && ev.defender?.traits?.dummy && ev.attacker === this.ctx.getWorld().player
+      && (this.drill.goal !== "air" || !ev.attacker.grounded)) { this.drill.got++; this._drillHud(); } // a drill, counting
     if (ev.type === "softHit") { this.law.onSoftHit(ev); return; } // a blade or a spell landed on a townsperson
     if (x?.combat?.law) { if (ev.type === "playerDown") this.law.fell(); return; } // the Watch, or a street fight
     if (x?.combat && !this.fight) {

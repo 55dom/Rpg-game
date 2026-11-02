@@ -57,6 +57,7 @@ export const ROOK_POSES = Object.freeze({
   GaleCutter: { from: [-1.5, -0.7, 0], to: [1.0, 0.5, 0], grimoire: true },
   Guard: { from: [-0.3, -0.95, 0.9], to: [-0.3, -0.95, 0.9], lean: -0.1 },
   Counter: { from: [0.2, 1.9, 0], to: [0.3, -1.9, 0], lean: 0.45 },
+  Stonebreaker: { from: [-2.8, 0.1, 0], to: [1.5, -0.1, 0], lean: 0.6 }, // two hands, overhead, all the way down (Bas's technique)
   LanternBreak: { from: [-2.7, 0, 0], to: [1.4, 0, 0], lean: 0.55, grimoire: true },
   Skyrender: { from: [-2.4, 0.3, 0], to: [1.3, -0.2, 0], lean: 0.4, spin: 6, grimoire: true },
 });
@@ -106,6 +107,11 @@ export const ROOK_ABILITIES = (() => {
     hit: hitSpec({ damage: 20, posture: 25, hitstop: 8, hitstun: 30, knockback: 3 }),
     events: [swing(6, "swingHeavy"), { frame: 8, type: E.Custom, key: "slam", value: 30 },
       { frame: 8, type: E.SpawnHitbox, key: "Slam", value: 8 }, { frame: 12, type: E.CameraCue, key: "punch" }] });
+  // Bas's technique (GDD §17, data/techniques.js): off a landed fourth swing, the blade comes down two-handed and breaks guards.
+  add({ id: "Stonebreaker", startup: 12, active: 4, recovery: 24, tags: ["heavy"],
+    hit: hitSpec({ damage: 22, posture: 45, hitstop: 12, hitstun: 34, knockback: 2 }),
+    events: [swing(9, "swingHeavy"), { frame: 12, type: E.Move, value: 0.8 }, blade(12, 4), { frame: 12, type: E.CameraCue, key: "punch" }],
+    cancels: [{ from: 22, to: 39, into: m("Dodge|AnySpell") }] });
   add({ id: "DashStrike", startup: 6, active: 4, recovery: 16,
     hit: hitSpec({ damage: 14, posture: 12, hitstop: 4, hitstun: 18, knockback: 3 }),
     events: [swing(4), { frame: 6, type: E.Move, value: 2 }, blade(6, 4)],
@@ -182,8 +188,28 @@ export const ROOK_ABILITIES = (() => {
 /** Which ability each spell button casts (page evolution swaps these). */
 export const defaultLoadout = (A = ROOK_ABILITIES) => ({ Spell1: A.GaleCutter, Spell2: A.VacuumPull, Spell3: A.TempestEdge, Spell4: A.WindWall });
 
-/** Rook's combo graph. Order matters inside each list: first match wins. */
-export function buildRookGraph(contextProvider, A = ROOK_ABILITIES, loadout = defaultLoadout(A), { ultimate = true } = {}) {
+/**
+ * Rook's moves with the techniques' extra cancel windows (GDD §17; data/techniques.js). Iron Answer: Block out of the
+ * first three swings' and the Dash Strike's recovery. Stonebreaker / Unbroken: Heavy / Slash out of a landed fourth swing.
+ */
+const withCancels = (a, extra) => defineAbility({ ...a, cancels: [...a.cancels, ...extra] });
+const techCache = new Map();
+export function techniqueAbilities(T) {
+  const key = [...T].sort().join(",");
+  if (techCache.has(key)) return techCache.get(key);
+  const A = { ...ROOK_ABILITIES };
+  if (T.has("ironAnswer")) for (const id of ["L1", "L2", "L3", "DashStrike"]) A[id] = withCancels(A[id], [{ from: A[id].startup + A[id].active, to: A[id].total - 1, into: m("Block") }]);
+  const l4 = [T.has("stonebreaker") && "Heavy", T.has("unbroken") && "Light"].filter(Boolean).join("|");
+  if (l4) A.L4 = withCancels(A.L4, [{ from: 16, to: 30, into: m(l4), requiresHit: true }]);
+  const frozen = Object.freeze(A);
+  techCache.set(key, frozen);
+  return frozen;
+}
+
+/** Rook's combo graph. Order matters inside each list: first match wins. `techniques`: what the mentors have taught. */
+export function buildRookGraph(contextProvider, A = ROOK_ABILITIES, loadout = defaultLoadout(A), { ultimate = true, techniques = null } = {}) {
+  const T = techniques ?? new Set();
+  if (T.size && A === ROOK_ABILITIES) A = techniqueAbilities(T);
   const S = loadout;
   const g = new ComboGraph(contextProvider);
   // Story episodes can lock pages (Rook starts with one) and the ultimate: empty slots get no routes.
@@ -217,5 +243,10 @@ export function buildRookGraph(contextProvider, A = ROOK_ABILITIES, loadout = de
     .addGlobal(Intent.Light, A.DashStrike, C.Grounded | C.AfterDash)
     .addGlobal(Intent.Light, A.AirL1, C.Airborne)
     .addGlobal(Intent.Heavy, A.AirSlam, C.Airborne);
+  // The mentors' techniques: new combo nodes (Bas), cancels (Brannoc). Dagrun's are air jumps and dashes (sim/world.js airMax).
+  if (T.has("risingEdge")) g.addEdge(A.L3, Intent.Heavy, A.Launcher);
+  if (T.has("stonebreaker")) g.addEdge(A.L4, Intent.Heavy, A.Stonebreaker);
+  if (T.has("unbroken")) g.addEdge(A.L4, Intent.Light, A.L1);
+  if (T.has("ironAnswer")) g.addGlobal(Intent.Block, A.Guard, C.Grounded);
   return g;
 }
