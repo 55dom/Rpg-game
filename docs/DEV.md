@@ -137,7 +137,7 @@ The start screen has two buttons: **Play Episode 4** (the run) and the training 
 |---|---|
 | Flags and the condition language | `core/flags.js` |
 | Dialogue scripts: parser, runner, pronoun tokens | `core/script.js` |
-| Saves (versions, migrations, slots) | `core/save.js` |
+| Saves (versions, migrations, slots, export/import; IndexedDB with localStorage as the fallback) | `core/save.js`, `runtime/idb.js` |
 | Episode beats (cold open, title, scene, fight, preview) | `sim/episode.js` |
 | Cast (speaker names and colors) | `data/story/cast.js` |
 | Episode 1 script and beats | `data/story/ep1.js` |
