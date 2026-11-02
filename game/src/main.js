@@ -1986,17 +1986,29 @@ export function boot(doc = document) {
   const transfer = slotsModal.querySelector("[data-transfer-panel]"), tText = transfer.querySelector("[data-transfer-text]"), tNote = transfer.querySelector("[data-transfer-note]");
   const tImport = transfer.querySelector("[data-transfer-import]"), tFileBtn = transfer.querySelector("[data-transfer-file]"), tFile = transfer.querySelector("[data-transfer-input]");
   tText.addEventListener("keydown", (e) => e.stopPropagation()); // typing here isn't playing
+  // Inside the Claude artifact viewer a page can't follow a download link; it offers the file through the viewer's
+  // downloads capability instead (the viewer confirms it). Opened on its own, the page uses a plain download link.
+  let fileSaver = null;
+  try { globalThis.claude?.use?.("downloads")?.then((d) => { fileSaver = d; }, () => {}); } catch { /* not in the viewer */ }
   slotsModal.querySelector('[data-transfer="export"]').addEventListener("click", (e) => {
     e.currentTarget.blur(); sfx.play("ui");
-    const text = JSON.stringify(saves.exportSaves(), null, 1);
-    let downloaded = false;
-    try {
-      const url = URL.createObjectURL(new Blob([text], { type: "application/json" })), a = document.createElement("a");
-      a.href = url; a.download = `unwritten-saves-${new Date().toISOString().slice(0, 10)}.json`;
-      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); downloaded = true;
-    } catch { /* no downloads in this frame */ }
+    const text = JSON.stringify(saves.exportSaves(), null, 1), filename = `unwritten-saves-${new Date().toISOString().slice(0, 10)}.json`;
     transfer.hidden = false; tText.readOnly = true; tText.value = text; tImport.hidden = tFileBtn.hidden = true;
-    tNote.textContent = `${downloaded ? "Downloaded as a .json file. " : ""}If it didn't arrive, copy this text and keep it somewhere safe.`;
+    const copy = "copy this text and keep it somewhere safe.";
+    if (fileSaver) {
+      tNote.textContent = `Offering the file to save. If it doesn't arrive, ${copy}`;
+      fileSaver.save({ filename, data: text }).then(
+        () => { tNote.textContent = "Saved as a .json file. (The text is here to copy too.)"; },
+        (err) => { tNote.textContent = err?.code === "declined" ? `Not saved. If you like, ${copy}` : `This view can't save files: ${copy}`; });
+    } else {
+      let downloaded = false;
+      try {
+        const url = URL.createObjectURL(new Blob([text], { type: "application/json" })), a = document.createElement("a");
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); downloaded = true;
+      } catch { /* no downloads in this frame */ }
+      tNote.textContent = `${downloaded ? "Downloaded as a .json file. " : ""}If it didn't arrive, ${copy}`;
+    }
     tText.focus(); tText.select();
   });
   slotsModal.querySelector('[data-transfer="import"]').addEventListener("click", (e) => {

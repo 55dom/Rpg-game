@@ -95,7 +95,10 @@ test("in the game: EXPORT SAVES downloads the file and shows its text; IMPORT SA
   const html = readFileSync(new URL("../template.html", import.meta.url), "utf8"), main = src("main.js");
   assert.match(html, /data-transfer="export"[^>]*>EXPORT SAVES</); assert.match(html, /data-transfer="import"[^>]*>IMPORT SAVES</);
   assert.match(html, /<input type="file" accept="\.json,application\/json,text\/plain" data-transfer-input hidden>/);
-  assert.match(main, /a\.download = `unwritten-saves-\$\{new Date\(\)\.toISOString\(\)\.slice\(0, 10\)\}\.json`;/);
+  assert.match(main, /filename = `unwritten-saves-\$\{new Date\(\)\.toISOString\(\)\.slice\(0, 10\)\}\.json`;/);
+  assert.match(main, /globalThis\.claude\?\.use\?\.\("downloads"\)/, "in the artifact viewer, through its downloads capability (the viewer confirms)");
+  assert.match(main, /fileSaver\.save\(\{ filename, data: text \}\)/);
+  assert.match(main, /a\.href = url; a\.download = filename;/, "opened on its own, a plain download link");
   assert.match(main, /const got = saves\.importSaves\(tText\.value\);/);
   assert.match(main, /tText\.addEventListener\("keydown", \(e\) => e\.stopPropagation\(\)\);/, "typing a paste doesn't swing the sword");
   assert.match(main, /for \(const b of slotsModal\.querySelectorAll\("\[data-transfer\]"\)\) b\.hidden = saving;/);
