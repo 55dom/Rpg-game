@@ -326,7 +326,7 @@ export const ZONES = {
       { id: "workbench", x: -9.5, z: 1.7, show: "1", ui: "temper", marker: false, label: "Use the workbench (temper gear)" },
       { id: "meal", x: 5, z: 2.9, show: "$HQ_KITCHEN", node: "W_Meal", marker: false, label: "Sit down for Dagrun's stew" },
       { id: "wellLetter", x: SQ.letter.x, z: SQ.letter.z, show: "$EP4_DONE and not $MIRREN_SAVED and $EP24_DONE and $Q_WELL_B == 0", node: "W_WellLetter", label: "A letter on the bench" }, // (Fork & Fold, §18.2)
-      frag(1, -12.6, 10), mural(1, 8, -10), mural(2, 12, 3),
+      frag(1, -12.6, 10), mural(1, 8, -10),
     ],
     exits: [
       { id: "road", rect: [-17, -17, 17, -15.5], to: "aurelin", spawn: "gate", label: "The road to Aurelin" },
@@ -466,7 +466,7 @@ export const ZONES = {
         routine: { role: "guard", steps: [{ do: "idle", at: [1.4, 9.6], face: Math.PI, dur: [8, 12] }, { do: "walk", to: [-2.6, 13.6] }, { do: "idle", at: [-2.6, 13.6], face: 2.6, dur: [6, 9] }, { do: "walk", to: [1.4, 9.6] }] } },
     ],
     pickups: [{ id: "oldWell", x: SQ.well.x, z: SQ.well.z, show: "$Q_WELL_B == 1 and not $WELL_SEEN", node: "W_WellAlone", label: "The old well on the north path" },
-{ id: "hymn", x: -1.4, z: 15.2, show: "1", flag: "HYMN_READ", node: "W_Hymn", label: "Read the hymn nailed to the well" }, frag(4, -10.4, 9.5), mural(10, 6, 4), mural(11, -4, -10),
+{ id: "hymn", x: -1.4, z: 15.2, show: "1", flag: "HYMN_READ", node: "W_Hymn", label: "Read the hymn nailed to the well" }, frag(4, -10.4, 9.5), mural(10, 6, 4),
       { id: "choirCache", x: 8, z: -14, show: "$ILSE_DEFEATED and not $FORBIDDEN_FOUND", node: "W_ChoirCache", faint: true, label: "A loose flagstone" }], // a Pale Choir cache: Hollow Bite, a forbidden page (§8.2)
     // Field fights: they come back each visit. Run far enough and they give up the chase.
     encounters: [
@@ -622,6 +622,20 @@ export const ZONES = {
     exits: [{ id: "door", rect: [-0.9, -HL.half[1], 0.9, -HL.half[1] + 0.75], to: "aurelin", spawn: "hall", label: "Out to the plaza" }],
     arrivals: { aurelin: { x: 0, z: -8.6, yaw: 0 } },
   },
+  // Mirrorlake Saelith (GDD §13): the island from Eps 27–28, on the map once you've been. Its mirror wraiths (data/saelith.js),
+  // a reflection of a village that isn't there, and the Drowned Archive under the water.
+  mirrorlake: {
+    id: "mirrorlake", name: "Mirrorlake Saelith", region: "West of Aurelin", stage: "mirrorlake", mapWhen: "$EP28_DONE",
+    bounds: { radius: 16.5 },
+    spawn: { x: 0, z: -14, yaw: 0 },
+    cast: [],
+    pickups: [
+      { id: "reflection", x: 8, z: -12, show: "1", node: "W_SaelithReflection", label: "Look at the reflection" },
+      { id: "drownedArchive", x: -9, z: -11, show: "1", node: "W_DrownedArchive", label: "Look down into the water" },
+    ],
+    encounters: [{ id: "wraiths", rect: [-10, -4, 10, 12], at: { x: 0, z: 4, r: 4 }, wave: ["mirrorWraith", "mirrorWraith", "mirrorWraith", "mirrorWraith"], label: "MIRROR WRAITHS" }],
+    exits: [], arrivals: {},
+  },
   // The Exam Grounds (GDD §17's promotion exams): the arena from the Knight Exam (Ep 2), open between exams. The Proctor
   // keeps a desk under the captains' box; past the interview, the ring's trial is the rank's own (data/ranks.js).
   grounds: {
@@ -644,7 +658,7 @@ export const ZONES = {
     ] },
     spawn: { x: SI.dock.x, z: SI.dock.z + 2.4, yaw: 0 },
     cast: [],
-    pickups: [{ id: "mural", x: SI.mural.x, z: SI.mural.z - 1.6, show: "1", marker: false, node: "W_Mural", label: "Look at the star mural" }],
+    pickups: [mural(2, -10, 10), mural(11, -16, 4), { id: "mural", x: SI.mural.x, z: SI.mural.z - 1.6, show: "1", marker: false, node: "W_Mural", label: "Look at the star mural" }],
     encounters: [
       { id: "riders", rect: [-14, -12, 14, 2], at: { x: 0, z: -5, r: 5 }, wave: ["rider", "rider", "wisp"], label: "TEMPEST RIDERS" },
     ],

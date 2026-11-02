@@ -8,6 +8,7 @@ import { CRAFT_SCRIPT } from "../crafting.js";
 import { LORE_SCRIPT, MURAL_SCRIPT, FORBIDDEN_SCRIPT } from "../lore.js";
 import { RANK_SCRIPT } from "../ranks.js";
 import { SIDEQUEST_SCRIPT } from "./sidequests.js";
+import { SAELITH_SCRIPT } from "../saelith.js";
 import { TECHNIQUE_SCRIPT } from "../techniques.js";
 import { NOTEBOOK_READ } from "./ep23.js";
 import { LAW_SCRIPT, LUKE_SCRIPT } from "./law.js";
@@ -321,6 +322,18 @@ Cook: Fried fish! Fried bread! Fried things you don't want to ask about!
 
 title: W_Wren
 ---
+<<if $EP70_DONE and not $WREN_FESTIVAL>>
+    <<set $WREN_FESTIVAL to 1>>
+    Wren: Bunting! Can you believe it? The little ones strung it themselves. Half of it's upside down. Don't you dare fix it.
+    Wren: Thornwick hasn't had a festival since before you came to us. Somebody said it was time. Nobody argued.
+    <<stop>>
+<<endif>>
+<<if $EP58_DONE and not $EP70_DONE and not $WREN_RIBBONS>>
+    <<set $WREN_RIBBONS to 1>>
+    Wren: The ribbons are for Larkspur. All of us remembered it at once, like waking from the same dream. A whole village, just down the road.
+    Wren: We didn't know what else to do. So we tied ribbons. Grey, because nobody could agree what colour you wear for people you forgot.
+    <<stop>>
+<<endif>>
 <<if $MET_WREN>>
     Wren: Eating properly? You look thin. Knights always look thin. It's all the running at things.
     <<stop>>
@@ -449,4 +462,4 @@ ${NOTEBOOK_READ}
 `;
 
 /** Every free-roam talk node: the towns, the Gilded Spoon café (data/story/cafe.js), and bonds (data/bonds.js). */
-export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT + CRAFT_SCRIPT + LORE_SCRIPT + MURAL_SCRIPT + FORBIDDEN_SCRIPT + RANK_SCRIPT + TECHNIQUE_SCRIPT + SIDEQUEST_SCRIPT + HALL_SCRIPT + IRON_SCRIPT + NOTEBOOK_SCRIPT + LAW_SCRIPT + LUKE_SCRIPT + ISLES_SCRIPT + OLDCITY_SCRIPT;
+export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT + CRAFT_SCRIPT + LORE_SCRIPT + MURAL_SCRIPT + FORBIDDEN_SCRIPT + RANK_SCRIPT + TECHNIQUE_SCRIPT + SIDEQUEST_SCRIPT + SAELITH_SCRIPT + HALL_SCRIPT + IRON_SCRIPT + NOTEBOOK_SCRIPT + LAW_SCRIPT + LUKE_SCRIPT + ISLES_SCRIPT + OLDCITY_SCRIPT;

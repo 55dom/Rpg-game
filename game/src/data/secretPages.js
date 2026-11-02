@@ -66,7 +66,7 @@ export const SECRET_NEEDS = Object.freeze({ hallNights: 3, jurorParries: 100, mo
  */
 export const MURALS = Object.freeze([
   { n: 1, zone: "lighthouse", name: "The Lamplighter", line: "A figure holding up a pole with a star on the end of it." },
-  { n: 2, zone: "lighthouse", name: "The Keel", line: "Seven stars in the curve of an upturned boat." },
+  { n: 2, zone: "isles", name: "The Keel", line: "Seven stars in the curve of an upturned boat." }, // (§13: the Severed Isles have the constellation murals)
   { n: 3, zone: "aurelin", name: "The Crown", line: "Five stars in a ring, the top one a little brighter than the rest." },
   { n: 4, zone: "aurelin", name: "The Bell", line: "A bell of stars with no clapper." },
   { n: 5, zone: "aurelin", name: "The Weaver", line: "A loom of stars, the threads running off the edge of the stone." },
@@ -75,6 +75,6 @@ export const MURALS = Object.freeze([
   { n: 8, zone: "thornwick", name: "The Hound", line: "A running dog, its tail a comet." },
   { n: 9, zone: "thornwick", name: "The Oak", line: "A tree of stars with its roots drawn as carefully as its branches." },
   { n: 10, zone: "fens", name: "The Heron", line: "A long-legged bird standing in a pool of painted-over stars." },
-  { n: 11, zone: "fens", name: "The Lantern", line: "A small square of stars with a brighter one inside it." },
+  { n: 11, zone: "isles", name: "The Lantern", line: "A small square of stars with a brighter one inside it." },
   { n: 12, zone: "undercroft", name: "The Gear", line: "A wheel of stars with teeth, turning nothing." },
 ]);

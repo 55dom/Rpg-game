@@ -1621,7 +1621,7 @@ export class World {
   _states(def) {
     const s = [];
     if (!def.grounded) s.push("airborne");
-    if (def.kind?.startsWith("twinEcho") || ((def.magic === "glass" || def.magic === "both") && !(def.glassBroken > 0)) || def.tags.has("FROZEN")) s.push("glass");
+    if (def.kind?.startsWith("twinEcho") || def.traits.glass || ((def.magic === "glass" || def.magic === "both") && !(def.glassBroken > 0)) || def.tags.has("FROZEN")) s.push("glass");
     if (def.traits.frontalGuard || def.traits.heavy) s.push("armor");
     return s;
   }

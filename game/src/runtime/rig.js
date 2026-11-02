@@ -257,6 +257,7 @@ LOOKS.halvardFace = { poses: ACOLYTE_POSES, scale: 1.14, skirt: 1.0, coat: "#1a2
 LOOKS.rider = { poses: LANCE_POSES, scale: 1.0, skirt: 1.1, coat: "#3a5a7a", trim: "#e8f4ff", hairColor: "#e8e4f0", skin: "#d8c0a8",
   head: "hood", weapon: "sword", sash: true, trail: "#9ad8ff" };
 LOOKS.wisp = { form: "object", shape: "wisp", trail: "#bfe8ff" };
+LOOKS.mirrorWraith = { form: "object", shape: "wisp", trail: "#eef2ff" }; // Mirrorlake Saelith (GDD §13): a wisp of silvered water
 LOOKS.hollowBloom = { form: "object", shape: "bloom", trail: "#f4f2ff" }; // Boss 7 (Ep 18)
 LOOKS.rod = { form: "object", shape: "rod", trail: "#bfe8ff" };
 LOOKS.warden = { poses: WARDEN_POSES, scale: 1.95, skirt: 0.9, coat: "#8a8a94", trim: "#5aa8e8", hairColor: "#6a6a74", skin: "#7a7a84",

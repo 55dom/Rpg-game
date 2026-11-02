@@ -148,10 +148,10 @@ test("Re-branching (§8.1): an evolved page can take its other branch at the Lig
   assert.match(main, /story\.inventory\.marks -= REBRANCH_MARKS;/);
 });
 
-test("The world holds them: twelve murals in seven places (somewhere you can stand), Moss takes his tea, and the Grimoire shows it all", () => {
+test("The world holds them: twelve murals in eight places (somewhere you can stand), Moss takes his tea, and the Grimoire shows it all", () => {
   const all = Object.values(ZONES).flatMap((z) => (z.pickups ?? []).filter((p) => /^mural\d+$/.test(p.id)).map((p) => ({ z, p })));
   assert.equal(all.length, 12);
-  assert.equal(new Set(all.map(({ z }) => z.id)).size, 7);
+  assert.equal(new Set(all.map(({ z }) => z.id)).size, 8); // (two in the Severed Isles since Phase 12: §13 puts the constellation murals there)
   for (const { z, p } of all) {
     const c = constrain({ x: p.x, z: p.z }, 0.4, z.bounds);
     assert.ok(Math.hypot(c.x - p.x, c.z - p.z) < 1e-6, `${p.id} in ${z.id} is somewhere you can stand`);

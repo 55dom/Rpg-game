@@ -1229,6 +1229,26 @@ function buildThornwick(scene, mobile) {
   smoke.minSize = 0.6; smoke.maxSize = 1.4; smoke.minLifeTime = 2; smoke.maxLifeTime = 3.5; smoke.emitRate = 8; smoke.gravity = new BB.Vector3(0.2, 0.6, 0);
   smoke.direction1 = new BB.Vector3(-0.1, 1, -0.1); smoke.direction2 = new BB.Vector3(0.1, 1, 0.1); smoke.minEmitPower = 0.2; smoke.maxEmitPower = 0.4; smoke.blendMode = BB.ParticleSystem.BLENDMODE_STANDARD;
   K.systems.push(smoke);
+  // Home changes as you come back (GDD §13: "rebuilt, mourning, festival"). Rebuilt: the barn above. Mourning: once
+  // Larkspur is remembered (Ep 58), grey ribbons on the oak and the orphanage rail, until the end. Festival: after the end,
+  // bunting criss-crossing the green and paper lanterns on poles round it, lit at night like the windows.
+  under(K.when("$EP58_DONE and not $EP70_DONE"), () => {
+    const grey = toon(scene, "tw-mourn", "#9a9aa4");
+    for (let i = 0; i < 7; i++) { const a = (i / 7) * Math.PI * 2, rb = add(MB.CreateBox("tw-ribbon", { width: 0.08, height: 1.1, depth: 0.22 }, scene)); rb.position.set(L.oak.x + Math.sin(a) * 1.0, 1.9, L.oak.z + Math.cos(a) * 1.0); rb.rotation.y = a; rb.rotation.z = 0.12; rb.material = grey; }
+    for (let i = 0; i < 6; i++) { const rb = add(MB.CreateBox("tw-railRibbon", { width: 0.22, height: 0.9, depth: 0.06 }, scene)); rb.position.set(L.orphanage.x0 + 2 + i * 2.4, 1.2, L.orphanage.z0 - 0.6); rb.material = grey; }
+  });
+  under(K.when("$EP70_DONE"), () => {
+    const flagCols = ["#c0504d", "#e6b54e", "#4f81bd", "#9bbb59", "#8064a2"].map((c, i) => toon(scene, `tw-bunting${i}`, c));
+    const poles = [[-8, -8], [8, -8], [8, 8], [-8, 8]], poleM = toon(scene, "tw-pole", "#6b4a32"), paper = K.lampMat("tw-paper", "#d9a85a", "#ffd36a");
+    for (const [x, z] of poles) {
+      const pl = add(MB.CreateCylinder("tw-fPole", { height: 4.2, diameter: 0.14, tessellation: 6 }, scene)); pl.position.set(x, 2.1, z); pl.material = poleM;
+      const ln = add(MB.CreateSphere("tw-paperLantern", { diameter: 0.55, segments: 8 }, scene)); ln.position.set(x, 3.7, z); ln.scaling.y = 1.25; ln.material = paper;
+    }
+    for (const [[x0, z0], [x1, z1]] of [[poles[0], poles[2]], [poles[1], poles[3]], [poles[0], poles[1]], [poles[2], poles[3]]]) {
+      for (let i = 1; i < 12; i++) { const t = i / 12, sag = Math.sin(t * Math.PI) * 0.8, fl = add(MB.CreateCylinder("tw-flag", { height: 0.02, diameterTop: 0, diameterBottom: 0.42, tessellation: 3 }, scene));
+        fl.position.set(x0 + (x1 - x0) * t, 4.0 - sag, z0 + (z1 - z0) * t); fl.rotation.x = Math.PI / 2; fl.rotation.y = Math.atan2(x1 - x0, z1 - z0); fl.material = flagCols[i % flagCols.length]; }
+    }
+  });
   // Villagers about their day: across the green, down the mill road, and two neighbors gossiping.
   const crowd = buildCrowd(scene, K, { count: 6, rng, mobile,
     paths: [{ cx: 0, cz: 0, r: 6.5, dir: 1 }, { line: [[3, -5], [17, -15]] }, { line: [[-4, 6], [-13, 19]] }, { line: [[1, -9], [1, 12]] }],

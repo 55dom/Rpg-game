@@ -26,6 +26,8 @@ export const CONTRACT_SITES = Object.freeze([
     foes: ["ashLegion", "ashMage"], clients: ["the Wardens' quartermaster"] },
   { id: "eastSpur", kinds: ["cull", "escort"], short: "eastern spur", zone: "isles", spot: "the eastern spur", at: { x: 8, z: 8, r: 4 }, rect: [2, 3, 15, 15], tier: 4, when: "$EP30_DONE",
     foes: ["rider", "wisp"], clients: ["a Tempest Rider"] },
+  { id: "lakeshore", kinds: ["cull", "recover"], short: "island", zone: "mirrorlake", spot: "the island on Mirrorlake", at: { x: -8, z: 6, r: 3 }, rect: [-14, 1, -3, 12], tier: 4, when: "$EP28_DONE",
+    foes: ["mirrorWraith"], clients: ["a Verdant Oath pilgrim"] },
   { id: "oldStreets", kinds: ["cull", "recover"], short: "old streets", zone: "oldcity", spot: "the old streets under the Lowmarket", at: { x: 0, z: -25, r: 4 }, rect: [-8, -32, 8, -18], tier: 5, when: "$EP33_DONE",
     foes: ["shell", "wisp"], clients: ["the City Watch"] },
   { id: "stones", kinds: ["cull", "escort"], short: "standing stones", zone: "hollowmarch", spot: "the standing stones", at: { x: 0, z: 0, r: 4 }, rect: [-8, -8, 8, 8], tier: 5, when: "$EP17_DONE",
@@ -35,7 +37,7 @@ export const CONTRACT_SITES = Object.freeze([
 /** What foes are called on a contract (plural). */
 export const FOE_NAMES = Object.freeze({
   bandit: "bandits", hound: "fen hounds", acolyte: "Choir stragglers", rat: "rats", clockwork: "loose clockwork", cantor: "Choir cantors",
-  ashLegion: "Ashfall raiders", ashMage: "Ashfall war-mages", rider: "rogue riders", wisp: "wisps", shell: "hollow shells",
+  ashLegion: "Ashfall raiders", ashMage: "Ashfall war-mages", rider: "rogue riders", wisp: "wisps", shell: "hollow shells", mirrorWraith: "mirror wraiths",
 });
 
 /** Things that go missing (recover contracts). */

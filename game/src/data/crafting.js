@@ -22,7 +22,7 @@ export const DROPS = Object.freeze({
   ashLegion: ["plate", 0.35], ashMage: ["gear", 0.3], varka: ["plate", 5],
   lion: ["starglass", 0.5], reflection: ["starglass", 0], // a reflection never falls: it fades
   lance: ["plate", 0.35], rider: ["strap", 0.4], wisp: ["starglass", 0.25], warden: ["starglass", 4], shell: ["plate", 0.5], halvard: ["plate", 3], eraser: ["starglass", 4], paragon: ["starglass", 2], lineSoldier: ["plate", 0.3], lineMarshal: ["plate", 4], heroKnight: ["plate", 0], heroKnightSurge: ["plate", 0], heroSaint: ["starglass", 0], heroSacrifice: ["starglass", 0], heroArcher: ["strap", 0], drillPartner: ["plate", 0], calSeated: ["starglass", 0], calBonds: ["starglass", 0], rookFoe: ["plate", 0], junoFoe: ["strap", 0], basFoe: ["plate", 0], // Arcs 4–5 (and a memory)
-  bellWarden: ["strap", 0], throneGuard: ["plate", 0.6], twinMirror: ["starglass", 2], twinSmoke: ["starglass", 2], hollowBloom: ["starglass", 4], heroKnightNow: ["starglass", 0], calRite: ["starglass", 0], // Arc 6: the Bell tests you; it isn't a hunt
+  bellWarden: ["strap", 0], mirrorWraith: ["starglass", 0.3], throneGuard: ["plate", 0.6], twinMirror: ["starglass", 2], twinSmoke: ["starglass", 2], hollowBloom: ["starglass", 4], heroKnightNow: ["starglass", 0], calRite: ["starglass", 0], // Arc 6: the Bell tests you; it isn't a hunt
 });
 
 /** Tempering: what each level adds, by kind of gear, and what it costs. Charms grow their own effect by 30% a level. */

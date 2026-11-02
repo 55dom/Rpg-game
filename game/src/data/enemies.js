@@ -11,6 +11,7 @@ import { ACOLYTE_STATS, ACOLYTE_HITBOXES, ACOLYTE_ABILITIES, ACOLYTE_POSES, acol
 import { ASHFALL_ENEMIES } from "./ashfall.js";
 import { ECLIPSE_ENEMIES } from "./eclipse.js";
 import { ISLES_ENEMIES } from "./isles.js";
+import { SAELITH_ENEMIES } from "./saelith.js";
 import { HOLLOW_ENEMIES } from "./hollow.js";
 import { LEGION_ENEMIES } from "../reveal/legion.js";
 import { HERO_ENEMIES, DRILL_PARTNER } from "../reveal/backlash.js";
@@ -160,6 +161,7 @@ export const ENEMIES = Object.freeze({
   },
   ...ASHFALL_ENEMIES, // the Iron Front (Arc 3)
   ...ISLES_ENEMIES, // Arc 4: Aldric's Lances, the Severed Isles' riders and wisps
+  ...SAELITH_ENEMIES, // Mirrorlake Saelith's mirror wraiths (GDD §13; Phase 12)
   ...HOLLOW_ENEMIES, // Arc 4: the empty armor that walks out of the door under the Lowmarket
   ...LEGION_ENEMIES, // Arc 5: the Line, through the Gate (src/reveal/, the one sanctioned exception to the leak rules)
   ...HERO_ENEMIES, heroSacrifice: { ...HERO_ENEMIES.heroSacrifice, Controller: SaintController }, // Backlash (Ep 49): the Trial's Hero Party
