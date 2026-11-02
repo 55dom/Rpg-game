@@ -124,6 +124,13 @@ export const TEAM_ATTACK = defineAbility({ id: "TeamAttack", startup: 1, active:
  * Full, a rank-5 squadmate's Assist becomes a Team Attack.
  */
 export const BOND_GAUGE = Object.freeze({ max: 100, reaction: 15, assist: 20 });
+/**
+ * AI level of detail (GDD §21.5): an enemy within `full` metres of Rook thinks every frame; out to `reduced`, five times
+ * a second (every `every` frames, staggered, keeping its last order between); beyond that it's dormant. And at most
+ * `active` of them (`activeMobile` on a phone) fight at once (§21.7): the nearest; the rest hold their ground, facing Rook,
+ * until a place opens. A boss always thinks.
+ */
+export const AI_LOD = Object.freeze({ full: 25, reduced: 60, every: 12, active: 8, activeMobile: 5 });
 /** The tag-in strike: a shockwave around whoever comes in. */
 export const TAG_STRIKE = defineAbility({ id: "TagStrike", startup: 1, active: 1, recovery: 1, tags: ["tag"],
   hit: hitSpec({ damage: 10, posture: 18, hitstop: 6, hitstun: 26, knockback: 4 }) }); // Surge spent on a Team Attack
@@ -339,6 +346,8 @@ export class World {
     this.fighters = [];
     this.events = [];
     this.baseTokens = o.tokens ?? 2;
+    this.activeCap = o.activeCap ?? AI_LOD.active; // (main.js passes the phone's when it's on one)
+    this._aiSeq = 0; this._aiDist = []; this._aiCtx = { guarding: false, opening: false, airborne: false };
     this.tokens = new AttackTokenPool(this.baseTokens);
     this.rng = seededRandom(o.seed ?? 1234);
     this.slowFrames = 0;
@@ -1321,17 +1330,41 @@ export class World {
   }
 
   _brains(frame, live) {
+    // Who's near enough to think, and who's among the nearest `activeCap` (GDD §21.5, §21.7): distances from Rook, once a
+    // frame, in an array kept between frames (no allocation in the fight's hot path).
+    const me = this.player, dist = this._aiDist;
+    let n = 0;
+    for (const e of this.fighters) if (e.brain && !e.companion && !e.boss && live(e) && e.alive) dist[n++] = flatDistance(e.pos, me.pos); // (the fallen give up their place at once)
+    dist.length = n;
+    let k = 0;
     for (const e of this.fighters) {
       if (!e.brain || !live(e)) continue;
       if (e.companion) { if (this.foesHeld) { e.moveInput.x = e.moveInput.z = 0; if (e.target?.alive) e.yaw = turn(e.yaw, angleTo(e.pos, e.target.pos), e.stats.turnRate); continue; } this._companionBrain(e, frame); continue; } // (holding the Bloom back with you)
       if (e.boss && !e.boss.brainActive) { if (e.boss.state !== "toPolaris" && e.boss.state !== "wading") { e.moveInput.x = 0; e.moveInput.z = 0; } continue; } // the controller has it
+      if (!e.boss && e.alive) {
+        const mine = dist[k], idx = k++;
+        if (mine > AI_LOD.reduced) { e.moveInput.x = 0; e.moveInput.z = 0; continue; } // dormant
+        let nearer = 0;
+        for (let j = 0; j < n && nearer < this.activeCap; j++) if (dist[j] < mine || (dist[j] === mine && j < idx)) nearer++;
+        if (nearer >= this.activeCap) { // not one of the nearest: it holds its ground, facing Rook, and gives up any token it held
+          e.moveInput.x = 0; e.moveInput.z = 0; e.aiHeld = true;
+          if (!e.runner.isRunning) { e.brain.pool.release(e.brain.id); e.yaw = turn(e.yaw, angleTo(e.pos, me.pos), e.stats.turnRate); }
+          continue;
+        }
+        e.aiHeld = false;
+        e.aiSlot ??= this._aiSeq++ % AI_LOD.every;
+        if (mine > AI_LOD.full && (frame + e.aiSlot) % AI_LOD.every !== 0 && !e.runner.isRunning) continue; // five times a second: the last order stands
+      }
       const p = this._enemyTarget(e);
       e.target = p;
       const d = p ? flatDistance(e.pos, p.pos) : Infinity;
       e.brain.pace = this.diff; // (how often it swings: the difficulty's)
+      // What the target is doing, for the utility scoring (§21.5): guard up, an opening, in the air.
+      const t = this._aiCtx;
+      if (p) { t.guarding = !!p.combatant.blocking; t.opening = p.combatant.isStaggered || (p.runner.isRunning && p.runner.phase === "Recovery"); t.airborne = !p.grounded; }
       const out = e.brain.think({
         frame, hasTarget: !!p, distance: d, isStaggered: e.combatant.isStaggered,
-        isDead: !e.alive, abilityRunning: e.runner.isRunning,
+        isDead: !e.alive, abilityRunning: e.runner.isRunning, target: p ? t : null,
       });
       if (!p) { e.moveInput.x = 0; e.moveInput.z = 0; continue; }
       const tx = (p.pos.x - e.pos.x) / (d || 1), tz = (p.pos.z - e.pos.z) / (d || 1);

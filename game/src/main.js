@@ -3,7 +3,7 @@
 import { FrameClock } from "./core/timing.js";
 import { EventType } from "./core/abilities.js";
 import { Team } from "./core/combat.js";
-import { World } from "./sim/world.js";
+import { World, AI_LOD } from "./sim/world.js";
 import { ACOLYTE_ABILITIES } from "./data/acolyte.js";
 import { ROOK_ABILITIES, ROOK_STATS } from "./data/rook.js";
 import { PAGES } from "./data/pages.js";
@@ -198,7 +198,7 @@ export function boot(doc = document) {
   const controls = new Controls(canvas, root.querySelector("[data-touch]"));
   if (coarse) controls.device = "touch";
 
-  let world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: coarse, companions: true });
+  let world = new World({ tokens: mobile ? 1 : 2, activeCap: mobile ? AI_LOD.activeMobile : AI_LOD.active, seed: (Date.now() & 0xffff) || 1, assist: coarse, companions: true });
   world.pageDefs = PAGES;
   const clock = new FrameClock();
   const views = new Map();
@@ -1042,7 +1042,7 @@ export function boot(doc = document) {
   const newWorld = (opts = {}) => {
     for (const f of [...views.keys()]) removeView(f);
     walls.clear(); setBog(false, true); constellation.clear(true);
-    world = new World({ tokens: mobile ? 1 : 2, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, difficulty: settings.difficulty, companions: true, injured: injuredNow(), annotation: annotationNow(), revision: revisionNow(), margin: marginNow(), forbidden: forbiddenNow(), corruption: corruptionNow(), techniques: techniquesNow(), ...opts });
+    world = new World({ tokens: mobile ? 1 : 2, activeCap: mobile ? AI_LOD.activeMobile : AI_LOD.active, seed: (Date.now() & 0xffff) || 1, assist: settings.assist, difficulty: settings.difficulty, companions: true, injured: injuredNow(), annotation: annotationNow(), revision: revisionNow(), margin: marginNow(), forbidden: forbiddenNow(), corruption: corruptionNow(), techniques: techniquesNow(), ...opts });
     const ink = world.loadout.Spell1?.id === "Inscribe"; // the margin: Inscribe takes Gale's button
     for (const b of root.querySelectorAll('[data-intent="Spell1"]')) b.textContent = ink ? "INK" : "GALE"; // (the Gale button and its place in the Magic ring)
     for (const b of root.querySelectorAll('[data-intent="Spell4"]')) b.textContent = world.loadout.Spell4?.id === "HollowBite" ? "BITE" : "WALL"; // the forbidden page takes Wind Wall's button (§8.3)

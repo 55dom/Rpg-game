@@ -45,6 +45,35 @@ export class AttackOption {
   isReady(frame) { return frame >= this.readyFrame; }
 }
 
+/** Utility scoring (GDD §21.5: "utility scoring for choosing *which* attack"): each attack ready and in reach scores its
+ *  weight, scaled by how well it suits the moment: an unblockable one into a raised guard (and less for one the guard
+ *  will stop), a quick one into an opening (the target recovering or reeling), not a slow one at someone in the air, not
+ *  the same one twice running, and best where its reach fits the distance. The pick is weighted by the scores, so a fight
+ *  still varies; with nothing to tell them apart, the weights alone decide, as before. */
+export const UTILITY = Object.freeze({ guardBreak: 2.5, intoGuard: 0.7, punish: 2, quick: 14, slowVsAir: 0.6, slow: 20, repeat: 0.6, fit: 0.4 });
+
+/** @param {AttackOption} o @param {{distance:number, target?:{guarding?:boolean, opening?:boolean, airborne?:boolean}|null}} p @param {AttackOption|null} last */
+export function utilityOf(o, p, last = null) {
+  let u = o.weight;
+  const t = p.target, a = o.ability;
+  if (t?.guarding) u *= a.hit?.unblockable ? UTILITY.guardBreak : UTILITY.intoGuard;
+  if (t?.opening && a.startup <= UTILITY.quick) u *= UTILITY.punish;
+  if (t?.airborne && a.startup > UTILITY.slow) u *= UTILITY.slowVsAir;
+  if (o === last) u *= UTILITY.repeat;
+  const half = (o.maxRange - o.minRange) / 2;
+  if (half > 0 && Number.isFinite(half)) u *= 1 - UTILITY.fit / 2 + UTILITY.fit * Math.max(0, 1 - Math.abs(p.distance - (o.minRange + half)) / half);
+  return u;
+}
+
+/** A weighted pick by utility, without allocating (the fight's hot path, §21.7). */
+function pickByUtility(list, p, last, rng, scores) {
+  let total = 0;
+  for (let i = 0; i < list.length; i++) total += (scores[i] = utilityOf(list[i], p, last));
+  let r = rng() * total;
+  for (let i = 0; i < list.length; i++) if ((r -= scores[i]) < 0) return list[i];
+  return list[list.length - 1];
+}
+
 /** @enum {string} */
 export const BrainState = Object.freeze({
   Idle: "Idle", Approach: "Approach", Circle: "Circle", Attacking: "Attacking",
@@ -72,10 +101,13 @@ export class EnemyBrain {
     this.state = BrainState.Idle;
     this.recoverLeft = 0;
     this._wasRunning = false;
+    this.last = null; // the attack it chose last (utility: not the same one twice running)
+    this._scores = [];
   }
 
   /**
-   * @param {{frame:number, hasTarget:boolean, distance:number, isStaggered:boolean, isDead:boolean, abilityRunning:boolean}} p
+   * @param {{frame:number, hasTarget:boolean, distance:number, isStaggered:boolean, isDead:boolean, abilityRunning:boolean,
+   *          target?:{guarding:boolean, opening:boolean, airborne:boolean}|null}} p
    * @returns {{move:string, attack:object|null}}
    */
   think(p) {
@@ -105,7 +137,7 @@ export class EnemyBrain {
     const ready = this.options.filter((o) => o.isReady(p.frame) && o.inRange(p.distance));
     if (ready.length) {
       if (!this.pool.tryAcquire(this.id, p.frame)) { this.state = BrainState.Circle; return out(MoveIntent.Circle); }
-      const pick = this._weighted(ready);
+      const pick = this.last = pickByUtility(ready, p, this.last, this.rng, this._scores);
       pick.readyFrame = p.frame + Math.round(pick.cooldownFrames * (this.pace?.cooldown ?? 1));
       this.state = BrainState.Attacking;
       return out(MoveIntent.Hold, pick.ability);
@@ -124,12 +156,6 @@ export class EnemyBrain {
     this.state = BrainState.Idle;
   }
 
-  _weighted(list) {
-    const total = list.reduce((s, o) => s + o.weight, 0);
-    let r = this.rng() * total;
-    for (const o of list) { if ((r -= o.weight) < 0) return o; }
-    return list[list.length - 1];
-  }
 }
 
 /** @enum {string} */
@@ -196,10 +222,8 @@ export class CompanionBrain {
       return out(p.leaderDistance > r.follow ? AllyMove.Follow : AllyMove.Hold);
     }
     const ready = this.options.filter((o) => o.isReady(p.frame) && o.inRange(t.distance));
-    if (ready.length) {
-      const total = ready.reduce((s, o) => s + o.weight, 0);
-      let x = this.rng() * total, pick = ready[ready.length - 1];
-      for (const o of ready) { if ((x -= o.weight) < 0) { pick = o; break; } }
+    if (ready.length) { // the same scoring as the enemies' (§21.5: "Companion AI uses the same framework with an 'ally' profile")
+      const pick = this.last = pickByUtility(ready, t, this.last ?? null, this.rng, this._scores ??= []);
       pick.readyFrame = p.frame + Math.round(pick.cooldownFrames / r.attackRate);
       return out(AllyMove.Hold, pick.ability);
     }
