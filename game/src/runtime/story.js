@@ -1706,7 +1706,7 @@ export class StoryPlayer {
     }
     c.prev = c.t;
     const cam = sampleCamera(cs.camera, c.t);
-    this.ctx.camera.frame({ x: cam.pos[0], y: cam.pos[1], z: cam.pos[2] }, { x: cam.look[0], y: cam.look[1], z: cam.look[2] }, { fov: cam.fov, cut: true });
+    this.ctx.camera.frame({ x: cam.pos[0], y: cam.pos[1], z: cam.pos[2] }, { x: cam.look[0], y: cam.look[1], z: cam.look[2] }, { fov: cam.fov, cut: true, roll: cam.roll, shake: cam.shake });
     if (c.t >= cs.duration) {
       this.cut = null;
       this.ctx.root.classList.remove("in-cut");

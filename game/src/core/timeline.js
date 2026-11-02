@@ -5,7 +5,8 @@
 // cutscene = {
 //   id, stage, duration,
 //   actors: [{ id, look, x, z, yaw, hidden?, carry? }],
-//   camera: [{ t, pos: [x,y,z], look: [x,y,z], fov?, ease?: "linear"|"in"|"out"|"inOut", cut?, ots? }],
+//   camera: [{ t, pos: [x,y,z], look: [x,y,z], fov?, roll?, shake?, ease?: "linear"|"in"|"out"|"inOut", cut?, ots?, ecu? }],
+//            (roll: a Dutch angle, radians · shake: a hand-held drift, metres; core/storyboard.js lays these out from a board)
 //   events: [{ t, caption? | sfx? | fx? | move?: { id, to: [x,z], dur } | show? | hide? | fade?: "in"|"out" | pose?: { id, name }
 //              | cue? | tear?: { at: [x,y,z], kind?: "pale"|"black", r?, yaw?, life?, ground? } }],
 // }
@@ -51,10 +52,10 @@ export function sampleCamera(keys, t, defaultFov = 0.8) {
   let i = 0;
   while (i + 1 < keys.length && keys[i + 1].t <= t) i++;
   const a = keys[i], b = keys[i + 1];
-  if (!b || b.cut || t <= a.t) return { pos: [...a.pos], look: [...a.look], fov: a.fov ?? defaultFov };
+  if (!b || b.cut || t <= a.t) return { pos: [...a.pos], look: [...a.look], fov: a.fov ?? defaultFov, roll: a.roll ?? 0, shake: a.shake ?? 0 };
   const k = EASE[b.ease ?? "inOut"](Math.min(1, (t - a.t) / Math.max(1e-6, b.t - a.t)));
-  const mix = (p, q) => p.map((v, j) => v + (q[j] - v) * k);
-  return { pos: mix(a.pos, b.pos), look: mix(a.look, b.look), fov: (a.fov ?? defaultFov) + ((b.fov ?? defaultFov) - (a.fov ?? defaultFov)) * k };
+  const mix = (p, q) => p.map((v, j) => v + (q[j] - v) * k), lin = (p = 0, q = 0) => p + (q - p) * k;
+  return { pos: mix(a.pos, b.pos), look: mix(a.look, b.look), fov: (a.fov ?? defaultFov) + ((b.fov ?? defaultFov) - (a.fov ?? defaultFov)) * k, roll: lin(a.roll, b.roll), shake: lin(a.shake, b.shake) };
 }
 
 /** Events with from < t <= to: each fires once as time passes it. Start playback at from = -Infinity so t = 0 events fire. */

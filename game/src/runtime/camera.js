@@ -43,9 +43,9 @@ export class FollowCamera {
    * Scripted framing for story scenes: hold the camera at `pos` looking at `look`.
    * cut=true jumps there; otherwise it eases. release() hands back to gameplay with a blend.
    */
-  frame(pos, look, { fov = this.baseFov * 0.8, cut = false, ease = 3 } = {}) {
+  frame(pos, look, { fov = this.baseFov * 0.8, cut = false, ease = 3, roll = 0, shake = 0 } = {}) {
     const first = !this.scripted;
-    this.scripted = { pos: { ...pos }, look: { ...look }, fov, ease, cut: cut || first };
+    this.scripted = { pos: { ...pos }, look: { ...look }, fov, ease, cut: cut || first, roll, shake }; // roll: a Dutch angle · shake: hand-held (GDD §19.5)
   }
   release() { if (this.scripted) { this.scripted = null; this.returnBlend = 1; } }
   get isScripted() { return !!this.scripted; }
@@ -86,9 +86,10 @@ export class FollowCamera {
       const k = s.cut ? 1 : 1 - Math.exp(-s.ease * dt);
       s.cut = false;
       for (const a of ["x", "y", "z"]) { this.shotPos[a] = lerp(this.shotPos[a], s.pos[a], k); this.shotLook[a] = lerp(this.shotLook[a], s.look[a], k); }
-      const sh = this.trauma * this.trauma * 0.3;
+      const sh = this.trauma * this.trauma * 0.3, hh = (s.shake ?? 0) * this.shakeScale; // hand-held: a slow, uneven drift (the shake setting stills it)
       this.t += dt;
-      this.cam.position.set(this.shotPos.x + Math.sin(this.t * 71) * sh, this.shotPos.y + Math.sin(this.t * 83) * sh, this.shotPos.z);
+      this.cam.position.set(this.shotPos.x + Math.sin(this.t * 71) * sh + (Math.sin(this.t * 1.7) + Math.sin(this.t * 2.9) * 0.5) * hh,
+        this.shotPos.y + Math.sin(this.t * 83) * sh + Math.sin(this.t * 2.3 + 1) * hh * 0.7, this.shotPos.z + Math.sin(this.t * 1.3 + 2) * hh * 0.6);
       this.cam.fov = lerp(this.cam.fov, s.fov, k);
       // Frame bias: put the look point (a face) where the screen is clear, above the dialogue box,
       // by aiming a little below it. frameBias is in screen units (+1 = top edge, 0 = centre).
@@ -96,6 +97,7 @@ export class FollowCamera {
       const d = Math.hypot(this.shotLook.x - this.shotPos.x, this.shotLook.y - this.shotPos.y, this.shotLook.z - this.shotPos.z);
       this.tmp.set(this.shotLook.x, this.shotLook.y - this.bias * Math.tan(this.cam.fov / 2) * d, this.shotLook.z);
       this.cam.setTarget(this.tmp);
+      this.cam.rotation.z = s.roll ?? 0; // (setTarget levels the horizon; a Dutch angle tilts it back)
       this.trauma = Math.max(0, this.trauma - dt * 2.2);
       this.yaw = playerYaw;
       this.focus.set(playerPos.x, playerPos.y * 0.6 + 1.3, playerPos.z);
