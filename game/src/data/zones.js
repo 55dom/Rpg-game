@@ -251,6 +251,7 @@ const aurelinSolids = [
   ...A.stalls.map((s) => box(s.x - 1.4, s.z - 1, s.x + 1.4, s.z + 1)),
   box(A.hall.x0, A.hall.z0, A.hall.x1, A.hall.z1),
   low(circle(A.fountain.x, A.fountain.z, A.fountain.r)),
+  circle(A.fountain.x, A.fountain.z, 1.6), // the plinth and the lantern-bearer on it, 5.5 m tall, with room round it: the basin stops feet (and is wider), this keeps a camera off the statue
   box(A.chapel.x - A.chapel.w / 2, A.chapel.z - A.chapel.d / 2, A.chapel.x + A.chapel.w / 2, A.chapel.z + A.chapel.d / 2),
   ...A.shacks.map((h) => box(h.x - h.w / 2, h.z - h.d / 2, h.x + h.w / 2, h.z + h.d / 2)),
   low(circle(-8.5, -27.5, 1.3)), low(circle(-8.5, -25.2, 0.9)), // the cart by the gate, and its horse

@@ -7,7 +7,12 @@
 // Weather and night thin the crowd (density); rain hurries it along.
 
 import { B } from "./look.js";
-import { animeHead } from "./rig.js";
+import { animeHead, Rig } from "./rig.js";
+
+/** Level of detail (GDD §21.7: "Distant NPCs are animated impostors / no AI; crowds are cosmetic"): within `near` metres
+ *  of the camera a townsperson is posed every frame; further out, every `every`th frame (a walk on threes); past `hide`
+ *  they aren't drawn at all. Out of sight they still walk their routes, so nobody jumps when they come back into view. */
+export const CROWD_LOD = Object.freeze({ near: 30, hide: 70, every: 3 });
 
 const SKIN = ["#f3dcc8", "#f0d0b4", "#e2b894", "#c88a64", "#8a5a3a", "#6b4632"];
 const HAIR = ["#16141c", "#2a1e18", "#4a3020", "#6a4228", "#b04a26", "#e06a2a", "#f0c850", "#e4e4e8"];
@@ -101,11 +106,10 @@ export function buildCrowd(scene, K, { count, paths, rng, mobile = false, chatte
     people,
     /** @param {{ density?: number, hurry?: number, noChildren?: boolean }} mood 0–1 share of the crowd out and about; walking speed factor; the children kept in */
     update(dt, mood = {}) {
-      const density = mood.density ?? 1, hurry = mood.hurry ?? 1;
+      const density = mood.density ?? 1, hurry = mood.hurry ?? 1, v = Rig.view;
       for (const [i, p] of people.entries()) {
-        const on = i / people.length < density && !(mood.noChildren && p.child); // (Corruption 25 in Thornwick: the children stay in, GDD §8.3)
-        if (on !== p.on) { p.on = on; for (const m of parts(p)) m.setEnabled(on); }
-        if (!on) continue;
+        const out = i / people.length < density && !(mood.noChildren && p.child); // (Corruption 25 in Thornwick: the children stay in, GDD §8.3)
+        if (!out) { if (p.on) { p.on = false; for (const m of parts(p)) m.setEnabled(false); } continue; }
         let moving = 0;
         if (p.path) {
           p.t += dt * p.speed * hurry; moving = p.speed * hurry;
@@ -121,8 +125,16 @@ export function buildCrowd(scene, K, { count, paths, rng, mobile = false, chatte
             p.yaw = Math.atan2(x1 - x0, z1 - z0) + (u < 1 ? 0 : Math.PI);
           }
         } else p.t += dt;
+        // Level of detail (CROWD_LOD): where they are is always worked out (it's cheap); how they're posed, less often
+        // further away, and not at all out of sight.
+        p.owed = (p.owed ?? 0) + dt;
+        const far = v ? Math.hypot(p.x - v.x, p.z - v.z) : 0, shown = far < CROWD_LOD.hide;
+        if (shown !== p.on) { p.on = shown; for (const m of parts(p)) m.setEnabled(shown); }
+        if (!shown) { p.phase += (moving * p.owed) / (1.1 * p.H); p.owed = 0; continue; }
+        if (far > CROWD_LOD.near && ((p.tick = (p.tick ?? i) + 1) % CROWD_LOD.every)) continue;
+        const pdt = p.owed; p.owed = 0;
         // A stride in step with the ground covered: thighs swing, knees bend on the way through, arms counter-swing.
-        p.phase += (moving * dt) / (1.1 * p.H);
+        p.phase += (moving * pdt) / (1.1 * p.H);
         const ph = p.phase * Math.PI * 2, s = Math.sin(ph), swing = moving ? 0.45 : 0;
         const bob = moving ? Math.abs(Math.cos(ph)) * 0.035 * p.bounce : 0;
         const H = p.H, W = p.W, cy = Math.cos(p.yaw), sy = Math.sin(p.yaw);

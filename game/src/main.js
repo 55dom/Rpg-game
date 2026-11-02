@@ -192,7 +192,7 @@ export function boot(doc = document) {
 
   const hud = new Hud(root, SPELLS);
   const overlay = root.querySelector("[data-overlay]");
-  const vfx = new Vfx(scene, camera.cam, overlay);
+  const vfx = new Vfx(scene, camera.cam, overlay, { mobile }); // (a phone gets half the particle budget: GDD §21.7)
   vfx.reduceFlashes = reduced;
   const sfx = new Sfx();
   const controls = new Controls(canvas, root.querySelector("[data-touch]"));
@@ -1010,7 +1010,7 @@ export function boot(doc = document) {
     perf.t += dt; perf.frames++; perf.draws += perf.si.drawCallsCounter.current;
     if (perf.t < 0.5) return;
     const fps = perf.frames / perf.t, draws = Math.round(perf.draws / perf.frames), budget = mobile ? 250 : 400;
-    perfEl.textContent = `${Math.round(fps)} FPS · ${draws}/${budget} DRAWS · ${Math.round(scene.getActiveIndices() / 3000)}K TRIS · ${quality.ratio.toFixed(2)}x`;
+    perfEl.textContent = `${Math.round(fps)} FPS · ${draws}/${budget} DRAWS · ${Math.round(scene.getActiveIndices() / 3000)}K TRIS · ${quality.ratio.toFixed(2)}x · ${sets.built.size}/${sets.keep} SETS`;
     perfEl.classList.toggle("over", fps < 50 || draws > budget);
     perf.t = 0; perf.frames = 0; perf.draws = 0;
   };

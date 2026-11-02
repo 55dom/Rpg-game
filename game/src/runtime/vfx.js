@@ -3,6 +3,18 @@
 
 import { B, PALETTE, color3, glow, toon as toonMat, clamp01, lerp } from "./look.js";
 
+/** The particle budget (GDD §21.7: "per-spell particle budget (≤ 300 normal, ≤ 1500 ultimate; mobile: half)"). Every
+ *  combat effect comes out of one of these fixed pools, so however much happens at once, no more than their sum can
+ *  be alive: the pools are the budget. A phone gets fewer sparks. (Damage numbers, warning rings, bolts and mud are
+ *  counted apart: they're readouts and projectiles, not particles.) */
+export const VFX_BUDGET = Object.freeze({ normal: 300, ultimate: 1500, mobileShare: 0.5 });
+export const VFX_POOLS = Object.freeze({ sparkKinds: 6, sparks: 40, sparksMobile: 18, flashes: 8, sparkFlips: 6, rings: 8, crescents: 3, threads: 4, pillars: 3 });
+/** How many particles the pools can hold at once. */
+export const vfxCapacity = (mobile = false) => {
+  const P = VFX_POOLS;
+  return P.sparkKinds * (mobile ? P.sparksMobile : P.sparks) + P.flashes + P.sparkFlips + P.rings + P.crescents + P.threads + P.pillars;
+};
+
 /** A ribbon that follows a blade: newest edge bright, older edges fade (additive). */
 export class Trail {
   constructor(scene, name, hex, segments = 14) {
@@ -91,7 +103,7 @@ class Pool {
 }
 
 export class Vfx {
-  constructor(scene, camera, overlay) {
+  constructor(scene, camera, overlay, { mobile = false } = {}) {
     const BB = B(), MB = BB.MeshBuilder;
     this.scene = scene; this.camera = camera; this.overlay = overlay;
     this.reduceFlashes = false;
@@ -110,7 +122,7 @@ export class Vfx {
         const inst = base.createInstance(`spark-${key}-${i}`);
         inst.setEnabled(false);
         return { mesh: inst, vel: new BB.Vector3(), life: 0, max: 1 };
-      }, 40);
+      }, mobile ? VFX_POOLS.sparksMobile : VFX_POOLS.sparks);
     }
 
     // Starburst flash (the anime "impact star").
@@ -133,7 +145,7 @@ export class Vfx {
       m.alphaMode = BB.Engine.ALPHA_ADD; m.backFaceCulling = false; m.fogEnabled = false;
       p.material = m; p.billboardMode = BB.Mesh.BILLBOARDMODE_ALL; p.isPickable = false; p.setEnabled(false);
       return { mesh: p, mat: m, life: 0, max: 1, size: 1, spin: 0 };
-    }, 8);
+    }, VFX_POOLS.flashes);
 
     // A hand-drawn hit spark (GDD §19.6: "flipbook textures (2D-drawn) on particles, not physically simulated effects"):
     // four drawings on one sheet, drawn here with a pen (strokes, not a simulation), played on twos at 12 a second:
@@ -159,7 +171,7 @@ export class Vfx {
       m.alphaMode = BB.Engine.ALPHA_ADD; m.backFaceCulling = false; m.fogEnabled = false;
       p.material = m; p.billboardMode = BB.Mesh.BILLBOARDMODE_ALL; p.isPickable = false; p.setEnabled(false);
       return { mesh: p, mat: m, tex, life: 0, size: 1 };
-    }, 6);
+    }, VFX_POOLS.sparkFlips);
     this.flipFrames = SHEET;
 
     // Expanding rings: parry, slam, posture break.
@@ -168,7 +180,7 @@ export class Vfx {
       r.material = glow(scene, `ring-mat-${i}`, "#ffffff", 1, true);
       r.isPickable = false; r.setEnabled(false);
       return { mesh: r, life: 0, max: 1, size: 1, implode: false };
-    }, 8);
+    }, VFX_POOLS.rings);
 
     // Gale Cutter crescent.
     this.crescents = new Pool((i) => {
@@ -177,7 +189,7 @@ export class Vfx {
       m.material = glow(scene, `crescent-mat-${i}`, PALETTE.gale, 0.9, true);
       m.isPickable = false; m.setEnabled(false);
       return { mesh: m, life: 0, max: 0.3, vel: new BB.Vector3() };
-    }, 3);
+    }, VFX_POOLS.crescents);
 
     // Juno's threads: thin glowing lines stretched between two points.
     this.threads = new Pool((i) => {
@@ -185,7 +197,7 @@ export class Vfx {
       m.material = glow(scene, `thread-mat-${i}`, "#ff4d6d");
       m.isPickable = false; m.setEnabled(false);
       return { mesh: m, life: 0, max: 1, from: new BB.Vector3(), to: new BB.Vector3(), follow: null };
-    }, 4);
+    }, VFX_POOLS.threads);
     // Bas's pillars: stone columns that erupt from the ground, hold, then sink.
     this.pillars = new Pool((i) => {
       const m = MB.CreateCylinder(`pillar-${i}`, { height: 1, diameterTop: 0.9, diameterBottom: 1.3, tessellation: 7 }, scene);
@@ -193,7 +205,7 @@ export class Vfx {
       m.renderOutline = true; m.outlineWidth = 0.04; m.outlineColor = color3("#0f1117");
       m.isPickable = false; m.setEnabled(false);
       return { mesh: m, life: 0, max: 1, height: 4 };
-    }, 3);
+    }, VFX_POOLS.pillars);
 
     // Cantor sound bolts: a violet orb with a spinning ring, synced to the sim's projectiles each frame.
     this.boltPool = Array.from({ length: 10 }, (_, i) => {

@@ -28,12 +28,27 @@ function softTexture(scene) {
 const NIGHT = { clear: "#141a2e", fog: "#1e2640", fogDensity: 0.016, hemi: [0.45, "#a9b8ff", "#2a2040"], sun: [0.5, "#c8d4ff", [0.3, -1, 0.3]] };
 const NIGHT_TOON = { sky: [0.86, 0.88, 1.02], ground: [0.66, 0.66, 0.82], rim: [0.8, 0.9, 1.1] };
 
+/** What a set's builder made is whatever it added to these lists of the scene's (zone streaming, below). */
+const OWNED = ["meshes", "materials", "multiMaterials", "textures", "particleSystems", "lights", "transformNodes"];
+
+/**
+ * Zone streaming (GDD §21.7: "Memory: async loading; unload previous zone"; "dispose each zone's assets on exit"): a set
+ * is built the first time it's needed and disposed once it isn't among the last `keep` used (2 on a phone: the one
+ * you're in and the one you came from; 4 elsewhere), so the tab holds a few places, not every one the story has been.
+ * Coming back to a disposed set builds it again, fresh.
+ */
+export const SET_STREAMING = Object.freeze({ keep: 4, keepMobile: 2 });
+
 export class Sets {
   constructor(scene, arena, { mobile = false } = {}) {
     this.scene = scene;
     this.arena = arena;
     this.mobile = mobile;
     this.built = new Map();
+    this.keep = mobile ? SET_STREAMING.keepMobile : SET_STREAMING.keep;
+    this.recent = []; // set names, most recently used first
+    this.disposed = 0; // (for the performance meter and the tests)
+    this.makers = null; // (the tests put stand-in builders here)
     this.current = "yard";
     this.lights = { hemi: scene.getLightByName("hemi"), sun: scene.getLightByName("moon"), warm: scene.getLightByName("yardLight") };
   }
@@ -48,16 +63,35 @@ export class Sets {
     set.show(true);
     this._env(set.env, set.toon);
     if (set.night != null || name === "lighthouse") set.onNight = (k) => this._blendNight(set, k);
+    this.recent = [name, ...this.recent.filter((n) => n !== name)];
+    for (const old of this.recent.splice(this.keep)) this.unload(old);
     return set;
+  }
+
+  /** Dispose a set that isn't in use: everything its builder made, and anything made under its root since. */
+  unload(name) {
+    const s = this.built.get(name);
+    if (!s || name === this.current) return false;
+    this.built.delete(name);
+    this.recent = this.recent.filter((n) => n !== name);
+    const o = s.owned ?? {};
+    for (const ps of o.particleSystems ?? []) ps.dispose();
+    for (const r of o.roots ?? []) if (!r.isDisposed?.()) r.dispose(false, true);
+    for (const k of ["meshes", "lights", "transformNodes", "multiMaterials", "materials", "textures"]) for (const x of o[k] ?? []) if (!x.isDisposed?.()) x.dispose?.();
+    this.disposed++;
+    return true;
   }
 
   get(name) {
     if (name === "yard") return null;
     let s = this.built.get(name);
     if (!s) {
-      const make = { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, archive: buildArchive, bridge: buildBridge, camp: buildCamp, throne: buildThrone, caverns: buildCaverns, astral: buildAstral, watchhouse: buildWatchhouse, belltower: buildBelltower, ruins: buildRuins, hollowmarch: buildHollowmarch, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, hollow: buildHollow, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
+      const make = this.makers?.[name] ?? { towerSteps: buildTowerSteps, towerHall: buildTowerHall, larkspur: buildLarkspur, examGrounds: buildExamGrounds, lighthouse: buildLighthouse, fens: buildFens, aurelin: buildAurelin, thornwick: buildThornwick, undercroft: buildUndercroft, cafe: buildCafe, home: buildHome, hall: buildHall, archive: buildArchive, bridge: buildBridge, camp: buildCamp, throne: buildThrone, caverns: buildCaverns, astral: buildAstral, watchhouse: buildWatchhouse, belltower: buildBelltower, ruins: buildRuins, hollowmarch: buildHollowmarch, fenhome: buildFenhome, isles: buildIsles, oldcity: buildOldCity, hollow: buildHollow, ironhold: buildIronhold, vault: buildVault, mirrorlake: buildMirrorlake, crypt: buildCrypt }[name];
       if (!make) throw new Error(`no set "${name}"`);
-      s = make(this.scene, this.mobile);
+      const sc = this.scene, before = Object.fromEntries(OWNED.map((k) => [k, new Set(sc[k] ?? [])]));
+      s = make(sc, this.mobile);
+      s.owned = Object.fromEntries(OWNED.map((k) => [k, (sc[k] ?? []).filter((x) => !before[k].has(x))]));
+      s.owned.roots = s.owned.transformNodes.filter((n) => n.name.startsWith("set-") && !n.parent); // (what it adds later, under its root, goes with it)
       s.show(false);
       this.built.set(name, s);
     }

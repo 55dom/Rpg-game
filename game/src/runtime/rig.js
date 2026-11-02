@@ -1086,6 +1086,11 @@ export class Rig {
     const s = a.startup, act = a.active;
     // Smear frames (§19.6: "on major attacks only"): the first frames of a major release draw the blade's whole arc.
     this.smear = isAttack(a) && animTier(a) !== "A" && raw >= s && raw < s + Math.min(act, 3) ? 1 : 0;
+    // A held drawing isn't worked out again (GDD §21.7: "stepped (on-twos) playback halves evaluation cost"): the pose is
+    // a function of the move and the frame drawn, so while the drawing holds, the last one stands.
+    const held = this._held ??= { a: null, f: NaN, out: null };
+    if (held.a === a && held.f === f) { Rig.poseHeld++; return held.out; }
+    Rig.poseDrawn++;
     // Optional full turns: over the active frames for attacks, over the whole move otherwise.
     let spin = 0;
     const attack = isAttack(a);
@@ -1105,7 +1110,8 @@ export class Rig {
       const back = easeInOut(clamp01((k - 0.35) / 0.65)); // hold the follow-through a beat
       rot = mix(p.to, rest, back); lean = (p.lean ?? 0) * (1 - back); active = k < 0.25 && attack;
     }
-    return { rot, lean, active: active || (p.spin > 0 && attack && f >= s && f < s + act), spin };
+    held.a = a; held.f = f;
+    return (held.out = { rot, lean, active: active || (p.spin > 0 && attack && f >= s && f < s + act), spin });
   }
 
   /** Apply one render frame. */
@@ -1352,6 +1358,7 @@ export class Rig {
 }
 
 Rig.view = null;        // the camera's ground position, set by the game each frame
+Rig.poseDrawn = 0; Rig.poseHeld = 0; // move poses worked out, and held drawings reused (the performance meter; the tests)
 Rig.twos = true;        // limited animation (GDD §19.6): the ANIMATION setting turns it off
 Rig.outlineRange = 30;  // metres
 
