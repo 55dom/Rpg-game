@@ -26,6 +26,7 @@ import { Crafting } from "../core/crafting.js";
 import { BONDS, BOND_GAIN } from "../data/bonds.js";
 import { EPISODE_XP, QUEST_XP, episodeXp, bracketOf, xpToReach, CATCH_UP } from "../data/skills.js";
 import { Ranks, storyBracket } from "../core/ranks.js";
+import { Contracts } from "../core/contracts.js";
 import { TRIAL_GOALS, KNIGHT_RANKS, rankBracket } from "../data/ranks.js";
 import { TECHNIQUES, MENTORS, DRILL_POSTS, TP_FLAG, learnTechnique } from "../data/techniques.js";
 import { EPISODE_REWARD } from "../data/items.js";
@@ -401,6 +402,7 @@ export class StoryPlayer {
     this.secrets = new Secrets(this.flags); // the secret pages (GDD §8.4), found and pinned, also in the flags
     this.corruption = new Corruption(this.flags, this.secrets); // GDD §8.3: kept in the flags too
     this.ranks = new Ranks(this.flags); // Knight Rank (GDD §17): the KNIGHT_RANK flag, and the exam in progress
+    this.contracts = new Contracts(this.flags); // Squad Contracts (GDD §18.1): today's board, the one taken, the pay
     this.quests = new QuestLog(QUESTS, this.flags, {
       onReward: (q, r) => { if (r.marks) this.inventory.earn(r.marks); this.gainXp(r.xp ?? QUEST_XP); for (const [id, n] of Object.entries(r.bond ?? {})) this.bondGain(id, n); },
       onEvent: (e) => this.ctx.onQuest?.(e),
@@ -1154,8 +1156,9 @@ export class StoryPlayer {
     const x = this.exploring, b = x.beat, { n, total } = objectiveCount(b, x.talked); // sim/episode.js
     this.ui.objective.innerHTML = fillText(b.objective ?? "", { ...this.player, flags: this.flags }).replace("{n}", n).replace("{total}", total).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
     if (this.roaming) {
-      const q = this.quests.entries().find((e) => !e.done);
-      const track = q ? ` · <b>Quest:</b> ${fillText(q.objective, { ...this.player, flags: this.flags })}` : "";
+      const q = this.quests.entries().find((e) => !e.done), ct = this.contracts.active;
+      const track = q ? ` · <b>Quest:</b> ${fillText(q.objective, { ...this.player, flags: this.flags })}`
+        : ct ? ` · <b>Contract:</b> ${ct.title} (${ZONES[ct.site.zone]?.name ?? ct.site.zone}: ${ct.site.spot})` : "";
       this.ui.objective.innerHTML = `<b>${this.zone.name}</b>${this.skyLabel ? ` · ${this.skyLabel}` : ""}${track}`;
       this.ui.objective.hidden = false;
     }
@@ -1523,6 +1526,14 @@ export class StoryPlayer {
     this.bars = null;
     if (e.exam) { this._finishExam(e, won); if (won) { world.player.relaxed = true; return; } }
     if (e.drill) { this._finishDrill(e.drill, won); if (won) { world.player.relaxed = true; return; } } // (a bout with a mentor: won is the drill done)
+    if (e.contract && won) { // a Squad Contract done: the pay, and the board's next one waits at the Lighthouse
+      const o = this.contracts.complete(this.day);
+      if (o) {
+        this.inventory.earn(o.marks); this.gainXp(Math.round(40 * o.tier * (1 + o.tier / 2)));
+        this.ctx.hud.banner(`CONTRACT DONE · ${o.title.toUpperCase()} · +${o.merit} MERIT · +${o.marks} MARKS`);
+        this.ctx.onContract?.(o);
+      }
+    }
     if (won) {
       e.done = true;
       if (e.flag) { // (an episode's walk-around has no zone, and no visits to count)
@@ -1539,7 +1550,7 @@ export class StoryPlayer {
       for (const o of x.encounters) if (inRect(pp, o.rect)) o.armed = false;
       const p = world.player.combatant.health;
       p.add(p.max * 0.3); // catch your breath
-      this.ctx.hud.banner(`${e.label ?? "AMBUSH"} · CLEARED`);
+      if (!e.contract) this.ctx.hud.banner(`${e.label ?? "AMBUSH"} · CLEARED`); // (a contract said what it paid)
       this.saveNow();
     } else {
       world.clearEnemies();
@@ -1631,7 +1642,7 @@ export class StoryPlayer {
       this.law.beforeZone(); // night or day, and how big the Watch is: who's here can depend on both
       const out = await this.explore({ id: `zone-${id}`, zone, stage: zone.stage, rook: at,
         cast: [...zone.cast, ...(zone.extras ?? [])].filter((c) => !c.when || truthy(compileExpr(c.when)(this.flags))), // who is here depends on the story
-        exits: zone.exits, pickups: zone.pickups, encounters: zone.encounters,
+        exits: zone.exits, pickups: zone.pickups, encounters: [...(zone.encounters ?? []), ...[this.contracts.encounterFor(zone.id)].filter(Boolean)], // (a contract taken here, §18.1)
         objective: zone.exits.map((e) => `<b>Exit:</b> ${e.label}`).join(" · ") });
       if (!this.active) return;
       this._fade(true, 0.35);

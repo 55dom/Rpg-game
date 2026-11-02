@@ -321,7 +321,7 @@ export const ZONES = {
     shelters: [[-5, 9.6], [-3, 9.6], [-1.8, 9.8]], // under the keeper's house eaves
     // The Squad HQ: the board (rooms), the workbench (tempering) and, once there's a kitchen, the day's meal.
     pickups: [
-      { id: "squadBoard", x: 1.0, z: 10.9, show: "1", ui: "hq", marker: false, label: "Read the squad board (HQ rooms)" },
+      { id: "squadBoard", x: 1.0, z: 10.9, show: "1", ui: "hq", marker: false, label: "Read the squad board (contracts, HQ rooms)" },
       { id: "workbench", x: -9.5, z: 1.7, show: "1", ui: "temper", marker: false, label: "Use the workbench (temper gear)" },
       { id: "meal", x: 5, z: 2.9, show: "$HQ_KITCHEN", node: "W_Meal", marker: false, label: "Sit down for Dagrun's stew" },
       frag(1, -12.6, 10), mural(1, 8, -10), mural(2, 12, 3),
@@ -722,21 +722,21 @@ export const ZONES = {
   // Luke and Elsie's house (data/story/law.js), once the Fens village is safe.
   // The Hollowmarch (Eps 17–18): story only, past the end of every road.
   hollowmarch: {
-    id: "hollowmarch", name: "The Hollowmarch", region: "Past the northern border", stage: "hollowmarch",
+    id: "hollowmarch", name: "The Hollowmarch", region: "Past the northern border", stage: "hollowmarch", mapWhen: "$EP17_DONE", // (on the map once you've been: Ep 17)
     bounds: { radius: HM_.radius - 2, solids: [...HM_.stones.map(([x, z]) => circle(x, z, 0.6)), ...HM_.trees.map(([x, z]) => circle(x, z, 0.35))] },
     spawn: { x: 0, z: -20, yaw: 0 },
     cast: [], pickups: [], encounters: [], exits: [], arrivals: {},
   },
   // Larkspur, the night it burned (Cal's Path, Ch 6): story only. The houses are the fire's (runtime/sets.js buildLarkspur).
   larkspurFire: {
-    id: "larkspurFire", name: "Larkspur", region: "Fifteen years ago", stage: "larkspur",
+    id: "larkspurFire", name: "Larkspur", region: "Fifteen years ago", stage: "larkspur", noMap: true, // (a memory: never on the map)
     bounds: { radius: 24, solids: [[-5.5, 4], [5.2, 6], [-6.5, 12], [6, 14], [-3.5, 20], [4, 22], [0, 28]].map(([x, z]) => box(x - 2.2, z - 1.9, x + 2.2, z + 1.9)) },
     spawn: { x: 0, z: -2, yaw: 0 },
     cast: [], pickups: [], encounters: [], exits: [], arrivals: {},
   },
   // Larkspur, fifteen years after the fire (Eps 57–59): story only.
   ruins: {
-    id: "ruins", name: "Larkspur", region: "The Thornwick Road", stage: "ruins",
+    id: "ruins", name: "Larkspur", region: "The Thornwick Road", stage: "ruins", mapWhen: "$EP57_DONE", // (on the map once you've walked the road there: Ep 57)
     bounds: { radius: RU.radius, solids: [
       ...RU.houses.map(([x, z]) => low(box(x - 2.1, z - 1.8, x + 2.1, z + 1.8))), // a course or two of wall: stops feet, not a camera
       ...RU.houses.map(([x, z, r]) => circle(x + Math.cos(r) * 1.6, z - Math.sin(r) * 1.6, 0.55)), // the chimney stacks

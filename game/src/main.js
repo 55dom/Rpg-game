@@ -1057,6 +1057,7 @@ export function boot(doc = document) {
     playSkit: (k, name) => playSkit(k, name), // a camp skit (GDD §10)
     onSecret: () => { world.margin = new Set(story.secrets.margin); refreshGrimDot(); }, // a secret page found (and pinned, if there was room)
     onCorruption: () => { if (!grim.hidden) renderGrimoire(); },
+    onContract: () => { sfx.play("surgeFull"); }, // (the banner says what it paid)
     onTechnique: (t) => { world.setTechniques(techniquesNow()); sfx.play("surgeFull"); hud.toast(`TECHNIQUE · ${t.name.toUpperCase()}`, "finisher"); }, // learned: in Rook's hands at once
     onRank: (rk) => { sfx.play("surgeFull"); hud.toast(`KNIGHT RANK · ${rk.name.toUpperCase()}`, "finisher"); vfx.flash({ x: world.player.pos.x, y: 1.4, z: world.player.pos.z }, 4, "#ffd36a", 0.5); },
     onMeal: () => { hud.toast("WARM AND FULL", "clear"); hud.banner("+20 HEALTH · +5% DAMAGE UNTIL MIDNIGHT"); sfx.play("heal"); applyGear(); const p = world.player; p.combatant.health.fill(); },
@@ -1210,7 +1211,7 @@ export function boot(doc = document) {
     if (!story.roaming) return;
     sfx.play("ui");
     const list = mapModal.querySelector("[data-map-list]");
-    list.innerHTML = Object.values(ZONES).filter((z) => !z.dungeon && !z.interior && (!z.mapWhen || truthy(compileExpr(z.mapWhen)(story.flags)))).map((z) => `<button data-zone="${z.id}" ${story.zone?.id === z.id ? "disabled" : ""}><b>${z.name.toUpperCase()}</b><span>${z.region}${story.zone?.id === z.id ? " · You are here" : ""}</span></button>`).join("");
+    list.innerHTML = Object.values(ZONES).filter((z) => !z.dungeon && !z.interior && !z.noMap && (!z.mapWhen || truthy(compileExpr(z.mapWhen)(story.flags)))).map((z) => `<button data-zone="${z.id}" ${story.zone?.id === z.id ? "disabled" : ""}><b>${z.name.toUpperCase()}</b><span>${z.region}${story.zone?.id === z.id ? " · You are here" : ""}</span></button>`).join("");
     for (const b of list.querySelectorAll("[data-zone]")) b.addEventListener("click", () => { mapModal.hidden = true; state.modal = false; story.travel(b.dataset.zone); });
     mapModal.hidden = false; state.modal = true;
   };
@@ -1715,9 +1716,17 @@ export function boot(doc = document) {
     hqModal.querySelector("[data-hq-mats]").innerHTML = Object.entries(MATERIALS).map(([id, m]) => `<b>${m.name}</b> ×${cr.count(id)}`).join(" · ") + ` · <b>Marks</b> ${inv.marks}`;
     const list = hqModal.querySelector("[data-hq-list]");
     if (hqKind === "hq") {
-      hqModal.querySelector("[data-hq-title]").textContent = "SQUAD BOARD · HQ ROOMS";
-      hqModal.querySelector("[data-hq-sub]").textContent = `Squad Merit: ${story.flags.get("MERIT") || 0}. Rooms need the squad's standing (Merit is never spent), plus Marks and materials.`;
-      list.innerHTML = Object.entries(HQ).map(([id, r]) => {
+      hqModal.querySelector("[data-hq-title]").textContent = "SQUAD BOARD · CONTRACTS & HQ ROOMS";
+      hqModal.querySelector("[data-hq-sub]").textContent = `Squad Merit: ${story.flags.get("MERIT") || 0}. Contracts pay in Merit and Marks; rooms need the squad's standing (Merit is never spent), plus Marks and materials.`;
+      // Squad Contracts (§18.1): today's three, one taken at a time; a higher Knight Rank opens harder tiers (§17).
+      const board = story.contracts.board(story.day), taken = story.contracts.active, kr = rankOf(story.flags);
+      const contractRows = `<h3>SQUAD CONTRACTS · DAY ${story.day}${Number(story.flags.get("CONTRACTS_DONE")) ? ` · ${story.flags.get("CONTRACTS_DONE")} done` : ""}</h3>` +
+        (taken && !board.some((o) => o.active) ? `<div class="row built"><b>T${taken.tier}</b><span>${taken.title} <em>taken on day ${taken.day}</em><small>${taken.text}</small><small>${ZONES[taken.site.zone].name}: ${taken.site.spot}.</small></span><span class="act"><button class="go alt" data-ct-drop>DROP</button></span></div>` : "") +
+        (board.length ? board.map((o) => `<div class="row${o.done ? " built" : ""}"><b>T${o.tier}</b><span>${o.title}<small>${o.text}</small><small>${ZONES[o.site.zone].name}: ${o.site.spot} · ${o.wave.length} foes · pays ${o.merit} Merit, ${o.marks} Marks</small></span>
+          <span class="act">${o.done ? "✓" : o.active ? `<button class="go alt" data-ct-drop>DROP</button>` : `<button class="go" data-ct-take="${o.i}" ${taken ? "disabled" : ""}>${taken ? "ONE AT A TIME" : "TAKE IT"}</button>`}</span></div>`).join("")
+          : `<p class="hint">Nothing on the board yet. The first contracts go up once the squad's been somewhere (after your first mission).</p>`) +
+        (kr < 4 ? `<p class="hint">Tier ${kr + 2} contracts go up for a ${KNIGHT_RANKS[kr + 1].name}: promotion exams at the Exam Grounds.</p>` : "") + "<h3>HQ ROOMS</h3>";
+      list.innerHTML = contractRows + Object.entries(HQ).map(([id, r]) => {
         const why = cr.buildBlocker(id), built = why === "built";
         return `<div class="row${built ? " built" : ""}"><b>${built ? "✓" : r.merit}</b><span>${r.name}<small>${r.desc}</small><small>${built ? "Built" : `Needs ${r.merit} Merit · ${costText(r.marks, r.mats)}`}</small></span>
           <span class="act">${built ? "" : `<button class="go" data-build="${id}" ${why ? "disabled" : ""} title="${why ?? ""}">${why ? why.toUpperCase() : "BUILD"}</button>`}</span></div>`;
@@ -1732,6 +1741,8 @@ export function boot(doc = document) {
           <span class="act">${c ? `<button class="go" data-temper="${id}" ${why ? "disabled" : ""}>${why ? why.toUpperCase() : `TEMPER +${lv + 1}`}</button>` : ""}</span></div>`;
       }).join("");
     }
+    for (const b of list.querySelectorAll("[data-ct-take]")) b.addEventListener("click", () => { const o = story.contracts.accept(story.day, Number(b.dataset.ctTake)); if (o) { sfx.play("ui"); hud.toast(`CONTRACT TAKEN · ${ZONES[o.site.zone].name.toUpperCase()}`, "clear"); story.saveNow(); } renderHQ(); });
+    for (const b of list.querySelectorAll("[data-ct-drop]")) b.addEventListener("click", () => { story.contracts.abandon(); sfx.play("ui"); story.saveNow(); renderHQ(); });
     for (const b of list.querySelectorAll("[data-build]")) b.addEventListener("click", () => { if (story.crafting.build(b.dataset.build)) { sfx.play("ultActivate"); hud.toast(`${HQ[b.dataset.build].name.toUpperCase()} BUILT`, "finisher"); story._refreshSet?.(); applyGear(); story.saveNow(); } renderHQ(); });
     for (const b of list.querySelectorAll("[data-temper]")) b.addEventListener("click", () => { if (story.crafting.temper(b.dataset.temper)) { sfx.play("stone"); hud.toast(`${ITEMS[b.dataset.temper].name.toUpperCase()} +${story.inventory.temperOf(b.dataset.temper)}`, "finisher"); applyGear(); story.saveNow(); } renderHQ(); });
   };

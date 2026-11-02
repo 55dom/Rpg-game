@@ -112,7 +112,8 @@ test("free roam passes each zone's exits, pickups and fights to the walk-around 
   const src = readFileSync(new URL("../src/runtime/story.js", import.meta.url), "utf8");
   const code = src.split("\n").map((l) => l.replace(/\/\/.*$/, "")).join("\n"); // comments out
   const call = code.slice(code.indexOf("const out = await this.explore({ id: `zone-${id}`"), code.indexOf("const out = await this.explore({ id: `zone-${id}`") + 600);
-  for (const k of ["exits: zone.exits", "pickups: zone.pickups", "encounters: zone.encounters"]) assert.ok(call.includes(k), k);
+  for (const k of ["exits: zone.exits", "pickups: zone.pickups"]) assert.ok(call.includes(k), k);
+  assert.match(call, /encounters: \[\.\.\.\(zone\.encounters \?\? \[\]\)/, "the zone's fights (and a Squad Contract taken there, Phase 12)");
 });
 
 test("the law's places, people and words: steal spots sit in real zones near their owners, every node and speaker exists", () => {
