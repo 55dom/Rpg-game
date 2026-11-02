@@ -363,6 +363,7 @@ export function boot(doc = document) {
           const windy = ability.id === "GaleCutter" || ability.id === "VacuumPull" || ability.id === "TempestEdge";
           vfx.sparksAt(at, heavy ? 14 : 7, a.team === Team.Player ? (windy ? "mint" : "gold") : "red", heavy ? 12 : 9);
           vfx.flash(at, heavy ? 2.4 : 1.4, a.team === Team.Player ? "#fff2cf" : "#ffb0a0", heavy ? 0.16 : 0.1);
+          if (heavy || finisher) vfx.hitSpark(at, heavy ? 2.2 : 1.8, a.team === Team.Player ? "#fff2cf" : "#ffb0a0"); // the hand-drawn spark (§19.6), on the big blows
           vfx.number(at, result.healthDamage, `${isPlayer(d) ? "hurt" : ""} ${heavy ? "big" : ""}`);
           viewFor(d)?.hitFlash(heavy ? 0.1 : 0.06);
           if (d.traits?.dummy) sets.get(sets.current)?.hitDummy?.(d.pos.x, d.pos.z, a.pos, heavy ? 2 : 1);

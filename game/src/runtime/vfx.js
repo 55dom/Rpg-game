@@ -135,6 +135,33 @@ export class Vfx {
       return { mesh: p, mat: m, life: 0, max: 1, size: 1, spin: 0 };
     }, 8);
 
+    // A hand-drawn hit spark (GDD §19.6: "flipbook textures (2D-drawn) on particles, not physically simulated effects"):
+    // four drawings on one sheet, drawn here with a pen (strokes, not a simulation), played on twos at 12 a second:
+    // the burst, the spikes flung out, the ring breaking up, the last flecks.
+    const SHEET = 4, cell = 128, sheet = new BB.DynamicTexture("hitSheet", { width: cell * SHEET, height: cell }, scene, false);
+    const pen = sheet.getContext();
+    pen.clearRect(0, 0, cell * SHEET, cell); pen.lineCap = "round"; pen.strokeStyle = "rgba(255,248,226,1)"; pen.fillStyle = "rgba(255,248,226,1)";
+    for (let f = 0; f < SHEET; f++) {
+      const cx = f * cell + cell / 2, cy = cell / 2, k = (f + 1) / SHEET;
+      if (f === 0) { pen.beginPath(); for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2, r = i % 2 ? 10 : 34; pen.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); } pen.closePath(); pen.fill(); }
+      for (let i = 0; i < 9; i++) { // spikes flung outward, thinning as they go
+        const a = (i / 9) * Math.PI * 2 + f * 0.17, r0 = 14 + k * 30, r1 = r0 + 26 * (1 - k * 0.6);
+        pen.lineWidth = 7 * (1 - k * 0.7); pen.beginPath(); pen.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0); pen.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); pen.stroke();
+      }
+      if (f >= 1) { pen.lineWidth = 4 * (1.2 - k); pen.setLineDash(f === 3 ? [4, 10] : f === 2 ? [14, 8] : []); pen.beginPath(); pen.arc(cx, cy, 18 + k * 36, 0, Math.PI * 2); pen.stroke(); pen.setLineDash([]); }
+    }
+    sheet.hasAlpha = true; sheet.update();
+    this.sparkFlips = new Pool((i) => {
+      const p = MB.CreatePlane(`hitFlip-${i}`, { size: 1 }, scene);
+      const tex = sheet.clone(); tex.uScale = 1 / SHEET; tex.hasAlpha = true;
+      const m = new BB.StandardMaterial(`hitFlip-mat-${i}`, scene);
+      m.disableLighting = true; m.emissiveTexture = tex; m.opacityTexture = tex; m.diffuseColor = BB.Color3.Black();
+      m.alphaMode = BB.Engine.ALPHA_ADD; m.backFaceCulling = false; m.fogEnabled = false;
+      p.material = m; p.billboardMode = BB.Mesh.BILLBOARDMODE_ALL; p.isPickable = false; p.setEnabled(false);
+      return { mesh: p, mat: m, tex, life: 0, size: 1 };
+    }, 6);
+    this.flipFrames = SHEET;
+
     // Expanding rings: parry, slam, posture break.
     this.rings = new Pool((i) => {
       const r = MB.CreateTorus(`ring-${i}`, { diameter: 1, thickness: 0.06, tessellation: 40 }, scene);
@@ -233,6 +260,14 @@ export class Vfx {
     f.size = size; f.life = f.max = life; f.spin = Math.random() * Math.PI;
   }
 
+  /** The hand-drawn hit spark (a flipbook, §19.6): four drawings on twos, a third of a second. */
+  hitSpark(at, size = 1.8, hex = "#fff2cf") {
+    const f = this.sparkFlips.take();
+    f.mesh.setEnabled(true); f.mesh.position.set(at.x, at.y, at.z); f.mesh.rotation.z = Math.random() * Math.PI;
+    f.mat.emissiveColor.copyFrom(color3(hex)); f.size = this.reduceFlashes ? size * 0.6 : size; f.life = 0;
+    f.mesh.scaling.setAll(f.size); f.tex.uOffset = 0;
+  }
+
   /** A flat shockwave ring expanding from `at` (or collapsing into it, for a vortex). */
   ring(at, size = 3, hex = "#ffffff", life = 0.35, implode = false) {
     const r = this.rings.take();
@@ -327,6 +362,13 @@ export class Vfx {
         const k = s.life / s.max;
         s.mesh.scaling.set(1, 1, 0.15 + s.vel.length() * 0.035 * k);
       }
+    }
+    for (const f of this.sparkFlips.items) { // the flipbook: a new drawing every 1/12 s, then gone
+      if (!f.mesh.isEnabled()) continue;
+      f.life += dt;
+      const frame = Math.floor(f.life * 12);
+      if (frame >= this.flipFrames) { f.mesh.setEnabled(false); continue; }
+      f.tex.uOffset = frame / this.flipFrames;
     }
     for (const f of this.flashes.items) {
       if (f.life <= 0) continue;
