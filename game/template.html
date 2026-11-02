@@ -415,6 +415,8 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
 .survey-opts button { padding: 10px 12px; border-radius: 8px; border: 1px solid #3a4058; background: #1d2131; color: var(--text); font-size: 14px; text-align: left; }
 .survey-opts button[aria-pressed="true"] { border-color: #ffd36a; background: #2a2a1d; }
 .survey-card textarea { width: 100%; min-height: 64px; box-sizing: border-box; margin-top: 8px; padding: 8px; border-radius: 8px; border: 1px solid #3a4058; background: #12141e; color: var(--text); font: 14px/1.4 inherit; }
+.transfer textarea { width: 100%; min-height: 90px; box-sizing: border-box; font: 11px/1.3 var(--font-mono, monospace); background: #12141e; color: var(--text); border: 1px solid #343a50; border-radius: 8px; padding: 8px; }
+.transfer .hint { margin: 10px 0 6px; }
 .playtest textarea { width: 100%; min-height: 90px; box-sizing: border-box; font: 11px/1.3 var(--mono, monospace); background: #12141e; color: var(--text); border: 1px solid #343a50; border-radius: 8px; }
 .surge-locked [data-surge] { background: #3a2a5a !important; }
 .keyitems { display: grid; gap: 6px; text-align: left; }
@@ -804,7 +806,13 @@ button.go.alt { background: transparent; color: var(--text); border: 1px solid v
       <div class="ep-list theatre-list" data-theatre-list></div>
       <h3 data-slots-sub>SAVES</h3>
       <div class="slot-list" data-slot-list></div>
-      <div class="start-buttons"><button class="go alt" data-slots-close>BACK</button></div>
+      <div class="transfer" data-transfer-panel hidden>
+        <p class="hint" data-transfer-note></p>
+        <textarea data-transfer-text rows="5" spellcheck="false" aria-label="Save file text"></textarea>
+        <input type="file" accept=".json,application/json,text/plain" data-transfer-input hidden>
+        <div class="start-buttons"><button class="go alt" data-transfer-file>FROM A FILE…</button><button class="go" data-transfer-import>IMPORT</button></div>
+      </div>
+      <div class="start-buttons"><button class="go alt" data-transfer="export" title="Every save as one file, to keep or to carry to another device">EXPORT SAVES</button><button class="go alt" data-transfer="import" title="Read saves back from an exported file">IMPORT SAVES</button><button class="go alt" data-slots-close>BACK</button></div>
     </div>
   </div>
   <div class="modal" data-shop hidden>

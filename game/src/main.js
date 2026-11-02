@@ -27,6 +27,7 @@ import { Constellation, StarFigure } from "./runtime/constellation.js";
 import { LION_FIGURE } from "./data/eclipse.js";
 import { TearFx, makeTear, makeDoor, tearMaterials } from "./runtime/tears.js";
 import { SaveStore, cleanName } from "./core/save.js";
+import { idbBackend } from "./runtime/idb.js";
 import { EPISODE_1, EP1_SCRIPT } from "./data/story/ep1.js";
 import { EPISODE_2, EP2_SCRIPT } from "./data/story/ep2.js";
 import { EPISODE_3, EP3_SCRIPT } from "./data/story/ep3.js";
@@ -1093,6 +1094,11 @@ export function boot(doc = document) {
 
   // ---- Story mode (Phase 3) ----
   const saves = SaveStore.browser();
+  // The saves live in IndexedDB (GDD §20): once it answers, however long a slow phone takes, the store reads and writes
+  // there, and whatever is in localStorage comes across (the newer copy of each). Until then, and wherever it can't
+  // open, localStorage.
+  SaveStore.open({ backend: idbBackend(), legacy: (() => { try { return globalThis.localStorage; } catch { return null; } })() })
+    .then((s) => { saves.storage = s.storage; saves.kind = s.kind; try { if (!state.started) refreshContinue(); } catch { /* the title isn't up yet */ } });
   /** The level the fight in front of you was made for (§17 power gating): this episode's, or, roaming, the story's so far. */
   const xpBracket = () => { const m = /^ep(\d+)$/.exec(story.ep?.id ?? ""); return !story.roaming && m ? bracketOf(Number(m[1])) : storyBracket(story.flags); };
   const story = new StoryPlayer({
@@ -1919,7 +1925,7 @@ export function boot(doc = document) {
   const slotLabel = (sv) => {
     if (!sv) return "<span>Empty</span>";
     const ep = story.episodeById(sv.episode);
-    const where = ep ? (sv.beat >= ep.beats.length ? `Episode ${ep.number} complete` : `Episode ${ep.number} · ${ep.title}`) : "—";
+    const where = ep ? (sv.beat >= ep.beats.length ? `Episode ${ep.number} complete` : `Episode ${ep.number} · ${ep.title}`) : sv.zone && ZONES[sv.zone] ? `Out in ${ZONES[sv.zone].name}` : "—";
     const when = sv.savedAt ? new Date(sv.savedAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "";
     return `<span>${sv.player.name} · ${where}<small>${when}</small></span>`;
   };
@@ -1940,6 +1946,8 @@ export function boot(doc = document) {
     const epList = slotsModal.querySelector("[data-ep-list]");
     epList.hidden = saving;
     slotsModal.querySelector("[data-slots-sub]").textContent = saving ? "CHOOSE A SLOT" : "LOAD A SAVE";
+    slotsModal.querySelector("[data-transfer-panel]").hidden = true;
+    for (const b of slotsModal.querySelectorAll("[data-transfer]")) b.hidden = saving;
     const reached = saves.reached;
     epList.innerHTML = story.episodes.map(({ episode: e }) =>
       `<button data-ep="${e.id}" ${(e.unlockAt ?? e.number) > reached ? "disabled" : ""}><b>${e.label ?? `EP ${e.number}`}</b><span>${(e.unlockAt ?? e.number) > reached ? "Locked" : e.title}<small>${e.arc ?? ""}</small></span></button>`).join("");
@@ -1973,6 +1981,39 @@ export function boot(doc = document) {
     slotsModal.hidden = false; state.modal = true;
   };
   slotsModal.querySelector("[data-slots-close]").addEventListener("click", () => { sfx.play("ui"); closeSlots(); });
+  // Export and import (GDD §20: "Versioned JSON in IndexedDB, with export/import"): every save as one file, to keep or to
+  // carry to another device. It downloads where the browser lets it, and the text is shown as well, to copy.
+  const transfer = slotsModal.querySelector("[data-transfer-panel]"), tText = transfer.querySelector("[data-transfer-text]"), tNote = transfer.querySelector("[data-transfer-note]");
+  const tImport = transfer.querySelector("[data-transfer-import]"), tFileBtn = transfer.querySelector("[data-transfer-file]"), tFile = transfer.querySelector("[data-transfer-input]");
+  tText.addEventListener("keydown", (e) => e.stopPropagation()); // typing here isn't playing
+  slotsModal.querySelector('[data-transfer="export"]').addEventListener("click", (e) => {
+    e.currentTarget.blur(); sfx.play("ui");
+    const text = JSON.stringify(saves.exportSaves(), null, 1);
+    let downloaded = false;
+    try {
+      const url = URL.createObjectURL(new Blob([text], { type: "application/json" })), a = document.createElement("a");
+      a.href = url; a.download = `unwritten-saves-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); downloaded = true;
+    } catch { /* no downloads in this frame */ }
+    transfer.hidden = false; tText.readOnly = true; tText.value = text; tImport.hidden = tFileBtn.hidden = true;
+    tNote.textContent = `${downloaded ? "Downloaded as a .json file. " : ""}If it didn't arrive, copy this text and keep it somewhere safe.`;
+    tText.focus(); tText.select();
+  });
+  slotsModal.querySelector('[data-transfer="import"]').addEventListener("click", (e) => {
+    e.currentTarget.blur(); sfx.play("ui");
+    transfer.hidden = false; tText.readOnly = false; tText.value = ""; tImport.hidden = tFileBtn.hidden = false;
+    tNote.textContent = "Paste a save file's text here, or choose the file. Importing replaces the slots it holds.";
+    tText.focus();
+  });
+  tFileBtn.addEventListener("click", () => tFile.click());
+  tFile.addEventListener("change", async () => { const f = tFile.files?.[0]; if (f) tText.value = await f.text(); tFile.value = ""; });
+  tImport.addEventListener("click", () => {
+    try {
+      const got = saves.importSaves(tText.value);
+      hud.toast(`IMPORTED · ${got.map((k) => (k === "auto" ? "AUTO" : `SLOT ${k}`)).join(" · ")}`, "clear"); sfx.play("ui");
+      transfer.hidden = true; openSlots("load"); refreshContinue();
+    } catch (err) { tNote.textContent = err.message; }
+  });
   // ---- The Theatre: replay a scene with the latest save's world (its cairns and wrecks), then back to this screen ----
   const theatreBar = root.querySelector("[data-theatre]");
   const playTheatre = async (id) => {
