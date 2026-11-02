@@ -14,10 +14,11 @@
 //   <<jump Ep1_Ceremony>>   <<stop>>   <<anything else args>> → a command for the host (camera, wait, sfx…)
 //   ===
 //
-// Text tokens: {name}, {they} {them} {their} {theirs} {themself} (capitalize the first letter for
+// Text tokens: {name}, {rank} (Rook's Knight Rank: Ember… Sun), {they} {them} {their} {theirs} {themself} (capitalize the first letter for
 // sentence starts: {They}), verb helpers {is} {was} {has} {s} {es} ("{they} walk{s}"), and {$FLAG}.
 
 import { compileExpr, truthy } from "./flags.js";
+import { rankName } from "../data/ranks.js";
 
 const TEMPERS = new Set(["bold", "earnest", "wry"]);
 
@@ -161,6 +162,7 @@ export function fillText(text, { name = "Rook", pronouns = "they", flags = null 
   return text.replace(/\{(\$?[\w']+)\}/g, (whole, key) => {
     if (key.startsWith("$")) return flags ? String(flags.get(key.slice(1))) : whole;
     if (key === "name") return name;
+    if (key === "rank") return rankName(flags); // Rook's Knight Rank (GDD §17: "title in dialogue")
     const lower = key[0].toLowerCase() + key.slice(1);
     const v = P[lower];
     if (v === undefined) return whole;

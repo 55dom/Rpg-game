@@ -6,6 +6,7 @@ import { CAFE_SCRIPT } from "./cafe.js";
 import { BOND_SCRIPT } from "../bonds.js";
 import { CRAFT_SCRIPT } from "../crafting.js";
 import { LORE_SCRIPT, MURAL_SCRIPT, FORBIDDEN_SCRIPT } from "../lore.js";
+import { RANK_SCRIPT } from "../ranks.js";
 import { NOTEBOOK_READ } from "./ep23.js";
 import { LAW_SCRIPT, LUKE_SCRIPT } from "./law.js";
 import { ISLES_SCRIPT } from "./ep30.js";
@@ -134,6 +135,9 @@ title: W_Guard
 <<if $RENOWN_AURELIN >= 10>>
     The guard straightens up and salutes as you pass.
 <<endif>>
+<<if $KNIGHT_RANK >= 1>>
+    Guard: Evening, {rank}. Saw the ribbon. Suits you.
+<<endif>>
 Guard: South gate. The road out runs to the old Lighthouse. Nothing past that but dry seabed.
 <<if $EXAM_DUEL_WON>>
     Guard: Wait. You're the one-pager who beat Valcourt's boy. My sister won a week's wages on you.
@@ -214,8 +218,17 @@ title: W_Crier
     <<set $ASKED_FENS to $ASKED_FENS + 1>>
     <<stop>>
 <<endif>>
+<<if $KNIGHT_RANK >= 1 and $CRIED_RANK < $KNIGHT_RANK>>
+    <<set $CRIED_RANK to $KNIGHT_RANK>>
+    Crier: Hear ye! Promoted at the Exam Grounds this week: {name} of the Last Lanterns, to the rank of {rank}!
+    Crier: ...I was paid in fried fish to read that one. Your captain drives a hard bargain.
+    <<stop>>
+<<endif>>
 Crier: Hear ye! The Royal Festival comes to Aurelin within the month!
 Crier: All squads to parade! Even, by royal decree, the Lanterns.
+<<if $KNIGHT_RANK == 0 and $EP4_DONE>>
+    Crier: And the Exam Grounds in the Guild Ward are open for promotion exams, for any knight who thinks they're ready. Most aren't!
+<<endif>>
 ===
 title: W_Cook
 ---
@@ -383,4 +396,4 @@ ${NOTEBOOK_READ}
 `;
 
 /** Every free-roam talk node: the towns, the Gilded Spoon café (data/story/cafe.js), and bonds (data/bonds.js). */
-export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT + CRAFT_SCRIPT + LORE_SCRIPT + MURAL_SCRIPT + FORBIDDEN_SCRIPT + HALL_SCRIPT + IRON_SCRIPT + NOTEBOOK_SCRIPT + LAW_SCRIPT + LUKE_SCRIPT + ISLES_SCRIPT + OLDCITY_SCRIPT;
+export const WORLD_SCRIPT = BASE_SCRIPT + CAFE_SCRIPT + BOND_SCRIPT + CRAFT_SCRIPT + LORE_SCRIPT + MURAL_SCRIPT + FORBIDDEN_SCRIPT + RANK_SCRIPT + HALL_SCRIPT + IRON_SCRIPT + NOTEBOOK_SCRIPT + LAW_SCRIPT + LUKE_SCRIPT + ISLES_SCRIPT + OLDCITY_SCRIPT;

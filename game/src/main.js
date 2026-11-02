@@ -109,7 +109,9 @@ import { Inventory } from "./core/inventory.js";
 import { Progress, addMods, pageLevel, pageLevelProgress, REBRANCH_MARKS } from "./core/progress.js";
 import { SECRET_PAGES, SECRET_NEEDS } from "./data/secretPages.js";
 import { CORRUPTION } from "./data/forbidden.js";
-import { SKILLS, TREE_COLUMNS, XP_BY_KIND, PAGE_ROMAN, MAX_LEVEL } from "./data/skills.js";
+import { SKILLS, TREE_COLUMNS, XP_BY_KIND, PAGE_ROMAN, MAX_LEVEL, killXp, bracketOf } from "./data/skills.js";
+import { storyBracket, storyEpisode } from "./core/ranks.js";
+import { KNIGHT_RANKS, rankOf } from "./data/ranks.js";
 import { BONDS, RANK_POINTS, RANK_UNLOCKS, GIFTS } from "./data/bonds.js";
 import { MATERIALS, HQ, TEMPER } from "./data/crafting.js";
 import { FRAGMENTS, CLAUSE } from "./data/lore.js";
@@ -752,8 +754,11 @@ export function boot(doc = document) {
         }
         case "kill":
           if (ev.defender.traits?.echo) { shatter(ev.defender, { x: ev.defender.pos.x, y: 1.2, z: ev.defender.pos.z }); break; } // a reflection: glass
-          if (state.mode === "story" && ev.defender.team === Team.Enemy && XP_BY_KIND[ev.defender.kind]) {
-            const n = Math.round(XP_BY_KIND[ev.defender.kind] * (1 + story.crafting.xpBonus));
+          // XP for every foe Rook fells (not a memory worn as someone else, not a prop): its worth scaled to the story's bracket (§17).
+          const kx = state.mode === "story" && ev.defender.team === Team.Enemy && !world.wearing && (XP_BY_KIND[ev.defender.kind] != null || !(ev.defender.traits?.object || ev.defender.traits?.prop || ev.defender.traits?.dummy))
+            ? killXp(ev.defender.kind, ev.defender.stats?.maxHealth ?? ev.defender.combatant?.health?.max, xpBracket(), story.progress.level) : 0;
+          if (kx > 0) {
+            const n = Math.round(kx * (1 + story.crafting.xpBonus));
             vfx.number({ x: ev.defender.pos.x, y: ev.defender.pos.y + 2.9, z: ev.defender.pos.z }, `+${n} XP`, "text");
             story.gainXp(n);
             for (const d of story.crafting.drop(ev.defender.kind)) vfx.number({ x: ev.defender.pos.x + 0.4, y: ev.defender.pos.y + 3.3, z: ev.defender.pos.z }, `+${d.n} ${MATERIALS[d.id].name.toUpperCase()}`, "text marks");
@@ -1036,6 +1041,8 @@ export function boot(doc = document) {
 
   // ---- Story mode (Phase 3) ----
   const saves = SaveStore.browser();
+  /** The level the fight in front of you was made for (§17 power gating): this episode's, or, roaming, the story's so far. */
+  const xpBracket = () => { const m = /^ep(\d+)$/.exec(story.ep?.id ?? ""); return !story.roaming && m ? bracketOf(Number(m[1])) : storyBracket(story.flags); };
   const story = new StoryPlayer({
     root, scene, camera, hud, sfx, vfx, controls, saves, sets, mobile,
     setPlayerVisible: (on) => views.get(world.player)?.setVisible(on),
@@ -1048,6 +1055,7 @@ export function boot(doc = document) {
     playSkit: (k, name) => playSkit(k, name), // a camp skit (GDD §10)
     onSecret: () => { world.margin = new Set(story.secrets.margin); refreshGrimDot(); }, // a secret page found (and pinned, if there was room)
     onCorruption: () => { if (!grim.hidden) renderGrimoire(); },
+    onRank: (rk) => { sfx.play("surgeFull"); hud.toast(`KNIGHT RANK · ${rk.name.toUpperCase()}`, "finisher"); vfx.flash({ x: world.player.pos.x, y: 1.4, z: world.player.pos.z }, 4, "#ffd36a", 0.5); },
     onMeal: () => { hud.toast("WARM AND FULL", "clear"); hud.banner("+20 HEALTH · +5% DAMAGE UNTIL MIDNIGHT"); sfx.play("heal"); applyGear(); const p = world.player; p.combatant.health.fill(); },
     openShop: (id) => openShop(id),
     onQuest: (e) => {
@@ -1277,7 +1285,11 @@ export function boot(doc = document) {
     if (state.mode !== "story") return;
     sfx.play("ui");
     const f = story.flags, rank = squadRank(Number(f.get("MERIT")) || 0);
+    const kr = rankOf(f), nx = KNIGHT_RANKS[kr + 1], ep = storyEpisode(f), br = storyBracket(f);
     journal.querySelector("[data-rep]").innerHTML = [
+      // Rook's own standing (§17): Knight Rank, and the level the story expects by now (its bosses' brackets).
+      ["KNIGHT RANK", `${KNIGHT_RANKS[kr].name}${nx ? ` · next: ${nx.name}, by exam at the Exam Grounds (after ${nx.afterText}, near level ${nx.level})` : " · the top of the ladder"}`],
+      ["LEVEL", `${story.progress.level}${ep ? ` · the story expects about ${br} by now, ${bracketOf(Math.min(70, ep + 1))} by the next episode` : ""}`],
       ["SQUAD RANK", `The Lanterns are ${["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th (last)"][rank.place]} of seven`],
       ["MERIT", `${f.get("MERIT") || 0}${rank.next ? ` · next rank at ${rank.next}` : " · top of the Crown's ranking"}`],
       ["SQUAD REPUTATION", f.get("REP_SQUAD") || 0],
@@ -1786,12 +1798,12 @@ export function boot(doc = document) {
     grim.querySelector("[data-grim-pts]").textContent = `THE GRIMOIRE TREE · ${pr.points} SKILL POINT${pr.points === 1 ? "" : "S"}`;
     grim.querySelector("[data-grim-tree]").innerHTML = TREE_COLUMNS.map(({ col, name }) => `<div class="col"><b>${name}</b>${
       Object.values(SKILLS).filter((n) => n.col === col).map((n) => {
-        const have = pr.skills.has(n.id), why = pr.blocker(n.id);
+        const have = pr.skills.has(n.id), why = pr.blocker(n.id, rankOf(story.flags));
         return `<button data-learn="${n.id}" class="${have ? "have" : why ? "" : "can"}" ${have || why ? "disabled" : ""}><b>${n.name}</b><small>${n.desc}</small><em>${have ? "LEARNED" : why ? why.toUpperCase() : `LEARN · ${n.cost} PT${n.cost > 1 ? "S" : ""}`}</em></button>`;
       }).join("")}</div>`).join("");
     for (const btn of grim.querySelectorAll("[data-learn]")) btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      if (!story.progress.learn(btn.dataset.learn)) return;
+      if (!story.progress.learn(btn.dataset.learn, rankOf(story.flags))) return;
       sfx.play("ultActivate"); hud.toast(SKILLS[btn.dataset.learn].name.toUpperCase(), "finisher");
       if (world.progress === story.progress) world.applyLoadout(); // page bonuses apply mid-fight too
       applyGear(); story.saveNow(); renderGrimoire(); refreshGrimDot();

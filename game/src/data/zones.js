@@ -1,4 +1,5 @@
 import { REVEAL_ZONES } from "../reveal/places.js";
+import { KNIGHT_RANKS } from "./ranks.js";
 // Explorable zones (GDD §13: large interconnected zones, not a seamless open world).
 // Each zone names its set, bounds and solids (also used to build the set's buildings),
 // where you arrive, who's there, and its exits. Talk nodes live in data/story/world.js.
@@ -610,6 +611,19 @@ export const ZONES = {
     ],
     exits: [{ id: "door", rect: [-0.9, -HL.half[1], 0.9, -HL.half[1] + 0.75], to: "aurelin", spawn: "hall", label: "Out to the plaza" }],
     arrivals: { aurelin: { x: 0, z: -8.6, yaw: 0 } },
+  },
+  // The Exam Grounds (GDD §17's promotion exams): the arena from the Knight Exam (Ep 2), open between exams. The Proctor
+  // keeps a desk under the captains' box; past the interview, the ring's trial is the rank's own (data/ranks.js).
+  grounds: {
+    id: "grounds", name: "The Exam Grounds", region: "Guild Ward, Aurelin", stage: "examGrounds", mapWhen: "$EP2_DONE",
+    bounds: { radius: 18.4 },
+    spawn: { x: 0, z: -15, yaw: 0 },
+    cast: [{ id: "proctor", name: "The Proctor", look: "herald", x: 0, z: 12.8, yaw: Math.PI, node: "W_Proctor" }],
+    pickups: [],
+    encounters: KNIGHT_RANKS.slice(1).map((r, i) => ({ id: `exam${i + 1}`, rect: [-7, -7, 7, 7], at: { x: 0, z: 1.5, r: 5 },
+      wave: r.trial.wave, when: `$EXAM_READY == ${i + 1}`, exam: i + 1, leash: 40, label: r.trial.label })),
+    exits: [{ id: "gate", rect: [-2.4, -18.8, 2.4, -17.4], to: "aurelin", spawn: "gate", label: "Out to the Guild Ward" }],
+    arrivals: {},
   },
   // The Severed Isles (Arc 4): adrift over the Spindle Peaks. On the map once the Lanterns have been (after Ep 30).
   isles: {

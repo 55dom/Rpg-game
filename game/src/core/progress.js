@@ -5,7 +5,7 @@
 
 import { PAGES } from "../data/pages.js";
 import {
-  MAX_LEVEL, xpToNext, GROWTH, POINTS_PER_LEVEL, SKILLS, PAGE_LEVELS, PAGE_LEVEL_DAMAGE, PAGE_MASTERED_MANA,
+  MAX_LEVEL, xpToNext, growthAt, TIER_RANK, POINTS_PER_LEVEL, SKILLS, PAGE_LEVELS, PAGE_LEVEL_DAMAGE, PAGE_MASTERED_MANA,
 } from "../data/skills.js";
 
 /** A page's level (1–5) from the hits it has landed. */
@@ -61,20 +61,22 @@ export class Progress {
     return gained;
   }
 
-  /** Why a skill can't be learned yet, or null if it can. */
-  blocker(id) {
+  /** Why a skill can't be learned yet, or null if it can. `rank`: Rook's Knight Rank (data/ranks.js), which opens
+   *  the tree's rows (page tiers, §17); left out, no row is closed (the old saves and the tests that predate it). */
+  blocker(id, rank = null) {
     const s = SKILLS[id];
     if (!s) return "unknown";
     if (this.skills.has(id)) return "learned";
     if (s.requires && !this.skills.has(s.requires)) return `needs ${SKILLS[s.requires].name}`;
+    if (rank != null && rank < (TIER_RANK[s.tier] ?? 0)) return `${["Ember", "Spark", "Flame", "Blaze", "Sun"][TIER_RANK[s.tier]]} rank`;
     if (this.level < s.level) return `level ${s.level}`;
     if (s.pageLevel && pageLevel(s.col, this.pages[s.col].xp) < s.pageLevel) return `page level ${["", "I", "II", "III", "IV", "V"][s.pageLevel]}`;
     if (this.points < s.cost) return `${s.cost} point${s.cost > 1 ? "s" : ""}`;
     return null;
   }
 
-  learn(id) {
-    if (this.blocker(id)) return false;
+  learn(id, rank = null) {
+    if (this.blocker(id, rank)) return false;
     this.points -= SKILLS[id].cost;
     this.skills.add(id);
     return true;
@@ -90,8 +92,8 @@ export class Progress {
 
   /** Stat mods from level growth and Margin skills (same keys as equipment mods). */
   get mods() {
-    const up = this.level - 1;
-    const m = { health: Math.round(GROWTH.health * up), mana: GROWTH.mana * up, attack: GROWTH.attack * up, posture: GROWTH.posture * up, manaRegen: 0, surge: 0 };
+    const g = growthAt(this.level);
+    const m = { health: Math.round(g.health), mana: g.mana, attack: g.attack, posture: g.posture, manaRegen: 0, surge: 0 };
     for (const id of this.skills) for (const [k, v] of Object.entries(SKILLS[id].effect)) if (k in m) m[k] += v;
     return m;
   }

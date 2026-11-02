@@ -99,6 +99,7 @@ test("in a fight: mastery keeps counting past evolution, an evolved page stays e
 test("level growth reaches Rook's stats through the world's mods", () => {
   const pr = new Progress({ level: 11 });
   const w = new World({ mods: pr.mods, progress: pr });
-  assert.equal(w.player.stats.maxHealth, ROOK_STATS.maxHealth + 50);
-  assert.equal(w.player.mana.max, ROOK_STATS.maxMana + 10);
+  // (Phase 12: the full step to level 10, then GROWTH_LATE, so the story's ~48 levels stay modest, §17.)
+  assert.equal(w.player.stats.maxHealth, ROOK_STATS.maxHealth + 45 + 2);
+  assert.equal(w.player.mana.max, ROOK_STATS.maxMana + 9.25);
 });

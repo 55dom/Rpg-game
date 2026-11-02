@@ -24,7 +24,9 @@ import { Progress } from "../core/progress.js";
 import { Bonds } from "../core/bonds.js";
 import { Crafting } from "../core/crafting.js";
 import { BONDS, BOND_GAIN } from "../data/bonds.js";
-import { EPISODE_XP, QUEST_XP } from "../data/skills.js";
+import { EPISODE_XP, QUEST_XP, episodeXp, bracketOf, xpToReach, CATCH_UP } from "../data/skills.js";
+import { Ranks, storyBracket } from "../core/ranks.js";
+import { TRIAL_GOALS, KNIGHT_RANKS, rankBracket } from "../data/ranks.js";
 import { EPISODE_REWARD } from "../data/items.js";
 import { QuestLog } from "../core/quests.js";
 import { QUESTS } from "../data/quests.js";
@@ -397,6 +399,7 @@ export class StoryPlayer {
     this.bonds = new Bonds(this.flags); // bond state lives in the flags
     this.secrets = new Secrets(this.flags); // the secret pages (GDD §8.4), found and pinned, also in the flags
     this.corruption = new Corruption(this.flags, this.secrets); // GDD §8.3: kept in the flags too
+    this.ranks = new Ranks(this.flags); // Knight Rank (GDD §17): the KNIGHT_RANK flag, and the exam in progress
     this.quests = new QuestLog(QUESTS, this.flags, {
       onReward: (q, r) => { if (r.marks) this.inventory.earn(r.marks); this.gainXp(r.xp ?? QUEST_XP); for (const [id, n] of Object.entries(r.bond ?? {})) this.bondGain(id, n); },
       onEvent: (e) => this.ctx.onQuest?.(e),
@@ -594,7 +597,10 @@ export class StoryPlayer {
       this.flags.set(`${ep.id.toUpperCase()}_PAID`, 1);
       this.flags.add("REP_SQUAD", 2); this.flags.add("RENOWN_AURELIN", 1); // a mission done: word gets around (GDD §12.3)
       this.inventory.earn(EPISODE_REWARD);
-      this.gainXp(EPISODE_XP);
+      // Story XP (§17 power gating): most of the way to this episode's bracket, and never more than CATCH_UP under it.
+      const n = Number(/^ep(\d+)$/.exec(ep.id)?.[1]) || 0, pr = this.progress;
+      const floor = n ? xpToReach(bracketOf(n) - CATCH_UP) - (xpToReach(pr.level) + pr.xp) : 0;
+      this.gainXp(Math.max(n ? episodeXp(n) : EPISODE_XP, floor));
     }
     if (this.active) this.autosave();
   }
@@ -689,7 +695,9 @@ export class StoryPlayer {
     const t = this.ui.title, ep = this.ep;
     t.querySelector("[data-tc-ep]").textContent = `EPISODE ${ep.number}`;
     t.querySelector("[data-tc-title]").textContent = ep.title.toUpperCase();
-    t.querySelector("[data-tc-arc]").textContent = ep.arc ?? "";
+    // The bracket the episode was made for (§17 power gating), under the arc's name; not on a memory worn as someone else.
+    const br = ep.number && !ep.world?.kit ? ` · Lv ${bracketOf(ep.number)} · ${KNIGHT_RANKS[rankBracket(ep.number)].name}` : "";
+    t.querySelector("[data-tc-arc]").textContent = (ep.arc ?? "") + br;
     t.hidden = false; // un-hiding restarts the CSS animations
     this.ctx.sfx.play("bossIntro");
     await Promise.race([this.sleep(3.4), new Promise((r) => { this.waitingCard = r; })]);
@@ -890,6 +898,18 @@ export class StoryPlayer {
         if (Number(this.flags.get("CLEANSE_DAY")) === this.day) { this.flags.set("CLEANSE_OK", -1); break; }
         this.flags.set("CLEANSE_DAY", this.day); this.flags.set("CLEANSE_OK", 1);
         this.cleanse(CORRUPTION.shrine);
+        break;
+      }
+      case "rank": { // the Proctor: <<rank check>> sets $RANK_CAN, $RANK_NEXT (1–4, 0 at Sun), $RANK_WHY (1 story, 2 level, 3 top), $RANK_NEED_LV;
+        // <<rank ring>>: the interview's done, so the ring opens ($EXAM_READY); <<rank cancel>> closes it again
+        if (args[0] === "check") {
+          const e = this.ranks.eligible(this.progress.level), nx = this.ranks.next;
+          this.flags.set("RANK_CAN", e.ok ? 1 : 0); this.flags.set("RANK_NEXT", nx ? this.ranks.rank + 1 : 0);
+          this.flags.set("RANK_WHY", { story: 1, level: 2, top: 3 }[e.why] ?? 0); this.flags.set("RANK_NEED_LV", nx?.level ?? 0);
+        } else if (args[0] === "ring" && this.ranks.next) {
+          this.flags.set("EXAM_READY", this.ranks.rank + 1);
+          this.ctx.hud.banner?.(`${this.ranks.next.trial.label} · ${this.ranks.next.trial.text}`);
+        } else if (args[0] === "cancel") this.flags.set("EXAM_READY", 0);
         break;
       }
       case "forbidden": if (args[0] === "take") { this.flags.set("FORBIDDEN_FOUND", 1); this.ctx.hud.toast("FORBIDDEN PAGE · HOLLOW BITE", "danger"); } break;
@@ -1116,6 +1136,7 @@ export class StoryPlayer {
   }
 
   _objective() {
+    if (this.ranks.trial && this.exploring?.combat?.exam) { this._trialHud(true); return; } // (an exam's goal holds the line while it lasts)
     const x = this.exploring, b = x.beat, { n, total } = objectiveCount(b, x.talked); // sim/episode.js
     this.ui.objective.innerHTML = fillText(b.objective ?? "", { ...this.player, flags: this.flags }).replace("{n}", n).replace("{total}", total).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
     if (this.roaming) {
@@ -1131,6 +1152,7 @@ export class StoryPlayer {
     const x = this.exploring;
     if (!x || x.busy) return;
     if (x.cooldown > 0) x.cooldown -= dt;
+    if (this.ranks.trial && x.combat?.exam) { this.ranks.tick(dt); if (this.ranks.trial.goal === "fast") this._trialHud(); } // (the Sun exam's clock)
     const pp = this.ctx.getWorld().player.pos;
     if (x.combat?.law) { // a run-in with the law: no talking, but the way out is open (running is a choice)
       if (!this.ui.talk.hidden) this.ui.talk.hidden = true;
@@ -1407,6 +1429,7 @@ export class StoryPlayer {
     if (e.once && e.flag) this.flags.set(e.flag, 1); // (it happens once, however it goes: the Crimson Bell's questions)
     for (const [k, v] of Object.entries(e.add ?? {})) this.flags.add(k, v);
     if (e.say) this.say(e.say[0], e.say[1]);
+    if (e.exam) { this.ranks.startTrial(); this._trialHud(true); } // a promotion exam's trial: count toward its goal
     // Boss fights: the squad comes with you (and leaves again after).
     this.squadIn = [];
     for (const k of e.squad ?? []) if (!world.companions.some((c) => c.kind === k)) { world.addCompanion(k); this.squadIn.push(k); }
@@ -1431,6 +1454,7 @@ export class StoryPlayer {
     }
     for (const b of this.bars ?? []) b.dispose(false, true);
     this.bars = null;
+    if (e.exam) { this._finishExam(e, won); if (won) { world.player.relaxed = true; return; } }
     if (won) {
       e.done = true;
       if (e.flag) { // (an episode's walk-around has no zone, and no visits to count)
@@ -1455,6 +1479,37 @@ export class StoryPlayer {
       if (e.sentry) this._sentryBack(e.sentry);
     }
     world.player.relaxed = true;
+  }
+
+  /** The trial's goal, counting, where the objective line goes (GDD §17's promotion exams). */
+  _trialHud(force = false) {
+    const t = this.ranks.trial;
+    if (!t) return;
+    const text = TRIAL_GOALS[t.goal](t.n).replace("{got}", t.got), html = `<b>${["", "SPARK", "FLAME", "BLAZE", "SUN"][t.rank]} EXAM</b> · ${text}${this.ranks.met(t) ? " ✓" : ""}`;
+    if (!force && html === this._trialText) return;
+    this._trialText = html;
+    this.ui.objective.innerHTML = html; this.ui.objective.hidden = false;
+  }
+
+  /** The trial's over: promoted, or told what the test was. */
+  _finishExam(e, won) {
+    const r = this.ranks.finishTrial(won), rk = r.promoted;
+    this._trialText = null;
+    if (rk) {
+      e.done = true;
+      if (rk.reward?.marks) this.inventory.earn(rk.reward.marks);
+      for (const [k, v] of Object.entries(rk.reward?.flags ?? {})) this.flags.add(k, v);
+      const p = this.ctx.getWorld().player.combatant.health; p.add(p.max);
+      this.ctx.hud.banner(`PROMOTED · ${rk.name.toUpperCase()} · ${rk.tiers ? `Open to you now: ${rk.tiers}.` : ""}`);
+      this.say("Proctor", ["", "Spark. Don't let it go to your head; it's mostly smoke at this stage.", "Flame. That's a rank people stop laughing at, you know.", "Blaze. The Lances will have to call you sir. Or whatever you'd like. They'll hate it either way.", "Sun. I've given that ribbon out four times in thirty years. Wear it somewhere I can see it."][this.ranks.rank]);
+      this.ctx.onRank?.(rk);
+    } else if (won) {
+      e.done = false; e.armed = false; // walk out of the ring and back in to try again
+      this.say("Proctor", r.trial?.goal === "clean" ? "You won. You also bled for it. Again: come home in one piece." : r.trial?.goal === "fast" ? "You won. Eventually. That wasn't the test. Again." : "You won. That wasn't the test. Again, when you're ready.");
+      this.ctx.hud.banner("THE TRIAL GOES ON · Step out of the ring, and back in when you're ready");
+    }
+    this._objective();
+    this.saveNow();
   }
 
   /** Falling in the field: wake up back at the zone's entrance, enemies gone, nothing lost. */
@@ -1721,6 +1776,7 @@ export class StoryPlayer {
     if (ev.type === "forbiddenCast") this.corrupt(CORRUPTION.cast); // every cast of a forbidden page leaves a mark (§8.3)
     if (ev.type === "parry" && ev.defender === this.ctx.getWorld().player) this._found(this.secrets.parry(this.ctx.getWorld().companions.some((c) => c.kind === "juno" && c.alive))); // (Juror's Thread)
     if (ev.type === "haskDown") this._found(this.secrets.haskDown(ev.clean)); // (Weight of Nothing)
+    if (this.ranks.trial) { this.ranks.event(ev, this.ctx.getWorld().player); this._trialHud(); } // a promotion exam, counting
     if (ev.type === "softHit") { this.law.onSoftHit(ev); return; } // a blade or a spell landed on a townsperson
     if (x?.combat?.law) { if (ev.type === "playerDown") this.law.fell(); return; } // the Watch, or a street fight
     if (x?.combat && !this.fight) {
